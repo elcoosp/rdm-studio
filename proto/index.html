@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RDM7 Studio — Assistant de Calcul de Structure 3D</title>
+<style>
+  :root{
+    --bg:#1e2024; --panel:#24262a; --panel2:#181a1d; --header:#142d50;
+    --accent:#0078d7; --green:#27ae60; --red:#c0392b; --orange:#f39c12;
+    --txt:#f5f5f5; --muted:#b9bcc2; --line:#2c2f35;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:-apple-system,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+    font-size:13px; overflow:hidden;
+  }
+  #app{display:flex;flex-direction:column;height:100vh;}
+  header{
+    background:var(--header); height:56px; display:flex; align-items:center;
+    padding:0 18px; flex:0 0 auto;
+  }
+  header .ttl{font-size:15px;font-weight:700;letter-spacing:.2px;}
+  .tabs{display:flex;flex:0 0 auto;background:var(--panel2);border-bottom:1px solid var(--line);}
+  .tab{
+    padding:11px 18px;cursor:pointer;font-weight:600;color:var(--muted);
+    border-right:1px solid var(--line);user-select:none;white-space:nowrap;
+  }
+  .tab.active{color:#fff;background:var(--bg);box-shadow:inset 0 -3px 0 var(--accent);}
+  .page{display:none;flex:1 1 auto;overflow:auto;padding:18px;}
+  .page.active{display:block;}
+  h3{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:600;}
+  label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;}
+  select,input[type=text]{
+    background:#2f3238;color:var(--txt);border:1px solid #3a3e46;border-radius:6px;
+    padding:7px 9px;font-size:13px;width:100%;
+  }
+  select:focus,input:focus{outline:none;border-color:var(--accent);}
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .col{display:flex;flex-direction:column;}
+  button{
+    border:none;border-radius:7px;padding:9px 14px;font-size:13px;font-weight:600;
+    cursor:pointer;color:#fff;background:#3c4149;transition:filter .12s;
+  }
+  button:hover{filter:brightness(1.12);}
+  button.primary{background:var(--accent);}
+  button.green{background:var(--green);}
+  button.red{background:var(--red);}
+  .grid2{display:grid;grid-template-columns:440px 1fr;gap:20px;}
+  canvas{background:#141619;border:1px solid var(--line);border-radius:8px;display:block;}
+  .kpi{display:flex;align-items:center;gap:16px;background:var(--panel2);
+    border-radius:8px;padding:10px 14px;margin-bottom:12px;flex-wrap:wrap;}
+  .kpi .status{font-weight:700;font-size:14px;color:var(--orange);}
+  .kpi .info{color:var(--muted);font-size:12px;margin-left:auto;}
+  .ctrlbar{display:flex;align-items:center;gap:12px;background:#2a2d32;
+    border-radius:8px;padding:8px 12px;margin-bottom:12px;flex-wrap:wrap;}
+  .ctrlbar .hint{color:var(--muted);font-style:italic;font-size:11px;}
+  input[type=range]{accent-color:var(--accent);width:200px;}
+  .preset{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:460px;}
+  .preset button{position:relative;}
+  .preset button.active{outline:2px solid var(--accent);outline-offset:-2px;filter:brightness(1.18);background:var(--accent);}
+  .loadlist{
+    background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    height:440px;overflow:auto;padding:8px 10px;font-family:"SF Mono",Menlo,Consolas,monospace;
+    font-size:12px;white-space:pre;line-height:1.5;
+  }
+  #report{
+    width:100%;height:calc(100vh - 220px);background:#16171a;color:var(--txt);
+    border:1px solid var(--line);border-radius:8px;padding:14px;resize:none;
+    font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre;
+  }
+  .muted{color:var(--muted);}
+  .small{font-size:11px;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .inline{display:flex;align-items:flex-end;gap:8px;}
+  .tablewrap{overflow:auto;max-height:calc(100vh - 150px);border:1px solid var(--line);border-radius:8px;}
+  table{border-collapse:collapse;width:100%;font-size:12px;}
+  th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;}
+  th{background:var(--panel2);color:var(--muted);position:sticky;top:0;font-weight:600;}
+  tbody tr:hover{background:#2a2d32;}
+  td.num{font-family:"SF Mono",Menlo,Consolas,monospace;text-align:right;}
+  .linkwrap{position:relative;display:inline-block;margin-bottom:10px;}
+  .linkwrap a{color:var(--accent);text-decoration:none;font-weight:600;cursor:pointer;}
+  .linkwrap a:hover{text-decoration:underline;}
+  .hoverpreview{display:none;position:absolute;top:22px;left:0;z-index:60;background:var(--panel2);
+    border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.55);
+    max-height:280px;overflow:auto;width:300px;}
+  .hoverpreview table{font-size:11px;}
+  .hoverpreview th,.hoverpreview td{padding:3px 7px;}
+  .linkwrap:hover .hoverpreview{display:block;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><div class="ttl" id="hdrTitle">ASSISTANT CALCUL DE STRUCTURE — MODELE 44 NOEUDS / 62 POUTRES</div></header>
+  <div class="tabs">
+    <div class="tab active" data-p="0">Étape 1 : Profilés &amp; Matériau</div>
+    <div class="tab" data-p="5">Étape 2 : Liaisons</div>
+    <div class="tab" data-p="1">Étape 3 : Charges &amp; Accélérations</div>
+    <div class="tab" data-p="2">Étape 4 : Calcul &amp; Diagnostic 3D</div>
+    <div class="tab" data-p="3">Étape 5 : Rapport &amp; Export</div>
+    <div class="tab" data-p="4">Nœuds &amp; Poutres</div>
+  </div>
+
+  <!-- ETAPE 1 -->
+  <div class="page active" id="p0">
+    <div class="grid2">
+      <div>
+        <div class="linkwrap">
+          <a id="linkNodes">🔗 Tableau Nœuds &amp; Poutres <span class="muted small">(survol : aperçu)</span></a>
+          <div class="hoverpreview"><div id="prevTable"></div></div>
+        </div>
+        <div id="newBeamDialog" style="display:none;margin-bottom:12px;padding:12px;background:#181a1d;border:1px solid #27ae60;border-radius:8px">
+          <b id="newBeamTitle" style="color:#4ade80;font-size:12px;display:block;margin-bottom:8px">Nouvelle poutre (Nœud A → Nœud B)</b>
+          <div class="field" style="margin-bottom:6px"><label>Matériau</label><select id="cbMat"></select></div>
+          <div class="row" style="gap:6px;margin-bottom:10px">
+            <div class="field" style="flex:1.15"><label>Géométrie</label><select id="cbSecGroup"></select></div>
+            <div class="field" style="flex:1"><label>Dimension</label><select id="cbSecNew"></select></div>
+          </div>
+          <div class="row" style="gap:6px">
+            <button class="green" id="btnConfirmNewBeam" style="flex:1">Créer la poutre</button>
+            <button id="btnCancelNewBeam">Annuler</button>
+          </div>
+        </div>
+
+        <h3 style="margin-top:12px">Créer un nœud (coordonnées mm)</h3>
+        <div class="row" style="align-items:flex-end;gap:6px">
+          <div class="field" style="width:80px"><label>X</label><input type="text" id="n1X" value="0"></div>
+          <div class="field" style="width:80px"><label>Y</label><input type="text" id="n1Y" value="0"></div>
+          <div class="field" style="width:80px"><label>Z</label><input type="text" id="n1Z" value="0"></div>
+          <button class="primary" id="btnAddNode1">+ Nœud</button>
+        </div>
+        <div class="muted small" style="margin-top:10px">Canevas : clic en zone vide = nouveau nœud. Utilisez les boutons ci-dessous pour ajouter ou supprimer des poutres.</div>
+        <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <button id="btnAddBeamMode">Ajouter une poutre</button>
+          <button id="btnCancelPending">Annuler la sélection</button>
+          <button id="btnDeleteBeamMode">Supprimer des poutres</button>
+        </div>
+
+        <div id="beamInspector" style="display:none;margin-top:12px;padding:10px 12px;background:#181a1d;border:1px solid #38bdf8;border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <b id="inspTitle" style="color:#38bdf8;font-size:12px">Poutre #1</b>
+            <button id="btnCloseInsp" style="padding:2px 7px;font-size:11px">✕</button>
+          </div>
+          <div id="inspMeta" class="muted small" style="margin-bottom:8px"></div>
+          <div class="field" style="margin-bottom:6px"><label>Matériau de cette poutre</label><select id="inspMat"></select></div>
+          <div class="row" style="gap:6px">
+            <div class="field" style="flex:1.15"><label>Géométrie</label><select id="inspSecGroup"></select></div>
+            <div class="field" style="flex:1"><label>Dimension</label><select id="inspSec"></select></div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:16px">0. Importer une géométrie (CAD)</h3>
+        <div class="row">
+          <button id="btnImpIGES">Importer IGES (.igs)</button>
+          <button id="btnImpDXF">Importer DXF (.dxf)</button>
+        </div>
+        <input type="file" id="fileIGES" accept=".igs,.iges" style="display:none">
+        <input type="file" id="fileDXF" accept=".dxf" style="display:none">
+        <div class="small muted" id="impStatus" style="margin-top:6px">Modèle par défaut : 44 nœuds / 62 poutres. L'import remplace la géométrie (poutres = famille 11, appui encastré sur le nœud le plus à gauche).</div>
+
+        <button class="primary" id="btnNext1" style="margin-top:18px;width:100%">Suivant : Définir les Liaisons ➔</button>
+      </div>
+      <div>
+        <div class="row" style="gap:6px;margin-bottom:8px;align-items:center">
+          <span class="muted small">Vue :</span>
+          <button id="btnViewIso" style="padding:4px 10px;font-size:11px">3D Iso</button>
+          <button id="btnViewXY" style="padding:4px 10px;font-size:11px">Dessus (XY)</button>
+          <button id="btnViewXZ" style="padding:4px 10px;font-size:11px">Face (XZ)</button>
+          <button id="btnViewYZ" style="padding:4px 10px;font-size:11px">Côté (YZ)</button>
+          <span class="muted small" style="margin-left:auto">Glisser : pivoter 3D · Shift+Glisser : déplacer · Molette : zoom</span>
+        </div>
+        <div style="position:relative;display:inline-block">
+          <canvas id="topView" width="750" height="620"></canvas>
+          <div id="nodeTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,17,20,0.96);border:1px solid #4da3ff;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;line-height:1.45;white-space:nowrap;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.5)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPE LIAISONS -->
+  <div class="page" id="p5">
+    <div class="grid2">
+      <div>
+        <h3>1. Choisir le type de liaison (puis cliquer un nœud en 3D)</h3>
+        <div class="row" style="gap:8px;align-items:flex-end;margin-bottom:10px">
+          <div class="field" style="flex:1"><label>Type de liaison RDM 7</label>
+            <select id="cbBcType">
+              <option value="1,1,1,1,1,1">Encastrement parfait (Ux,Uy,Uz,Rx,Ry,Rz)</option>
+              <option value="1,1,1,0,0,0">Rotule / Articulation sphérique (Ux,Uy,Uz)</option>
+              <option value="0,0,1,0,0,0">Appui simple plan XY (Uz bloqué)</option>
+              <option value="0,1,0,0,0,0">Appui simple plan XZ (Uy bloqué)</option>
+              <option value="1,0,0,0,0,0">Appui simple plan YZ (Ux bloqué)</option>
+              <option value="0,1,1,0,0,0">Appui glissant axe X (Uy,Uz bloqués)</option>
+              <option value="1,0,1,0,0,0">Appui glissant axe Y (Ux,Uz bloqués)</option>
+              <option value="1,1,0,0,0,0">Appui glissant axe Z (Ux,Uy bloqués)</option>
+              <option value="0,1,1,1,1,1">Glissière / Coulisseau X (Ux libre)</option>
+              <option value="1,0,1,1,1,1">Glissière / Coulisseau Y (Uy libre)</option>
+              <option value="1,1,0,1,1,1">Glissière / Coulisseau Z (Uz libre)</option>
+              <option value="1,1,1,0,1,1">Pivot d'axe X (Rx libre)</option>
+              <option value="1,1,1,1,0,1">Pivot d'axe Y (Ry libre)</option>
+              <option value="1,1,1,1,1,0">Pivot d'axe Z (Rz libre)</option>
+              <option value="custom">Personnalisée (6 DDL manuels)</option>
+            </select>
+          </div>
+        </div>
+
+        <h3>2. Degrés de liberté bloqués (1 = bloqué, 0 = libre)</h3>
+        <div class="row" style="gap:12px;background:#181a1d;padding:10px 12px;border-radius:8px;border:1px solid #2c2f35;margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer"><input type="checkbox" id="chkUx" checked> Ux</label>
+          <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer"><input type="checkbox" id="chkUy" checked> Uy</label>
+          <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer"><input type="checkbox" id="chkUz" checked> Uz</label>
+          <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer"><input type="checkbox" id="chkRx" checked> Rx</label>
+          <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer"><input type="checkbox" id="chkRy" checked> Ry</label>
+          <label style="display:flex;align-items:center;gap:5px;margin:0;cursor:pointer"><input type="checkbox" id="chkRz" checked> Rz</label>
+        </div>
+
+        <div id="bcStatusMsg" class="muted small" style="margin-bottom:8px">Aucun nœud sélectionné (cliquez sur un nœud en 3D).</div>
+        <button class="green" id="btnValidateBc" style="width:100%">Valider la liaison sur le nœud sélectionné</button>
+        <button class="primary" id="btnNextBc" style="margin-top:16px;width:100%">Suivant : Définir les Charges ➔</button>
+      </div>
+      <div>
+        <div class="row" style="gap:6px;margin-bottom:6px;align-items:center">
+          <span class="muted small">Cliquez sur un nœud en 3D pour lui appliquer la liaison choisie</span>
+          <button id="btnBcIso" style="padding:3px 9px;font-size:11px;margin-left:auto">Recentrer 3D</button>
+        </div>
+        <div style="position:relative;display:inline-block">
+          <canvas id="bcView3d" width="750" height="430"></canvas>
+          <div id="bcTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(15,17,20,0.96);border:1px solid #4da3ff;border-radius:6px;padding:6px 10px;color:#fff;font-size:11px;line-height:1.45;white-space:nowrap;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,0.5)"></div>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;margin-top:8px;margin-bottom:4px">
+          <h3 style="margin:0">3. Liaisons actives sur le modèle</h3>
+          <button class="red" id="btnClearBc" style="padding:4px 10px;font-size:11px">Tout supprimer</button>
+        </div>
+        <div class="loadlist" id="lbBcs" style="height:135px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPE 2 -->
+  <div class="page" id="p1">
+    <div class="grid2">
+      <div>
+        <h3>1. Scénarios Rapides (Presets)</h3>
+        <div class="preset">
+          <button data-preset="0">Poids Propre Seul (1g Z)</button>
+          <button data-preset="2">Transport (0.8g X / 1.5g Z)</button>
+        </div>
+
+        <h3 style="margin-top:18px">2. Accélérations Dynamiques Imposées (en g)</h3>
+        <div class="row">
+          <div class="field" style="width:90px"><label>Accél. X (g)</label><input type="text" id="tbAx" value="0.0"></div>
+          <div class="field" style="width:90px"><label>Accél. Y (g)</label><input type="text" id="tbAy" value="0.0"></div>
+          <div class="field" style="width:90px"><label>Accél. Z (g)</label><input type="text" id="tbAz" value="1.0"></div>
+        </div>
+
+        <button class="green" id="btnRun" style="margin-top:18px;width:100%;font-size:15px;padding:16px">LANCER LE CALCUL 3D &amp; MODAL 🚀</button>
+      </div>
+      <div>
+        <h3>3. Charges Ponctuelles aux Nœuds (N)</h3>
+        <div class="inline" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <div class="field" style="width:70px"><label>Nœud</label><input type="text" id="tbNid" value="1"></div>
+          <div class="field" style="width:80px"><label>Fx</label><input type="text" id="tbFx" value="0"></div>
+          <div class="field" style="width:80px"><label>Fy</label><input type="text" id="tbFy" value="0"></div>
+          <div class="field" style="width:90px"><label>Fz</label><input type="text" id="tbFz" value="-10000"></div>
+          <button class="primary" id="btnAddL">+ Ajouter</button>
+        </div>
+        <div class="loadlist" id="lbLoads" style="height:200px"></div>
+        <button class="red" id="btnClearL" style="margin-top:8px">Vider toutes les charges ponctuelles</button>
+
+        <h3 style="margin-top:16px">4. Charges Réparties Uniformes sur Poutre (N/m)</h3>
+        <div class="inline" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <div class="field" style="width:70px"><label>Poutre</label><input type="text" id="tbBid" value="1"></div>
+          <div class="field" style="width:80px"><label>qx</label><input type="text" id="tbQx" value="0"></div>
+          <div class="field" style="width:80px"><label>qy</label><input type="text" id="tbQy" value="0"></div>
+          <div class="field" style="width:90px"><label>qz</label><input type="text" id="tbQz" value="-1000"></div>
+          <button class="primary" id="btnAddBL">+ Ajouter</button>
+        </div>
+        <div class="loadlist" id="lbBeamLoads" style="height:170px"></div>
+        <button class="red" id="btnClearBL" style="margin-top:8px">Vider les charges réparties</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPE 3 -->
+  <div class="page" id="p2">
+    <div class="kpi">
+      <span class="status" id="kpiStatus">EN ATTENTE DE CALCUL</span>
+      <span class="info" id="kpiInfo">Masse: -- kg | Flèche max: -- mm | Contrainte max: -- MPa | Mode 1: -- Hz</span>
+    </div>
+    <div class="ctrlbar">
+      <span class="muted">Affichage :</span>
+      <select id="cbViewMode" style="width:240px">
+        <option>Déformée Statique / Dynamique</option>
+        <option>Mode Propre 1</option><option>Mode Propre 2</option>
+        <option>Mode Propre 3</option><option>Mode Propre 4</option>
+        <option>Mode Propre 5</option><option>Mode Propre 6</option>
+      </select>
+      <span class="muted">Amplification visuelle :</span>
+      <input type="range" id="trAmp" min="1" max="60" value="15">
+      <span class="hint">(Cliquer-glisser : pivoter · Molette : zoom)</span>
+    </div>
+    <canvas id="view3d" width="1180" height="500"></canvas>
+
+    <div id="beamDiagPanel" style="display:none;margin-top:14px;padding:14px;background:#181a1d;border:1px solid #2e323b;border-radius:10px">
+      <div class="row" style="align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <b style="color:#4da3ff;font-size:13px">📊 Efforts internes dans la section droite</b>
+        <div class="row" style="align-items:center;gap:6px">
+          <span class="muted small">Poutre :</span>
+          <select id="cbDiagBeam" style="width:220px;padding:5px 8px"></select>
+        </div>
+        <div class="row" style="align-items:center;gap:8px;flex:1;min-width:260px">
+          <span class="muted small">Position x :</span>
+          <input type="range" id="trDiagX" min="0" max="1000" value="500" style="flex:1">
+          <span id="lblDiagX" style="font-family:monospace;font-size:12px;color:#ffd166;min-width:125px">x = 0.000 m (50%)</span>
+        </div>
+      </div>
+      <div id="diagValues" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-bottom:10px;font-family:monospace;font-size:12px"></div>
+      <div style="display:grid;grid-template-columns:310px 1fr;gap:12px;align-items:stretch">
+        <div style="background:#121417;border:1px solid #262930;border-radius:6px;padding:8px;display:flex;flex-direction:column;align-items:center">
+          <div style="font-size:11px;font-weight:700;color:#e2e8f0;margin-bottom:4px;width:100%;display:flex;justify-content:space-between;align-items:center;gap:4px">
+            <span>Section (MPa)</span>
+            <select id="cbSecScale" style="width:auto;padding:2px 5px;font-size:10px">
+              <option value="re">Échelle : 0 → Re</option>
+              <option value="global">Échelle : 0 → Max mod.</option>
+              <option value="local">Échelle : Auto (x)</option>
+            </select>
+            <span id="lblSecMax" style="color:#ff6b6b">--</span>
+          </div>
+          <canvas id="secStressCanvas" width="280" height="210"></canvas>
+        </div>
+        <canvas id="beamDiagCanvas" width="820" height="240" style="width:100%;height:240px;background:#121417;border:1px solid #262930;border-radius:6px"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETAPE 4 -->
+  <div class="page" id="p3">
+    <div class="row" style="gap:8px;margin-bottom:12px">
+      <button class="primary" id="btnCsv">Exporter les Résultats Complets (.CSV pour Excel)</button>
+      <button class="green" id="btnPdf">Exporter la Note de Calcul (.PDF)</button>
+      <button class="primary" id="btnHtml3d" style="background:#7c3aed;border-color:#8b5cf6">Exporter Rapport 3D Interactif (.HTML)</button>
+    </div>
+    <textarea id="report" readonly></textarea>
+  </div>
+
+  <!-- NOEUDS & POUTRES -->
+  <div class="page" id="p4">
+    <div class="muted small" style="margin-bottom:8px">Coordonnées des nœuds (m) et poutres connectées (identifiants). Le tableau se met à jour automatiquement après un import ou l'ajout d'un nœud.</div>
+    <div class="row" style="align-items:flex-end;margin-bottom:12px">
+      <div class="field" style="width:110px"><label>X (mm)</label><input type="text" id="npX" value="0"></div>
+      <div class="field" style="width:110px"><label>Y (mm)</label><input type="text" id="npY" value="0"></div>
+      <div class="field" style="width:110px"><label>Z (mm)</label><input type="text" id="npZ" value="0"></div>
+      <button class="primary" id="btnAddNode">+ Ajouter le nœud</button>
+    </div>
+    <div class="tablewrap" style="margin-bottom:16px"><div id="nodeTable"></div></div>
+    <div class="muted small" style="margin-bottom:6px">Listing des poutres. <b>Famille</b> = groupe de poutres partageant la même section (11–14 d'origine ; poutres importées = famille 11). <b>Raccordement</b> = nœuds de connexion (Nœud 1 → Nœud 2).</div>
+    <div class="tablewrap"><div id="beamTable"></div></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ===================== DONNEES ===================== */
+const rawN = [
+ [0,3.3,0],[1.025,3.3,0],[1.4,3.3,0],[0,2.7,0],[1.025,2.7,0],[1.4,2.7,0],[0,1.95,0],[1.025,1.95,0],
+ [1.975,1.95,0],[3,1.95,0],[0,1.2,0],[1.025,1.2,0],[1.035,1.2,0],[1.975,1.2,0],[2.49,1.2,0],[3,1.2,0],
+ [0,-1.2,0],[1.025,-1.2,0],[1.035,-1.2,0],[1.975,-1.2,0],[2.49,-1.2,0],[3,-1.2,0],[0,-1.95,0],[1.025,-1.95,0],
+ [1.975,-1.95,0],[3,-1.95,0],[0,-2.7,0],[1.025,-2.7,0],[1.4,-2.7,0],[0,-3.3,0],[1.025,-3.3,0],[1.4,-3.3,0],
+ [0,0,0],[1.975,-3.2421997,0],[1.975,-2.6268617,0],[1.975,2.6268617,0],[1.975,3.2421997,0],
+ [3,-2.8030056,0],[3,-2.0447163,0],[3,0,0],[3,2.0447163,0],[3,2.8030056,0],[3.6069937,2.2708588,0],[3.6069937,-2.2708588,0]
+];
+const nodes = rawN.map((r,i)=>({ID:i+1,X:r[0],Y:r[1],Z:r[2]}));
+
+// [n1,n2,vx,vy,vz,fam]
+const rawB = [
+ [1,2,0,-1,0,11],[2,3,0,-1,0,11],[4,5,0,-1,0,13],[5,6,0,-1,0,13],[7,8,0,-1,0,11],[8,9,0,-1,0,11],[9,10,0,-1,0,11],
+ [11,12,0,-1,0,11],[12,13,0,-1,0,11],[13,14,0,-1,0,11],[14,15,0,-1,0,11],[15,16,0,-1,0,11],[17,18,0,-1,0,11],
+ [18,19,0,-1,0,11],[19,20,0,-1,0,11],[20,21,0,-1,0,11],[21,22,0,-1,0,11],[23,24,0,-1,0,11],[24,25,0,-1,0,11],
+ [25,26,0,-1,0,11],[27,28,0,-1,0,13],[28,29,0,-1,0,13],[30,31,0,-1,0,11],[31,32,0,-1,0,11],[30,27,1,0,0,14],
+ [27,23,1,0,0,12],[23,17,1,0,0,12],[17,33,1,0,0,12],[33,11,1,0,0,12],[11,7,1,0,0,12],[7,4,1,0,0,12],[4,1,1,0,0,14],
+ [31,28,1,0,0,14],[28,24,1,0,0,14],[24,18,1,0,0,14],[12,8,1,0,0,14],[8,5,1,0,0,14],[5,2,1,0,0,14],[34,35,1,0,0,14],
+ [35,25,1,0,0,14],[25,20,1,0,0,14],[14,9,1,0,0,14],[9,36,1,0,0,14],[36,37,1,0,0,14],[38,39,1,0,0,14],[39,26,1,0,0,13],
+ [26,22,1,0,0,13],[22,40,1,0,0,13],[40,16,1,0,0,13],[16,10,1,0,0,13],[10,41,1,0,0,13],[41,42,1,0,0,14],
+ [3,37,-0.100018,-0.994986,0,11],[37,42,-0.39385,-0.919175,0,11],[42,43,-0.659225,-0.751946,0,11],
+ [6,36,-0.12618,-0.992007,0,13],[36,41,-0.493855,-0.869544,0,13],[32,34,0.100018,-0.994986,0,11],
+ [34,38,0.39385,-0.919175,0,11],[38,44,0.659225,-0.751946,0,11],[29,35,0.12618,-0.992007,0,13],[35,39,0.493855,-0.869544,0,13]
+];
+const beams = rawB.map((r,i)=>({ID:i+1,N1:r[0],N2:r[1],Vx:r[2],Vy:r[3],Vz:r[4],Fam:r[5]}));
+
+const bcs = {
+ 33:[1,1,1,1,1,1], 40:[1,1,1,1,1,1],
+ 13:[1,1,1,0,0,0], 15:[1,1,1,0,0,0], 19:[1,1,1,0,0,0], 21:[1,1,1,0,0,0]
+};
+
+const catSecGroups = {
+ "Tubes Ronds Creux (CHS - EN 10210/10219)": {
+  "Rond creux D26.9x2.6":{A:1.98e-4,Iy:1.48e-8,Iz:1.48e-8,J:2.96e-8,Wel:1.10e-6},"Rond creux D33.7x3.2":{A:3.07e-4,Iy:3.60e-8,Iz:3.60e-8,J:7.21e-8,Wel:2.14e-6},
+  "Rond creux D42.4x3.2":{A:3.94e-4,Iy:7.62e-8,Iz:7.62e-8,J:1.52e-7,Wel:3.59e-6},"Rond creux D48.3x3.2":{A:4.53e-4,Iy:1.16e-7,Iz:1.16e-7,J:2.32e-7,Wel:4.80e-6},
+  "Rond creux D60.3x4.0":{A:7.07e-4,Iy:2.82e-7,Iz:2.82e-7,J:5.64e-7,Wel:9.34e-6},"Rond creux D76.1x4.0":{A:9.06e-4,Iy:5.91e-7,Iz:5.91e-7,J:1.18e-6,Wel:1.55e-5},
+  "Rond creux D88.9x5.0":{A:1.32e-3,Iy:1.16e-6,Iz:1.16e-6,J:2.33e-6,Wel:2.62e-5},"Rond creux D101.6x5.0":{A:1.52e-3,Iy:1.77e-6,Iz:1.77e-6,J:3.55e-6,Wel:3.49e-5},
+  "Rond creux D114.3x6":{A:2.041407e-3,Iy:3.002116e-6,Iz:3.002116e-6,J:6.004232e-6,Wel:3.002116e-6/0.05715},
+  "Rond creux D139.7x6.3":{A:2.64e-3,Iy:5.89e-6,Iz:5.89e-6,J:1.18e-5,Wel:8.43e-5},
+  "Rond creux D168.3x6":{A:3.059283e-3,Iy:1.008695e-5,Iz:1.008695e-5,J:2.01739e-5,Wel:1.008695e-5/0.08415},
+  "Rond creux D193.7x8.0":{A:4.67e-3,Iy:2.02e-5,Iz:2.02e-5,J:4.03e-5,Wel:2.08e-4},"Rond creux D219.1x8.0":{A:5.31e-3,Iy:2.96e-5,Iz:2.96e-5,J:5.92e-5,Wel:2.70e-4},
+  "Rond creux D273.0x10.0":{A:8.26e-3,Iy:7.15e-5,Iz:7.15e-5,J:1.43e-4,Wel:5.24e-4},"Rond creux D323.9x10.0":{A:9.86e-3,Iy:1.22e-4,Iz:1.22e-4,J:2.43e-4,Wel:7.51e-4},
+  "Rond creux D406.4x12.5":{A:1.55e-2,Iy:3.00e-4,Iz:3.00e-4,J:6.01e-4,Wel:1.48e-3}
+ },
+ "Tubes Carrés Creux (SHS - EN 10210/10219)": {
+  "Carre creux 40x40x3":{A:4.34e-4,Iy:9.78e-8,Iz:9.78e-8,J:1.57e-7,Wel:4.89e-6},"Carre creux 50x50x3":{A:5.54e-4,Iy:2.02e-7,Iz:2.02e-7,J:3.21e-7,Wel:8.08e-6},
+  "Carre creux 60x60x4":{A:8.78e-4,Iy:4.54e-7,Iz:4.54e-7,J:7.26e-7,Wel:1.51e-5},"Carre creux 80x80x5":{A:1.46e-3,Iy:1.35e-6,Iz:1.35e-6,J:2.16e-6,Wel:3.37e-5},
+  "Carre creux 90x90x5":{A:1.7e-3,Iy:2.054167e-6,Iz:2.054167e-6,J:3.161069e-6,Wel:2.054167e-6/0.045},
+  "Carre creux 100x100x5":{A:1.86e-3,Iy:2.77e-6,Iz:2.77e-6,J:4.39e-6,Wel:5.54e-5},"Carre creux 120x120x6":{A:2.68e-3,Iy:5.79e-6,Iz:5.79e-6,J:8.95e-6,Wel:5.79e-6/0.060},
+  "Carre creux 140x140x8":{A:4.10e-3,Iy:1.18e-5,Iz:1.18e-5,J:1.90e-5,Wel:1.69e-4},"Carre creux 150x150x10":{A:5.6e-3,Iy:1.838667e-5,Iz:1.838667e-5,J:2.84337e-5,Wel:1.838667e-5/0.075},
+  "Carre creux 200x200x10":{A:7.39e-3,Iy:4.36e-5,Iz:4.36e-5,J:6.98e-5,Wel:4.36e-4},"Carre creux 250x250x10":{A:9.39e-3,Iy:8.86e-5,Iz:8.86e-5,J:1.40e-4,Wel:7.09e-4},
+  "Carre creux 300x300x12.5":{A:1.41e-2,Iy:1.90e-4,Iz:1.90e-4,J:3.03e-4,Wel:1.27e-3}
+ },
+ "Tubes Rectangulaires Creux (RHS - EN 10210/10219)": {
+  "Rect creux 60x40x3":{A:5.54e-4,Iy:2.65e-7,Iz:1.39e-7,J:2.94e-7,Wel:8.83e-6},"Rect creux 80x40x4":{A:8.78e-4,Iy:7.03e-7,Iz:2.33e-7,J:5.64e-7,Wel:1.76e-5},
+  "Rect creux 100x50x4":{A:1.12e-3,Iy:1.45e-6,Iz:4.87e-7,J:1.17e-6,Wel:2.90e-5},"Rect creux 120x60x5":{A:1.66e-3,Iy:3.04e-6,Iz:1.03e-6,J:2.47e-6,Wel:5.07e-5},
+  "Rect creux 160x80x6":{A:2.66e-3,Iy:8.74e-6,Iz:2.96e-6,J:6.97e-6,Wel:1.09e-4},"Rect creux 200x100x8":{A:4.42e-3,Iy:2.21e-5,Iz:7.41e-6,J:1.76e-5,Wel:2.21e-4},
+  "Rect creux 300x200x10":{A:9.39e-3,Iy:1.16e-4,Iz:6.18e-5,J:1.27e-4,Wel:7.73e-4}
+ },
+ "Poutrelles IPE (EN 10365)": {
+  "IPE 80":{A:7.64e-4,Iy:8.01e-7,Iz:8.49e-8,J:7.00e-9,Wel:2.00e-5},"IPE 100":{A:1.03e-3,Iy:1.71e-6,Iz:1.59e-7,J:1.20e-8,Wel:3.42e-5},
+  "IPE 120":{A:1.32e-3,Iy:3.18e-6,Iz:2.77e-7,J:1.74e-8,Wel:5.30e-5},"IPE 140":{A:1.64e-3,Iy:5.41e-6,Iz:4.49e-7,J:2.45e-8,Wel:7.73e-5},
+  "IPE 160":{A:2.01e-3,Iy:8.69e-6,Iz:6.83e-7,J:3.60e-8,Wel:1.09e-4},"IPE 180":{A:2.39e-3,Iy:1.32e-5,Iz:1.01e-6,J:4.79e-8,Wel:1.46e-4},
+  "IPE 200":{A:2.85e-3,Iy:1.94e-5,Iz:1.42e-6,J:6.98e-8,Wel:1.94e-4},"IPE 220":{A:3.34e-3,Iy:2.77e-5,Iz:2.05e-6,J:9.07e-8,Wel:2.52e-4},
+  "IPE 240":{A:3.91e-3,Iy:3.89e-5,Iz:2.84e-6,J:1.29e-7,Wel:3.24e-4},"IPE 270":{A:4.59e-3,Iy:5.79e-5,Iz:4.20e-6,J:1.59e-7,Wel:4.29e-4},
+  "IPE 300":{A:5.38e-3,Iy:8.36e-5,Iz:6.04e-6,J:2.01e-7,Wel:5.57e-4},"IPE 330":{A:6.26e-3,Iy:1.18e-4,Iz:7.88e-6,J:2.82e-7,Wel:7.13e-4},
+  "IPE 360":{A:7.27e-3,Iy:1.63e-4,Iz:1.04e-5,J:3.73e-7,Wel:9.04e-4},"IPE 400":{A:8.45e-3,Iy:2.31e-4,Iz:1.32e-5,J:5.11e-7,Wel:1.16e-3},
+  "IPE 450":{A:9.88e-3,Iy:3.37e-4,Iz:1.68e-5,J:6.69e-7,Wel:1.50e-3},"IPE 500":{A:1.16e-2,Iy:4.82e-4,Iz:2.14e-5,J:8.93e-7,Wel:1.93e-3},
+  "IPE 550":{A:1.34e-2,Iy:6.71e-4,Iz:2.67e-5,J:1.23e-6,Wel:2.44e-3},"IPE 600":{A:1.56e-2,Iy:9.21e-4,Iz:3.39e-5,J:1.65e-6,Wel:3.07e-3}
+ },
+ "Poutrelles HEA (EN 10365)": {
+  "HEA 100":{A:2.12e-3,Iy:3.49e-6,Iz:1.34e-6,J:5.24e-8,Wel:7.28e-5},"HEA 120":{A:2.53e-3,Iy:6.06e-6,Iz:2.31e-6,J:5.99e-8,Wel:1.06e-4},
+  "HEA 140":{A:3.14e-3,Iy:1.03e-5,Iz:3.89e-6,J:8.13e-8,Wel:1.55e-4},"HEA 160":{A:3.88e-3,Iy:1.67e-5,Iz:6.16e-6,J:1.22e-7,Wel:2.20e-4},
+  "HEA 180":{A:4.53e-3,Iy:2.51e-5,Iz:9.25e-6,J:1.48e-7,Wel:2.94e-4},"HEA 200":{A:5.38e-3,Iy:3.69e-5,Iz:1.34e-5,J:2.10e-7,Wel:3.89e-4},
+  "HEA 220":{A:6.43e-3,Iy:5.41e-5,Iz:1.95e-5,J:2.85e-7,Wel:5.15e-4},"HEA 240":{A:7.68e-3,Iy:7.76e-5,Iz:2.77e-5,J:4.16e-7,Wel:6.75e-4},
+  "HEA 260":{A:8.68e-3,Iy:1.05e-4,Iz:3.67e-5,J:5.24e-7,Wel:8.36e-4},"HEA 280":{A:9.73e-3,Iy:1.37e-4,Iz:4.76e-5,J:6.21e-7,Wel:1.01e-3},
+  "HEA 300":{A:1.13e-2,Iy:1.83e-4,Iz:6.31e-5,J:8.52e-7,Wel:1.26e-3},"HEA 360":{A:1.43e-2,Iy:3.31e-4,Iz:7.89e-5,J:1.49e-6,Wel:1.89e-3},
+  "HEA 400":{A:1.59e-2,Iy:4.51e-4,Iz:8.56e-5,J:1.89e-6,Wel:2.31e-3},"HEA 500":{A:1.98e-2,Iy:8.70e-4,Iz:1.04e-4,J:3.09e-6,Wel:3.55e-3},
+  "HEA 600":{A:2.26e-2,Iy:1.41e-3,Iz:1.13e-4,J:3.98e-6,Wel:4.79e-3}
+ },
+ "Poutrelles HEB / HEM (EN 10365)": {
+  "HEB 100":{A:2.60e-3,Iy:4.50e-6,Iz:1.67e-6,J:9.25e-8,Wel:8.99e-5},"HEB 120":{A:3.40e-3,Iy:8.64e-6,Iz:3.18e-6,J:1.38e-7,Wel:1.44e-4},
+  "HEB 140":{A:4.30e-3,Iy:1.51e-5,Iz:5.50e-6,J:2.01e-7,Wel:2.16e-4},"HEB 160":{A:5.43e-3,Iy:2.49e-5,Iz:8.89e-6,J:3.12e-7,Wel:3.11e-4},
+  "HEB 180":{A:6.53e-3,Iy:3.83e-5,Iz:1.36e-5,J:4.22e-7,Wel:4.26e-4},"HEB 200":{A:7.81e-3,Iy:5.70e-5,Iz:2.00e-5,J:5.93e-7,Wel:5.70e-4},
+  "HEB 220":{A:9.10e-3,Iy:8.09e-5,Iz:2.84e-5,J:7.65e-7,Wel:7.36e-4},"HEB 240":{A:1.06e-2,Iy:1.13e-4,Iz:3.92e-5,J:1.03e-6,Wel:9.38e-4},
+  "HEB 300":{A:1.49e-2,Iy:2.52e-4,Iz:8.56e-5,J:1.85e-6,Wel:1.68e-3},"HEB 400":{A:1.98e-2,Iy:5.77e-4,Iz:1.08e-4,J:3.55e-6,Wel:2.88e-3},
+  "HEB 500":{A:2.39e-2,Iy:1.07e-3,Iz:1.26e-4,J:5.38e-6,Wel:4.29e-3},"HEB 600":{A:2.70e-2,Iy:1.71e-3,Iz:1.35e-4,J:6.67e-6,Wel:5.70e-3},
+  "HEM 100":{A:5.32e-3,Iy:1.14e-5,Iz:3.99e-6,J:6.82e-7,Wel:1.90e-4},"HEM 160":{A:9.71e-3,Iy:5.10e-5,Iz:1.76e-5,J:1.62e-6,Wel:5.66e-4},
+  "HEM 200":{A:1.31e-2,Iy:1.06e-4,Iz:3.65e-5,J:2.59e-6,Wel:9.67e-4},"HEM 300":{A:3.03e-2,Iy:5.92e-4,Iz:1.94e-4,J:1.41e-5,Wel:3.48e-3}
+ },
+ "Fers U (UPN / UPE - EN 10365) & Cornières (EN 10056)": {
+  "UPN 80":{A:1.10e-3,Iy:1.06e-6,Iz:1.94e-7,J:2.20e-8,Wel:2.65e-5},"UPN 100":{A:1.35e-3,Iy:2.06e-6,Iz:2.93e-7,J:2.81e-8,Wel:4.12e-5},
+  "UPN 120":{A:1.70e-3,Iy:3.64e-6,Iz:4.32e-7,J:4.15e-8,Wel:6.07e-5},"UPN 140":{A:2.04e-3,Iy:6.05e-6,Iz:6.27e-7,J:5.68e-8,Wel:8.64e-5},
+  "UPN 160":{A:2.40e-3,Iy:9.25e-6,Iz:8.53e-7,J:7.39e-8,Wel:1.16e-4},"UPN 200":{A:3.22e-3,Iy:1.91e-5,Iz:1.48e-6,J:1.19e-7,Wel:1.91e-4},
+  "UPN 240":{A:4.23e-3,Iy:3.60e-5,Iz:2.48e-6,J:1.97e-7,Wel:3.00e-4},"UPN 300":{A:5.88e-3,Iy:8.03e-5,Iz:4.95e-6,J:3.74e-7,Wel:5.35e-4},
+  "UPE 100":{A:1.25e-3,Iy:2.07e-6,Iz:3.83e-7,J:2.10e-8,Wel:4.14e-5},"UPE 140":{A:1.84e-3,Iy:5.99e-6,Iz:7.87e-7,J:3.81e-8,Wel:8.56e-5},
+  "UPE 200":{A:2.90e-3,Iy:1.91e-5,Iz:1.87e-6,J:8.34e-8,Wel:1.91e-4},"UPE 300":{A:5.66e-3,Iy:8.12e-5,Iz:5.88e-6,J:2.84e-7,Wel:5.41e-4},
+  "Cornière L40x40x4":{A:3.08e-4,Iy:4.47e-8,Iz:4.47e-8,J:1.64e-9,Wel:1.55e-6},"Cornière L50x50x5":{A:4.80e-4,Iy:1.10e-7,Iz:1.10e-7,J:4.00e-9,Wel:3.05e-6},
+  "Cornière L60x60x6":{A:6.91e-4,Iy:2.28e-7,Iz:2.28e-7,J:8.29e-9,Wel:5.29e-6},"Cornière L80x80x8":{A:1.23e-3,Iy:7.22e-7,Iz:7.22e-7,J:2.62e-8,Wel:1.26e-5},
+  "Cornière L100x100x10":{A:1.92e-3,Iy:1.77e-6,Iz:1.77e-6,J:6.40e-8,Wel:2.47e-5},"Cornière L150x150x15":{A:4.30e-3,Iy:8.98e-6,Iz:8.98e-6,J:3.23e-7,Wel:8.35e-5}
+ }
+};
+const welzMap = {
+  "Rect creux 60x40x3":5.79e-6,"Rect creux 80x40x4":1.06e-5,"Rect creux 100x50x4":1.78e-5,
+  "Rect creux 120x60x5":3.12e-5,"Rect creux 160x80x6":6.73e-5,"Rect creux 200x100x8":1.35e-4,"Rect creux 300x200x10":5.62e-4,
+  "IPE 80":3.69e-6,"IPE 100":5.79e-6,"IPE 120":8.65e-6,"IPE 140":1.23e-5,"IPE 160":1.67e-5,"IPE 180":2.22e-5,
+  "IPE 200":2.85e-5,"IPE 220":3.73e-5,"IPE 240":4.73e-5,"IPE 270":6.22e-5,"IPE 300":8.05e-5,"IPE 330":9.85e-5,
+  "IPE 360":1.23e-4,"IPE 400":1.46e-4,"IPE 450":1.76e-4,"IPE 500":2.14e-4,"IPE 550":2.54e-4,"IPE 600":3.08e-4,
+  "HEA 100":2.68e-5,"HEA 120":3.85e-5,"HEA 140":5.56e-5,"HEA 160":7.70e-5,"HEA 180":1.03e-4,"HEA 200":1.34e-4,
+  "HEA 220":1.77e-4,"HEA 240":2.31e-4,"HEA 260":2.82e-4,"HEA 280":3.40e-4,"HEA 300":4.21e-4,"HEA 360":5.26e-4,
+  "HEA 400":5.71e-4,"HEA 500":6.93e-4,"HEA 600":7.53e-4,
+  "HEB 100":3.34e-5,"HEB 120":5.30e-5,"HEB 140":7.86e-5,"HEB 160":1.11e-4,"HEB 180":1.51e-4,"HEB 200":2.00e-4,
+  "HEB 220":2.58e-4,"HEB 240":3.27e-4,"HEB 300":5.71e-4,"HEB 400":7.20e-4,"HEB 500":8.40e-4,"HEB 600":9.00e-4,
+  "HEM 100":7.53e-5,"HEM 160":2.12e-4,"HEM 200":3.54e-4,"HEM 300":1.25e-3,
+  "UPN 80":6.36e-6,"UPN 100":8.49e-6,"UPN 120":1.11e-5,"UPN 140":1.48e-5,"UPN 160":1.83e-5,
+  "UPN 200":2.70e-5,"UPN 240":3.96e-5,"UPN 300":6.78e-5,
+  "UPE 100":1.01e-5,"UPE 140":1.71e-5,"UPE 200":3.28e-5,"UPE 300":7.95e-5
+};
+const catSec = {};
+for(const grp in catSecGroups) for(const k in catSecGroups[grp]){
+  const raw = catSecGroups[grp][k];
+  const wely = raw.Wel;
+  const welz = welzMap[k] || (raw.Iy > 0 ? raw.Wel * (raw.Iz / raw.Iy) : raw.Wel);
+  catSec[k] = Object.assign({Name:k, Group:grp, Wely:wely, Welz:welz}, raw);
+}
+const catMat = {
+ "Acier S275 (Re = 250 MPa)":      {Name:"Acier S275",      E:210e9, Nu:0.3,  Rho:7800, Re:250e6},
+ "Acier S235 (Re = 235 MPa)":      {Name:"Acier S235",      E:210e9, Nu:0.3,  Rho:7800, Re:235e6},
+ "Acier S355 (Re = 355 MPa)":      {Name:"Acier S355",      E:210e9, Nu:0.3,  Rho:7800, Re:355e6},
+ "Aluminium 6060 (Re = 160 MPa)":  {Name:"Aluminium 6060",  E:69e9,  Nu:0.33, Rho:2700, Re:160e6}
+};
+
+let nodLoads = {1:[0,0,-10000], 30:[0,0,-10000], 43:[0,0,-10000], 44:[0,0,-10000]};
+let beamLoads = {};
+
+const famInfo = {
+ 11:["Famille 11 — Longerons principaux & rives pointes :","Rond creux D114.3x6"],
+ 12:["Famille 12 — Traverse centrale avant (X = 0) :","Carre creux 150x150x10"],
+ 13:["Famille 13 — Longerons intermédiaires & traverse arrière :","Rond creux D168.3x6"],
+ 14:["Famille 14 — Traverses secondaires (X = 1.025 / 1.975) :","Carre creux 90x90x5"]
+};
+const cbFam = {};
+
+/* ===================== ETAT RESULTATS ===================== */
+let U_res=null,R_res=null,Freqs=null,Modes_res=[],Beam_res=[];
+let MasseTot=0,MaxFleche=0,MaxSig=0,ReMpa=0,CritNode=1,CritBeam=1;
+let rotX=25,rotZ=-35,lastMouse=null,zoom3D=1,zoom2D=1;
+let pendingStart=null, pendingEnd=null, topViewXform={cx:0,cy:0,sc:1};
+let modelCenter={x:1.8,y:0,z:0}, modelRange={x:3.6,y:6.6,z:0.001};
+function computeBounds(){
+  let minX=Infinity,minY=Infinity,minZ=Infinity,maxX=-Infinity,maxY=-Infinity,maxZ=-Infinity;
+  for(const n of nodes){
+    if(n.X<minX)minX=n.X; if(n.X>maxX)maxX=n.X;
+    if(n.Y<minY)minY=n.Y; if(n.Y>maxY)maxY=n.Y;
+    if(n.Z<minZ)minZ=n.Z; if(n.Z>maxZ)maxZ=n.Z;
+  }
+  if(!isFinite(minX)){minX=maxX=minY=maxY=minZ=maxZ=0;}
+  modelCenter={x:(minX+maxX)/2,y:(minY+maxY)/2,z:(minZ+maxZ)/2};
+  modelRange={x:Math.max(maxX-minX,0.001),y:Math.max(maxY-minY,0.001),z:Math.max(maxZ-minZ,0.001)};
+  zoom3D=1; zoom2D=1;
+}
+
+/* ===================== UI SETUP ===================== */
+function $(id){return document.getElementById(id);}
+const cbMat=$("cbMat");
+Object.keys(catMat).forEach(k=>cbMat.add(new Option(k,k)));
+cbMat.selectedIndex=0;
+
+const cbSecGroup=$("cbSecGroup"), cbSecNew=$("cbSecNew");
+Object.keys(catSecGroups).forEach(g=>cbSecGroup.add(new Option(g,g)));
+function refreshSecDimensions(){
+  cbSecNew.innerHTML="";
+  const grp=cbSecGroup.value;
+  if(catSecGroups[grp]) Object.keys(catSecGroups[grp]).forEach(k=>cbSecNew.add(new Option(k,k)));
+}
+cbSecGroup.onchange=refreshSecDimensions;
+refreshSecDimensions();
+function beamSec(b){ return catSec[b.Sec] || catSec[cbSecNew.value] || Object.values(catSec)[0]; }
+function beamMat(b){ return catMat[b.Mat] || catMat[cbMat.value] || Object.values(catMat)[0]; }
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  $("p"+t.dataset.p).classList.add("active");
+  if(t.dataset.p==="0") drawTopView();
+  if(t.dataset.p==="2") draw3D();
+  if(t.dataset.p==="4") buildNodeTable();
+  if(t.dataset.p==="5"){ refreshBcList(); drawBcView(); }
+});
+$("btnNext1").onclick=()=>document.querySelector('.tab[data-p="5"]').click();
+$("btnNextBc").onclick=()=>document.querySelector('.tab[data-p="1"]').click();
+
+const bcDdlIds = ["chkUx","chkUy","chkUz","chkRx","chkRy","chkRz"];
+function bcLabel(arr){
+  const s = arr.join(",");
+  const map = {
+    "1,1,1,1,1,1":"Encastrement parfait",
+    "1,1,1,0,0,0":"Rotule / Articulation",
+    "0,0,1,0,0,0":"Appui simple XY (Uz)",
+    "0,1,0,0,0,0":"Appui simple XZ (Uy)",
+    "1,0,0,0,0,0":"Appui simple YZ (Ux)",
+    "0,1,1,0,0,0":"Appui glissant X",
+    "1,0,1,0,0,0":"Appui glissant Y",
+    "1,1,0,0,0,0":"Appui glissant Z",
+    "0,1,1,1,1,1":"Glissière X",
+    "1,0,1,1,1,1":"Glissière Y",
+    "1,1,0,1,1,1":"Glissière Z",
+    "1,1,1,0,1,1":"Pivot axe X",
+    "1,1,1,1,0,1":"Pivot axe Y",
+    "1,1,1,1,1,0":"Pivot axe Z"
+  };
+  return map[s] || "Liaison personnalisée";
+}
+$("cbBcType").onchange=()=>{
+  const v = $("cbBcType").value;
+  if(v==="custom") return;
+  const parts = v.split(",").map(Number);
+  bcDdlIds.forEach((id,idx)=>{ $(id).checked = parts.at(idx)===1; });
+};
+bcDdlIds.forEach(id=>{
+  $(id).onchange=()=>{
+    const cur = bcDdlIds.map(cid=>$(cid).checked?1:0).join(",");
+    const sel = $("cbBcType");
+    let found = false;
+    for(let i=0;i<sel.options.length;i++){ if(sel.options.item(i).value===cur){ sel.selectedIndex=i; found=true; break; } }
+    if(!found) sel.value="custom";
+  };
+});
+
+let bcSelectedNode=null;
+let bcRotX=28, bcRotZ=-35, bcPan={x:0,y:0}, bcZoom=1, bcXform={cx:0,cy:0,sc:1};
+let bcIsOrbit=false, bcIsPan=false, bcDidDrag=false, bcDragStart={x:0,y:0};
+function projBc(x,y,z,cx,cy,sc){
+  const rx=bcRotX*Math.PI/180, rz=bcRotZ*Math.PI/180;
+  const xc=x-modelCenter.x, yc=y-modelCenter.y, zc=z-modelCenter.z;
+  const x1=xc*Math.cos(rz)-yc*Math.sin(rz), y1=xc*Math.sin(rz)+yc*Math.cos(rz);
+  return {x: cx+x1*sc, y: cy-(y1*Math.cos(rx)-zc*Math.sin(rx))*sc};
+}
+function drawBcView(){
+  const c=$("bcView3d"); if(!c) return;
+  const g=c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height); g.fillStyle="#181a1d"; g.fillRect(0,0,c.width,c.height);
+  const cx=c.width*0.5+bcPan.x, cy=c.height*0.5+bcPan.y;
+  const maxR=Math.max(modelRange.x,modelRange.y,modelRange.z,0.1);
+  const sc=(Math.min(c.width,c.height)*0.82/maxR)*bcZoom;
+  bcXform={cx,cy,sc};
+
+  g.lineWidth=2.5; g.lineCap="round"; g.strokeStyle="#4b5563";
+  beams.forEach(b=>{
+    const n1=nodes.at(b.N1-1), n2=nodes.at(b.N2-1); if(!n1||!n2) return;
+    const p1=projBc(n1.X,n1.Y,n1.Z,cx,cy,sc), p2=projBc(n2.X,n2.Y,n2.Z,cx,cy,sc);
+    g.beginPath(); g.moveTo(p1.x,p1.y); g.lineTo(p2.x,p2.y); g.stroke();
+  });
+
+  // Dessin des liaisons actives avec code couleur RDM 7
+  for(const k in bcs){
+    const n=nodes.at(Number(k)-1); if(!n) continue;
+    const p=projBc(n.X,n.Y,n.Z,cx,cy,sc);
+    const sum=bcs[k].reduce((a,b)=>a+b,0);
+    g.fillStyle = sum===6 ? "#ff3b30" : (sum===3 && bcs[k].at(0)===1 && bcs[k].at(1)===1 && bcs[k].at(2)===1 ? "#ffd700" : "#00d4ff");
+    g.beginPath(); g.arc(p.x,p.y,7,0,Math.PI*2); g.fill();
+    g.strokeStyle="#111"; g.lineWidth=1.5; g.stroke();
+  }
+
+  g.font="10px sans-serif"; g.textAlign="left";
+  nodes.forEach(n=>{
+    const p=projBc(n.X,n.Y,n.Z,cx,cy,sc);
+    g.fillStyle="#fff"; g.strokeStyle="#000"; g.lineWidth=1;
+    g.beginPath(); g.arc(p.x,p.y,3,0,Math.PI*2); g.fill(); g.stroke();
+    g.fillStyle=bcs[n.ID]?"#ffd166":"#cbd5e1";
+    g.fillText(String(n.ID), p.x+6, p.y-5);
+  });
+
+  if(bcSelectedNode!=null && nodes.at(bcSelectedNode-1)){
+    const sn=nodes.at(bcSelectedNode-1), sp=projBc(sn.X,sn.Y,sn.Z,cx,cy,sc);
+    g.strokeStyle="#38bdf8"; g.lineWidth=2.5;
+    g.beginPath(); g.arc(sp.x,sp.y,10,0,Math.PI*2); g.stroke();
+  }
+  g.fillStyle="rgba(20,22,25,0.9)"; g.fillRect(10,c.height-34,430,24);
+  g.strokeStyle="#3a3e46"; g.strokeRect(10,c.height-34,430,24);
+  g.fillStyle="#e6e8ea"; g.font="10px sans-serif";
+  g.fillText("Rouge = Encastrement · Jaune = Rotule · Cyan = Autre liaison · Clic nœud = Appliquer", 18, c.height-18);
+}
+$("btnBcIso").onclick=()=>{ bcRotX=28; bcRotZ=-35; bcPan={x:0,y:0}; bcZoom=1; drawBcView(); };
+$("bcView3d").addEventListener("mousedown",e=>{
+  if(e.button!==0) return; bcDidDrag=false;
+  if(e.shiftKey||e.altKey){ bcIsPan=true; bcDragStart={x:e.clientX-bcPan.x,y:e.clientY-bcPan.y}; }
+  else { bcIsOrbit=true; bcDragStart={x:e.clientX,y:e.clientY}; }
+});
+window.addEventListener("mouseup",()=>{ bcIsPan=false; bcIsOrbit=false; });
+$("bcView3d").addEventListener("mousemove",e=>{
+  const c=$("bcView3d"), rect=c.getBoundingClientRect();
+  if(bcIsPan){
+    const nx=e.clientX-bcDragStart.x, ny=e.clientY-bcDragStart.y;
+    if(Math.hypot(nx-bcPan.x,ny-bcPan.y)>3) bcDidDrag=true;
+    if(bcDidDrag){ bcPan={x:nx,y:ny}; $("bcTooltip").style.display="none"; drawBcView(); return; }
+  }
+  if(bcIsOrbit){
+    const dx=e.clientX-bcDragStart.x, dy=e.clientY-bcDragStart.y;
+    if(Math.hypot(dx,dy)>3) bcDidDrag=true;
+    if(bcDidDrag){ bcRotZ+=dx*0.5; bcRotX+=dy*0.5; bcDragStart={x:e.clientX,y:e.clientY}; $("bcTooltip").style.display="none"; drawBcView(); return; }
+  }
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const near=nodes.filter(n=>{ const p=projBc(n.X,n.Y,n.Z,bcXform.cx,bcXform.cy,bcXform.sc); return Math.hypot(mx-p.x,my-p.y)<11; });
+  const tip=$("bcTooltip");
+  if(near.length){
+    c.style.cursor="pointer";
+    tip.innerHTML=near.map(n=>{
+      const cur=bcs[n.ID] ? " — <b>"+bcLabel(bcs[n.ID])+"</b>" : " — <i>Libre</i>";
+      return "<b>Nœud "+n.ID+"</b> ("+n.X.toFixed(2)+", "+n.Y.toFixed(2)+", "+n.Z.toFixed(2)+" m)"+cur;
+    }).join("<br>");
+    tip.style.display="block";
+    tip.style.left=Math.min(rect.width-tip.offsetWidth-10, Math.max(10, mx+14))+"px";
+    tip.style.top=Math.min(rect.height-tip.offsetHeight-10, Math.max(10, my-tip.offsetHeight-8))+"px";
+  } else { c.style.cursor="grab"; tip.style.display="none"; }
+});
+$("bcView3d").addEventListener("mouseleave",()=>{ $("bcTooltip").style.display="none"; });
+$("bcView3d").addEventListener("click",e=>{
+  if(bcDidDrag){ bcDidDrag=false; return; }
+  const rect=$("bcView3d").getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  let hit=null, best=11;
+  nodes.forEach(n=>{ const p=projBc(n.X,n.Y,n.Z,bcXform.cx,bcXform.cy,bcXform.sc); const d=Math.hypot(mx-p.x,my-p.y); if(d<best){best=d;hit=n;} });
+  if(hit){
+    bcSelectedNode = hit.ID;
+    const st=$("bcStatusMsg"); if(st) st.innerHTML="Nœud sélectionné : <b>Nœud "+hit.ID+"</b> (cliquez sur Valider pour appliquer)";
+    drawBcView();
+  }
+});
+$("bcView3d").addEventListener("wheel",e=>{
+  e.preventDefault();
+  const c=$("bcView3d"), rect=c.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const oldZ=bcZoom, newZ=Math.max(0.05,Math.min(50,oldZ*(e.deltaY<0?1.12:1/1.12))), k=newZ/oldZ;
+  bcPan.x=mx-c.width*0.5-k*(mx-c.width*0.5-bcPan.x);
+  bcPan.y=my-c.height*0.5-k*(my-c.height*0.5-bcPan.y);
+  bcZoom=newZ; drawBcView();
+},{passive:false});
+
+$("btnValidateBc").onclick=()=>{
+  if(bcSelectedNode==null || !nodes.at(bcSelectedNode-1)){ alert("Cliquez d'abord sur un nœud dans la vue 3D."); return; }
+  const arr=bcDdlIds.map(id=>$(id).checked?1:0);
+  if(arr.reduce((a,b)=>a+b,0)===0) delete bcs[bcSelectedNode];
+  else bcs[bcSelectedNode]=arr;
+  const st=$("bcStatusMsg"); if(st) st.innerHTML="✔ Liaison <b>"+bcLabel(arr)+"</b> validée sur le <b>Nœud "+bcSelectedNode+"</b>.";
+  bcSelectedNode=null;
+  resetResults(); refreshBcList(); drawBcView(); drawTopView();
+};
+$("btnClearBc").onclick=()=>{ for(const k in bcs) delete bcs[k]; resetResults(); refreshBcList(); drawBcView(); drawTopView(); };
+function removeBc(nid){ delete bcs[nid]; resetResults(); refreshBcList(); drawBcView(); drawTopView(); }
+function refreshBcList(){
+  const el = $("lbBcs"); if(!el) return;
+  const keys = Object.keys(bcs).map(Number).sort((a,b)=>a-b);
+  if(keys.length===0){ el.innerHTML='<span class="muted">Aucune liaison définie (attention : structure libre / mécanisme).</span>'; return; }
+  el.innerHTML = keys.map(k=>{
+    const a = bcs[k];
+    const ddlTxt = ["Ux","Uy","Uz","Rx","Ry","Rz"].filter((_,i)=>a.at(i)===1).join(", ");
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #262930">
+      <span>Nœud <b>${String(k).padStart(2,"0")}</b> &nbsp;|&nbsp; <b>${bcLabel(a)}</b> <span class="muted">[${ddlTxt}]</span></span>
+      <button class="red" style="padding:2px 8px;font-size:11px" onclick="removeBc(${k})">Suppr.</button>
+    </div>`;
+  }).join("");
+}
+
+function applyPreset(ax,ay,az,loads){
+  $("tbAx").value=ax; $("tbAy").value=ay; $("tbAz").value=az;
+  if(loads && Object.keys(loads).length>0){
+    for(const k in loads) nodLoads[k]=loads[k];
+  }
+  refreshLoadList();
+}
+function clearPresetActive(){document.querySelectorAll("[data-preset]").forEach(x=>x.classList.remove("active"));}
+document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=()=>{
+  clearPresetActive(); b.classList.add("active");
+  const p=b.dataset.preset;
+  if(p==="0") applyPreset(0,0,1.0,{});
+  if(p==="1") applyPreset(0,0,1.0,{1:[0,0,-10000],30:[0,0,-10000],43:[0,0,-10000],44:[0,0,-10000]});
+  if(p==="2") applyPreset(0.8,0.5,1.5,{});
+  if(p==="3") applyPreset(0,0,1.0,{1:[0,0,-20000],3:[0,0,-20000],43:[0,0,-20000]});
+});
+["tbAx","tbAy","tbAz"].forEach(id=>$(id).addEventListener("input",clearPresetActive));
+
+$("btnAddL").onclick=()=>{
+  const nid=parseInt($("tbNid").value,10);
+  const fx=parseFloat($("tbFx").value),fy=parseFloat($("tbFy").value),fz=parseFloat($("tbFz").value);
+  if(!(nid>=1&&nid<=nodes.length)||isNaN(fx)||isNaN(fy)||isNaN(fz)){
+    alert(`Veuillez saisir un nœud entre 1 et ${nodes.length} et des valeurs numériques.`);return;
+  }
+  nodLoads[nid]=[fx,fy,fz]; refreshLoadList(); clearPresetActive();
+};
+$("btnClearL").onclick=()=>{nodLoads={};refreshLoadList();clearPresetActive();};
+function removeLoad(nid){ delete nodLoads[nid]; refreshLoadList(); clearPresetActive(); }
+
+function fmtSigned(v,w){const s=(v>=0?"+":"")+Math.round(v).toString();return s.padStart(w," ");}
+function refreshLoadList(){
+  const el=$("lbLoads"); const keys=Object.keys(nodLoads).map(Number).sort((a,b)=>a-b);
+  if(keys.length===0){el.innerHTML='<span class="muted">Aucune charge ponctuelle (uniquement accélérations / poids propre).</span>';} else {
+  el.innerHTML=keys.map(k=>{
+    const v=nodLoads[k];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #262930">
+      <span>Nœud <b>${String(k).padStart(2,"0")}</b> &nbsp;|&nbsp; Fx = ${fmtSigned(v[0],6)} N &nbsp;|&nbsp; Fy = ${fmtSigned(v[1],6)} N &nbsp;|&nbsp; Fz = ${fmtSigned(v[2],6)} N</span>
+      <button class="red" style="padding:2px 8px;font-size:11px" onclick="removeLoad(${k})">Suppr.</button>
+    </div>`;
+  }).join(""); }
+  refreshBeamLoadList();
+  if(typeof drawTopView==="function") drawTopView();
+}
+$("btnAddBL").onclick=()=>{
+  const bid=parseInt($("tbBid").value,10);
+  const qx=parseFloat($("tbQx").value),qy=parseFloat($("tbQy").value),qz=parseFloat($("tbQz").value);
+  if(!(bid>=1&&bid<=beams.length)||isNaN(qx)||isNaN(qy)||isNaN(qz)){
+    alert(`Veuillez saisir une poutre entre 1 et ${beams.length} et des valeurs numériques.`);return;
+  }
+  if(qx===0&&qy===0&&qz===0) delete beamLoads[bid];
+  else beamLoads[bid]={qx:qx,qy:qy,qz:qz};
+  refreshBeamLoadList(); drawTopView();
+};
+$("btnClearBL").onclick=()=>{beamLoads={};refreshBeamLoadList();drawTopView();};
+function removeBeamLoad(bid){ delete beamLoads[bid]; refreshBeamLoadList(); drawTopView(); }
+function refreshBeamLoadList(){
+  const el=$("lbBeamLoads"); if(!el) return;
+  const keys=Object.keys(beamLoads).map(Number).sort((a,b)=>a-b);
+  if(keys.length===0){el.innerHTML='<span class="muted">Aucune charge répartie sur poutre.</span>';return;}
+  el.innerHTML=keys.map(k=>{
+    const v=beamLoads[k];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #262930">
+      <span>Poutre <b>${String(k).padStart(2,"0")}</b> &nbsp;|&nbsp; qx = ${fmtSigned(v.qx,6)} &nbsp;|&nbsp; qy = ${fmtSigned(v.qy,6)} &nbsp;|&nbsp; qz = ${fmtSigned(v.qz,6)} N/m</span>
+      <button class="red" style="padding:2px 8px;font-size:11px" onclick="removeBeamLoad(${k})">Suppr.</button>
+    </div>`;
+  }).join("");
+}
+
+/* ===================== VUE 2D (dessus) ===================== */
+const SEC_PALETTE=["#00bfff","#ff8c00","#32cd32","#ba55d3","#40e0d0","#ff69b4","#7fff00","#1e90ff","#ffa500","#8a2be2","#20b2aa","#9370db"];
+const secColorMap={};
+function secColor(name){
+  if(!secColorMap[name]) secColorMap[name]=SEC_PALETTE[Object.keys(secColorMap).length % SEC_PALETTE.length];
+  return secColorMap[name];
+}
+let editRotX = 28, editRotZ = -35;
+let pan2D={x:0,y:0}, isPanning2D=false, isOrbitingEdit=false, didDrag2D=false;
+let panStart2D={x:0,y:0}, orbitStartEdit={x:0,y:0};
+
+function projEdit(x,y,z,cx,cy,sc){
+  const rx=editRotX*Math.PI/180, rz=editRotZ*Math.PI/180;
+  const xc=x-modelCenter.x, yc=y-modelCenter.y, zc=z-modelCenter.z;
+  const x1=xc*Math.cos(rz)-yc*Math.sin(rz), y1=xc*Math.sin(rz)+yc*Math.cos(rz);
+  const y2=y1*Math.cos(rx)-zc*Math.sin(rx);
+  return {x: cx+x1*sc, y: cy-y2*sc};
+}
+function projVecEdit(vx,vy,vz){
+  const rx=editRotX*Math.PI/180, rz=editRotZ*Math.PI/180;
+  const x1=vx*Math.cos(rz)-vy*Math.sin(rz), y1=vx*Math.sin(rz)+vy*Math.cos(rz);
+  return {x: x1, y: -(y1*Math.cos(rx)-vz*Math.sin(rx))};
+}
+function drawTopView(){
+  const c=$("topView"),g=c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height); g.fillStyle="#181a1d"; g.fillRect(0,0,c.width,c.height);
+  const cx=c.width*0.5 + pan2D.x, cy=c.height*0.5 + pan2D.y;
+  const maxR=Math.max(modelRange.x,modelRange.y,modelRange.z,0.1);
+  const sc=(Math.min(c.width,c.height)*0.82/maxR)*zoom2D;
+  topViewXform={cx,cy,sc};
+
+  const axO={x:c.width-55, y:55}, axL=28;
+  [{v:projVecEdit(1,0,0),col:"#ff4d4d",lbl:"X"},{v:projVecEdit(0,1,0),col:"#4dff88",lbl:"Y"},{v:projVecEdit(0,0,1),col:"#4da6ff",lbl:"Z"}].forEach(a=>{
+    const ex=axO.x+a.v.x*axL, ey=axO.y+a.v.y*axL;
+    g.strokeStyle=a.col; g.lineWidth=2; g.beginPath(); g.moveTo(axO.x,axO.y); g.lineTo(ex,ey); g.stroke();
+    g.fillStyle=a.col; g.font="bold 11px sans-serif"; g.fillText(a.lbl, ex+3, ey+3);
+  });
+
+  g.lineCap="round";
+  beams.forEach(b=>{
+    const n1=nodes.at(b.N1-1),n2=nodes.at(b.N2-1); if(!n1||!n2) return;
+    const p1=projEdit(n1.X,n1.Y,n1.Z,cx,cy,sc), p2=projEdit(n2.X,n2.Y,n2.Z,cx,cy,sc);
+    const isDelHover=(deleteBeamMode && hoveredBeamId===b.ID);
+    const isSel=(selectedBeamId===b.ID);
+    g.lineWidth=(isDelHover||isSel)?6:3;
+    g.strokeStyle=isDelHover?"#ff3030":(isSel?"#38bdf8":secColor(beamSec(b).Name));
+    g.beginPath(); g.moveTo(p1.x,p1.y); g.lineTo(p2.x,p2.y); g.stroke();
+  });
+  for(const k in bcs){
+    const n=nodes.at(Number(k)-1); if(!n) continue;
+    const p=projEdit(n.X,n.Y,n.Z,cx,cy,sc);
+    g.fillStyle=bcs[k].reduce((a,b)=>a+b,0)===6?"#ff0000":"#ffd700";
+    g.beginPath(); g.arc(p.x,p.y,5,0,Math.PI*2); g.fill();
+  }
+  const pts=nodes.map(n=>{ const p=projEdit(n.X,n.Y,n.Z,cx,cy,sc); return {n,x:p.x,y:p.y,used:false}; });
+  pts.forEach(p=>{ g.fillStyle="#fff"; g.strokeStyle="#000"; g.lineWidth=1; g.beginPath(); g.arc(p.x,p.y,2.8,0,Math.PI*2); g.fill(); g.stroke(); });
+  g.font="10px sans-serif"; g.textAlign="left";
+  for(let i=0;i<pts.length;i++){
+    if(pts.at(i).used) continue;
+    const grp=[pts.at(i)]; pts.at(i).used=true;
+    for(let j=i+1;j<pts.length;j++) if(!pts.at(j).used && Math.hypot(pts.at(i).x-pts.at(j).x,pts.at(i).y-pts.at(j).y)<14){ grp.push(pts.at(j)); pts.at(j).used=true; }
+    const lbl=grp.map(p=>p.n.ID).join("/"), lx=grp.at(0).x+6, ly=grp.at(0).y-6, tw=g.measureText(lbl).width;
+    g.fillStyle="rgba(20,22,25,0.82)"; g.fillRect(lx-2,ly-9,tw+4,12);
+    g.fillStyle=grp.length>1?"#ffd166":"#fff"; g.fillText(lbl,lx,ly);
+  }
+  [pendingStart, pendingEnd].forEach(pid=>{
+    if(pid!=null && nodes.at(pid-1)){
+      const p=projEdit(nodes.at(pid-1).X,nodes.at(pid-1).Y,nodes.at(pid-1).Z,cx,cy,sc);
+      g.strokeStyle="#4ade80"; g.lineWidth=2.5; g.beginPath(); g.arc(p.x,p.y,8,0,Math.PI*2); g.stroke();
+    }
+  });
+  if(pendingStart!=null && pendingEnd!=null && nodes.at(pendingStart-1) && nodes.at(pendingEnd-1)){
+    const p1=projEdit(nodes.at(pendingStart-1).X,nodes.at(pendingStart-1).Y,nodes.at(pendingStart-1).Z,cx,cy,sc);
+    const p2=projEdit(nodes.at(pendingEnd-1).X,nodes.at(pendingEnd-1).Y,nodes.at(pendingEnd-1).Z,cx,cy,sc);
+    g.save(); g.strokeStyle="#4ade80"; g.lineWidth=2.5; g.setLineDash([6,4]);
+    g.beginPath(); g.moveTo(p1.x,p1.y); g.lineTo(p2.x,p2.y); g.stroke(); g.restore();
+  }
+  function drawArrow(x1,y1,x2,y2,col){
+    g.strokeStyle=col; g.fillStyle=col; g.lineWidth=2;
+    g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke();
+    const ang=Math.atan2(y2-y1,x2-x1), hl=7;
+    g.beginPath(); g.moveTo(x2,y2);
+    g.lineTo(x2-hl*Math.cos(ang-0.45),y2-hl*Math.sin(ang-0.45));
+    g.lineTo(x2-hl*Math.cos(ang+0.45),y2-hl*Math.sin(ang+0.45)); g.closePath(); g.fill();
+  }
+  for(const k in beamLoads){
+    const b=beams.at(Number(k)-1); if(!b) continue;
+    const n1=nodes.at(b.N1-1),n2=nodes.at(b.N2-1); if(!n1||!n2) continue;
+    const q=beamLoads[k], qMag=Math.hypot(q.qx,q.qy,q.qz); if(qMag<1e-9) continue;
+    const p1=projEdit(n1.X,n1.Y,n1.Z,cx,cy,sc), p2=projEdit(n2.X,n2.Y,n2.Z,cx,cy,sc);
+    const segL=Math.hypot(p2.x-p1.x,p2.y-p1.y); if(segL<4) continue;
+    const steps=Math.max(3,Math.min(10,Math.floor(segL/22)));
+    const pv=projVecEdit(q.qx/qMag,q.qy/qMag,q.qz/qMag), plen=Math.hypot(pv.x,pv.y);
+    const vx=plen>1e-6?(pv.x/plen)*22:0, vy=plen>1e-6?(pv.y/plen)*22:18;
+    for(let st=1;st<steps;st++){ const t=st/steps; drawArrow(p1.x+(p2.x-p1.x)*t-vx, p1.y+(p2.y-p1.y)*t-vy, p1.x+(p2.x-p1.x)*t, p1.y+(p2.y-p1.y)*t, "#ff3b30"); }
+    g.font="bold 10px sans-serif"; g.fillStyle="#ff6b6b";
+    g.fillText("P"+k+": "+(qMag/1000).toFixed(2)+" kN/m", (p1.x+p2.x)*0.5-vx-4, (p1.y+p2.y)*0.5-vy-4);
+  }
+  for(const k in nodLoads){
+    const n=nodes.at(Number(k)-1); if(!n) continue;
+    const f=nodLoads[k], fx=f.at(0), fy=f.at(1), fz=f.at(2);
+    const fMag=Math.hypot(fx,fy,fz); if(fMag<1e-9) continue;
+    const p=projEdit(n.X,n.Y,n.Z,cx,cy,sc);
+    const pv=projVecEdit(fx/fMag,fy/fMag,fz/fMag), plen=Math.hypot(pv.x,pv.y);
+    const vx=plen>1e-6?(pv.x/plen)*34:0, vy=plen>1e-6?(pv.y/plen)*34:26;
+    drawArrow(p.x-vx,p.y-vy,p.x,p.y,"#ff3b30");
+    g.font="bold 10px sans-serif"; g.fillStyle="#ff6b6b";
+    g.fillText((fMag/1000).toFixed(1)+" kN", p.x-vx+4, p.y-vy-4);
+  }
+  const items=[], seen=new Set();
+  beams.forEach(b=>{ const s=beamSec(b).Name; if(s&&!seen.has(s)){seen.add(s);items.push(s);} });
+  g.font="11px sans-serif"; const rowH=16, pad=8, boxW=260, boxH=items.length*rowH+rowH+pad*2, bx=10, by=c.height-boxH-10;
+  g.fillStyle="rgba(20,22,25,0.92)"; g.fillRect(bx,by,boxW,boxH); g.strokeStyle="#3a3e46"; g.lineWidth=1; g.strokeRect(bx,by,boxW,boxH);
+  let ty=by+pad+11;
+  items.forEach(s=>{ g.fillStyle=secColor(s); g.fillRect(bx+pad,ty-9,12,12); g.fillStyle="#e6e8ea"; g.fillText(s,bx+pad+18,ty); ty+=rowH; });
+  g.fillStyle="#c9ccd1"; g.font="10px sans-serif"; g.fillText("Rouge=Encastrement · Jaune=Rotule · Flèches rouges=Efforts 3D",bx+pad,ty);
+}
+
+/* ===================== VUE 3D ===================== */
+function project3D(x,y,z,cx,cy,sc){
+  const rx=rotX*Math.PI/180, rz=rotZ*Math.PI/180;
+  const xc=x-modelCenter.x, yc=y-modelCenter.y, zc=z-modelCenter.z;
+  const x1=xc*Math.cos(rz)-yc*Math.sin(rz);
+  const y1=xc*Math.sin(rz)+yc*Math.cos(rz);
+  const y2=y1*Math.cos(rx)-zc*Math.sin(rx);
+  return [cx+x1*sc, cy-y2*sc];
+}
+function draw3D(){
+  const c=$("view3d"),g=c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height); g.fillStyle="#141619"; g.fillRect(0,0,c.width,c.height);
+  if(!U_res) return;
+  const cx=c.width*0.5, cy=c.height*0.52;
+  const maxR=Math.max(modelRange.x,modelRange.y,modelRange.z);
+  const sc=(Math.min(c.width,c.height)*0.85/maxR)*zoom3D;
+  const amp=parseFloat($("trAmp").value);
+  const modeIdx=parseInt($("cbViewMode").selectedIndex,10);
+  const disp = modeIdx===0?U_res:Modes_res[modeIdx-1];
+  if(!disp) return;
+  const mult = modeIdx===0?amp:amp*0.35;
+  Beam_res.forEach(br=>{
+    const n1=nodes[br.N1-1],n2=nodes[br.N2-1];
+    const p1_0=project3D(n1.X,n1.Y,n1.Z,cx,cy,sc);
+    const p2_0=project3D(n2.X,n2.Y,n2.Z,cx,cy,sc);
+    g.strokeStyle="rgba(150,150,150,0.35)"; g.lineWidth=1; g.setLineDash([5,5]);
+    g.beginPath(); g.moveTo(p1_0[0],p1_0[1]); g.lineTo(p2_0[0],p2_0[1]); g.stroke();
+    g.setLineDash([]);
+    const o1=(br.N1-1)*6, o2=(br.N2-1)*6;
+    const p1=project3D(n1.X+disp[o1]*mult, n1.Y+disp[o1+1]*mult, n1.Z+disp[o1+2]*mult, cx,cy,sc);
+    const p2=project3D(n2.X+disp[o2]*mult, n2.Y+disp[o2+1]*mult, n2.Z+disp[o2+2]*mult, cx,cy,sc);
+    let col="#00bfff";
+    if(modeIdx===0){
+      const ratio=Math.min(1.0, br.Sig/ReMpa);
+      const r=Math.round(255*Math.min(1.0,ratio*2));
+      const gr=Math.round(255*Math.min(1.0,(1.0-ratio)*2));
+      col=`rgb(${r},${gr},40)`;
+    }
+    g.strokeStyle=col; g.lineWidth=3.2; g.lineCap="round";
+    g.beginPath(); g.moveTo(p1[0],p1[1]); g.lineTo(p2[0],p2[1]); g.stroke();
+  });
+  // Surligner la poutre inspectee dans les diagrammes
+  if(Beam_res && Beam_res.at(diagBeamIdx)){
+    const sb=Beam_res.at(diagBeamIdx), sn1=nodes.at(sb.N1-1), sn2=nodes.at(sb.N2-1);
+    if(sn1&&sn2){
+      const sp1=project3D(sn1.X,sn1.Y,sn1.Z,cx,cy,sc), sp2=project3D(sn2.X,sn2.Y,sn2.Z,cx,cy,sc);
+      g.strokeStyle="#38bdf8"; g.lineWidth=6; g.beginPath(); g.moveTo(sp1.at(0),sp1.at(1)); g.lineTo(sp2.at(0),sp2.at(1)); g.stroke();
+    }
+  }
+  // nœuds (blanc) + numéro
+  g.font="9px -apple-system,Segoe UI,sans-serif"; g.textAlign="center"; g.lineWidth=1;
+  nodes.forEach(n=>{
+    const p=project3D(n.X,n.Y,n.Z,cx,cy,sc);
+    g.fillStyle="#ffffff"; g.strokeStyle="#000000";
+    g.beginPath(); g.arc(p[0],p[1],2.5,0,Math.PI*2); g.fill(); g.stroke();
+    g.fillStyle="#ffffff"; g.fillText(String(n.ID), p[0]+7, p[1]-6);
+  });
+  g.textAlign="left";
+}
+(function setup3D(){
+  const c=$("view3d");
+  c.addEventListener("mousedown",e=>{lastMouse=[e.offsetX,e.offsetY];});
+  window.addEventListener("mousemove",e=>{
+    if(lastMouse && e.buttons===1){
+      const r=c.getBoundingClientRect();
+      rotZ+=(e.clientX-r.left-lastMouse[0])*0.5;
+      rotX+=(e.clientY-r.top-lastMouse[1])*0.5;
+      lastMouse=[e.clientX-r.left,e.clientY-r.top];
+      draw3D();
+    }
+  });
+  window.addEventListener("mouseup",()=>lastMouse=null);
+  c.addEventListener("click",e=>{
+    if(!Beam_res || !Beam_res.length) return;
+    const r=c.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    const cx=c.width*0.5, cy=c.height*0.52, maxR=Math.max(modelRange.x,modelRange.y,modelRange.z), sc=(Math.min(c.width,c.height)*0.85/maxR)*zoom3D;
+    let best=10, hitIdx=-1;
+    Beam_res.forEach((br,idx)=>{
+      const n1=nodes.at(br.N1-1), n2=nodes.at(br.N2-1); if(!n1||!n2) return;
+      const p1=project3D(n1.X,n1.Y,n1.Z,cx,cy,sc), p2=project3D(n2.X,n2.Y,n2.Z,cx,cy,sc);
+      const d=distToSegment(mx,my,p1.at(0),p1.at(1),p2.at(0),p2.at(1));
+      if(d<best){ best=d; hitIdx=idx; }
+    });
+    if(hitIdx>=0){ diagBeamIdx=hitIdx; $("cbDiagBeam").selectedIndex=hitIdx; drawBeamDiag(); draw3D(); }
+  });
+  c.addEventListener("wheel",e=>{
+    e.preventDefault();
+    zoom3D*= (e.deltaY<0?1.1:0.9);
+    zoom3D=Math.max(0.05,Math.min(50,zoom3D));
+    draw3D();
+  },{passive:false});
+  $("trAmp").oninput=draw3D;
+  $("cbViewMode").onchange=draw3D;
+})();
+
+/* ===================== SOLVEUR EME ===================== */
+function zeros(n,m){const a=new Array(n);for(let i=0;i<n;i++)a[i]=new Float64Array(m);return a;}
+
+function runSolver(){
+  const gx=parseFloat($("tbAx").value),gy=parseFloat($("tbAy").value),gz=parseFloat($("tbAz").value);
+  if(isNaN(gx)||isNaN(gy)||isNaN(gz)){alert("Veuillez saisir des accelerations valides.");return;}
+  ReMpa=0;
+  const ax=gx*9.81, ay=gy*9.81, az=gz*9.81;
+  const ndof=nodes.length*6;
+  const K=zeros(ndof,ndof);
+  const Mdiag=new Float64Array(ndof);
+  const F=new Float64Array(ndof);
+  for(const key in nodLoads){const o=(key-1)*6;F[o]+=nodLoads[key][0];F[o+1]+=nodLoads[key][1];F[o+2]+=nodLoads[key][2];}
+  MasseTot=0;
+  const cache=[];
+  let allOk=true, ReCrit=0;
+  for(const b of beams){
+    const mat=beamMat(b); const E=mat.E, G=E/(2.0*(1.0+mat.Nu)), rho=mat.Rho; const ReBeam=mat.Re/1e6;
+    const sec=beamSec(b);
+    const p1=nodes[b.N1-1],p2=nodes[b.N2-1];
+    const dx=p2.X-p1.X,dy=p2.Y-p1.Y,dz=p2.Z-p1.Z;
+    const L=Math.sqrt(dx*dx+dy*dy+dz*dz);
+    const mp=rho*sec.A*L; MasseTot+=mp;
+    for(const nid of [b.N1,b.N2]){
+      const o=(nid-1)*6;
+      for(let j=0;j<3;j++){Mdiag[o+j]+=mp/2.0;Mdiag[o+j+3]+=(mp*L*L)/24.0;}
+      F[o]+=(mp/2.0)*ax; F[o+1]+=(mp/2.0)*ay; F[o+2]-=(mp/2.0)*az;
+    }
+    const exx=dx/L,exy=dy/L,exz=dz/L;
+    let ezx=exy*b.Vz-exz*b.Vy, ezy=exz*b.Vx-exx*b.Vz, ezz=exx*b.Vy-exy*b.Vx;
+    const nez=Math.sqrt(ezx*ezx+ezy*ezy+ezz*ezz); ezx/=nez;ezy/=nez;ezz/=nez;
+    const eyx=ezy*exz-ezz*exy, eyy=ezz*exx-ezx*exz, eyz=ezx*exy-ezy*exx;
+    const T=zeros(12,12);
+    for(let blk=0;blk<4;blk++){const o=blk*3;
+      T[o][o]=exx;T[o][o+1]=exy;T[o][o+2]=exz;
+      T[o+1][o]=eyx;T[o+1][o+1]=eyy;T[o+1][o+2]=eyz;
+      T[o+2][o]=ezx;T[o+2][o+1]=ezy;T[o+2][o+2]=ezz;
+    }
+    const kl=zeros(12,12);
+    const eal=E*sec.A/L, gjl=G*sec.J/L;
+    const eiz12=12*E*sec.Iz/(L*L*L),eiz6=6*E*sec.Iz/(L*L),eiz4=4*E*sec.Iz/L,eiz2=2*E*sec.Iz/L;
+    const eiy12=12*E*sec.Iy/(L*L*L),eiy6=6*E*sec.Iy/(L*L),eiy4=4*E*sec.Iy/L,eiy2=2*E*sec.Iy/L;
+    kl[0][0]=eal;kl[0][6]=-eal;kl[6][0]=-eal;kl[6][6]=eal;
+    kl[3][3]=gjl;kl[3][9]=-gjl;kl[9][3]=-gjl;kl[9][9]=gjl;
+    kl[1][1]=eiz12;kl[1][5]=eiz6;kl[1][7]=-eiz12;kl[1][11]=eiz6;
+    kl[5][1]=eiz6;kl[5][5]=eiz4;kl[5][7]=-eiz6;kl[5][11]=eiz2;
+    kl[7][1]=-eiz12;kl[7][5]=-eiz6;kl[7][7]=eiz12;kl[7][11]=-eiz6;
+    kl[11][1]=eiz6;kl[11][5]=eiz2;kl[11][7]=-eiz6;kl[11][11]=eiz4;
+    kl[2][2]=eiy12;kl[2][4]=-eiy6;kl[2][8]=-eiy12;kl[2][10]=-eiy6;
+    kl[4][2]=-eiy6;kl[4][4]=eiy4;kl[4][8]=eiy6;kl[4][10]=eiy2;
+    kl[8][2]=-eiy12;kl[8][4]=eiy6;kl[8][8]=eiy12;kl[8][10]=eiy6;
+    kl[10][2]=-eiy6;kl[10][4]=eiy2;kl[10][8]=eiy6;kl[10][10]=eiy4;
+    const tmp=zeros(12,12),kg=zeros(12,12);
+    for(let i=0;i<12;i++)for(let j=0;j<12;j++)for(let m=0;m<12;m++)tmp[i][j]+=kl[i][m]*T[m][j];
+    for(let i=0;i<12;i++)for(let j=0;j<12;j++)for(let m=0;m<12;m++)kg[i][j]+=T[m][i]*tmp[m][j];
+    const map=new Array(12);
+    for(let j=0;j<6;j++){map[j]=(b.N1-1)*6+j;map[j+6]=(b.N2-1)*6+j;}
+    for(let i=0;i<12;i++)for(let j=0;j<12;j++)K[map[i]][map[j]]+=kg[i][j];
+    const feq_l=new Float64Array(12);
+    let qx_l=0, qy_l=0, qz_l=0;
+    const bl=beamLoads[b.ID];
+    if(bl){
+      qx_l=exx*bl.qx+exy*bl.qy+exz*bl.qz;
+      qy_l=eyx*bl.qx+eyy*bl.qy+eyz*bl.qz;
+      qz_l=ezx*bl.qx+ezy*bl.qy+ezz*bl.qz;
+      feq_l.set(Float64Array.of(qx_l*L/2, qy_l*L/2, qz_l*L/2, 0, -qz_l*L*L/12, qy_l*L*L/12, qx_l*L/2, qy_l*L/2, qz_l*L/2, 0, qz_l*L*L/12, -qy_l*L*L/12));
+      for(let j=0;j<12;j++){
+        let fg=0;
+        for(let i=0;i<12;i++) fg+=T.at(i).at(j)*feq_l.at(i);
+        F[map[j]]+=fg;
+      }
+    }
+    cache.push({b,L,sec,T,kl,map,ReBeam,feq_l,qx_l,qy_l,qz_l});
+  }
+  const K0=K.map(r=>Float64Array.from(r));
+  const F0=Float64Array.from(F);
+  for(const key in bcs){
+    const o=(key-1)*6;
+    for(let j=0;j<6;j++){
+      if(bcs[key][j]===1){
+        const idx=o+j;
+        for(let c=0;c<ndof;c++){K[idx][c]=0;K[c][idx]=0;}
+        K[idx][idx]=1;F[idx]=0;Mdiag[idx]=0;
+      }
+    }
+  }
+  const Kinv=invertMatrix(K,ndof);
+  U_res=new Float64Array(ndof);
+  R_res=new Float64Array(ndof);
+  for(let i=0;i<ndof;i++)for(let j=0;j<ndof;j++)U_res[i]+=Kinv[i][j]*F[j];
+  for(let i=0;i<ndof;i++){let s=0;for(let j=0;j<ndof;j++)s+=K0[i][j]*U_res[j];R_res[i]=s-F0[i];}
+  Beam_res=[];MaxSig=0;CritBeam=1;
+  for(const it of cache){
+    const ul=new Float64Array(12),fl=new Float64Array(12);
+    for(let i=0;i<12;i++)for(let j=0;j<12;j++)ul[i]+=it.T[i][j]*U_res[it.map[j]];
+    for(let i=0;i<12;i++){for(let j=0;j<12;j++)fl[i]+=it.kl[i][j]*ul[j]; fl[i]-=it.feq_l.at(i);}
+    // Effets internes aux extremites (convention RDM : N1=-fl[0], Vy1=fl[1], Vz1=fl[2], Mx1=-fl[3], My1=-fl[4], Mz1=-fl[5])
+    const N1=-fl.at(0), Vy1=fl.at(1), Vz1=fl.at(2), Mx1=-fl.at(3), My1=-fl.at(4), Mz1=-fl.at(5);
+    const wely=it.sec.Wely||it.sec.Wel, welz=it.sec.Welz||it.sec.Wel;
+    let N=Math.abs(N1), Ty=Math.abs(Vy1), Tz=Math.abs(Vz1), Mx=Math.abs(Mx1), My=Math.abs(My1), Mz=Math.abs(Mz1);
+    let maxVmPa=0;
+    for(let st=0; st<=10; st++){
+      const x=(st/10)*it.L;
+      const nx=N1 - it.qx_l*x;
+      const vyx=Vy1 + it.qy_l*x;
+      const vzx=Vz1 + it.qz_l*x;
+      const myx=My1 - Vz1*x - 0.5*it.qz_l*x*x;
+      const mzx=Mz1 + Vy1*x + 0.5*it.qy_l*x*x;
+      if(Math.abs(nx)>N) N=Math.abs(nx);
+      if(Math.abs(vyx)>Ty) Ty=Math.abs(vyx);
+      if(Math.abs(vzx)>Tz) Tz=Math.abs(vzx);
+      if(Math.abs(myx)>My) My=Math.abs(myx);
+      if(Math.abs(mzx)>Mz) Mz=Math.abs(mzx);
+      const sigX=Math.abs(nx)/it.sec.A + Math.abs(myx)/wely + Math.abs(mzx)/welz;
+      const tau=(Math.hypot(vyx,vzx)/(it.sec.A*0.6));
+      const vm=Math.sqrt(sigX*sigX + 3*tau*tau);
+      if(vm>maxVmPa) maxVmPa=vm;
+    }
+    if(Math.abs(fl.at(9))>Mx) Mx=Math.abs(fl.at(9));
+    const sig=maxVmPa/1e6;
+    const taux=sig/it.ReBeam*100;
+    if(sig>MaxSig){MaxSig=sig;CritBeam=it.b.ID;ReCrit=it.ReBeam;}
+    if(sig>it.ReBeam) allOk=false;
+    Beam_res.push({ID:it.b.ID,N1:it.b.N1,N2:it.b.N2,Sec:it.sec.Name,L:it.L,N,Ty,Tz,Mx,My,Mz,Sig:sig,Taux:taux,Re:it.ReBeam,N1_s:N1,Vy1_s:Vy1,Vz1_s:Vz1,Mx1_s:Mx1,My1_s:My1,Mz1_s:Mz1,qx_l:it.qx_l,qy_l:it.qy_l,qz_l:it.qz_l,A:it.sec.A,Wely:wely,Welz:welz});
+  }
+  ReMpa=ReCrit;
+  // Modes propres (iteration inverse)
+  Freqs=new Float64Array(6);Modes_res=[];
+  for(let m=0;m<6;m++){
+    let v=new Float64Array(ndof);
+    for(let i=0;i<ndof;i++)v[i]=Mdiag[i]>0?Math.sin((i+1)*(m+1)):0;
+    for(let iter=0;iter<40;iter++){
+      for(let p=0;p<m;p++){
+        let dot=0;for(let i=0;i<ndof;i++)dot+=Modes_res[p][i]*Mdiag[i]*v[i];
+        for(let i=0;i<ndof;i++)v[i]-=dot*Modes_res[p][i];
+      }
+      const w=new Float64Array(ndof);
+      for(let i=0;i<ndof;i++)for(let j=0;j<ndof;j++)if(Mdiag[j]>0)w[i]+=Kinv[i][j]*Mdiag[j]*v[j];
+      let nm=0;for(let i=0;i<ndof;i++)nm+=w[i]*Mdiag[i]*w[i];nm=Math.sqrt(nm);
+      for(let i=0;i<ndof;i++)v[i]=w[i]/nm;
+    }
+    Modes_res.push(v);
+    let num=0;for(let i=0;i<ndof;i++)for(let j=0;j<ndof;j++)num+=v[i]*K0[i][j]*v[j];
+    Freqs[m]=Math.sqrt(Math.abs(num))/(2.0*Math.PI);
+  }
+  MaxFleche=0;CritNode=1;
+  for(let i=0;i<nodes.length;i++){
+    const uz=Math.abs(U_res[i*6+2]*1000.0);
+    if(uz>MaxFleche){MaxFleche=uz;CritNode=i+1;}
+  }
+  const ok=allOk;
+  const coef=MaxSig>0?ReMpa/MaxSig:999;
+  const ks=$("kpiStatus");
+  ks.textContent=`${ok?"✔ STRUCTURE CONFORME":"✖ DEPASSEMENT LIMITE ELASTIQUE"} (Coeff. ${coef.toFixed(2)})`;
+  ks.style.color=ok?"#32cd32":"#ff4500";
+  const selMode=$("cbViewMode");
+  for(let i=0;i<6;i++){
+    if(selMode.options[i+1]) selMode.options[i+1].textContent=`Mode Propre ${i+1} (${Freqs[i].toFixed(2)} Hz)`;
+  }
+  $("kpiInfo").textContent=`Masse: ${MasseTot.toFixed(1)} kg | Flèche max: ${MaxFleche.toFixed(2)} mm (N${CritNode}) | Contrainte max: ${MaxSig.toFixed(1)}/${ReMpa.toFixed(0)} MPa (P${CritBeam}) | Mode 1: ${Freqs[0].toFixed(2)} Hz`;
+  buildReport();
+  initBeamDiagPanel();
+  draw3D();
+  document.querySelector('.tab[data-p="2"]').click();
+}
+$("btnRun").onclick=runSolver;
+
+function invertMatrix(M,n){
+  const A=M.map(r=>Float64Array.from(r));
+  const inv=zeros(n,n);
+  for(let i=0;i<n;i++)inv[i][i]=1.0;
+  for(let i=0;i<n;i++){
+    let mr=i;
+    for(let k=i+1;k<n;k++)if(Math.abs(A[k][i])>Math.abs(A[mr][i]))mr=k;
+    if(mr!==i){const t=A[mr];A[mr]=A[i];A[i]=t;const ti=inv[mr];inv[mr]=inv[i];inv[i]=ti;}
+    const piv=A[i][i];
+    for(let c=0;c<n;c++){A[i][c]/=piv;inv[i][c]/=piv;}
+    for(let k=0;k<n;k++){
+      if(k===i)continue;
+      const fac=A[k][i];
+      if(fac===0)continue;
+      for(let c=0;c<n;c++){A[k][c]-=fac*A[i][c];inv[k][c]-=fac*inv[i][c];}
+    }
+  }
+  return inv;
+}
+
+/* ===================== RAPPORT ===================== */
+function buildReport(){
+  let s="";
+  const line="==========================================================================";
+  s+=line+"\n";
+  s+="             NOTE DE CALCUL DE STRUCTURE 3D — SYNTHESE COMPLETE           \n";
+  s+=line+"\n";
+  s+=`Masse totale de l'ossature   : ${MasseTot.toFixed(2)} kg\n`;
+  s+=`Flèche verticale max |Uz|    : ${MaxFleche.toFixed(3)} mm (Nœud ${CritNode})\n`;
+  s+=`Contrainte maximale Sigma    : ${MaxSig.toFixed(2)} MPa (Poutre ${CritBeam} — Limite Re = ${ReMpa.toFixed(0)} MPa)\n`;
+  s+="\n--- 1. FREQUENCES PROPRES (ANALYSE MODALE) ---\n";
+  for(let i=0;i<6;i++)s+=`  Mode ${i+1} : f = ${Freqs[i].toFixed(2).padStart(6)} Hz   (Période T = ${(Freqs[i]>0?1.0/Freqs[i]:0).toFixed(3)} s)\n`;
+  s+="\n--- 2. REACTIONS AUX 6 APPUIS (Attention aux signes négatifs = arrachement) ---\n";
+  Object.keys(bcs).map(Number).sort((a,b)=>a-b).forEach(nid=>{
+    const o=(nid-1)*6;
+    const alert=R_res[o+2]<-100?"  <-- SOULEVEMENT / TRACTION !":"";
+    s+=`  Appui Nœud ${String(nid).padStart(2,"0")} : Rx=${fmtSigned(R_res[o],8)} N | Ry=${fmtSigned(R_res[o+1],8)} N | Rz=${fmtSigned(R_res[o+2],9)} N | My=${fmtSigned(R_res[o+4],8)} N.m${alert}\n`;
+  });
+  s+="\n--- 3. TOP 10 DES POUTRES LES PLUS SOLLICITEES ---\n";
+  Beam_res.slice().sort((a,b)=>b.Sig-a.Sig).slice(0,10).forEach(b=>{
+    s+=`  Poutre ${String(b.ID).padStart(2,"0")} (${b.Sec.padEnd(22)}) : Sigma = ${b.Sig.toFixed(1).padStart(6)} MPa (${b.Taux.toFixed(1).padStart(5)} % Re) | N=${Math.round(b.N).toString().padStart(7)} N\n`;
+  });
+  s+="\n--- 4. DEPLACEMENTS DE CHAQUE NOEUD (mm) ---\n";
+  if(U_res){
+    nodes.forEach(n=>{
+      const o=(n.ID-1)*6, ux=U_res.at(o)*1000, uy=U_res.at(o+1)*1000, uz=U_res.at(o+2)*1000;
+      const utot=Math.hypot(ux,uy,uz);
+      s+="  Nœud "+String(n.ID).padStart(2,"0")+" : Ux = "+ux.toFixed(3).padStart(8)+" mm | Uy = "+uy.toFixed(3).padStart(8)+" mm | Uz = "+uz.toFixed(3).padStart(8)+" mm | |U|_max = "+utot.toFixed(3).padStart(8)+" mm\n";
+    });
+  }
+  $("report").value=s;
+}
+
+/* ===================== EXPORT CSV ===================== */
+$("btnCsv").onclick=()=>{
+  if(Beam_res.length===0){alert("Lancez d'abord le calcul a l'Etape 2.");return;}
+  let csv="Poutre;Noeud 1;Noeud 2;Section;Effort Normal N (N);Tranchant Ty (N);Tranchant Tz (N);Torsion Mx (N.m);Moment My (N.m);Moment Mz (N.m);Contrainte Max (MPa);Taux Travail (%)\n";
+  Beam_res.forEach(b=>{
+    csv+=`${b.ID};${b.N1};${b.N2};${b.Sec};${b.N.toFixed(1)};${b.Ty.toFixed(1)};${b.Tz.toFixed(1)};${b.Mx.toFixed(1)};${b.My.toFixed(1)};${b.Mz.toFixed(1)};${b.Sig.toFixed(2)};${b.Taux.toFixed(1)}\n`;
+  });
+  if(U_res){
+    csv+="\nNoeud;Ux (mm);Uy (mm);Uz (mm);Deplacement Resultant |U| (mm)\n";
+    nodes.forEach(n=>{
+      const o=(n.ID-1)*6, ux=U_res.at(o)*1000, uy=U_res.at(o+1)*1000, uz=U_res.at(o+2)*1000;
+      csv+=n.ID+";"+ux.toFixed(3)+";"+uy.toFixed(3)+";"+uz.toFixed(3)+";"+Math.hypot(ux,uy,uz).toFixed(3)+"\n";
+    });
+  }
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="Resultats_RDM7.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+
+
+$("btnPdf").onclick=()=>{
+  if(!Beam_res || Beam_res.length===0){ alert("Lancez d'abord le calcul avant d'exporter le PDF."); return; }
+  let img3d = "";
+  try {
+    if(typeof draw3D === "function") draw3D();
+    img3d = $("view3d").toDataURL("image/png");
+  } catch(e){}
+  const repTxt = ($("report").value || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const dateStr = new Date().toLocaleString("fr-FR");
+  const w = window.open("", "_blank", "width=960,height=800");
+  if(!w){ alert("Autorisez l'ouverture des pop-ups pour générer le PDF."); return; }
+  w.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Note de Calcul RDM - ${dateStr}</title>
+  <style>
+    body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;margin:24px;line-height:1.4}
+    h1{font-size:18px;margin:0 0 4px;border-bottom:2px solid #1e3a8a;padding-bottom:6px;color:#1e3a8a}
+    .meta{font-size:11px;color:#555;margin-bottom:14px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+    .kpi{border:1px solid #cbd5e1;border-radius:6px;padding:8px;background:#f8fafc}
+    .kpi span{display:block;font-size:10px;color:#64748b;text-transform:uppercase}
+    .kpi b{font-size:14px;color:#0f172a}
+    .visu{text-align:center;margin:12px 0 16px;border:1px solid #e2e8f0;border-radius:6px;padding:8px;background:#181a1d}
+    .visu img{max-width:100%;max-height:310px;border-radius:4px}
+    pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:12px;white-space:pre-wrap;word-break:break-word}
+    @media print{body{margin:10mm} .no-print{display:none}}
+  </style></head><body>
+  <div class="no-print" style="margin-bottom:12px;text-align:right">
+    <button onclick="window.print()" style="padding:8px 16px;background:#1e3a8a;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer">Enregistrer en PDF / Imprimer</button>
+  </div>
+  <h1>NOTE DE CALCUL DE STRUCTURE 3D</h1>
+  <div class="meta">Généré le ${dateStr} · Modèle : ${nodes.length} nœuds / ${beams.length} poutres</div>
+  <div class="kpis">
+    <div class="kpi"><span>Masse Totale</span><b>${MasseTot.toFixed(1)} kg</b></div>
+    <div class="kpi"><span>Flèche Max |Uz|</span><b>${MaxFleche.toFixed(2)} mm (N${CritNode})</b></div>
+    <div class="kpi"><span>Contrainte Max σ</span><b>${MaxSig.toFixed(1)} / ${ReMpa.toFixed(0)} MPa</b></div>
+    <div class="kpi"><span>Mode Propre 1</span><b>${Freqs.at(0).toFixed(2)} Hz</b></div>
+  </div>
+  ${img3d ? `<div class="visu"><img src="${img3d}" alt="Vue 3D"></div>` : ""}
+  <pre>${repTxt}</pre>
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>{ w.focus(); w.print(); }, 300);
+};
+
+
+const VIEWER_CODE = "const D = JSON.parse(document.getElementById(\"data3d\").textContent);\ndocument.getElementById(\"meta\").textContent = \"Généré le \" + D.date + \" · \" + D.nodes.length + \" nœuds / \" + D.beams.length + \" poutres\";\ndocument.getElementById(\"rep\").textContent = D.report;\ndocument.getElementById(\"kpis\").innerHTML = [\n  [\"Masse Totale\", D.kpi.masse.toFixed(1) + \" kg\"],\n  [\"Flèche Max |Uz|\", D.kpi.fleche.toFixed(2) + \" mm (N\" + D.kpi.critNode + \")\"],\n  [\"Contrainte Max σ\", D.kpi.maxSig.toFixed(1) + \" / \" + D.kpi.re.toFixed(0) + \" MPa\"],\n  [\"Mode Propre 1\", (D.Freqs.at(0) || 0).toFixed(2) + \" Hz\"]\n].map(x => \"<div class=\\\"kpi\\\"><span>\" + x.at(0) + \"</span><b>\" + x.at(1) + \"</b></div>\").join(\"\");\nconst sm = document.getElementById(\"selMode\"); sm.add(new Option(\"Déformée Statique + Contraintes\", \"0\"));\nfor (let i = 0; i < D.Freqs.length; i++) sm.add(new Option(\"Mode Propre \" + (i + 1) + \" (\" + D.Freqs.at(i).toFixed(2) + \" Hz)\", String(i + 1)));\nlet rx = 28, rz = -35, zm = 1, drag = null; const cv = document.getElementById(\"c3d\"), g = cv.getContext(\"2d\");\nlet minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9, minZ = 1e9, maxZ = -1e9;\nD.nodes.forEach(n => { if (n.X < minX) minX = n.X; if (n.X > maxX) maxX = n.X; if (n.Y < minY) minY = n.Y; if (n.Y > maxY) maxY = n.Y; if (n.Z < minZ) minZ = n.Z; if (n.Z > maxZ) maxZ = n.Z; });\nconst mc = { x: (minX + maxX) / 2, y: (minY + maxY) / 2, z: (minZ + maxZ) / 2 }, mr = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 0.1);\nfunction proj(x, y, z, cx, cy, sc) { const a = rx * Math.PI / 180, b = rz * Math.PI / 180, xc = x - mc.x, yc = y - mc.y, zc = z - mc.z; const x1 = xc * Math.cos(b) - yc * Math.sin(b), y1 = xc * Math.sin(b) + yc * Math.cos(b); return { x: cx + x1 * sc, y: cy - (y1 * Math.cos(a) - zc * Math.sin(a)) * sc }; }\nfunction draw() { g.clearRect(0, 0, cv.width, cv.height); const cx = cv.width * 0.5, cy = cv.height * 0.52, sc = (Math.min(cv.width, cv.height) * 0.82 / mr) * zm;\n  const mode = parseInt(sm.value, 10), amp = parseFloat(document.getElementById(\"amp\").value); document.getElementById(\"ampVal\").textContent = amp + \"x\";\n  const vec = mode === 0 ? D.U : (D.Modes.at(mode - 1) || []); let mxV = 1e-9; for (let i = 0; i < D.nodes.length; i++) { const m = Math.hypot(vec.at(i * 6) || 0, vec.at(i * 6 + 1) || 0, vec.at(i * 6 + 2) || 0); if (m > mxV) mxV = m; }\n  const kDisp = mode === 0 ? amp : (amp * 0.004 * mr / mxV);\n  g.strokeStyle = \"rgba(120,130,145,0.28)\"; g.lineWidth = 1.5; D.beams.forEach(b => { const n1 = D.nodes.at(b.N1 - 1), n2 = D.nodes.at(b.N2 - 1), p1 = proj(n1.X, n1.Y, n1.Z, cx, cy, sc), p2 = proj(n2.X, n2.Y, n2.Z, cx, cy, sc); g.beginPath(); g.moveTo(p1.x, p1.y); g.lineTo(p2.x, p2.y); g.stroke(); });\n  const dn = D.nodes.map((n, i) => ({ ID: n.ID, X: n.X + (vec.at(i * 6) || 0) * kDisp, Y: n.Y + (vec.at(i * 6 + 1) || 0) * kDisp, Z: n.Z + (vec.at(i * 6 + 2) || 0) * kDisp }));\n  g.lineWidth = 3.5; D.beams.forEach(b => { const n1 = dn.at(b.N1 - 1), n2 = dn.at(b.N2 - 1), p1 = proj(n1.X, n1.Y, n1.Z, cx, cy, sc), p2 = proj(n2.X, n2.Y, n2.Z, cx, cy, sc);\n    const r = b.Taux / 100; g.strokeStyle = mode > 0 ? \"#38bdf8\" : (r > 1 ? \"#ff3b30\" : (r > 0.8 ? \"#ff9f1c\" : (r > 0.5 ? \"#ffd700\" : \"#2ecc71\"))); g.beginPath(); g.moveTo(p1.x, p1.y); g.lineTo(p2.x, p2.y); g.stroke(); });\n  for (const k in D.bcs) { const n = dn.at(Number(k) - 1); if (!n) continue; const p = proj(n.X, n.Y, n.Z, cx, cy, sc); g.fillStyle = D.bcs[k].reduce((a, b) => a + b, 0) === 6 ? \"#ff3b30\" : \"#ffd700\"; g.beginPath(); g.arc(p.x, p.y, 5, 0, Math.PI * 2); g.fill(); }\n  if (document.getElementById(\"chkIds\").checked) { g.fillStyle = \"#fff\"; g.font = \"10px sans-serif\"; dn.forEach(n => { const p = proj(n.X, n.Y, n.Z, cx, cy, sc); g.fillText(n.ID, p.x + 5, p.y - 4); }); } }\ncv.onmousedown = e => { drag = { x: e.clientX, y: e.clientY }; cv.style.cursor = \"grabbing\"; };\nwindow.onmouseup = () => { drag = null; cv.style.cursor = \"grab\"; };\nwindow.onmousemove = e => { if (!drag) return; rz += (e.clientX - drag.x) * 0.5; rx += (e.clientY - drag.y) * 0.5; drag = { x: e.clientX, y: e.clientY }; draw(); };\ncv.addEventListener(\"wheel\", e => { e.preventDefault(); zm = Math.max(0.1, Math.min(30, zm * (e.deltaY < 0 ? 1.12 : 1 / 1.12))); draw(); }, { passive: false });\nsm.onchange = draw; document.getElementById(\"amp\").oninput = draw; document.getElementById(\"chkIds\").onchange = draw;\ndocument.getElementById(\"btnReset\").onclick = () => { rx = 28; rz = -35; zm = 1; draw(); }; draw();";
+$("btnHtml3d").onclick=()=>{
+  if(!Beam_res || Beam_res.length===0){ alert("Lancez d'abord le calcul avant d'exporter le rapport 3D."); return; }
+  const payload = JSON.stringify({
+    date: new Date().toLocaleString("fr-FR"),
+    nodes: nodes,
+    beams: Beam_res.map(b=>({ID:b.ID,N1:b.N1,N2:b.N2,Sec:b.Sec,Sig:b.Sig,Taux:b.Taux,Re:b.Re})),
+    bcs: bcs,
+    U: Array.from(U_res || []),
+    Modes: (Modes_res || []).map(m=>Array.from(m)),
+    Freqs: Array.from(Freqs || []),
+    kpi: { masse: MasseTot, fleche: MaxFleche, critNode: CritNode, maxSig: MaxSig, critBeam: CritBeam, re: ReMpa },
+    report: $("report").value || ""
+  }).replace(/</g, "\u003c");
+
+  const doc = [
+    '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Rapport 3D Interactif - Note de Calcul</title>',
+    '<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#121417;color:#e6e8ea;margin:0;padding:20px}',
+    '.wrap{max-width:1200px;margin:0 auto} h1{font-size:18px;margin:0 0 6px;color:#60a5fa}',
+    '.meta{font-size:12px;color:#9aa0a6;margin-bottom:14px}',
+    '.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}',
+    '.kpi{background:#181a1d;border:1px solid #2c2f35;border-radius:8px;padding:10px}',
+    '.kpi span{display:block;font-size:11px;color:#9aa0a6} .kpi b{font-size:16px;color:#fff}',
+    '.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#181a1d;border:1px solid #2c2f35;border-radius:8px;padding:10px;margin-bottom:10px}',
+    'select,input[type=range],button{background:#22252a;color:#fff;border:1px solid #3a3e46;border-radius:6px;padding:5px 10px}',
+    'canvas{width:100%;height:540px;background:#181a1d;border:1px solid #2c2f35;border-radius:8px;display:block;cursor:grab}',
+    'pre{background:#181a1d;border:1px solid #2c2f35;border-radius:8px;padding:14px;font-size:11.5px;line-height:1.45;overflow-x:auto;margin-top:14px;color:#d1d5db}</style>',
+    '</head><body><div class="wrap">',
+    '<h1>NOTE DE CALCUL DE STRUCTURE 3D — RAPPORT INTERACTIF</h1>',
+    '<div class="meta" id="meta"></div><div class="kpis" id="kpis"></div>',
+    '<div class="bar"><label>Mode : <select id="selMode"></select></label>',
+    '<label>Amplification : <input type="range" id="amp" min="0" max="150" value="30"> <span id="ampVal">30x</span></label>',
+    '<label><input type="checkbox" id="chkIds" checked> N° Nœuds</label>',
+    '<button id="btnReset">Recentrer 3D</button><span style="margin-left:auto;font-size:11px;color:#9aa0a6">Glisser : pivoter · Molette : zoom</span></div>',
+    '<canvas id="c3d" width="1160" height="540"></canvas><pre id="rep"></pre></div>',
+    '<' + 'script type="application/json" id="data3d">' + payload + '<' + '/script>',
+    '<' + 'script>' + VIEWER_CODE + '<' + '/script></body></html>'
+  ].join(String.fromCharCode(10));
+
+  const blob = new Blob([doc], {type:"text/html;charset=utf-8;"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Rapport_Structure_3D_Interactif.html";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ===================== IMPORT CAD (IGES / DXF) ===================== */
+
+let diagBeamIdx = 0;
+function evalBeamAt(br, x){
+  const nx = br.N1_s - br.qx_l * x;
+  const vy = br.Vy1_s + br.qy_l * x;
+  const vz = br.Vz1_s + br.qz_l * x;
+  const mx = br.Mx1_s;
+  const my = br.My1_s - br.Vz1_s * x - 0.5 * br.qz_l * x * x;
+  const mz = br.Mz1_s + br.Vy1_s * x + 0.5 * br.qy_l * x * x;
+  const sigX = Math.abs(nx)/br.A + Math.abs(my)/br.Wely + Math.abs(mz)/br.Welz;
+  const tau = Math.hypot(vy, vz)/(br.A * 0.6);
+  const vm = Math.sqrt(sigX*sigX + 3*tau*tau)/1e6;
+  return {nx, vy, vz, mx, my, mz, vm};
+}
+
+function initBeamDiagPanel(){
+  const pan = $("beamDiagPanel");
+  if(!Beam_res || Beam_res.length===0){ if(pan) pan.style.display="none"; return; }
+  pan.style.display="block";
+  const sel = $("cbDiagBeam");
+  sel.innerHTML="";
+  Beam_res.forEach((br,idx)=>{
+    sel.add(new Option("Poutre #"+br.ID+" ("+br.N1+" → "+br.N2+") ["+br.Sec+"]", idx));
+  });
+  diagBeamIdx = Math.max(0, Math.min(Beam_res.length-1, CritBeam-1));
+  sel.selectedIndex = diagBeamIdx;
+  drawBeamDiag();
+}
+
+
+function stressColor(t){
+  t = Math.max(0, Math.min(1, t));
+  let r=0, g=0, b=0;
+  if(t<0.25){ const k=t/0.25; r=0; g=Math.round(255*k); b=255; }
+  else if(t<0.5){ const k=(t-0.25)/0.25; r=0; g=255; b=Math.round(255*(1-k)); }
+  else if(t<0.75){ const k=(t-0.5)/0.25; r=Math.round(255*k); g=255; b=0; }
+  else { const k=(t-0.75)/0.25; r=255; g=Math.round(255*(1-k)); b=0; }
+  return "rgb("+r+","+g+","+b+")";
+}
+
+function getSecGeom(sec){
+  const name = sec.Name || "";
+  const wely = sec.Wely || sec.Wel || 1e-5;
+  const welz = sec.Welz || sec.Wel || 1e-5;
+  const h = Math.max(0.02, 2 * (sec.Iy / wely));
+  const b = Math.max(0.02, 2 * (sec.Iz / welz));
+  let shape = "I";
+  if(name.startsWith("Rond")) shape = "CHS";
+  else if(name.startsWith("Carre") || name.startsWith("Rect")) shape = "RHS";
+  else if(name.startsWith("UPN") || name.startsWith("UPE")) shape = "U";
+  else if(name.startsWith("Corni")) shape = "L";
+  const t = Math.max(0.003, Math.min(h*0.18, b*0.18, sec.A / (2*(h+b))));
+  return {shape, h, b, t};
+}
+
+function isInsideSec(geom, y, z){
+  const hh = geom.h*0.5, hb = geom.b*0.5, t = geom.t;
+  if(geom.shape==="CHS"){
+    const rOut = hh, rIn = Math.max(0, rOut - t);
+    const r = Math.hypot(y, z);
+    return r <= rOut && r >= rIn;
+  }
+  if(geom.shape==="RHS"){
+    if(Math.abs(y)>hb || Math.abs(z)>hh) return false;
+    return Math.abs(y) >= hb - t || Math.abs(z) >= hh - t;
+  }
+  if(geom.shape==="U"){
+    if(Math.abs(y)>hb || Math.abs(z)>hh) return false;
+    return y <= -hb + t*1.2 || Math.abs(z) >= hh - t;
+  }
+  if(geom.shape==="L"){
+    if(Math.abs(y)>hb || Math.abs(z)>hh) return false;
+    return y <= -hb + t*1.3 || z <= -hh + t*1.3;
+  }
+  // Poutrelle I / H
+  if(Math.abs(y)>hb || Math.abs(z)>hh) return false;
+  return Math.abs(z) >= hh - t || Math.abs(y) <= t*0.65;
+}
+
+function drawSectionHeatmap(br, cur){
+  const c = $("secStressCanvas"); if(!c) return;
+  const g = c.getContext("2d");
+  g.clearRect(0,0,c.width,c.height);
+  const sec = catSec[br.Sec] || {Name:br.Sec, A:br.A, Iy:br.Wely*0.05, Iz:br.Welz*0.05, Wely:br.Wely, Welz:br.Welz};
+  const geom = getSecGeom(sec);
+  const Iy = sec.Iy || (br.Wely * geom.h * 0.5);
+  const Iz = sec.Iz || (br.Welz * geom.b * 0.5);
+  const tauMean = Math.hypot(cur.vy, cur.vz) / (br.A * 0.6);
+
+  // Calcul des contraintes locales sur une grille fine (y, z)
+  const ny = 44, nz = 44;
+  const cells = [];
+  let maxSig = 0.01;
+  for(let iz=0; iz<nz; iz++){
+    const z = -geom.h*0.5 + ((iz+0.5)/nz)*geom.h;
+    for(let iy=0; iy<ny; iy++){
+      const y = -geom.b*0.5 + ((iy+0.5)/ny)*geom.b;
+      if(!isInsideSec(geom, y, z)) continue;
+      // Contrainte normale combinee: N/A + My*z/Iy - Mz*y/Iz
+      const sigX = (cur.nx / br.A) + (cur.my * z / Iy) - (cur.mz * y / Iz);
+      const vm = Math.sqrt(sigX*sigX + 3*tauMean*tauMean) / 1e6;
+      if(vm > maxSig) maxSig = vm;
+      cells.push({iy, iz, vm});
+    }
+  }
+  const scaleMode = $("cbSecScale") ? $("cbSecScale").value : "re";
+  const refMax = scaleMode==="re" ? (br.Re || 235) : (scaleMode==="global" ? Math.max(MaxSig, 1) : maxSig);
+  $("lblSecMax").textContent = maxSig.toFixed(1) + " MPa";
+
+  const drawW = 195, drawH = 185, ox = 14, oy = 12;
+  const sc = Math.min((drawW-20)/geom.b, (drawH-20)/geom.h);
+  const pw = geom.b * sc, ph = geom.h * sc;
+  const sx0 = ox + (drawW - pw)*0.5, sy0 = oy + (drawH - ph)*0.5;
+  const cw = pw / ny, ch = ph / nz;
+
+  cells.forEach(pt=>{
+    g.fillStyle = stressColor(pt.vm / refMax);
+    g.fillRect(sx0 + pt.iy*cw, sy0 + (nz - 1 - pt.iz)*ch, Math.ceil(cw), Math.ceil(ch));
+  });
+
+  // Axes locaux Y et Z au centre de gravite
+  const cx = sx0 + pw*0.5, cy = sy0 + ph*0.5;
+  g.strokeStyle = "rgba(255,255,255,0.45)"; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(cx-16, cy); g.lineTo(cx+22, cy); g.moveTo(cx, cy+16); g.lineTo(cx, cy-22); g.stroke();
+  g.fillStyle = "#e2e8f0"; g.font = "10px sans-serif"; g.textAlign="left";
+  g.fillText("y", cx+24, cy+3); g.fillText("z", cx-3, cy-25);
+
+  // Legende degradee verticale a droite
+  const bx = 222, by = 18, bw = 12, bh = 165;
+  for(let py=0; py<bh; py++){
+    g.fillStyle = stressColor(1 - py/bh);
+    g.fillRect(bx, by+py, bw, 1);
+  }
+  g.strokeStyle = "#4b5563"; g.strokeRect(bx, by, bw, bh);
+  g.fillStyle = "#cbd5e1"; g.font = "10px monospace"; g.textAlign = "left";
+  g.fillText(refMax.toFixed(0)+" MPa", bx+15, by+8);
+  g.fillText((refMax*0.75).toFixed(0), bx+15, by+bh*0.25+3);
+  g.fillText((refMax*0.5).toFixed(0), bx+15, by+bh*0.5+3);
+  g.fillText((refMax*0.25).toFixed(0), bx+15, by+bh*0.75+3);
+  g.fillText("0 MPa", bx+15, by+bh);
+}
+
+function drawBeamDiag(){
+  if(!Beam_res || !Beam_res.length) return;
+  const br = Beam_res.at(diagBeamIdx); if(!br) return;
+  const ratio = parseInt($("trDiagX").value, 10) / 1000;
+  const xCur = ratio * br.L;
+  $("lblDiagX").textContent = "x = "+xCur.toFixed(3)+" m ("+Math.round(ratio*100)+"%)";
+
+  const cur = evalBeamAt(br, xCur);
+  const cards = [
+    {lbl:"Normal N(x)", val:(cur.nx/1000).toFixed(2)+" kN", col:"#38bdf8"},
+    {lbl:"Tranchant Ty(x)", val:(cur.vy/1000).toFixed(2)+" kN", col:"#34d399"},
+    {lbl:"Tranchant Tz(x)", val:(cur.vz/1000).toFixed(2)+" kN", col:"#a7f3d0"},
+    {lbl:"Flexion My(x)", val:(cur.my/1000).toFixed(3)+" kN·m", col:"#fbbf24"},
+    {lbl:"Flexion Mz(x)", val:(cur.mz/1000).toFixed(3)+" kN·m", col:"#f59e0b"},
+    {lbl:"Torsion Mx(x)", val:(cur.mx/1000).toFixed(3)+" kN·m", col:"#c084fc"},
+    {lbl:"Von Mises σ(x)", val:cur.vm.toFixed(1)+" MPa", col:cur.vm>br.Re?"#ff4500":"#f87171"}
+  ];
+  $("diagValues").innerHTML = cards.map(c=>
+    "<div style=\"background:#121417;border:1px solid #262930;border-radius:6px;padding:6px 9px\"><div style=\"color:#9aa0a6;font-size:10px\">"+c.lbl+"</div><b style=\"color:"+c.col+";font-size:13px\">"+c.val+"</b></div>"
+  ).join("");
+
+  drawSectionHeatmap(br, cur);
+  const c = $("beamDiagCanvas"), g = c.getContext("2d");
+  const rect = c.getBoundingClientRect();
+  c.width = Math.max(520, Math.round(rect.width || 800));
+  c.height = 240;
+  g.clearRect(0,0,c.width,c.height);
+  const padL=48, padR=20, padT=22, padB=24;
+  const W = c.width - padL - padR, H = c.height - padT - padB;
+  const cols = [
+    {title:"Moment fléchissant My & Mz (kN·m)", keys:["my","mz"], colors:["#fbbf24","#f97316"], scale:1/1000},
+    {title:"Effort tranchant Ty & Tz (kN)", keys:["vy","vz"], colors:["#34d399","#06b6d4"], scale:1/1000},
+    {title:"Effort normal N (kN) & Torsion Mx (kN·m)", keys:["nx","mx"], colors:["#38bdf8","#c084fc"], scale:1/1000}
+  ];
+  const gap = 28, subW = (W - gap*2)/3;
+  const Npts = 60;
+  const samples = [];
+  for(let i=0;i<=Npts;i++) samples.push(evalBeamAt(br, (i/Npts)*br.L));
+
+  cols.forEach((col, ci)=>{
+    const x0 = padL + ci*(subW + gap), yMid = padT + H*0.5;
+    let maxAbs = 1e-6;
+    samples.forEach(s=>col.keys.forEach(k=>{ const v=Math.abs(s[k]*col.scale); if(v>maxAbs) maxAbs=v; }));
+
+    // Cadre & axe zero
+    g.strokeStyle="#262930"; g.lineWidth=1; g.strokeRect(x0, padT, subW, H);
+    g.strokeStyle="#4b5563"; g.setLineDash();
+    g.beginPath(); g.moveTo(x0, yMid); g.lineTo(x0+subW, yMid); g.stroke();
+    g.setLineDash([]);
+
+    g.fillStyle="#cbd5e1"; g.font="bold 11px sans-serif"; g.textAlign="left";
+    g.fillText(col.title, x0, padT-7);
+    g.fillStyle="#6b7280"; g.font="10px monospace"; g.textAlign="right";
+    g.fillText("+"+maxAbs.toFixed(2), x0-4, padT+8);
+    g.fillText("0", x0-4, yMid+3);
+    g.fillText("-"+maxAbs.toFixed(2), x0-4, padT+H);
+
+    // Courbes
+    col.keys.forEach((k, ki)=>{
+      g.strokeStyle = col.colors.at(ki); g.lineWidth=2;
+      g.beginPath();
+      samples.forEach((s, si)=>{
+        const px = x0 + (si/Npts)*subW;
+        const py = yMid - ((s[k]*col.scale)/maxAbs)*(H*0.44);
+        if(si===0) g.moveTo(px,py); else g.lineTo(px,py);
+      });
+      g.stroke();
+    });
+
+    // Curseur vertical x
+    const cxCur = x0 + ratio*subW;
+    g.strokeStyle="#ff3b30"; g.lineWidth=1.5;
+    g.beginPath(); g.moveTo(cxCur, padT); g.lineTo(cxCur, padT+H); g.stroke();
+    col.keys.forEach((k, ki)=>{
+      const pyCur = yMid - ((cur[k]*col.scale)/maxAbs)*(H*0.44);
+      g.fillStyle=col.colors.at(ki);
+      g.beginPath(); g.arc(cxCur, pyCur, 4, 0, Math.PI*2); g.fill();
+    });
+  });
+}
+$("cbDiagBeam").onchange=()=>{ diagBeamIdx=parseInt($("cbDiagBeam").value,10)||0; drawBeamDiag(); };
+$("trDiagX").oninput=drawBeamDiag;
+$("cbSecScale").onchange=drawBeamDiag;
+
+function resetResults(){
+  U_res=null;R_res=null;Freqs=null;Modes_res=[];Beam_res=[]; if($("beamDiagPanel")) $("beamDiagPanel").style.display="none";
+  MasseTot=0;MaxFleche=0;MaxSig=0;CritNode=1;CritBeam=1;
+  const ks=$("kpiStatus"); ks.textContent="EN ATTENTE DE CALCUL"; ks.style.color="var(--orange)";
+  const selMode=$("cbViewMode");
+  if(selMode){ for(let i=0;i<6;i++){ if(selMode.options[i+1]) selMode.options[i+1].textContent=`Mode Propre ${i+1}`; } }
+  $("kpiInfo").textContent="Masse: -- kg | Flèche max: -- mm | Contrainte max: -- MPa | Mode 1: -- Hz";
+  $("report").value="";
+}
+function buildGeometry(rawNodes, rawBeams){
+  // rawNodes: [{X,Y,Z}], rawBeams: [{n1,n2}] (1-based indices into rawNodes)
+  nodes.length=0; beams.length=0;
+  rawNodes.forEach((r,i)=>nodes.push({ID:i+1,X:r.X,Y:r.Y,Z:r.Z}));
+  rawBeams.forEach((b,i)=>{
+    const p1=nodes[b.n1-1],p2=nodes[b.n2-1];
+    let dx=p2.X-p1.X,dy=p2.Y-p1.Y,dz=p2.Z-p1.Z;
+    const L=Math.hypot(dx,dy,dz)||1; dx/=L;dy/=L;dz/=L;
+    // vecteur de référence non parallèle à l'axe
+    let vx=0,vy=0,vz=1;
+    if(Math.abs(dz)>0.9){vx=0;vy=1;vz=0;}
+    beams.push({ID:i+1,N1:b.n1,N2:b.n2,Vx:vx,Vy:vy,Vz:vz,Fam:11,Mat:cbMat.value,Sec:cbSecNew.value});
+  });
+  // charges & appuis
+  nodLoads={}; beamLoads={};
+  for(const k in bcs) delete bcs[k];
+  // appui par défaut : encastrement sur le nœud le plus à gauche (min X)
+  if(nodes.length){
+    let best=nodes[0];
+    for(const n of nodes) if(n.X<best.X) best=n;
+    bcs[best.ID]=[1,1,1,1,1,1];
+  }
+  resetResults();
+  refreshLoadList();
+  $("hdrTitle").textContent=`ASSISTANT CALCUL DE STRUCTURE — MODELE ${nodes.length} NOEUDS / ${beams.length} POUTRES (IMPORTE)`;
+  $("impStatus").textContent=`Import recharge : ${nodes.length} nœuds / ${beams.length} poutres (famille 11, appui encastré sur nœud ${nodes.length?best0ID():"-"}).`;
+  computeBounds();
+  buildNodeTable();
+  drawTopView();
+  if(nodes.length>150) $("impStatus").textContent+=" ⚠ Modèle volumineux : le calcul (O(n³)) peut être long.";
+}
+function best0ID(){let b=nodes[0];for(const n of nodes)if(n.X<b.X)b=n;return b.ID;}
+
+/* --- DXF --- */
+function parseDXF(text){
+  const lines=text.split(/\r?\n/);
+  const pairs=[];
+  for(let i=0;i+1<lines.length;i+=2) pairs.push([lines[i].trim(),lines[i+1]]);
+  let inEnt=false; const ents=[]; let cur=null;
+  for(const [code,val] of pairs){
+    if(code==='2' && val.trim()==='ENTITIES'){inEnt=true;continue;}
+    if(!inEnt) continue;
+    if(code==='0'){
+      if(cur) ents.push(cur);
+      const t=val.trim();
+      if(t==='ENDSEC'){cur=null;break;}
+      cur={type:t,data:{}};
+    } else if(cur){
+      const c=code;
+      if(!(c in cur.data)) cur.data[c]=val.trim();
+      else if(Array.isArray(cur.data[c])) cur.data[c].push(val.trim());
+      else cur.data[c]=[cur.data[c],val.trim()];
+    }
+  }
+  if(cur) ents.push(cur);
+  const rawNodes=[], rawBeams=[]; const map=new Map();
+  const key=(x,y,z)=>`${Math.round(x*1e6)},${Math.round(y*1e6)},${Math.round(z*1e6)}`;
+  function node(x,y,z){const k=key(x,y,z);if(map.has(k))return map.get(k);const id=rawNodes.length+1;rawNodes.push({X:x,Y:y,Z:z});map.set(k,id);return id;}
+  const num=v=>parseFloat(v);
+  for(const e of ents){
+    const d=e.data;
+    if(e.type==='LINE'){
+      const x1=num(d['10']),y1=num(d['20']),z1=num(d['30']||0),x2=num(d['11']),y2=num(d['21']),z2=num(d['31']||0);
+      if([x1,y1,z1,x2,y2,z2].every(isFinite)){const a=node(x1,y1,z1),b=node(x2,y2,z2);if(a!==b)rawBeams.push({n1:a,n2:b});}
+    } else if(e.type==='POINT'){
+      const x=num(d['10']),y=num(d['20']),z=num(d['30']||0);
+      if([x,y,z].every(isFinite))node(x,y,z);
+    } else if(e.type==='LWPOLYLINE'){
+      const xs=Array.isArray(d['10'])?d['10']:(d['10']!==undefined?[d['10']]:[]);
+      const ys=Array.isArray(d['20'])?d['20']:(d['20']!==undefined?[d['20']]:[]);
+      const ids=[];for(let i=0;i<xs.length;i++)ids.push(node(num(xs[i]),num(ys[i]||0),0));
+      for(let i=0;i+1<ids.length;i++)if(ids[i]!==ids[i+1])rawBeams.push({n1:ids[i],n2:ids[i+1]});
+    }
+  }
+  return {rawNodes,rawBeams};
+}
+
+/* --- IGES --- */
+function parseIGES(text){
+  const raw=text.split(/\r\n|\r|\n/);
+  const D=[],P=[];
+  for(const line of raw){
+    if(!line.length) continue;
+    const t=line.replace(/\s+$/,"");
+    const last=t.length?t[t.length-1]:"";
+    const c73=line[72];
+    let s=null;
+    if(line[0]==='S'||line[0]==='G'||line[0]==='T') s=line[0];
+    else if(c73==='D'||(line.length<73&&last==='D')) s='D';
+    else if(c73==='P'||(line.length<73&&last==='P')) s='P';
+    if(s==='D') D.push(line);
+    else if(s==='P') P.push(line);
+  }
+  // type par entité (2 lignes D par entité)
+  const typeById=new Map();
+  for(let i=0;i+1<D.length;i+=2){
+    const ty=parseInt(D[i].slice(0,8).trim(),10);
+    let id=parseInt(D[i].slice(73,80).trim(),10);          // id après le 'D' (cols 74-80)
+    if(isNaN(id)){const m=D[i].match(/D\s*(\d+)\s*$/);id=m?parseInt(m[1],10):NaN;}
+    if(isNaN(id)) id=parseInt(D[i].slice(65,72).trim(),10); // fallback avant 'D'
+    if(!isNaN(id)&&!isNaN(ty)) typeById.set(id,ty);
+  }
+  // regrouper les lignes P par DE id (tolérant aux lignes non paddées)
+  const pData=new Map();
+  for(const line of P){
+    const m=line.match(/(\d+)\s*P\s*$/);
+    let id,chunk;
+    if(m){ id=parseInt(m[1],10); chunk=line.slice(0,m.index); }
+    else { id=parseInt(line.slice(65,72).trim(),10); chunk=line.slice(0,64); }
+    if(isNaN(id)) continue;
+    if(!pData.has(id)) pData.set(id,"");
+    pData.set(id,pData.get(id)+chunk);
+  }
+  const rawNodes=[], rawBeams=[]; const map=new Map();
+  const key=(x,y,z)=>`${Math.round(x*1e6)},${Math.round(y*1e6)},${Math.round(z*1e6)}`;
+  function node(x,y,z){if(!isFinite(x)||!isFinite(y)||!isFinite(z))return 0;const k=key(x,y,z);if(map.has(k))return map.get(k);const id=rawNodes.length+1;rawNodes.push({X:x,Y:y,Z:z});map.set(k,id);return id;}
+  function toks(s){return s.replace(/[dD]/g,'E').split(',').map(t=>parseFloat(t));}
+  for(const [id,ty] of typeById){
+    const data=pData.get(id); if(data===undefined) continue;
+    const t=toks(data);
+    // le 1er token est le numéro de type d'entité (110/116/106) -> on le saute
+    if(ty===110 && t.length>=7){
+      const a=node(t[1],t[2],t[3]),b=node(t[4],t[5],t[6]); if(a&&b&&a!==b)rawBeams.push({n1:a,n2:b});
+    } else if(ty===116 && t.length>=4){
+      node(t[1],t[2],t[3]);
+    } else if(ty===106){
+      const count=Math.round(t[1])||0; const base=2;
+      const ids=[]; for(let i=0;i<count;i++){const o=base+i*3; if(o+2<t.length)ids.push(node(t[o],t[o+1],t[o+2]));}
+      for(let i=0;i+1<ids.length;i++)if(ids[i]&&ids[i+1]&&ids[i]!==ids[i+1])rawBeams.push({n1:ids[i],n2:ids[i+1]});
+    }
+  }
+  return {rawNodes,rawBeams,diag:{D:D.length,P:P.length,types:[...typeById.values()]}};
+}
+
+function handleImport(file, kind){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const res = kind==='IGES'?parseIGES(rd.result):parseDXF(rd.result);
+      if(!res.rawNodes.length){ alert("Aucune géométrie reconnue dans le fichier "+kind+" (entités ligne/point supportées)."); return; }
+      buildGeometry(res.rawNodes,res.rawBeams);
+      document.querySelector('.tab[data-p="0"]').click();
+    }catch(err){ alert("Erreur d'import "+kind+" : "+err.message); }
+  };
+  rd.readAsText(file);
+}
+$("btnImpIGES").onclick=()=>$("fileIGES").click();
+$("btnImpDXF").onclick=()=>$("fileDXF").click();
+$("fileIGES").onchange=e=>{if(e.target.files[0])handleImport(e.target.files[0],'IGES');};
+$("fileDXF").onchange=e=>{if(e.target.files[0])handleImport(e.target.files[0],'DXF');};
+
+/* ===================== TABLEAU NOEUDS / POUTRES ===================== */
+function buildNodeTable(){
+  const cont=$("nodeTable"); if(!cont) return;
+  const map={};
+  nodes.forEach(n=>map[n.ID]=[]);
+  beams.forEach(b=>{ if(map[b.N1])map[b.N1].push(b.ID); if(map[b.N2])map[b.N2].push(b.ID); });
+  let html="<table><thead><tr><th>Nœud</th><th>X (m)</th><th>Y (m)</th><th>Z (m)</th><th>Poutres connectées</th><th>Nb</th><th></th></tr></thead><tbody>";
+  nodes.forEach(n=>{
+    const bs=map[n.ID]||[];
+    html+=`<tr><td>${n.ID}</td><td class="num">${n.X.toFixed(3)}</td><td class="num">${n.Y.toFixed(3)}</td><td class="num">${n.Z.toFixed(3)}</td><td>${bs.length?bs.join(", "):"—"}</td><td class="num">${bs.length}</td><td><button class="red" style="padding:3px 9px;font-size:11px" onclick="deleteNode(${n.ID})">Suppr.</button></td></tr>`;
+  });
+  html+="</tbody></table>";
+  cont.innerHTML=html;
+  buildBeamTable();
+  buildPreviewTable();
+}
+
+/* ===================== APERCU (hover) + AJOUT DE NOEUD ===================== */
+function buildPreviewTable(){
+  const cont=$("prevTable"); if(!cont) return;
+  let html="<table><thead><tr><th>Nœud</th><th>X (m)</th><th>Y (m)</th><th>Z (m)</th></tr></thead><tbody>";
+  nodes.forEach(n=>{ html+=`<tr><td>${n.ID}</td><td class="num">${n.X.toFixed(3)}</td><td class="num">${n.Y.toFixed(3)}</td><td class="num">${n.Z.toFixed(3)}</td></tr>`; });
+  html+="</tbody></table>";
+  cont.innerHTML=html;
+}
+function buildBeamTable(){
+  const cont=$("beamTable"); if(!cont) return;
+  let html="<table><thead><tr><th>Poutre</th><th>Raccordement</th><th>Nœud</th><th>Famille</th><th>Section associée</th><th>L (m)</th></tr></thead><tbody>";
+  beams.forEach(b=>{
+    const p1=nodes[b.N1-1],p2=nodes[b.N2-1];
+    const L=(p1&&p2)?Math.hypot(p2.X-p1.X,p2.Y-p1.Y,p2.Z-p1.Z):0;
+    const sec=beamSec(b).Name;
+    html+=`<tr><td>${b.ID}</td><td class="num">${b.N1} → ${b.N2}</td><td class="num">${b.N1}</td><td class="num">${b.Fam}</td><td>${sec}</td><td class="num">${L.toFixed(3)}</td></tr>`;
+  });
+  html+="</tbody></table>";
+  cont.innerHTML=html;
+}
+function drawPreview(){ buildPreviewTable(); }
+$("linkNodes").addEventListener("mouseenter",drawPreview);
+$("linkNodes").addEventListener("click",e=>{
+  e.preventDefault();
+  document.querySelector('.tab[data-p="4"]').click();
+});
+$("btnAddNode").onclick=()=>{
+  const x=parseFloat($("npX").value)/1000, y=parseFloat($("npY").value)/1000, z=parseFloat($("npZ").value)/1000;
+  if(isNaN(x)||isNaN(y)||isNaN(z)){ alert("Coordonnées invalides."); return; }
+  nodes.push({ID:nodes.length+1, X:x, Y:y, Z:z});
+  resetResults(); computeBounds(); buildNodeTable(); drawTopView(); drawPreview();
+  $("hdrTitle").textContent=`ASSISTANT CALCUL DE STRUCTURE — MODELE ${nodes.length} NOEUDS / ${beams.length} POUTRES`;
+};
+function deleteNode(id){
+  const oldToNew=new Map(); let idx=0;
+  nodes.forEach(n=>{ if(n.ID!==id){ idx++; oldToNew.set(n.ID, idx); } });
+  const kept=nodes.filter(n=>n.ID!==id);
+  nodes.length=0; kept.forEach(n=>nodes.push(n));
+  nodes.forEach((n,i)=>n.ID=i+1);
+  const nb=[]; beams.forEach(b=>{
+    if(b.N1===id||b.N2===id) return;
+    nb.push({ID:0,N1:oldToNew.get(b.N1),N2:oldToNew.get(b.N2),Vx:b.Vx,Vy:b.Vy,Vz:b.Vz,Fam:b.Fam,Mat:b.Mat,Sec:b.Sec});
+  });
+  beams.length=0; nb.forEach((b,i)=>{b.ID=i+1; beams.push(b);});
+  const nb2={}; for(const k in bcs){ const nk=oldToNew.get(parseInt(k,10)); if(nk) nb2[nk]=bcs[k]; }
+  for(const k in bcs) delete bcs[k]; for(const k in nb2) bcs[k]=nb2[k];
+  const nl={}; for(const k in nodLoads){ const nk=oldToNew.get(parseInt(k,10)); if(nk) nl[nk]=nodLoads[k]; }
+  nodLoads=nl;
+  resetResults(); computeBounds(); buildNodeTable(); drawTopView(); refreshLoadList();
+  $("hdrTitle").textContent=`ASSISTANT CALCUL DE STRUCTURE — MODELE ${nodes.length} NOEUDS / ${beams.length} POUTRES`;
+}
+function updateHdr(){ $("hdrTitle").textContent=`ASSISTANT CALCUL DE STRUCTURE — MODELE ${nodes.length} NOEUDS / ${beams.length} POUTRES`; }
+function addNode(x,y,z){
+  if(isNaN(x)||isNaN(y)||isNaN(z)){ alert("Coordonnées invalides."); return; }
+  nodes.push({ID:nodes.length+1, X:x, Y:y, Z:z});
+  resetResults(); computeBounds(); buildNodeTable(); drawTopView(); updateHdr(); drawPreview();
+}
+function createBeam(a,bid){
+  const p1=nodes[a-1],p2=nodes[bid-1]; if(!p1||!p2||a===bid) return;
+  let dx=p2.X-p1.X,dy=p2.Y-p1.Y,dz=p2.Z-p1.Z; const L=Math.hypot(dx,dy,dz)||1; dx/=L;dy/=L;dz/=L;
+  let vx=0,vy=0,vz=1; if(Math.abs(dz)>0.9){vx=0;vy=1;vz=0;}
+  beams.push({ID:beams.length+1, N1:a, N2:bid, Vx:vx, Vy:vy, Vz:vz, Fam:11, Mat:cbMat.value, Sec:cbSecNew.value});
+  resetResults(); computeBounds(); buildNodeTable(); drawTopView(); updateHdr(); drawPreview();
+}
+let addBeamMode=false;
+let deleteBeamMode=false;
+let selectedBeamId=null;
+let hoveredBeamId=null;
+let hoveredNodes=[];
+let hoverMouse={x:0,y:0};
+
+function distToSegment(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1, l2=dx*dx+dy*dy;
+  if(l2===0) return Math.hypot(px-x1,py-y1);
+  let t=((px-x1)*dx+(py-y1)*dy)/l2;
+  t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(x1+t*dx), py-(y1+t*dy));
+}
+
+function findBeamAt(mx,my){
+  const cx=topViewXform.cx, cy=topViewXform.cy, sc=topViewXform.sc;
+  let hit=null, best=8;
+  beams.forEach(b=>{
+    const n1=nodes.at(b.N1-1), n2=nodes.at(b.N2-1); if(!n1||!n2) return;
+    const p1=projEdit(n1.X,n1.Y,n1.Z,cx,cy,sc), p2=projEdit(n2.X,n2.Y,n2.Z,cx,cy,sc);
+    const d=distToSegment(mx,my,p1.x,p1.y,p2.x,p2.y);
+    if(d<best){ best=d; hit=b; }
+  });
+  return hit;
+}
+function deleteBeam(id){
+  const nbl={}; let nidx=0;
+  beams.forEach(b=>{ if(b.ID!==id){ nidx++; if(beamLoads[b.ID]) nbl[nidx]=beamLoads[b.ID]; } });
+  beamLoads=nbl; refreshBeamLoadList();
+  const kept=beams.filter(b=>b.ID!==id); beams.length=0; kept.forEach((b,i)=>{ b.ID=i+1; beams.push(b); });
+  if(hoveredBeamId===id) hoveredBeamId=null;
+  if(selectedBeamId===id) closeBeamInspector();
+  resetResults(); computeBounds(); buildNodeTable(); drawTopView(); updateHdr(); drawPreview();
+}
+Object.keys(catMat).forEach(k=>$("inspMat").add(new Option(k,k)));
+Object.keys(catSecGroups).forEach(g=>$("inspSecGroup").add(new Option(g,g)));
+function refreshInspDims(){
+  const sel=$("inspSec"); sel.innerHTML="";
+  const grp=$("inspSecGroup").value;
+  if(catSecGroups[grp]) Object.keys(catSecGroups[grp]).forEach(k=>sel.add(new Option(k,k)));
+}
+function openBeamInspector(b){
+  selectedBeamId=b.ID;
+  const p1=nodes.at(b.N1-1), p2=nodes.at(b.N2-1);
+  const L=(p1&&p2)?Math.hypot(p2.X-p1.X,p2.Y-p1.Y,p2.Z-p1.Z):0;
+  $("inspTitle").textContent="Poutre #"+b.ID+" ("+b.N1+" → "+b.N2+")";
+  $("inspMeta").textContent="Longueur : "+L.toFixed(3)+" m · Famille "+b.Fam;
+  $("inspMat").value=b.Mat||cbMat.value;
+  const curSec=beamSec(b).Name;
+  const grp=catSec[curSec]?catSec[curSec].Group:Object.keys(catSecGroups).at(0);
+  $("inspSecGroup").value=grp;
+  refreshInspDims();
+  $("inspSec").value=curSec;
+  $("beamInspector").style.display="block";
+  drawTopView();
+}
+function closeBeamInspector(){ selectedBeamId=null; $("beamInspector").style.display="none"; drawTopView(); }
+$("btnCloseInsp").onclick=closeBeamInspector;
+$("inspSecGroup").onchange=()=>{
+  refreshInspDims();
+  if(selectedBeamId!=null && beams.at(selectedBeamId-1)){
+    beams.at(selectedBeamId-1).Sec=$("inspSec").value;
+    resetResults(); buildNodeTable(); drawTopView();
+  }
+};
+$("inspSec").onchange=()=>{
+  if(selectedBeamId!=null && beams.at(selectedBeamId-1)){
+    beams.at(selectedBeamId-1).Sec=$("inspSec").value;
+    resetResults(); buildNodeTable(); drawTopView();
+  }
+};
+$("inspMat").onchange=()=>{
+  if(selectedBeamId!=null && beams.at(selectedBeamId-1)){
+    beams.at(selectedBeamId-1).Mat=$("inspMat").value;
+    resetResults(); buildNodeTable(); drawTopView();
+  }
+};
+function setAddBeamMode(active){
+  addBeamMode=active; pendingStart=null; const btn=$("btnAddBeamMode");
+  if(active){ if(deleteBeamMode) setDeleteBeamMode(false); btn.classList.add("primary"); btn.textContent="Terminer l'ajout"; $("topView").style.cursor="crosshair"; }
+  else { btn.classList.remove("primary"); btn.textContent="Ajouter une poutre"; if(!deleteBeamMode) $("topView").style.cursor="default"; }
+  drawTopView();
+}
+function setDeleteBeamMode(active){
+  deleteBeamMode=active; hoveredBeamId=null; const btn=$("btnDeleteBeamMode");
+  if(active){ if(addBeamMode) setAddBeamMode(false); pendingStart=null; btn.classList.add("red"); btn.textContent="Terminer suppression"; $("topView").style.cursor="crosshair"; }
+  else { btn.classList.remove("red"); btn.textContent="Supprimer des poutres"; if(!addBeamMode) $("topView").style.cursor="default"; }
+  drawTopView();
+}
+$("btnAddBeamMode").onclick=()=>setAddBeamMode(!addBeamMode);
+$("btnDeleteBeamMode").onclick=()=>setDeleteBeamMode(!deleteBeamMode);
+$("btnViewIso").onclick=()=>{ editRotX=28; editRotZ=-35; pan2D={x:0,y:0}; zoom2D=1; drawTopView(); };
+$("btnViewXY").onclick=()=>{ editRotX=0; editRotZ=0; pan2D={x:0,y:0}; zoom2D=1; drawTopView(); };
+$("btnViewXZ").onclick=()=>{ editRotX=90; editRotZ=0; pan2D={x:0,y:0}; zoom2D=1; drawTopView(); };
+
+$("btnViewYZ").onclick=()=>{ editRotX=90; editRotZ=-90; pan2D={x:0,y:0}; zoom2D=1; drawTopView(); };
+$("topView").addEventListener("mousedown",e=>{
+    if(e.button!==0) return; didDrag2D=false;
+    if(e.shiftKey || e.altKey){ isPanning2D=true; panStart2D={x:e.clientX-pan2D.x, y:e.clientY-pan2D.y}; }
+    else { isOrbitingEdit=true; orbitStartEdit={x:e.clientX, y:e.clientY}; }
+});
+window.addEventListener("mouseup",()=>{
+    if(isPanning2D || isOrbitingEdit){ isPanning2D=false; isOrbitingEdit=false; $("topView").style.cursor=(addBeamMode||deleteBeamMode)?"crosshair":"default"; }
+});
+$("topView").addEventListener("mousemove",e=>{
+    if(isPanning2D){
+      const nx=e.clientX-panStart2D.x, ny=e.clientY-panStart2D.y;
+      if(Math.hypot(nx-pan2D.x, ny-pan2D.y)>3) didDrag2D=true;
+      if(didDrag2D){ pan2D.x=nx; pan2D.y=ny; $("topView").style.cursor="grabbing"; $("nodeTooltip").style.display="none"; drawTopView(); return; }
+    }
+    if(isOrbitingEdit){
+      const dx=e.clientX-orbitStartEdit.x, dy=e.clientY-orbitStartEdit.y;
+      if(Math.hypot(dx,dy)>3) didDrag2D=true;
+      if(didDrag2D){ editRotZ+=dx*0.5; editRotX+=dy*0.5; orbitStartEdit={x:e.clientX, y:e.clientY}; $("topView").style.cursor="grabbing"; $("nodeTooltip").style.display="none"; drawTopView(); return; }
+    }
+    const rect=$("topView").getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const cx=topViewXform.cx, cy=topViewXform.cy, sc=topViewXform.sc;
+    const near=nodes.filter(n=>{ const p=projEdit(n.X,n.Y,n.Z,cx,cy,sc); return Math.hypot(mx-p.x, my-p.y)<10; });
+    const tip=$("nodeTooltip");
+    if(near.length){
+      tip.innerHTML=near.map(n=>"Nœud "+n.ID+" : ("+n.X.toFixed(3)+", "+n.Y.toFixed(3)+", Z="+n.Z.toFixed(3)+" m)").join("<br>");
+        tip.style.display="block";
+        tip.style.left=Math.min(rect.width-tip.offsetWidth-10, Math.max(10, mx+14))+"px";
+        tip.style.top=Math.min(rect.height-tip.offsetHeight-10, Math.max(10, my-tip.offsetHeight-8))+"px";
+      } else tip.style.display="none";
+      if(deleteBeamMode){ const hit=findBeamAt(mx,my), nid=hit?hit.ID:null; if(nid!==hoveredBeamId){ hoveredBeamId=nid; drawTopView(); } }
+  });
+  $("topView").addEventListener("mouseleave",()=>{ $("nodeTooltip").style.display="none"; });
+    $("topView").addEventListener("click",e=>{
+      if(didDrag2D){ didDrag2D=false; return; }
+      const rect=$("topView").getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      if(deleteBeamMode){ const hit=findBeamAt(mx,my); if(hit) deleteBeam(hit.ID); return; }
+  if(!addBeamMode){
+    const hitBeam=findBeamAt(mx,my);
+    if(hitBeam){ openBeamInspector(hitBeam); return; }
+  }
+      const cx=topViewXform.cx, cy=topViewXform.cy, sc=topViewXform.sc;
+      let hit=null, best=9;
+      nodes.forEach(n=>{ const p=projEdit(n.X,n.Y,n.Z,cx,cy,sc); const d=Math.hypot(mx-p.x,my-p.y); if(d<best){best=d;hit=n;} });
+      if(hit){
+        if(!addBeamMode) return;
+        if(pendingStart==null){ pendingStart=hit.ID; pendingEnd=null; $("newBeamDialog").style.display="none"; drawTopView(); }
+        else if(pendingStart===hit.ID){ pendingStart=null; pendingEnd=null; $("newBeamDialog").style.display="none"; drawTopView(); }
+        else {
+          pendingEnd=hit.ID;
+          closeBeamInspector();
+          $("newBeamTitle").textContent="Nouvelle poutre : Nœud "+pendingStart+" → Nœud "+pendingEnd;
+          $("newBeamDialog").style.display="block";
+          drawTopView();
+        }
+      } else if(!addBeamMode && Math.abs(editRotX)<1 && Math.abs(editRotZ)<1){
+        addNode((mx-cx)/sc + modelCenter.x, -(my-cy)/sc + modelCenter.y, 0); pendingStart=null;
+      }
+  });
+$("btnAddNode1").onclick=()=>{ addNode(parseFloat($("n1X").value)/1000, parseFloat($("n1Y").value)/1000, parseFloat($("n1Z").value)/1000); };
+$("btnConfirmNewBeam").onclick=()=>{
+  if(pendingStart!=null && pendingEnd!=null){
+    createBeam(pendingStart, pendingEnd);
+    pendingStart=null; pendingEnd=null;
+    $("newBeamDialog").style.display="none";
+    drawTopView();
+  }
+};
+$("btnCancelNewBeam").onclick=()=>{
+  pendingStart=null; pendingEnd=null;
+  $("newBeamDialog").style.display="none";
+  drawTopView();
+};
+$("btnCancelPending").onclick=()=>{ pendingStart=null; pendingEnd=null; $("newBeamDialog").style.display="none"; drawTopView(); };
+
+/* ===================== INIT ===================== */
+beams.forEach(b=>{ if(!b.Sec) b.Sec=(famInfo[b.Fam]?famInfo[b.Fam][1]:Object.keys(catSec)[0]); if(!b.Mat) b.Mat=cbMat.value; });
+computeBounds();
+refreshLoadList();
+buildNodeTable();
+drawTopView();
+$("topView").addEventListener("wheel",e=>{
+  e.preventDefault();
+  const c=$("topView");
+  const rect=c.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  const oldZoom=zoom2D;
+  const factor=(e.deltaY<0?1.12:1/1.12);
+  const newZoom=Math.max(0.05,Math.min(50,oldZoom*factor));
+  const k=newZoom/oldZoom;
+  pan2D.x = mx - c.width*0.5 - k*(mx - c.width*0.5 - pan2D.x);
+  pan2D.y = my - c.height*0.5 - k*(my - c.height*0.5 - pan2D.y);
+  zoom2D=newZoom;
+  drawTopView();
+},{passive:false});
+
+$("topView").addEventListener("dblclick",()=>{
+  zoom2D=1;
+  pan2D={x:0,y:0};
+  drawTopView();
+});
+// redimensionnement canvas 3D
+function fit3D(){const c=$("view3d");const w=c.parentElement.clientWidth-36;c.width=Math.max(600,w);c.height=560;draw3D();}
+window.addEventListener("resize",fit3D);
+fit3D();
+</script>
+</body>
+</html>

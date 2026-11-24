@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>RDM Studio</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-primary": "#6cd3f7", "on-primary-container": "#fafdff", "text-secondary": "#4B5563", "primary-fixed-dim": "#6cd3f7", "on-background": "#171c1e", "surface": "#f6fafd", "canvas-base": "#F9FAFB", "surface-container": "#eaeef1", "text-primary": "#111827", "on-surface-variant": "#3e484d", "surface-container-highest": "#dfe3e6", "on-tertiary": "#ffffff", "on-secondary-container": "#596372", "surface-container-low": "#f0f4f7", "primary-fixed": "#b7eaff", "on-tertiary-fixed-variant": "#2e3aa2", "tertiary-fixed-dim": "#bdc2ff", "primary": "#00647c", "on-tertiary-container": "#fffbff", "on-secondary": "#ffffff", "border-hairline": "#E5E7EB", "fea-stress-low": "#0891B2", "secondary-fixed": "#d9e3f4", "on-secondary-fixed": "#121c28", "error-container": "#ffdad6", "surface-dim": "#d6dbdd", "on-primary-fixed": "#001f28", "error": "#ba1a1a", "surface-bright": "#f6fafd", "secondary": "#555f6d", "tertiary-container": "#5f6bd3", "surface-variant": "#dfe3e6", "border-subtle": "#D1D5DB", "tertiary": "#4551b8", "surface-container-high": "#e5e9eb", "surface-container-lowest": "#ffffff", "fea-stress-min": "#2563EB", "on-tertiary-fixed": "#000965", "outline-variant": "#bdc8ce", "text-muted": "#6B7280", "on-surface": "#171c1e", "surface-tint": "#006780", "on-secondary-fixed-variant": "#3e4755", "secondary-fixed-dim": "#bdc7d8", "on-primary-fixed-variant": "#004e61", "background": "#f6fafd", "outline": "#6e797e", "fea-stress-warn": "#F59E0B", "inverse-on-surface": "#edf1f4", "fea-stress-mid": "#10B981", "fea-stress-max": "#EF4444", "on-primary": "#ffffff", "on-error": "#ffffff", "surface-panel": "#FFFFFF", "secondary-container": "#d6e0f1", "on-error-container": "#93000a", "inverse-surface": "#2c3133", "primary-container": "#007f9d", "tertiary-fixed": "#dfe0ff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-sm": "0.5rem", "space-xl": "1.5rem", "space-md": "0.75rem", "margin": "1rem", "space-xs": "0.25rem", "space-lg": "1rem", "gutter": "0.75rem" }, "fontFamily": { "data-mono-sm": ["JetBrains Mono"], "headline-sm": ["Inter"], "label-ui": ["Inter"], "headline-lg": ["Inter"], "data-mono-lg": ["JetBrains Mono"], "headline-md": ["Inter"], "data-mono-md": ["JetBrains Mono"], "body-md": ["Inter"], "body-lg": ["Inter"], "label-code": ["JetBrains Mono"], "body-sm": ["Inter"] }, "fontSize": { "data-mono-sm": ["11px", { "lineHeight": "14px", "fontWeight": "400" }], "headline-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-ui": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "data-mono-lg": ["13px", { "lineHeight": "18px", "fontWeight": "500" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "data-mono-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "body-lg": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-code": ["10px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }] } } } };</script></head><body class="bg-canvas-base font-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-fea-stress-low/10 selection:text-text-primary"><header class="fixed top-0 left-0 w-full h-[44px] z-50 bg-surface-panel border-b border-border-hairline"><div class="w-full h-full px-4 flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="RDM Studio Logo" class="w-5 h-5 rounded-DEFAULT object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida/ALJJyrCpqktK_BUr0C2U3mvwsMzsD9Y3FpQKg48GMufCPkIecFCTTC9OXGIe0qupPB2A2LBDL0DP9gOZ4egj6PfOuRz7gB2_Mpn1EB4UlliYZy3CznvyXwOj_6n13Zt9s46oCtzcDTNvjW86LP_dhFd5uj9QzniS7czDnZihxJbe4fI7CMxzDzjLMhZiPQtc0A4XK15GTE8aHjQ5V2f63Nw6QwrJFR7ZdrLXN7KIMS-QUQA6fg"/><span class="font-body-md text-body-md font-semibold text-text-primary tracking-tight">RDM Studio</span><span class="text-border-subtle select-none font-body-sm text-body-sm">/</span><span class="font-body-sm text-body-sm text-text-muted">Projet Treillis-L240</span></div><nav class="hidden lg:flex items-center gap-6 h-full" data-active-classes="text-text-primary font-medium border-b-2 border-fea-stress-low pb-[11px]"><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="geometrie-et-profiles" href="#">Géométrie &amp; Profilés</a><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="liaisons" href="#">Liaisons</a><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="charges" href="#">Charges</a><a class="h-full flex items-center text-text-primary font-semibold font-body-md text-body-md transition-colors border-b-2 border-fea-stress-low pb-[11px]" data-path="calcul-3d-et-eurocode-3" href="#">Calcul 3D &amp; Eurocode 3</a><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="rapport" href="#">Rapport</a></nav><div class="flex items-center gap-3"><span class="font-data-mono-md text-data-mono-md text-text-muted tabular-nums">44 nœuds · 62 poutres</span><span class="w-[1px] h-3.5 bg-border-hairline"></span><button class="h-[26px] px-2.5 flex items-center justify-center font-body-sm text-body-sm font-medium text-text-primary bg-surface-panel border border-border-hairline rounded-lg hover:bg-canvas-base hover:border-border-subtle active:bg-surface-container-high transition-all" type="button">Exporter</button></div></div></header><main class="w-full pt-[44px] pb-[24px] bg-canvas-base min-h-screen"><div class="flex flex-col w-full h-[calc(100vh-68px)] select-none">
+<!-- Top KPI Summary Strip -->
+<div class="h-[52px] w-full bg-surface-panel shadow-sm px-6 flex items-center justify-between flex-shrink-0 z-20">
+<div class="flex items-center gap-8 w-full justify-between">
+<!-- Metric 1 -->
+<div class="flex flex-col justify-center min-w-0">
+<span class="font-label-ui text-label-ui text-text-muted">Masse totale</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-data-mono-lg text-data-mono-lg text-text-primary">412,5 kg</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted truncate">Acier S235 · 62 barres</span>
+</div>
+</div>
+<div class="w-[1px] h-6 bg-surface-container-highest"></div>
+<!-- Metric 2 -->
+<div class="flex flex-col justify-center min-w-0">
+<span class="font-label-ui text-label-ui text-text-muted">Flèche max ELS |Uz|</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-data-mono-lg text-data-mono-lg text-text-primary">4,82 mm</span>
+<span class="font-label-ui text-label-ui px-1.5 py-0.5 rounded-DEFAULT bg-fea-stress-mid/10 text-fea-stress-mid font-medium">Conforme &lt; L/300 (8,00 mm)</span>
+</div>
+</div>
+<div class="w-[1px] h-6 bg-surface-container-highest"></div>
+<!-- Metric 3 -->
+<div class="flex flex-col justify-center min-w-0">
+<span class="font-label-ui text-label-ui text-text-muted">Taux de travail max EC3</span>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="font-data-mono-lg text-data-mono-lg text-fea-stress-low font-semibold">74,2 %</span>
+<span class="font-label-ui text-label-ui px-1.5 py-0.5 rounded-DEFAULT bg-fea-stress-mid/10 text-fea-stress-mid font-medium">Von Mises + Flambement χ OK</span>
+</div>
+</div>
+<div class="w-[1px] h-6 bg-surface-container-highest"></div>
+<!-- Metric 4 -->
+<div class="flex flex-col justify-center min-w-0">
+<span class="font-label-ui text-label-ui text-text-muted">1er Mode propre</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-data-mono-lg text-data-mono-lg text-text-primary">14,25 Hz</span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted truncate">Période T = 0,070 s</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Middle 3D Viewport (52% height) -->
+<div class="relative flex-1 bg-canvas-base overflow-hidden flex items-center justify-center min-h-[340px]">
+<!-- Perspective Engineering Grid Floor -->
+<div class="absolute inset-0 pointer-events-none opacity-40">
+<svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="32" id="grid-cad" patternunits="userSpaceOnUse" width="32">
+<path d="M 32 0 L 0 0 0 32" fill="none" stroke="#D1D5DB" stroke-dasharray="2 4" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid-cad)" height="100%" width="100%"></rect>
+</svg>
+</div>
+<!-- Top floating HUD bar -->
+<div class="absolute top-4 left-6 z-10 flex items-center gap-3">
+<div class="flex items-center bg-surface-panel shadow-sm px-2.5 py-1 rounded-DEFAULT gap-2"><span class="material-symbols-outlined text-text-muted text-sm" style="font-size: 16px;">tune</span><select class="bg-transparent font-body-sm text-body-sm text-text-primary font-medium focus:outline-none cursor-pointer appearance-none pr-5" id="modeSelect"><option value="elu">Déformée statique ELU (Comb. Fondamentale)</option><option value="mode1">Mode propre 1 (14,25 Hz · Flexion Z)</option><option value="els">Déformée de service ELS (G + Q)</option></select><span class="material-symbols-outlined text-text-muted pointer-events-none -ml-5 text-sm" style="font-size: 16px;">expand_more</span></div>
+<div class="flex items-center bg-surface-panel shadow-sm px-3 py-1 rounded-DEFAULT gap-3.5">
+<span class="font-data-mono-sm text-data-mono-sm text-text-muted">Amplification</span>
+<div class="relative flex items-center w-24">
+<input class="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-fea-stress-low" id="ampSlider" max="100" min="1" type="range" value="30"/>
+</div>
+<span class="font-data-mono-sm text-data-mono-sm text-text-primary font-medium w-8 text-right" id="ampVal">30x</span>
+</div>
+<!-- View Orientation Quick Toggle -->
+<div class="flex items-center bg-surface-panel shadow-sm px-1 py-1 rounded-DEFAULT gap-0.5">
+<button class="px-2 py-0.5 rounded-DEFAULT text-fea-stress-low bg-surface-container-low font-data-mono-sm text-data-mono-sm font-semibold">ISO</button>
+<button class="px-2 py-0.5 rounded-DEFAULT text-text-muted hover:text-text-primary font-data-mono-sm text-data-mono-sm transition-colors">TOP</button>
+<button class="px-2 py-0.5 rounded-DEFAULT text-text-muted hover:text-text-primary font-data-mono-sm text-data-mono-sm transition-colors">FRONT</button>
+</div>
+</div>
+<!-- 3D Deformed Truss Schematic (Inline Vector) -->
+<div class="relative w-full max-w-4xl h-72 flex items-center justify-center">
+<svg class="w-full h-full overflow-visible" viewbox="0 0 860 260">
+<defs>
+<!-- Stress Gradients -->
+<lineargradient id="stressGradTop" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#2563EB"></stop>
+<stop offset="25%" stop-color="#0891B2"></stop>
+<stop offset="50%" stop-color="#EF4444"></stop>
+<stop offset="75%" stop-color="#F59E0B"></stop>
+<stop offset="100%" stop-color="#2563EB"></stop>
+</lineargradient>
+<lineargradient id="stressGradBot" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#2563EB"></stop>
+<stop offset="45%" stop-color="#10B981"></stop>
+<stop offset="50%" stop-color="#F59E0B"></stop>
+<stop offset="55%" stop-color="#10B981"></stop>
+<stop offset="100%" stop-color="#2563EB"></stop>
+</lineargradient>
+<lineargradient id="diagGradLeft" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#0891B2"></stop>
+<stop offset="100%" stop-color="#F59E0B"></stop>
+</lineargradient>
+<lineargradient id="diagGradRight" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#EF4444"></stop>
+<stop offset="100%" stop-color="#0891B2"></stop>
+</lineargradient>
+<radialgradient cx="50%" cy="50%" id="nodeGlow" r="50%">
+<stop offset="0%" stop-color="#EF4444" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#EF4444" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<!-- Ghost / Undeformed Reference Mesh (Hairline Gray) -->
+<g fill="none" opacity="0.65" stroke="#D1D5DB" stroke-dasharray="3 3" stroke-width="1">
+<!-- Top Chord -->
+<line x1="80" x2="780" y1="80" y2="80"></line>
+<!-- Bottom Chord -->
+<line x1="80" x2="780" y1="180" y2="180"></line>
+<!-- Vertical posts -->
+<line x1="80" x2="80" y1="80" y2="180"></line>
+<line x1="220" x2="220" y1="80" y2="180"></line>
+<line x1="360" x2="360" y1="80" y2="180"></line>
+<line x1="500" x2="500" y1="80" y2="180"></line>
+<line x1="640" x2="640" y1="80" y2="180"></line>
+<line x1="780" x2="780" y1="80" y2="180"></line>
+<!-- Diagonals -->
+<line x1="80" x2="220" y1="180" y2="80"></line>
+<line x1="220" x2="360" y1="180" y2="80"></line>
+<line x1="360" x2="500" y1="80" y2="180"></line>
+<line x1="500" x2="640" y1="80" y2="180"></line>
+<line x1="640" x2="780" y1="80" y2="180"></line>
+</g>
+<!-- Supports Symbols Undeformed Baseline -->
+<g fill="#4B5563">
+<!-- Pin Support Left -->
+<polygon fill="#4551b8" points="74,188 86,188 80,180"></polygon>
+<line stroke="#4551b8" stroke-width="2" x1="70" x2="90" y1="190" y2="190"></line>
+<!-- Roller Support Right -->
+<polygon fill="#4551b8" points="774,188 786,188 780,180"></polygon>
+<circle cx="776" cy="192" fill="#4551b8" r="2"></circle>
+<circle cx="784" cy="192" fill="#4551b8" r="2"></circle>
+<line stroke="#4551b8" stroke-width="1.5" x1="770" x2="790" y1="195" y2="195"></line>
+</g>
+<!-- Deformed Frame Elements (Active Solution State) -->
+<g id="deformedGroup" stroke-linecap="round" stroke-linejoin="round">
+<!-- Upper Chord Deformed Path (Smooth parabolic deflection) -->
+<path d="M 80 80 Q 430 134 780 80" fill="none" stroke="url(#stressGradTop)" stroke-width="3.5"></path>
+<!-- Lower Chord Deformed Path -->
+<path d="M 80 180 Q 430 228 780 180" fill="none" stroke="url(#stressGradBot)" stroke-width="3.5"></path>
+<!-- Vertical Struts (interpolated sag) -->
+<line stroke="#2563EB" stroke-width="2.5" x1="80" x2="80" y1="80" y2="180"></line>
+<line stroke="#0891B2" stroke-width="2.5" x1="220" x2="220" y1="96" y2="195"></line>
+<line stroke="#F59E0B" stroke-width="2.5" x1="360" x2="360" y1="113" y2="210"></line>
+<line stroke="#EF4444" stroke-width="3" x1="430" x2="430" y1="117" y2="214"></line> <!-- Selected Beam B14 -->
+<line stroke="#F59E0B" stroke-width="2.5" x1="500" x2="500" y1="113" y2="210"></line>
+<line stroke="#0891B2" stroke-width="2.5" x1="640" x2="640" y1="96" y2="195"></line>
+<line stroke="#2563EB" stroke-width="2.5" x1="780" x2="780" y1="80" y2="180"></line>
+<!-- Deformed Diagonals -->
+<line stroke="#2563EB" stroke-width="2" x1="80" x2="220" y1="180" y2="96"></line>
+<line stroke="url(#diagGradLeft)" stroke-width="2.2" x1="220" x2="360" y1="195" y2="113"></line>
+<line stroke="#EF4444" stroke-width="2.5" x1="360" x2="500" y1="113" y2="210"></line>
+<line stroke="url(#diagGradRight)" stroke-width="2.2" x1="500" x2="640" y1="113" y2="195"></line>
+<line stroke="#2563EB" stroke-width="2" x1="640" x2="780" y1="96" y2="180"></line>
+</g>
+<!-- Midspan Node Deflection Hotspot Circle -->
+<circle cx="430" cy="117" fill="url(#nodeGlow)" r="16"></circle>
+<circle cx="430" cy="117" fill="#EF4444" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Active Selected Element Indicator Halo (Beam B14) -->
+<rect fill="#EF4444" fill-opacity="0.08" height="97" rx="3" stroke="#EF4444" stroke-dasharray="2 2" stroke-width="1" width="12" x="424" y="117"></rect>
+</svg>
+<!-- Maximum Deflection Callout Pill (Exact alignment to node N09) -->
+<div class="absolute top-[82px] left-[52%] -translate-x-1/2 flex items-center gap-1.5 bg-surface-panel shadow-sm px-2.5 py-1 rounded-DEFAULT">
+<span class="w-1.5 h-1.5 rounded-full bg-fea-stress-max animate-pulse"></span>
+<span class="font-data-mono-sm text-data-mono-sm text-text-primary font-medium">N09 : |Uz| = 4,82 mm</span>
+</div>
+<!-- Selected Member Overlay Label -->
+<div class="absolute bottom-8 left-[51%] translate-x-3 bg-surface-panel shadow-sm px-2 py-0.5 rounded-DEFAULT flex items-center gap-1">
+<span class="font-label-code text-label-code text-text-muted">POUTRE</span>
+<span class="font-data-mono-sm text-data-mono-sm text-fea-stress-max font-semibold">B14</span>
+</div>
+</div>
+<!-- Right Vertical Calibrated Von Mises Scale Bar -->
+<div class="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2.5 bg-surface-panel shadow-sm p-3 rounded-DEFAULT z-10">
+<div class="flex flex-col items-end justify-between h-44 font-data-mono-sm text-data-mono-sm text-text-muted">
+<span class="text-fea-stress-max font-medium">235,0 MPa</span>
+<span>176,3 MPa</span>
+<span>117,5 MPa</span>
+<span>58,8 MPa</span>
+<span class="text-fea-stress-min font-medium">0,0 MPa</span>
+</div>
+<!-- Continuous Rainbow Thermal Bar -->
+<div class="w-3.5 h-44 rounded-DEFAULT bg-gradient-to-b from-fea-stress-max via-fea-stress-warn via-fea-stress-mid to-fea-stress-min"></div>
+<div class="h-44 flex flex-col justify-between items-start py-0.5">
+<span class="font-label-code text-label-code text-text-muted uppercase tracking-wider [writing-mode:vertical-rl] rotate-180">Contraintes Von Mises σvm</span>
+</div>
+</div>
+<!-- Viewport Axis Compass (Bottom-Left) -->
+<div class="absolute bottom-4 left-6 flex items-center gap-3">
+<div class="flex items-center gap-1 font-data-mono-sm text-data-mono-sm text-text-muted bg-surface-panel shadow-sm px-2.5 py-1 rounded-DEFAULT">
+<span class="text-fea-stress-max font-semibold">X</span>
+<span class="text-fea-stress-mid font-semibold">Y</span>
+<span class="text-fea-stress-min font-semibold">Z</span>
+<span class="ml-2 text-text-muted font-normal">Repère Global</span>
+</div>
+<div class="font-data-mono-sm text-data-mono-sm text-text-muted bg-surface-panel shadow-sm px-2 py-1 rounded-DEFAULT">
+        Échelle : 1:25
+      </div>
+</div>
+</div>
+<!-- Bottom Docked Section & Internal Forces Inspector -->
+<div class="min-h-[260px] w-full bg-surface-panel flex flex-shrink-0 border-t border-border-hairline"><div class="w-[330px] p-4 flex flex-col justify-between flex-shrink-0 bg-surface-panel border-r border-border-hairline"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-body-md text-body-md font-semibold text-text-primary">Coupe transversale</span><span class="text-text-muted font-body-sm text-body-sm">·</span><span class="font-data-mono-md text-data-mono-md text-text-primary">IPE 200</span></div><span class="font-data-mono-sm text-data-mono-sm px-1.5 py-0.5 rounded-DEFAULT bg-surface-container-high text-text-secondary">S235</span></div><div class="flex items-center justify-between my-2 px-1"><div class="relative flex items-center"><svg class="overflow-visible" height="126" viewbox="0 0 100 120" width="100"><defs><lineargradient id="beamGradTop" x1="0%" x2="0%" y1="0%" y2="100%"><stop offset="0%" stop-color="#EF4444"></stop><stop offset="100%" stop-color="#F59E0B"></stop></lineargradient><lineargradient id="beamGradWeb" x1="0%" x2="0%" y1="0%" y2="100%"><stop offset="0%" stop-color="#F59E0B"></stop><stop offset="50%" stop-color="#0891B2"></stop><stop offset="100%" stop-color="#2563EB"></stop></lineargradient><lineargradient id="beamGradBot" x1="0%" x2="0%" y1="0%" y2="100%"><stop offset="0%" stop-color="#0891B2"></stop><stop offset="100%" stop-color="#2563EB"></stop></lineargradient></defs><rect fill="url(#beamGradTop)" height="14" rx="1" width="60" x="20" y="6"></rect><rect fill="url(#beamGradWeb)" height="76" rx="0.5" width="10" x="45" y="20"></rect><rect fill="url(#beamGradBot)" height="14" rx="1" width="60" x="20" y="96"></rect><line stroke="#0891B2" stroke-dasharray="3 2" stroke-width="1" x1="16" x2="84" y1="58" y2="58"></line><path d="M 14 13 L 6 13" stroke="#EF4444" stroke-width="1.5"></path><polygon fill="#EF4444" points="6,13 10,11 10,15"></polygon><path d="M 14 103 L 6 103" stroke="#2563EB" stroke-width="1.5"></path><polygon fill="#2563EB" points="14,103 10,101 10,105"></polygon></svg></div><div class="flex flex-col justify-between h-[126px] font-data-mono-sm text-data-mono-sm pl-2"><div class="flex flex-col"><span class="font-semibold text-fea-stress-max">+168,4 MPa</span><span class="font-label-code text-label-code text-text-muted">Compression sup.</span></div><div class="flex flex-col py-1"><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-fea-stress-low"></span><span class="text-fea-stress-low font-medium">0,0 MPa</span></div><span class="font-label-code text-label-code text-text-muted">Axe neutre G (z=0)</span></div><div class="flex flex-col"><span class="font-semibold text-fea-stress-min">-152,1 MPa</span><span class="font-label-code text-label-code text-text-muted">Traction inf.</span></div></div></div><div class="pt-2 border-t border-border-hairline flex flex-col gap-1"><div class="flex items-center justify-between font-data-mono-sm text-data-mono-sm text-text-muted"><span>h/b: <strong class="text-text-primary font-medium">200/100</strong></span><span>Iy: <strong class="text-text-primary font-medium">1943 cm⁴</strong></span><span>Wpl,y: <strong class="text-text-primary font-medium">220,6 cm³</strong></span></div><div class="flex items-center justify-between font-data-mono-sm text-data-mono-sm"><span class="text-text-secondary font-medium">Classe 1</span><span class="text-text-muted">·</span><span class="text-text-secondary">Flambement χz = <strong class="text-text-primary font-medium">0,84</strong></span><span class="font-label-ui text-label-ui px-1.5 py-0.5 rounded-DEFAULT bg-fea-stress-mid/10 text-fea-stress-mid font-medium">EC3 OK</span></div></div></div><div class="flex-1 p-4 flex flex-col justify-between min-w-0"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-body-md text-body-md font-semibold text-text-primary">Sollicitations internes</span><span class="text-text-muted font-body-sm text-body-sm">·</span><span class="font-body-sm text-body-sm text-text-secondary font-medium">Poutre B14 (Portée L = 2,40 m)</span></div><div class="flex items-center gap-3"><span class="font-data-mono-sm text-data-mono-sm text-text-muted">Abscisse sélectionnée :</span><span class="font-data-mono-sm text-data-mono-sm px-2 py-0.5 rounded-DEFAULT bg-error-container/40 text-error font-medium">x = 1,20 m (50 %)</span></div></div><div class="grid grid-cols-3 gap-3 my-1"><div class="bg-surface-container-low px-3 py-2 rounded-DEFAULT flex items-center justify-between"><div><div class="font-label-ui text-label-ui text-text-muted uppercase">Flexion My / Mz</div><div class="flex items-baseline gap-2 mt-0.5"><span class="font-data-mono-md text-data-mono-md text-text-primary font-bold">-42,8 kN·m</span><span class="font-data-mono-sm text-data-mono-sm text-text-muted">/ 1,4 kN·m</span></div></div><span class="font-data-mono-sm text-data-mono-sm text-fea-stress-max bg-surface-panel px-1.5 py-0.5 rounded-DEFAULT">Max</span></div><div class="bg-surface-container-low px-3 py-2 rounded-DEFAULT flex items-center justify-between"><div><div class="font-label-ui text-label-ui text-text-muted uppercase">Tranchant Ty / Tz</div><div class="flex items-baseline gap-2 mt-0.5"><span class="font-data-mono-md text-data-mono-md text-text-primary font-bold">38,5 kN</span><span class="font-data-mono-sm text-data-mono-sm text-text-muted">/ -2,1 kN</span></div></div><span class="font-data-mono-sm text-data-mono-sm text-text-secondary bg-surface-panel px-1.5 py-0.5 rounded-DEFAULT">VEd OK</span></div><div class="bg-surface-container-low px-3 py-2 rounded-DEFAULT flex items-center justify-between"><div><div class="font-label-ui text-label-ui text-text-muted uppercase">Normal N / Torsion Mx</div><div class="flex items-baseline gap-2 mt-0.5"><span class="font-data-mono-md text-data-mono-md text-text-primary font-bold">-112,4 kN</span><span class="font-data-mono-sm text-data-mono-sm text-text-muted">/ 0,6 kN·m</span></div></div><span class="font-data-mono-sm text-data-mono-sm text-fea-stress-low bg-surface-panel px-1.5 py-0.5 rounded-DEFAULT">Compr.</span></div></div><div class="relative w-full h-[140px] bg-canvas-base rounded-DEFAULT p-2 flex flex-col justify-between border border-border-hairline"><div class="absolute top-1 bottom-6 left-1/2 w-[1px] bg-error z-20 pointer-events-none"><div class="absolute -top-1 -left-[3px] w-2 h-2 rounded-full bg-error"></div></div><div class="w-full flex-1 flex flex-col justify-between relative py-0.5"><div class="relative h-[32px] flex items-center"><span class="absolute left-1.5 font-label-code text-label-code text-text-muted z-10">My [kN·m]</span><svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 32"><line stroke="#E5E7EB" stroke-width="0.8" x1="0" x2="400" y1="16" y2="16"></line><path d="M 0 16 Q 200 34 400 16" fill="none" stroke="#0891B2" stroke-width="2"></path><circle cx="200" cy="25" fill="#EF4444" r="3"></circle></svg><span class="absolute right-1.5 font-data-mono-sm text-data-mono-sm text-fea-stress-low font-medium">-42,8</span></div><div class="relative h-[32px] flex items-center"><span class="absolute left-1.5 font-label-code text-label-code text-text-muted z-10">Vz [kN]</span><svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 32"><line stroke="#E5E7EB" stroke-width="0.8" x1="0" x2="400" y1="16" y2="16"></line><line stroke="#4551b8" stroke-width="2" x1="0" x2="400" y1="5" y2="27"></line><circle cx="200" cy="16" fill="#EF4444" r="3"></circle></svg><span class="absolute right-1.5 font-data-mono-sm text-data-mono-sm text-text-secondary font-medium">+38,5 / -38,5</span></div><div class="relative h-[32px] flex items-center"><span class="absolute left-1.5 font-label-code text-label-code text-text-muted z-10">N [kN]</span><svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 32"><line stroke="#E5E7EB" stroke-width="0.8" x1="0" x2="400" y1="16" y2="16"></line><line stroke="#10B981" stroke-width="2" x1="0" x2="400" y1="23" y2="23"></line><circle cx="200" cy="23" fill="#EF4444" r="3"></circle></svg><span class="absolute right-1.5 font-data-mono-sm text-data-mono-sm text-fea-stress-mid font-medium">-112,4</span></div></div><div class="flex items-center justify-between font-data-mono-sm text-[10px] text-text-muted pt-1 px-1.5 border-t border-border-hairline"><span>x = 0,00 m</span><span>0,60 m</span><span class="text-error font-medium">x = 1,20 m</span><span>1,80 m</span><span>x = 2,40 m</span></div></div></div></div>
+</div>
+<script>
+  // Simple micro-interaction for Amplification slider
+  const ampSlider = document.getElementById('ampSlider');
+  const ampVal = document.getElementById('ampVal');
+  const deformedGroup = document.getElementById('deformedGroup');
+
+  if (ampSlider && ampVal) {
+    ampSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      ampVal.textContent = val + 'x';
+      if (deformedGroup) {
+        // Subtly adjust SVG displacement scale
+        const scaleFactor = 0.5 + (val / 60);
+        deformedGroup.style.transformOrigin = "430px 130px";
+        deformedGroup.style.transform = `scaleY(${scaleFactor})`;
+      }
+    });
+  }
+
+  // Toggle dropdown behavior visual feedback
+  const modeSelect = document.getElementById('modeSelect');
+  if (modeSelect) {
+    modeSelect.addEventListener('change', (e) => {
+      if (deformedGroup) {
+        deformedGroup.style.transition = 'all 0.3s ease';
+        if (e.target.value === 'mode1') {
+          deformedGroup.style.filter = 'hue-rotate(45deg)';
+        } else if (e.target.value === 'els') {
+          deformedGroup.style.filter = 'saturate(0.7)';
+        } else {
+          deformedGroup.style.filter = 'none';
+        }
+      }
+    });
+  }
+</script></main><footer class="fixed bottom-0 left-0 w-full h-[24px] z-40 bg-surface-panel border-t border-border-hairline px-4 flex items-center justify-between font-data-mono-sm text-data-mono-sm text-text-muted"><div class="flex items-center gap-space-sm"><span>RDM Studio · Eurocode 3 (NF EN 1993-1-1)</span></div><div class="flex items-center gap-space-sm"><span>Solveur EF 3D · Précision IEEE 754</span></div></footer></body></html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>RDM Studio</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-primary": "#6cd3f7", "on-primary-container": "#fafdff", "text-secondary": "#4B5563", "primary-fixed-dim": "#6cd3f7", "on-background": "#171c1e", "surface": "#f6fafd", "canvas-base": "#F9FAFB", "surface-container": "#eaeef1", "text-primary": "#111827", "on-surface-variant": "#3e484d", "surface-container-highest": "#dfe3e6", "on-tertiary": "#ffffff", "on-secondary-container": "#596372", "surface-container-low": "#f0f4f7", "primary-fixed": "#b7eaff", "on-tertiary-fixed-variant": "#2e3aa2", "tertiary-fixed-dim": "#bdc2ff", "primary": "#00647c", "on-tertiary-container": "#fffbff", "on-secondary": "#ffffff", "border-hairline": "#E5E7EB", "fea-stress-low": "#0891B2", "secondary-fixed": "#d9e3f4", "on-secondary-fixed": "#121c28", "error-container": "#ffdad6", "surface-dim": "#d6dbdd", "on-primary-fixed": "#001f28", "error": "#ba1a1a", "surface-bright": "#f6fafd", "secondary": "#555f6d", "tertiary-container": "#5f6bd3", "surface-variant": "#dfe3e6", "border-subtle": "#D1D5DB", "tertiary": "#4551b8", "surface-container-high": "#e5e9eb", "surface-container-lowest": "#ffffff", "fea-stress-min": "#2563EB", "on-tertiary-fixed": "#000965", "outline-variant": "#bdc8ce", "text-muted": "#6B7280", "on-surface": "#171c1e", "surface-tint": "#006780", "on-secondary-fixed-variant": "#3e4755", "secondary-fixed-dim": "#bdc7d8", "on-primary-fixed-variant": "#004e61", "background": "#f6fafd", "outline": "#6e797e", "fea-stress-warn": "#F59E0B", "inverse-on-surface": "#edf1f4", "fea-stress-mid": "#10B981", "fea-stress-max": "#EF4444", "on-primary": "#ffffff", "on-error": "#ffffff", "surface-panel": "#FFFFFF", "secondary-container": "#d6e0f1", "on-error-container": "#93000a", "inverse-surface": "#2c3133", "primary-container": "#007f9d", "tertiary-fixed": "#dfe0ff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-sm": "0.5rem", "space-xl": "1.5rem", "space-md": "0.75rem", "margin": "1rem", "space-xs": "0.25rem", "space-lg": "1rem", "gutter": "0.75rem" }, "fontFamily": { "data-mono-sm": ["JetBrains Mono"], "headline-sm": ["Inter"], "label-ui": ["Inter"], "headline-lg": ["Inter"], "data-mono-lg": ["JetBrains Mono"], "headline-md": ["Inter"], "data-mono-md": ["JetBrains Mono"], "body-md": ["Inter"], "body-lg": ["Inter"], "label-code": ["JetBrains Mono"], "body-sm": ["Inter"] }, "fontSize": { "data-mono-sm": ["11px", { "lineHeight": "14px", "fontWeight": "400" }], "headline-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-ui": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "data-mono-lg": ["13px", { "lineHeight": "18px", "fontWeight": "500" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "data-mono-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "body-lg": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-code": ["10px", { "lineHeight": "12px", "letterSpacing": "0.04em", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }] } } } };</script></head><body class="bg-canvas-base font-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-fea-stress-low/10 selection:text-text-primary"><header class="fixed top-0 left-0 w-full h-[44px] z-50 bg-surface-panel border-b border-border-hairline"><div class="w-full h-full px-4 flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="RDM Studio Logo" class="w-5 h-5 rounded-DEFAULT object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida/ALJJyrCpqktK_BUr0C2U3mvwsMzsD9Y3FpQKg48GMufCPkIecFCTTC9OXGIe0qupPB2A2LBDL0DP9gOZ4egj6PfOuRz7gB2_Mpn1EB4UlliYZy3CznvyXwOj_6n13Zt9s46oCtzcDTNvjW86LP_dhFd5uj9QzniS7czDnZihxJbe4fI7CMxzDzjLMhZiPQtc0A4XK15GTE8aHjQ5V2f63Nw6QwrJFR7ZdrLXN7KIMS-QUQA6fg"/><span class="font-body-md text-body-md font-semibold text-text-primary tracking-tight">RDM Studio</span><span class="text-border-subtle select-none font-body-sm text-body-sm">/</span><span class="font-body-sm text-body-sm text-text-muted">Projet Treillis-L240</span></div><nav class="hidden lg:flex items-center gap-6 h-full" data-active-classes="text-text-primary font-medium border-b-2 border-fea-stress-low pb-[11px]"><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="geometrie-et-profiles" href="#">Géométrie &amp; Profilés</a><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="liaisons" href="#">Liaisons</a><a aria-current="page" class="h-full flex items-center transition-colors text-text-primary font-medium border-b-2 border-fea-stress-low pb-[11px]" data-path="charges" href="#">Charges</a><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="calcul-3d-et-eurocode-3" href="#">Calcul 3D &amp; Eurocode 3</a><a class="h-full flex items-center text-text-muted hover:text-text-primary font-body-md text-body-md transition-colors border-b-2 border-transparent pb-[11px]" data-path="rapport" href="#">Rapport</a></nav><div class="flex items-center gap-3"><span class="font-data-mono-md text-data-mono-md text-text-muted tabular-nums">44 nœuds · 62 poutres</span><span class="w-[1px] h-3.5 bg-border-hairline"></span><button class="h-[26px] px-2.5 flex items-center justify-center font-body-sm text-body-sm font-medium text-text-primary bg-surface-panel border border-border-hairline rounded-lg hover:bg-canvas-base hover:border-border-subtle active:bg-surface-container-high transition-all" type="button">Exporter</button></div></div></header><main class="w-full pt-[44px] pb-[24px] bg-canvas-base min-h-screen"><div class="flex flex-col w-full">
+<div class="flex w-full h-[calc(100vh-68px)] overflow-hidden">
+<!-- LEFT INSPECTOR PANEL (LINEAR / DAYLIGHT CAD AESTHETIC) -->
+<aside class="w-[300px] flex-shrink-0 bg-surface-panel p-4 flex flex-col justify-between h-full overflow-y-auto select-none shadow-[1px_0_0_0_#E5E7EB] z-20">
+<div class="flex flex-col gap-3">
+<!-- Header Section -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-text-primary text-[17px]">hub</span>
+<span class="font-headline-sm text-body-md text-text-primary font-semibold tracking-tight">Combinaisons &amp; Actions</span>
+</div>
+<span class="font-data-mono-sm text-[10px] text-text-muted bg-surface-container-high px-1.5 py-0.5 rounded-[3px] font-medium tracking-wide">NF EN 1990</span>
+</div>
+<!-- Eurocode 0 Segmented Switcher -->
+<div class="bg-surface-container-low p-0.5 rounded-lg flex items-center text-[11px] font-medium">
+<button class="flex-1 py-1 px-2 rounded-lg bg-surface-panel text-text-primary font-body-md text-label-ui shadow-sm text-center transition-all" id="combo-elu" onclick="switchCombo('elu')" type="button">
+            ELU (1,35G + 1,50Q)
+          </button>
+<button class="flex-1 py-1 px-2 rounded-lg text-text-muted hover:text-text-primary font-body-md text-label-ui text-center transition-all" id="combo-els" onclick="switchCombo('els')" type="button">
+            ELS (1,00G + 1,00Q)
+          </button>
+</div>
+<!-- Hairline Divider -->
+<div class="h-[1px] w-full bg-border-hairline my-1"></div>
+<!-- Section: Acceleration & Self Weight -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-label-code uppercase tracking-wider text-text-muted">Préréglages d'accélération</span>
+<span class="font-data-mono-sm text-[10px] text-fea-stress-low">g = 9.81 m/s²</span>
+</div>
+<!-- Toggle 1: Self weight -->
+<div class="flex items-center justify-between py-1 group">
+<div class="flex flex-col">
+<span class="font-body-md text-body-sm text-text-primary group-hover:text-text-primary transition-colors">Poids propre structurel</span>
+<span class="font-data-mono-sm text-[10px] text-text-muted">-9,81 m/s² (Axe Z)</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" id="toggle-gravity" onchange="toggleGravityEffect(this.checked)" type="checkbox"/>
+<div class="w-7 h-4 bg-border-subtle peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-fea-stress-low"></div>
+</label>
+</div>
+<!-- Toggle 2: Transport Dynamic -->
+<div class="flex items-center justify-between py-1 opacity-70 hover:opacity-100 transition-opacity">
+<div class="flex flex-col">
+<span class="font-body-md text-body-sm text-text-primary">Transport dynamique</span>
+<span class="font-data-mono-sm text-[10px] text-text-muted">0,8g X / 1,5g Z (Choc)</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="toggle-transport" type="checkbox"/>
+<div class="w-7 h-4 bg-border-subtle peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-fea-stress-low"></div>
+</label>
+</div>
+</div>
+<!-- Hairline Divider -->
+<div class="h-[1px] w-full bg-border-hairline my-1"></div>
+<!-- Section: Concentrated Nodal Load -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-label-code uppercase tracking-wider text-text-muted">Charge ponctuelle au nœud</span>
+<span class="font-data-mono-sm text-[10px] text-fea-stress-max bg-error-container/40 px-1 py-0.2 rounded text-error">Fx · Fy · Fz</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-text-secondary text-[12px] font-body-sm">Cible</span>
+<div class="relative w-36">
+<select class="w-full h-7 px-2 bg-surface-panel border border-border-hairline rounded-lg font-data-mono-md text-[11px] text-text-primary focus:outline-none focus:border-fea-stress-low transition-colors appearance-none cursor-pointer" id="select-node">
+<option selected="" value="node-08">Nœud #08 (Sommet)</option>
+<option value="node-06">Nœud #06 (Membrure)</option>
+<option value="node-12">Nœud #12 (Appui)</option>
+<option value="node-14">Nœud #14 (Diagonale)</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1.5 text-text-muted pointer-events-none text-[15px]">expand_more</span>
+</div>
+</div>
+<!-- 3-Column Inputs Fx Fy Fz -->
+<div class="grid grid-cols-3 gap-1.5">
+<div class="flex flex-col">
+<span class="font-data-mono-sm text-[9px] text-text-muted uppercase mb-0.5">Fx (N)</span>
+<input class="w-full h-7 px-1.5 bg-canvas-base border border-border-hairline rounded font-data-mono-md text-[11px] text-text-primary text-center focus:bg-surface-panel focus:outline-none focus:border-fea-stress-low" type="text" value="0"/>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-sm text-[9px] text-text-muted uppercase mb-0.5">Fy (N)</span>
+<input class="w-full h-7 px-1.5 bg-canvas-base border border-border-hairline rounded font-data-mono-md text-[11px] text-text-primary text-center focus:bg-surface-panel focus:outline-none focus:border-fea-stress-low" type="text" value="0"/>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-sm text-[9px] text-fea-stress-max font-semibold uppercase mb-0.5">Fz (N)</span>
+<input class="w-full h-7 px-1 bg-surface-panel border border-fea-stress-max/50 rounded font-data-mono-md text-[11px] text-fea-stress-max font-medium text-center focus:outline-none focus:ring-1 focus:ring-fea-stress-max" id="input-fz" oninput="updateFzValue(this.value)" type="text" value="-10 000"/>
+</div>
+</div>
+<button class="mt-1 h-7 w-full flex items-center justify-center gap-1 border border-border-hairline rounded-lg bg-surface-panel hover:bg-canvas-base text-text-primary font-body-sm text-[11px] transition-colors" type="button">
+<span class="material-symbols-outlined text-[13px]">add</span>
+            Ajouter effort nodal
+          </button>
+</div>
+<!-- Hairline Divider -->
+<div class="h-[1px] w-full bg-border-hairline my-1"></div>
+<!-- Section: Distributed Beam Load -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-label-code uppercase tracking-wider text-text-muted">Charge répartie sur poutre</span>
+<span class="font-data-mono-sm text-[10px] text-text-muted">NF EN 1991-1-1</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-text-secondary text-[12px] font-body-sm">Poutre</span>
+<div class="relative w-36">
+<select class="w-full h-7 px-2 bg-surface-panel border border-border-hairline rounded-lg font-data-mono-md text-[11px] text-text-primary focus:outline-none focus:border-fea-stress-low transition-colors appearance-none cursor-pointer" id="select-beam">
+<option selected="" value="beam-04">Poutre #04 (IPE 240)</option>
+<option value="beam-02">Poutre #02 (HEA 200)</option>
+<option value="beam-08">Poutre #08 (IPE 180)</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 top-1.5 text-text-muted pointer-events-none text-[15px]">expand_more</span>
+</div>
+</div>
+<!-- 3-Column Inputs qx qy qz -->
+<div class="grid grid-cols-3 gap-1.5">
+<div class="flex flex-col">
+<span class="font-data-mono-sm text-[9px] text-text-muted uppercase mb-0.5">qx (N/m)</span>
+<input class="w-full h-7 px-1.5 bg-canvas-base border border-border-hairline rounded font-data-mono-md text-[11px] text-text-primary text-center focus:bg-surface-panel focus:outline-none focus:border-fea-stress-low" type="text" value="0"/>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-sm text-[9px] text-text-muted uppercase mb-0.5">qy (N/m)</span>
+<input class="w-full h-7 px-1.5 bg-canvas-base border border-border-hairline rounded font-data-mono-md text-[11px] text-text-primary text-center focus:bg-surface-panel focus:outline-none focus:border-fea-stress-low" type="text" value="0"/>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-sm text-[9px] text-fea-stress-max font-semibold uppercase mb-0.5">qz (N/m)</span>
+<input class="w-full h-7 px-1 bg-surface-panel border border-fea-stress-max/50 rounded font-data-mono-md text-[11px] text-fea-stress-max font-medium text-center focus:outline-none focus:ring-1 focus:ring-fea-stress-max" id="input-qz" type="text" value="-1 250"/>
+</div>
+</div>
+<button class="mt-1 h-7 w-full flex items-center justify-center gap-1 border border-border-hairline rounded-lg bg-surface-panel hover:bg-canvas-base text-text-primary font-body-sm text-[11px] transition-colors" type="button">
+<span class="material-symbols-outlined text-[13px]">add</span>
+            Ajouter charge linéaire
+          </button>
+</div>
+</div>
+<!-- Bottom Action & Telemetry Readout -->
+<div class="pt-3 border-t border-border-hairline flex flex-col gap-2">
+<div class="flex items-center justify-between bg-canvas-base px-2.5 py-1.5 rounded-lg border border-border-hairline">
+<span class="font-label-ui text-label-code text-text-muted uppercase tracking-wider">Résultante ΣFz</span>
+<span class="font-data-mono-md text-data-mono-md text-text-primary font-semibold tabular-nums" id="telemetry-fz">-21,75 kN</span>
+</div>
+<button class="h-8 w-full bg-fea-stress-low hover:bg-[#0E7490] active:bg-[#155E75] text-white font-body-sm text-[12px] font-medium rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[15px]">play_arrow</span>
+<span>Lancer le calcul 3D &amp; Eurocode 3</span>
+</button>
+</div>
+</aside>
+<!-- MAIN 3D CAD / FEA VIEWPORT -->
+<main class="flex-1 bg-canvas-base relative overflow-hidden flex items-center justify-center select-none">
+<!-- Linear 20px Technical Engineering Dot Grid -->
+<div class="absolute inset-0 pointer-events-none opacity-60" style="background-image: radial-gradient(#D1D5DB 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- TOP-LEFT FLOATING STATE BANNER -->
+<div class="absolute top-4 left-4 z-20 flex items-center gap-2">
+<div class="h-[28px] px-3 bg-surface-panel/95 backdrop-blur-sm border border-border-hairline rounded-md flex items-center gap-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] text-text-primary">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-fea-stress-max animate-pulse"></span>
+<span class="font-label-ui text-[11px] font-medium text-text-secondary" id="banner-cas">Cas actif : <strong class="text-text-primary font-semibold">ELU (1,35 G + 1,50 Q)</strong></span>
+</div>
+<span class="w-[1px] h-3 bg-border-hairline"></span>
+<span class="font-data-mono-sm text-[11px] text-text-muted font-medium" id="banner-result">Résultante Z : <strong class="text-fea-stress-max">-21,75 kN (ELU)</strong></span>
+</div>
+<div class="h-[28px] px-2 bg-surface-panel/95 backdrop-blur-sm border border-border-hairline rounded-md flex items-center gap-1 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+<button class="p-1 text-text-muted hover:text-text-primary hover:bg-canvas-base rounded" title="Vue Isométrique" type="button"><span class="material-symbols-outlined text-[16px]">view_in_ar</span></button>
+<button class="p-1 text-text-muted hover:text-text-primary hover:bg-canvas-base rounded" title="Centrer le modèle" type="button"><span class="material-symbols-outlined text-[16px]">filter_center_focus</span></button>
+<button class="p-1 text-text-muted hover:text-text-primary hover:bg-canvas-base rounded" title="Afficher déformée" type="button"><span class="material-symbols-outlined text-[16px]">timeline</span></button>
+</div>
+</div>
+<!-- TOP-RIGHT 3D COORDINATE TRIAD -->
+<div class="absolute top-4 right-4 z-20 w-16 h-16 bg-surface-panel/90 backdrop-blur-sm border border-border-hairline rounded-md flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+<svg class="w-12 h-12" viewbox="0 0 60 60">
+<!-- Center origin -->
+<circle cx="28" cy="34" fill="#111827" r="2"></circle>
+<!-- X Axis (Red) -->
+<line stroke="#EF4444" stroke-linecap="round" stroke-width="1.75" x1="28" x2="50" y1="34" y2="40"></line>
+<text class="font-data-mono-sm text-[8px] font-bold" fill="#EF4444" x="52" y="43">X</text>
+<!-- Y Axis (Green) -->
+<line stroke="#10B981" stroke-linecap="round" stroke-width="1.75" x1="28" x2="38" y1="34" y2="16"></line>
+<text class="font-data-mono-sm text-[8px] font-bold" fill="#10B981" x="40" y="14">Y</text>
+<!-- Z Axis (Cyan/Blue) -->
+<line stroke="#0891B2" stroke-linecap="round" stroke-width="1.75" x1="28" x2="10" y1="34" y2="28"></line>
+<text class="font-data-mono-sm text-[8px] font-bold" fill="#0891B2" x="4" y="27">Z</text>
+</svg>
+</div>
+<!-- ISOMETRIC 3D STEEL TRUSS WITH VECTOR FORCES -->
+<div class="relative w-full max-w-[940px] h-[540px] flex items-center justify-center">
+<svg class="w-full h-full drop-shadow-sm select-none" viewbox="0 0 880 500" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<!-- Marker Arrowhead Red -->
+<marker id="arrow-down-red" markerheight="6" markerwidth="6" orient="auto" refx="5" refy="8" viewbox="0 0 10 10">
+<path d="M 1 2 L 5 8 L 9 2 Z" fill="#EF4444"></path>
+</marker>
+<!-- Marker Arrowhead Comb -->
+<marker id="comb-arrow" markerheight="4.5" markerwidth="4.5" orient="auto" refx="5" refy="8" viewbox="0 0 10 10">
+<path d="M 1 1 L 5 8 L 9 1 Z" fill="#EF4444"></path>
+</marker>
+<!-- Gradient for ground support shadow -->
+<lineargradient id="support-shadow" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#94A3B8" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#CBD5E1" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- GROUND DATUM WORKPLANE REFERENCE -->
+<g opacity="0.35">
+<line stroke="#CBD5E1" stroke-dasharray="3 3" stroke-width="1" x1="80" x2="480" y1="380" y2="445"></line>
+<line stroke="#CBD5E1" stroke-dasharray="3 3" stroke-width="1" x1="480" x2="820" y1="445" y2="350"></line>
+<line stroke="#CBD5E1" stroke-dasharray="3 3" stroke-width="1" x1="80" x2="420" y1="380" y2="285"></line>
+<line stroke="#CBD5E1" stroke-dasharray="3 3" stroke-width="1" x1="420" x2="820" y1="285" y2="350"></line>
+</g>
+<!-- STRUCTURAL SUPPORTS (APPUIS) -->
+<!-- Left Pin Support (Appui Fixe rotulé) -->
+<g transform="translate(180, 360)">
+<polygon fill="#F1F5F9" points="0,0 -12,18 12,18" stroke="#555F6D" stroke-width="1.5"></polygon>
+<line stroke="#334155" stroke-width="2" x1="-16" x2="16" y1="18" y2="18"></line>
+<line stroke="#94A3B8" stroke-width="1" x1="-14" x2="-8" y1="22" y2="18"></line>
+<line stroke="#94A3B8" stroke-width="1" x1="-6" x2="0" y1="22" y2="18"></line>
+<line stroke="#94A3B8" stroke-width="1" x1="2" x2="8" y1="22" y2="18"></line>
+<line stroke="#94A3B8" stroke-width="1" x1="10" x2="16" y1="22" y2="18"></line>
+</g>
+<!-- Right Roller Support (Appui Simple rouleau) -->
+<g transform="translate(700, 335)">
+<polygon fill="#F1F5F9" points="0,0 -12,15 12,15" stroke="#555F6D" stroke-width="1.5"></polygon>
+<circle cx="-6" cy="18" fill="#555F6D" r="2.5"></circle>
+<circle cx="6" cy="18" fill="#555F6D" r="2.5"></circle>
+<line stroke="#334155" stroke-width="1.5" x1="-16" x2="16" y1="21" y2="21"></line>
+</g>
+<!-- BACK TRUSS PLANE (Faint Depth Reference) -->
+<g opacity="0.35" stroke="#94A3B8" stroke-linecap="round" stroke-width="1.5">
+<line x1="240" x2="480" y1="320" y2="210"></line>
+<line x1="480" x2="720" y1="210" y2="295"></line>
+<line x1="240" x2="720" y1="320" y2="295"></line>
+<line x1="240" x2="360" y1="320" y2="265"></line>
+<line x1="480" x2="360" y1="210" y2="310"></line>
+<line x1="480" x2="600" y1="210" y2="305"></line>
+<!-- Cross bracings between planes -->
+<line stroke-dasharray="2 2" x1="180" x2="240" y1="360" y2="320"></line>
+<line stroke-dasharray="2 2" x1="440" x2="480" y1="240" y2="210"></line>
+<line stroke-dasharray="2 2" x1="700" x2="720" y1="335" y2="295"></line>
+</g>
+<!-- PRIMARY FRONT TRUSS (STEEL HEA / IPE) -->
+<!-- Lower Chord (Membrure Inférieure) -->
+<line stroke="#1E293B" stroke-linecap="round" stroke-width="3" x1="180" x2="700" y1="360" y2="335"></line>
+<!-- Upper Left Chord: POUTRE #04 (Highlighted with Active Load) -->
+<g id="poutre-04-group">
+<!-- Glow highlight for beam 04 -->
+<line opacity="0.18" stroke="#0891B2" stroke-linecap="round" stroke-width="7" x1="180" x2="440" y1="360" y2="240"></line>
+<!-- Main steel axis -->
+<line stroke="#0891B2" stroke-linecap="round" stroke-width="3.5" x1="180" x2="440" y1="360" y2="240"></line>
+<!-- Beam Label Badge -->
+<rect fill="#FFFFFF" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.05))" height="19" rx="3" stroke="#0891B2" stroke-width="1" width="92" x="260" y="278"></rect>
+<text class="font-data-mono-sm text-[10px] font-semibold" fill="#0891B2" text-anchor="middle" x="306" y="291">Poutre #04 · IPE</text>
+</g>
+<!-- Upper Right Chord -->
+<line stroke="#1E293B" stroke-linecap="round" stroke-width="3" x1="440" x2="700" y1="240" y2="335"></line>
+<!-- Web Members (Montants & Diagonales) -->
+<line stroke="#475569" stroke-width="2" x1="310" x2="310" y1="354" y2="300"></line>
+<line stroke="#475569" stroke-width="2" x1="440" x2="440" y1="240" y2="348"></line>
+<line stroke="#475569" stroke-width="2" x1="570" x2="570" y1="341" y2="288"></line>
+<line stroke="#475569" stroke-width="2" x1="180" x2="310" y1="360" y2="300"></line>
+<line stroke="#475569" stroke-width="2" x1="310" x2="440" y1="354" y2="240"></line>
+<line stroke="#475569" stroke-width="2" x1="440" x2="570" y1="348" y2="288"></line>
+<line stroke="#475569" stroke-width="2" x1="570" x2="700" y1="341" y2="335"></line>
+<!-- DISTRIBUTED LOAD COMB ON POUTRE #04 (Crimson FEA Vector Grid) -->
+<g id="distributed-load-comb">
+<!-- Top distribution envelope bar -->
+<line stroke="#EF4444" stroke-width="1.5" x1="180" x2="440" y1="312" y2="192"></line>
+<!-- Array of parallel downward vectors -->
+<!-- Step 1 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="200" x2="200" y1="303" y2="348"></line>
+<!-- Step 2 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="230" x2="230" y1="289" y2="334"></line>
+<!-- Step 3 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="260" x2="260" y1="275" y2="320"></line>
+<!-- Step 4 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="290" x2="290" y1="261" y2="306"></line>
+<!-- Step 5 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="320" x2="320" y1="247" y2="292"></line>
+<!-- Step 6 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="350" x2="350" y1="233" y2="278"></line>
+<!-- Step 7 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="380" x2="380" y1="219" y2="264"></line>
+<!-- Step 8 -->
+<line marker-end="url(#comb-arrow)" stroke="#EF4444" stroke-width="1.25" x1="410" x2="410" y1="205" y2="250"></line>
+<!-- Distributed Load Annotation Tag -->
+<rect fill="#FFFFFF" height="20" rx="3" stroke="#EF4444" stroke-width="1" width="144" x="236" y="166"></rect>
+<text class="font-data-mono-sm text-[11px] font-semibold" fill="#EF4444" text-anchor="middle" x="308" y="180">qz = -1,25 kN/m (ELU)</text>
+</g>
+<!-- CONCENTRATED FORCE VECTOR AT NODE #08 (Sommet - Apex) -->
+<g id="nodal-force-08" transform="translate(440, 240)">
+<!-- Prominent Crimson Vector Arrow pointing downward to Node 08 -->
+<line marker-end="url(#arrow-down-red)" stroke="#EF4444" stroke-width="2.5" x1="0" x2="0" y1="-80" y2="-4"></line>
+<!-- Force Magnitude Technical Callout -->
+<g transform="translate(10, -78)">
+<rect fill="#FFFFFF" height="22" rx="3" stroke="#EF4444" stroke-width="1" width="132" x="0" y="0"></rect>
+<text class="font-data-mono-sm text-[11px] font-semibold" fill="#EF4444" x="6" y="15">Nœud #08 : 10,0 kN</text>
+</g>
+</g>
+<!-- STRUCTURAL NODES (Nœuds de calcul) -->
+<!-- Node 01 Left Support -->
+<circle cx="180" cy="360" fill="#FFFFFF" r="4.5" stroke="#1E293B" stroke-width="2"></circle>
+<text class="font-data-mono-sm text-[10px]" fill="#64748B" x="160" y="375">#01</text>
+<!-- Node 04 Intermediate -->
+<circle cx="310" cy="354" fill="#FFFFFF" r="3.5" stroke="#1E293B" stroke-width="1.5"></circle>
+<!-- Node 06 Central Bottom -->
+<circle cx="440" cy="348" fill="#FFFFFF" r="3.5" stroke="#1E293B" stroke-width="1.5"></circle>
+<text class="font-data-mono-sm text-[10px]" fill="#64748B" x="445" y="365">#06</text>
+<!-- Node 08 APEX (Targeted Node) -->
+<circle cx="440" cy="240" fill="#EF4444" r="6" stroke="#FFFFFF" stroke-width="2"></circle>
+<circle cx="440" cy="240" fill="none" r="9" stroke="#EF4444" stroke-dasharray="2 2" stroke-width="1"></circle>
+<text class="font-data-mono-sm text-[11px] font-bold" fill="#EF4444" x="424" y="230">#08</text>
+<!-- Node 10 Intermediate Right -->
+<circle cx="570" cy="341" fill="#FFFFFF" r="3.5" stroke="#1E293B" stroke-width="1.5"></circle>
+<!-- Node 12 Right Support -->
+<circle cx="700" cy="335" fill="#FFFFFF" r="4.5" stroke="#1E293B" stroke-width="2"></circle>
+<text class="font-data-mono-sm text-[10px]" fill="#64748B" x="712" y="348">#12</text>
+</svg>
+<!-- Dynamic Hover Inspection Tooltip Overlay (Simulation of FEA Precision) -->
+<div class="absolute bottom-16 right-10 bg-surface-panel/95 backdrop-blur border border-border-hairline p-2.5 rounded-lg shadow-sm text-left flex flex-col gap-1 select-none pointer-events-none">
+<div class="flex items-center gap-1.5 font-label-ui text-[11px] text-text-muted">
+<span class="w-1.5 h-1.5 rounded-full bg-fea-stress-low"></span>
+<span>Élément survolé</span>
+</div>
+<div class="font-data-mono-md text-[12px] text-text-primary font-medium">Poutre #04 · L = 3.60 m</div>
+<div class="font-data-mono-sm text-[10px] text-text-secondary">Charge : qz = -1 250 N/m | My = 2.45 kNm</div>
+</div>
+</div>
+<!-- BOTTOM-LEFT MINIMAL CAD LEGEND -->
+<div class="absolute bottom-4 left-4 z-20 flex items-center gap-3 bg-surface-panel/90 backdrop-blur-sm border border-border-hairline px-3 py-1.5 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.03)] text-[11px]">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-fea-stress-max"></span>
+<span class="font-body-sm text-[11px] text-text-secondary">Vecteurs d'efforts (ELU)</span>
+</div>
+<span class="w-[1px] h-3 bg-border-hairline"></span>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-sm bg-fea-stress-low"></span>
+<span class="font-body-sm text-[11px] text-text-secondary">Poutre chargée (#04)</span>
+</div>
+<span class="w-[1px] h-3 bg-border-hairline"></span>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-text-primary"></span>
+<span class="font-body-sm text-[11px] text-text-secondary">Nœuds &amp; Appuis</span>
+</div>
+</div>
+<!-- BOTTOM-RIGHT VIEW CONTROL SHORTCUTS -->
+<div class="absolute bottom-4 right-4 z-20 flex items-center gap-1 font-data-mono-sm text-[11px] text-text-muted bg-surface-panel/90 backdrop-blur-sm border border-border-hairline px-2.5 py-1 rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+<span>Rotation : Clic G + Glisser</span>
+<span class="mx-1 text-border-subtle">·</span>
+<span>Zoom : Molette</span>
+</div>
+</main>
+</div>
+</div>
+<script>
+  function switchCombo(mode) {
+    const btnElu = document.getElementById('combo-elu');
+    const btnEls = document.getElementById('combo-els');
+    const bannerCas = document.getElementById('banner-cas');
+    const bannerResult = document.getElementById('banner-result');
+    const telemetryFz = document.getElementById('telemetry-fz');
+
+    if (mode === 'elu') {
+      btnElu.className = 'flex-1 py-1 px-2 rounded-lg bg-surface-panel text-text-primary font-body-md text-label-ui shadow-sm text-center transition-all';
+      btnEls.className = 'flex-1 py-1 px-2 rounded-lg text-text-muted hover:text-text-primary font-body-md text-label-ui text-center transition-all';
+      bannerCas.innerHTML = 'Cas actif : <strong class="text-text-primary font-semibold">ELU (1,35 G + 1,50 Q)</strong>';
+      bannerResult.innerHTML = 'Résultante Z : <strong class="text-fea-stress-max">-15,00 kN</strong>';
+      telemetryFz.textContent = '-15,00 kN';
+    } else {
+      btnEls.className = 'flex-1 py-1 px-2 rounded-lg bg-surface-panel text-text-primary font-body-md text-label-ui shadow-sm text-center transition-all';
+      btnElu.className = 'flex-1 py-1 px-2 rounded-lg text-text-muted hover:text-text-primary font-body-md text-label-ui text-center transition-all';
+      bannerCas.innerHTML = 'Cas actif : <strong class="text-text-primary font-semibold">ELS (1,00 G + 1,00 Q)</strong>';
+      bannerResult.innerHTML = 'Résultante Z : <strong class="text-fea-stress-low">-10,80 kN</strong>';
+      telemetryFz.textContent = '-10,80 kN';
+    }
+  }
+
+  function updateFzValue(val) {
+    const cleanNum = parseFloat(val.replace(/\s+/g, '').replace(',', '.'));
+    if (!isNaN(cleanNum)) {
+      const kN = Math.abs(cleanNum / 1000).toFixed(1);
+      const textElem = document.querySelector('#nodal-force-08 text');
+      if (textElem) {
+        textElem.textContent = 'Nœud #08 : ' + kN + ' kN';
+      }
+    }
+  }
+
+  function toggleGravityEffect(enabled) {
+    const tel = document.getElementById('telemetry-fz');
+    if (enabled) {
+      tel.textContent = '-15,00 kN';
+    } else {
+      tel.textContent = '-13,65 kN';
+    }
+  }
+</script></main><footer class="fixed bottom-0 left-0 w-full h-[24px] z-40 bg-surface-panel border-t border-border-hairline px-4 flex items-center justify-between font-data-mono-sm text-data-mono-sm text-text-muted"><div class="flex items-center gap-space-sm"><span>RDM Studio · Eurocode 3 (NF EN 1993-1-1)</span></div><div class="flex items-center gap-space-sm"><span>Solveur EF 3D · Précision IEEE 754</span></div></footer></body></html>

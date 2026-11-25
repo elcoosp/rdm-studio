@@ -18,7 +18,9 @@ test("5-step workflow runs a real FE calculation", async ({ page }) => {
 
   // Run the calculation in the worker and wait for ULS/SLS results.
   await page.getByRole("button", { name: /Calculer/ }).click();
-  await expect(page.getByRole("heading", { name: "1.35G + 1.50Q" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "1.35G + 1.50Q" })).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(page.getByRole("heading", { name: "1.00G + 1.00Q" })).toBeVisible();
 
   // Step 5: the report shows the model summary and a share URL.

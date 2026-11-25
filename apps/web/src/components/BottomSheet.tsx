@@ -66,7 +66,7 @@ export function BottomSheet({
         {open ? (
           <motion.div
             data-testid={testId}
-            className="fixed inset-x-0 bottom-0 z-40 max-h-[70dvh] touch-none overflow-auto rounded-t-panel border-t border-hairline bg-panel p-4 pb-8 shadow-[0_-8px_30px_rgba(17,24,39,0.12)]"
+            className="fixed inset-x-0 bottom-14 z-40 max-h-[70dvh] touch-none overflow-auto rounded-t-panel border border-hairline border-b-0 bg-panel p-4 pb-8 shadow-[0_-8px_30px_rgba(17,24,39,0.12)] md:bottom-0"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}

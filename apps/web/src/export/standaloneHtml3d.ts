@@ -7,7 +7,7 @@ import type { SolveReport } from "@/wasmBridge/workerClient";
 /**
  * Self-contained interactive 3D HTML report (ARCHITECTURE.md section 5,
  * `standaloneHtml3d.ts`; section 18 M8/e2): embeds three.js source, the
- * model JSON and the ULE thermal colors into ONE .html file that opens in
+ * model JSON and the ELU thermal colors into ONE .html file that opens in
  * any browser — fully offline, no server, no CDN.
  */
 export function buildStandaloneHtml3d(project: ProjectData, report: SolveReport | null): string {
@@ -37,26 +37,26 @@ export function buildStandaloneHtml3d(project: ProjectData, report: SolveReport 
 <title>RDM Studio — ${project.name} — rapport 3D</title>
 <style>
   :root { color-scheme: light; }
-  body { margin: 0; font-family: Inter, system-ui, sans-serif; color: #111827; background: #F9FAFB; }
-  header { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #E5E7EB; background: #fff; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; color: #0F172A; background: #F8FAFC; }
+  header { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #E2E8F0; background: #fff; }
   header h1 { font-size: 15px; margin: 0; }
-  header span { font-size: 11px; color: #6B7280; }
+  header span { font-size: 11px; color: #94A3B8; }
   #scene { position: absolute; inset: 57px 0 0 0; }
-  #legend { position: absolute; right: 16px; top: 72px; background: #fff; border: 1px solid #E5E7EB; border-radius: 6px; padding: 10px 12px; font-size: 11px; }
-  #bar { height: 8px; width: 140px; margin-top: 6px; background: linear-gradient(to right, #2563EB, #06B6D4, #10B981, #F59E0B, #EF4444); border-radius: 4px; }
-  #hint { position: absolute; left: 16px; bottom: 12px; font-size: 11px; color: #6B7280; }
+  #legend { position: absolute; right: 16px; top: 72px; background: #fff; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 12px; font-size: 11px; }
+  #bar { height: 8px; width: 140px; margin-top: 6px; background: linear-gradient(to right, #1D4ED8, #06B6D4, #10b981, #F59E0B, #DC2626); border-radius: 4px; }
+  #hint { position: absolute; left: 16px; bottom: 12px; font-size: 11px; color: #94A3B8; }
 </style>
 </head>
 <body>
-<header><h1>RDM Studio — ${project.name}</h1><span>Rapport 3D autonome — ULE η = exploitation (EN 1990 / EN 1993-1-1)</span></header>
+<header><h1>RDM Studio — ${project.name}</h1><span>Rapport 3D autonome — ELU η = exploitation (EN 1990 / EN 1993-1-1)</span></header>
 <div id="scene"></div>
-<div id="legend">η (ULE)<div id="bar"></div><span>0.00</span> — <span>1.25</span></div>
+<div id="legend">η (ELU)<div id="bar"></div><span>0.00</span> — <span>1.25</span></div>
 <div id="hint">Glisser: orbite · Molette: zoom · Clic droit: pan</div>
 <script type="module">
 const MODEL = ${data};
 ${threeSource}
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xF9FAFB);
+scene.background = new THREE.Color(0xF8FAFC);
 const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.01, 500);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -64,7 +64,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 document.getElementById("scene").appendChild(renderer.domElement);
 
 // Thermal spectrum (section 17)
-const STOPS = [[0,0x2563EB],[0.25,0x06B6D4],[0.5,0x10B981],[0.75,0xF59E0B],[1,0xEF4444]].map(([t, c]) => [t, new THREE.Color(c)]);
+const STOPS = [[0,0x1D4ED8],[0.25,0x06B6D4],[0.5,0x10B981],[0.75,0xF59E0B],[1,0xDC2626]].map(([t, c]) => [t, new THREE.Color(c)]);
 function spectrum(ratio) {
   const t = Math.min(1, Math.max(0, ratio || 0));
   for (let i = 1; i < STOPS.length; i++) {

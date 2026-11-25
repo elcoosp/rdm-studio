@@ -22,7 +22,7 @@
 ## Quickstart
 
 ```bash
-git clone [https://github.com/elcoosp/rdm-studio.git](https://github.com/elcoosp/rdm-studio.git)
+git clone https://github.com/elcoosp/rdm-studio.git
 ```
 
 ## Features

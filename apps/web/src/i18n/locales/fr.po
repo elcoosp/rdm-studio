@@ -11,6 +11,10 @@ msgstr ""
 msgid "+ Nœud"
 msgstr "+ Nœud"
 
+#: src/routes/geometry.tsx
+msgid "+ Placer un premier nœud"
+msgstr "+ Placer un premier nœud"
+
 #: src/routes/loads.tsx
 msgid "Ajouter la charge"
 msgstr "Ajouter la charge"
@@ -27,13 +31,29 @@ msgstr "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un pl
 msgid "Amplification"
 msgstr "Amplification"
 
+#: src/components/CadImportDialog.tsx
+msgid "Annuler"
+msgstr "Annuler"
+
+#: src/routes/supports.tsx
+msgid "Appuis actifs"
+msgstr "Appuis actifs"
+
+#: src/routes/supports.tsx
+msgid "Aucun appui — sélectionnez un nœud puis choisissez un preset."
+msgstr "Aucun appui — sélectionnez un nœud puis choisissez un preset."
+
 #: src/components/CommandPalette.tsx
 msgid "Aucun résultat."
 msgstr "Aucun résultat."
 
 #: src/routes/loads.tsx
-msgid "Aucune charge définie."
-msgstr "Aucune charge définie."
+msgid "Aucune charge définie — choisissez un scénario d'accélération ou ajoutez une charge."
+msgstr "Aucune charge définie — choisissez un scénario d'accélération ou ajoutez une charge."
+
+#: src/routes/loads.tsx
+#~ msgid "Aucune charge définie."
+#~ msgstr "Aucune charge définie."
 
 #: src/routes/results.tsx
 msgid "Calculer"
@@ -44,24 +64,36 @@ msgid "Cas"
 msgstr "Cas"
 
 #: src/routes/loads.tsx
-msgid "Cas de charge"
-msgstr "Cas de charge"
+#~ msgid "Cas de charge"
+#~ msgstr "Cas de charge"
 
 #: src/routes/geometry.tsx
 msgid "Catalogue"
 msgstr "Catalogue"
 
 #: src/routes/loads.tsx
-msgid "Charge ponctuelle"
-msgstr "Charge ponctuelle"
+#~ msgid "Charge ponctuelle"
+#~ msgstr "Charge ponctuelle"
+
+#: src/routes/geometry.tsx
+msgid "Charger un modèle type"
+msgstr "Charger un modèle type"
 
 #: src/routes/loads.tsx
 msgid "Charges et combinaisons EN 1990"
 msgstr "Charges et combinaisons EN 1990"
 
+#: src/components/CadImportDialog.tsx
+msgid "Choisir un fichier…"
+msgstr "Choisir un fichier…"
+
 #: src/routes/loads.tsx
 msgid "Cible"
 msgstr "Cible"
+
+#: src/routes/supports.tsx
+msgid "Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui."
+msgstr "Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui."
 
 #: src/routes/supports.tsx
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
@@ -87,6 +119,10 @@ msgstr "Créer une poutre"
 msgid "Déformée & exploitation (ELU)"
 msgstr "Déformée & exploitation (ELU)"
 
+#: src/routes/geometry.tsx
+msgid "Déjà reliés"
+msgstr "Déjà reliés"
+
 #: src/routes/results.tsx
 #~ msgid "Déplacements nodaux (G)"
 #~ msgstr "Déplacements nodaux (G)"
@@ -94,6 +130,10 @@ msgstr "Déformée & exploitation (ELU)"
 #: src/routes/results.tsx
 msgid "Déplacements nodaux (Q)"
 msgstr "Déplacements nodaux (Q)"
+
+#: src/components/CadImportDialog.tsx
+msgid "Encastrer le nœud le plus à gauche"
+msgstr "Encastrer le nœud le plus à gauche"
 
 #. placeholder {0}: index + 1
 #: src/routes/__root.tsx
@@ -112,21 +152,41 @@ msgstr "Exports (étape 5)"
 msgid "Fermer"
 msgstr "Fermer"
 
+#: src/components/CadImportDialog.tsx
+msgid "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
+msgstr "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
+
 #: src/routes/loads.tsx
-msgid "Fz (kN, négatif vers le bas)"
-msgstr "Fz (kN, négatif vers le bas)"
+#~ msgid "Fz (kN, négatif vers le bas)"
+#~ msgstr "Fz (kN, négatif vers le bas)"
 
 #: src/routes/report.tsx
 msgid "Génération…"
 msgstr "Génération…"
 
 #: src/routes/geometry.tsx
+msgid "Importer CAO"
+msgstr "Importer CAO"
+
+#: src/routes/geometry.tsx
 msgid "Importer DXF"
 msgstr "Importer DXF"
+
+#: src/components/CadImportDialog.tsx
+msgid "Importer un modèle CAO"
+msgstr "Importer un modèle CAO"
 
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
 msgstr "Inspecteur de section"
+
+#: src/routes/loads.tsx
+#~ msgid "Lancer le calcul 3D & Eurocode 3"
+#~ msgstr "Lancer le calcul 3D & Eurocode 3"
+
+#: src/routes/loads.tsx
+msgid "Lancer le calcul 3D & Eurocode 3 →"
+msgstr "Lancer le calcul 3D & Eurocode 3 →"
 
 #: src/routes/results.tsx
 msgid "Lancer un calcul pour afficher les résultats."
@@ -135,6 +195,18 @@ msgstr "Lancer un calcul pour afficher les résultats."
 #: src/routes/report.tsx
 msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 msgstr "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+
+#: src/routes/supports.tsx
+msgid "Liaisons (RDM 7)"
+msgstr "Liaisons (RDM 7)"
+
+#: src/routes/supports.tsx
+#~ msgid "Libre"
+#~ msgstr "Libre"
+
+#: src/routes/geometry.tsx
+msgid "Matériau"
+msgstr "Matériau"
 
 #: src/routes/supports.tsx
 msgid "Matrice 6 DDL des appuis"
@@ -165,14 +237,23 @@ msgstr "Nom du projet"
 msgid "Partage par URL"
 msgstr "Partage par URL"
 
+#: src/routes/supports.tsx
+msgid "Personnalisée : composez la matrice 2×3 ci-dessous."
+msgstr "Personnalisée : composez la matrice 2×3 ci-dessous."
+
 #: src/routes/report.tsx
 msgid "Poids propre automatique"
 msgstr "Poids propre automatique"
 
 #: src/routes/loads.tsx
-msgid "Poids propre automatique (cas G)"
-msgstr "Poids propre automatique (cas G)"
+msgid "Poids propre automatique (1g −Z)"
+msgstr "Poids propre automatique (1g −Z)"
 
+#: src/routes/loads.tsx
+#~ msgid "Poids propre automatique (cas G)"
+#~ msgstr "Poids propre automatique (cas G)"
+
+#: src/routes/loads.tsx
 #: src/routes/results.tsx
 msgid "Poutre"
 msgstr "Poutre"
@@ -182,8 +263,12 @@ msgid "Poutres"
 msgstr "Poutres"
 
 #: src/routes/loads.tsx
-msgid "poutres résolues par élément"
-msgstr "poutres résolues par élément"
+#~ msgid "poutres résolues par élément"
+#~ msgstr "poutres résolues par élément"
+
+#: src/routes/supports.tsx
+msgid "Presets d'appui"
+msgstr "Presets d'appui"
 
 #: src/routes/geometry.tsx
 msgid "Profil"
@@ -226,8 +311,12 @@ msgid "Resultats CSV (Excel)"
 msgstr "Resultats CSV (Excel)"
 
 #: src/routes/results.tsx
-msgid "Resultats de calcul"
-msgstr "Resultats de calcul"
+#~ msgid "Resultats de calcul"
+#~ msgstr "Resultats de calcul"
+
+#: src/routes/results.tsx
+msgid "Résultats de calcul"
+msgstr "Résultats de calcul"
 
 #: src/routes/geometry.tsx
 msgid "Roulis θx (°)"
@@ -236,6 +325,18 @@ msgstr "Roulis θx (°)"
 #: src/routes/geometry.tsx
 msgid "Sélectionnez une poutre pour éditer ses caractéristiques."
 msgstr "Sélectionnez une poutre pour éditer ses caractéristiques."
+
+#: src/routes/supports.tsx
+msgid "Suivant : Définir les charges →"
+msgstr "Suivant : Définir les charges →"
+
+#: src/routes/geometry.tsx
+msgid "Suivant : Définir les liaisons →"
+msgstr "Suivant : Définir les liaisons →"
+
+#: src/routes/supports.tsx
+msgid "Tout supprimer"
+msgstr "Tout supprimer"
 
 #: src/routes/loads.tsx
 msgid "Type"
@@ -249,6 +350,20 @@ msgstr "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichag
 msgid "Une nouvelle version est disponible."
 msgstr "Une nouvelle version est disponible."
 
+#. placeholder {0}: uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id
+#. placeholder {1}: (maxUls * 100).toFixed(1).replace(".", ",")
+#: src/routes/results.tsx
+msgid "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
+msgstr "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
+
+#: src/routes/loads.tsx
+msgid "Vider les charges"
+msgstr "Vider les charges"
+
 #: src/viewport3d/ViewportCanvas.tsx
-msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
-msgstr "Vue 3D indisponible (WebGL) — edition et calculs actifs."
+#~ msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
+#~ msgstr "Vue 3D indisponible (WebGL) — edition et calculs actifs."
+
+#: src/viewport3d/ViewportCanvas.tsx
+msgid "Vue 3D indisponible (WebGL) — édition et calculs actifs."
+msgstr "Vue 3D indisponible (WebGL) — édition et calculs actifs."

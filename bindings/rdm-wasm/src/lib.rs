@@ -1370,3 +1370,525 @@ mod dxf_import_tests {
         assert!(!err_at_limit.contains("trop volumineux"));
     }
 }
+
+// ---------------------------------------------------------------------------
+// v1.8.0 / v1.9.0 — Wave 3 surface: validation suite, calc trace,
+// envelopes, EN 1990 v2 combinations, EN 1991 generators, custom
+// sections, optimizer, buckling, seismic, BIM exports, ModelSession.
+// ---------------------------------------------------------------------------
+
+fn parse_project(project_json: &str) -> Result<rdm_model::ProjectFile, String> {
+    rdm_model::ProjectFile::load_json(project_json.as_bytes())
+        .map_err(|e| format!("invalid .rdm payload: {e}"))
+}
+
+fn fault_js(kind: &str, message: String) -> Result<JsValue, JsValue> {
+    serde_wasm_bindgen::to_value(&SolveFault {
+        kind: kind.to_owned(),
+        message,
+    })
+    .map_err(Into::into)
+}
+
+/// v1.9.0: the same fault payload as a bare `Err` value (for functions
+/// returning `Result<String, JsValue>`).
+fn fault_err(kind: &str, message: String) -> JsValue {
+    serde_wasm_bindgen::to_value(&SolveFault {
+        kind: kind.to_owned(),
+        message,
+    })
+    .unwrap_or_else(|_| JsValue::from_str("fault"))
+}
+
+/// v1.8.0: the 41 closed-form benchmarks, executed live in the wasm
+/// module — the in-app Validation modal renders this list.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on serialization failure.
+#[wasm_bindgen]
+pub fn run_validation_suite() -> Result<JsValue, JsValue> {
+    let results = rdm_solver::run_validation_suite();
+    serde_wasm_bindgen::to_value(&results).map_err(Into::into)
+}
+
+/// v1.8.0: EN 1990 combination set for the schema-v2 ψ table
+/// (`6.10` or `6.10a/b` per the model settings) + SLS families.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn build_combinations_v2_json(project_json: &str) -> Result<JsValue, JsValue> {
+    match parse_project(project_json) {
+        Ok(project) => {
+            let combos = rdm_eurocode::build_combinations_v2(
+                &project.structure.load_cases,
+                project.structure.settings.combination_method,
+            );
+            serde_wasm_bindgen::to_value(&combos).map_err(Into::into)
+        }
+        Err(message) => fault_js("InvalidModel", message),
+    }
+}
+
+/// v1.8.0: KaTeX `CalcTrace` tree of one member — the worst-case
+/// biaxial interaction (6.61/6.62) with substituted numbers.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn member_calc_trace(project_json: &str, beam_index: usize) -> Result<JsValue, JsValue> {
+    let project = match parse_project(project_json) {
+        Ok(p) => p,
+        Err(message) => return fault_js("InvalidModel", message),
+    };
+    let structure = &project.structure;
+    let Some(beam) = structure.beams.get(beam_index) else {
+        return fault_js(
+            "InvalidModel",
+            format!("beam index {beam_index} out of range"),
+        );
+    };
+    let Some(section) = structure.sections.get(&beam.section_id) else {
+        return fault_js(
+            "InvalidModel",
+            format!("unknown section {}", beam.section_id),
+        );
+    };
+    let Some(material) = structure.materials.get(&beam.material_id) else {
+        return fault_js(
+            "InvalidModel",
+            format!("unknown material {}", beam.material_id),
+        );
+    };
+    let demand = match rdm_solver::solve_model(structure) {
+        Ok(solved) => {
+            // Worst-case envelope of the end moments and axial force.
+            let base = 12 * beam_index;
+            let mut my = 0.0_f64;
+            let mut n = 0.0_f64;
+            for (_, sol) in &solved.cases {
+                my = my.max(sol.beam_end_forces[base + 4].abs());
+                n = n.min(sol.beam_end_forces[base]);
+            }
+            (n, my)
+        }
+        Err(_) => (0.0, 0.0),
+    };
+    let gamma = rdm_eurocode::annex_factors(structure.settings.national_annex);
+    let input = rdm_eurocode::InteractionInput {
+        n_ed: demand.0,
+        my_ed: demand.1,
+        mz_ed: 0.0,
+        n_b_rd_y: 0.6 * section.a * material.fy / gamma.gamma_m1,
+        n_b_rd_z: 0.5 * 0.6 * section.a * material.fy / gamma.gamma_m1,
+        mc_y_rd: section.wpl_y.unwrap_or(section.wel_y) * material.fy / gamma.gamma_m0,
+        mc_z_rd: section.wel_z * material.fy / gamma.gamma_m0,
+        chi_lt: 0.8,
+        lambda_bar_y_sq: 0.5,
+        lambda_bar_z_sq: 0.8,
+    };
+    let annex = if structure.settings.national_annex == rdm_model::NationalAnnex::EN {
+        rdm_eurocode::InteractionAnnex::B
+    } else {
+        rdm_eurocode::InteractionAnnex::A
+    };
+    let trace = rdm_eurocode::interaction_6_61_6_62(&input, annex);
+    serde_wasm_bindgen::to_value(&trace).map_err(Into::into)
+}
+
+/// v1.8.0: min/max envelopes of N/My/Mz/Vz/T across the ULS
+/// combinations produced by `build_combinations_v2`.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn compute_envelopes_json(project_json: &str) -> Result<JsValue, JsValue> {
+    let project = match parse_project(project_json) {
+        Ok(p) => p,
+        Err(message) => return fault_js("InvalidModel", message),
+    };
+    let structure = &project.structure;
+    let combos = rdm_eurocode::build_combinations_v2(
+        &structure.load_cases,
+        structure.settings.combination_method,
+    );
+    let solved = match rdm_solver::solve_model(structure) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
+    };
+    let case_map: std::collections::BTreeMap<String, rdm_model::LoadCase> = structure
+        .load_cases
+        .iter()
+        .map(|def| match def.category {
+            rdm_model::CaseCategory::Permanent => {
+                (def.code.clone(), rdm_model::LoadCase::Permanent)
+            }
+            rdm_model::CaseCategory::Variable => (def.code.clone(), rdm_model::LoadCase::Variable),
+            rdm_model::CaseCategory::Wind => (def.code.clone(), rdm_model::LoadCase::Wind),
+            rdm_model::CaseCategory::Snow => (def.code.clone(), rdm_model::LoadCase::Snow),
+            _ => (def.code.clone(), rdm_model::LoadCase::Acceleration),
+        })
+        .collect();
+    let weighted: Vec<(String, Vec<(rdm_model::LoadCase, f64)>)> = combos
+        .iter()
+        .map(|(kind, label, weights)| {
+            (
+                label.clone(),
+                weights
+                    .iter()
+                    .filter_map(|(code, f)| case_map.get(code).map(|c| (*c, *f)))
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect();
+    let combos_ref: Vec<(&str, &[(rdm_model::LoadCase, f64)])> = weighted
+        .iter()
+        .map(|(label, weights)| (label.as_str(), weights.as_slice()))
+        .collect();
+    match rdm_solver::compute_envelopes(structure, &solved, &combos_ref) {
+        Ok(envelopes) => serde_wasm_bindgen::to_value(&envelopes).map_err(Into::into),
+        Err(e) => fault_js("SolveError", e.to_string()),
+    }
+}
+
+/// v1.8.0: custom parametric section preview
+/// (`kind`: `WeldedI|Rhs|Chs|SolidRect|SolidRound`).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on unknown kinds.
+#[wasm_bindgen]
+pub fn custom_section_preview(
+    kind: &str,
+    h: f64,
+    b: f64,
+    tw: f64,
+    tf: f64,
+) -> Result<JsValue, JsValue> {
+    let section = match kind {
+        "WeldedI" | "PRS" => rdm_eurocode::welded_i(h, b, tw, tf),
+        "Rhs" => rdm_eurocode::rectangular_hollow(h, b, tw),
+        "Chs" => rdm_eurocode::circular_hollow(h, tw),
+        "SolidRect" => rdm_eurocode::solid_rect(h, b),
+        "SolidRound" => rdm_eurocode::solid_round(h),
+        _ => {
+            return fault_js(
+                "InvalidModel",
+                format!("unknown custom section kind {kind}"),
+            );
+        }
+    };
+    serde_wasm_bindgen::to_value(&section).map_err(Into::into)
+}
+
+/// v1.8.0: EN 1991 action generators (`kind`: `imposed|snow|wind`),
+/// returning the load DTOs to append to the model.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn generate_env_loads_json(
+    kind: &str,
+    beam_id: u32,
+    value: f64,
+    tributary_m: f64,
+) -> Result<JsValue, JsValue> {
+    use rdm_eurocode::{ImposedCategory, WindParameters, imposed_load, snow_load, wind_load};
+    let load = match kind {
+        "imposed" => {
+            let category = match value as u32 {
+                1 => ImposedCategory::A,
+                2 => ImposedCategory::B,
+                3 => ImposedCategory::C,
+                4 => ImposedCategory::D,
+                _ => ImposedCategory::E,
+            };
+            imposed_load(beam_id, category, tributary_m)
+        }
+        "snow" => snow_load(beam_id, value * 1000.0, 15.0, tributary_m),
+        "wind" => wind_load(
+            beam_id,
+            &WindParameters {
+                vb: value,
+                z: 10.0,
+                exposure: 1.0,
+                cf: 1.3,
+                area_m2: tributary_m,
+            },
+        ),
+        _ => return fault_js("InvalidModel", format!("unknown EN 1991 kind {kind}")),
+    };
+    serde_wasm_bindgen::to_value(&vec![load]).map_err(Into::into)
+}
+
+/// v1.8.0: iterative EC3 section optimizer over the catalog-like
+/// candidate list supplied by the caller.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn optimize_sections_json(
+    project_json: &str,
+    candidates_json: &str,
+) -> Result<JsValue, JsValue> {
+    let project = match parse_project(project_json) {
+        Ok(p) => p,
+        Err(message) => return fault_js("InvalidModel", message),
+    };
+    let candidates: Vec<rdm_eurocode::ProfileCandidate> =
+        match serde_json::from_str(candidates_json) {
+            Ok(c) => c,
+            Err(e) => return fault_js("InvalidModel", format!("bad candidates: {e}")),
+        };
+    let structure = &project.structure;
+    let solved = match rdm_solver::solve_model(structure) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
+    };
+    let fy = structure.materials.values().next().map_or(235e6, |m| m.fy);
+    let mut results: Vec<rdm_eurocode::GroupOptimization> = Vec::new();
+    for (index, beam) in structure.beams.iter().enumerate() {
+        let base = 12 * index;
+        let mut n = 0.0_f64;
+        let mut my = 0.0_f64;
+        for (_, sol) in &solved.cases {
+            n = n.min(sol.beam_end_forces[base]);
+            my = my.max(sol.beam_end_forces[base + 4].abs());
+        }
+        let length = match (structure.node(beam.n1), structure.node(beam.n2)) {
+            (Ok(a), Ok(b)) => {
+                ((b.x - a.x).powi(2) + (b.y - a.y).powi(2) + (b.z - a.z).powi(2)).sqrt()
+            }
+            _ => 4.0,
+        };
+        let demand = rdm_eurocode::GroupDemand {
+            n_ed: n,
+            my_ed: my,
+            mz_ed: 0.0,
+            v_ed: 0.0,
+            length_m: length,
+            defl_limit_ratio: 250.0,
+            defl_ed_m: 0.0,
+        };
+        results.push(rdm_eurocode::optimize_group(
+            &demand,
+            &candidates,
+            fy,
+            structure.settings.national_annex,
+            10,
+        ));
+    }
+    let totals = rdm_eurocode::totals(
+        structure
+            .beams
+            .iter()
+            .zip(&results)
+            .map(|(beam, opt)| {
+                opt.chosen
+                    .as_ref()
+                    .and_then(|designation| {
+                        candidates.iter().find(|c| &c.designation == designation)
+                    })
+                    .map_or(
+                        structure
+                            .sections
+                            .get(&beam.section_id)
+                            .map_or(0.0, |sec| sec.a * 7850.0),
+                        |c| c.mass_per_m,
+                    )
+            })
+            .sum(),
+    );
+    serde_wasm_bindgen::to_value(&(results, totals)).map_err(Into::into)
+}
+
+/// v1.9.0: linear buckling — top `n_modes` critical load factors.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn buckling_analysis_json(project_json: &str, n_modes: usize) -> Result<JsValue, JsValue> {
+    let project = match parse_project(project_json) {
+        Ok(p) => p,
+        Err(message) => return fault_js("InvalidModel", message),
+    };
+    match rdm_solver::buckling_analysis(&project.structure, n_modes) {
+        Ok(report) => serde_wasm_bindgen::to_value(&report).map_err(Into::into),
+        Err(e) => fault_js("SolveError", e.to_string()),
+    }
+}
+
+/// v1.9.0: EN 1998-1 elastic spectrum sampled on the given periods (s).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn seismic_spectrum_json(
+    ag_g: f64,
+    ground: &str,
+    spectrum: &str,
+    periods_json: &str,
+) -> Result<JsValue, JsValue> {
+    let ground_type = match ground {
+        "A" => rdm_solver::GroundType::A,
+        "B" => rdm_solver::GroundType::B,
+        "C" => rdm_solver::GroundType::C,
+        "D" => rdm_solver::GroundType::D,
+        _ => rdm_solver::GroundType::E,
+    };
+    let kind = match spectrum {
+        "Type1" | "type1" => rdm_solver::SpectrumType::Type1,
+        _ => rdm_solver::SpectrumType::Type2,
+    };
+    let periods: Vec<f64> = match serde_json::from_str(periods_json) {
+        Ok(p) => p,
+        Err(e) => return fault_js("InvalidModel", format!("bad periods: {e}")),
+    };
+    let values: Vec<f64> = periods
+        .iter()
+        .map(|t| rdm_solver::elastic_spectrum(*t, ag_g, ground_type, kind))
+        .collect();
+    serde_wasm_bindgen::to_value(&values).map_err(Into::into)
+}
+
+/// v1.9.0: BIM exports — `format` in
+/// `ifc4 | saf | opensees | solver | gltf` (string payload).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn export_bim(project_json: &str, format: &str) -> Result<String, JsValue> {
+    let project = match parse_project(project_json) {
+        Ok(p) => p,
+        Err(message) => return Err(fault_err("InvalidModel", message)),
+    };
+    let outcome: Option<String> = match format {
+        "ifc4" => Some(rdm_cad::export_ifc4_structural(&project)),
+        "saf" => rdm_cad::export_saf_json(&project).ok(),
+        "opensees" => Some(rdm_cad::export_opensees_tcl(&project)),
+        "solver" => rdm_cad::export_solver_json(&project).ok(),
+        "gltf" => rdm_cad::export_gltf(&project).ok(),
+        _ => None,
+    };
+    outcome.ok_or_else(|| fault_err("InvalidModel", format!("unknown BIM format {format}")))
+}
+
+/// v1.8.0 stateful session: caches the parsed model + solved cases so
+/// follow-up case superpositions (`solve_case_rhs`) skip the
+/// factorization entirely (< 2 ms) and model deltas re-solve on demand.
+#[wasm_bindgen]
+pub struct ModelSession {
+    project: Option<rdm_model::ProjectFile>,
+    solved: Option<rdm_solver::SolvedModel>,
+    canceled: bool,
+}
+
+#[wasm_bindgen]
+impl ModelSession {
+    /// Creates an empty session.
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            project: None,
+            solved: None,
+            canceled: false,
+        }
+    }
+
+    /// Opens (and migrates to schema v2) a `.rdm` payload.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+    #[wasm_bindgen]
+    pub fn open_model(&mut self, project_json: &str) -> Result<(), JsValue> {
+        self.canceled = false;
+        match parse_project(project_json) {
+            Ok(project) => {
+                self.project = Some(project);
+                self.solved = None;
+                Ok(())
+            }
+            Err(message) => Err(fault_err("InvalidModel", message)),
+        }
+    }
+
+    /// Applies a full model replacement (latest-wins semantics live in
+    /// the worker client; the session simply swaps the model).
+    ///
+    /// # Errors
+    ///
+    /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+    #[wasm_bindgen]
+    pub fn apply_delta(&mut self, project_json: &str) -> Result<(), JsValue> {
+        self.open_model(project_json)
+    }
+
+    /// Solves every elementary case and caches the result.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `SolveFault`-shaped `JsValue` on solve failure.
+    #[wasm_bindgen]
+    pub fn solve_session(&mut self) -> Result<bool, JsValue> {
+        if self.canceled {
+            return Ok(false);
+        }
+        let Some(project) = self.project.as_ref() else {
+            return Err(fault_err("InvalidModel", "no model open".to_owned()));
+        };
+        match rdm_solver::solve_model(&project.structure) {
+            Ok(solved) => {
+                self.solved = Some(solved);
+                Ok(true)
+            }
+            Err(e) => Err(fault_err("SolveError", e.to_string())),
+        }
+    }
+
+    /// Superposed response for `(case, weight)` pairs from the cached
+    /// solve — no refactorization, the < 2 ms hot path.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `SolveFault`-shaped `JsValue` when nothing is cached or
+    /// a case is missing.
+    #[wasm_bindgen]
+    pub fn solve_case_rhs(&self, weights_json: &str) -> Result<JsValue, JsValue> {
+        let Some(solved) = self.solved.as_ref() else {
+            return Err(fault_err(
+                "InvalidModel",
+                "no cached solve — call solve_session".to_owned(),
+            ));
+        };
+        let weights: Vec<(rdm_model::LoadCase, f64)> = match serde_json::from_str(weights_json) {
+            Ok(w) => w,
+            Err(e) => return Err(fault_err("InvalidModel", format!("bad weights: {e}"))),
+        };
+        match rdm_solver::superimpose(solved, &weights) {
+            Ok((u, r, f)) => serde_wasm_bindgen::to_value(&(u, r, f)).map_err(Into::into),
+            Err(e) => fault_js("SolveError", e.to_string()),
+        }
+    }
+
+    /// Cancels any pending work (the worker client polls this flag).
+    #[wasm_bindgen]
+    pub fn cancel(&mut self) {
+        self.canceled = true;
+    }
+
+    /// Whether the session holds a cached factorization.
+    #[wasm_bindgen]
+    pub fn has_cached_solve(&self) -> bool {
+        self.solved.is_some()
+    }
+}

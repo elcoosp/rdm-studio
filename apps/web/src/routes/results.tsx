@@ -13,6 +13,7 @@ import { NumberFlowValue } from "@/components/NumberFlowValue";
 import { CuttingPlane } from "@/viewport3d/CuttingPlane";
 import { SectionCut, DeflectionLimit, ModalVibration } from "@/components/icons/EngineeringIcons";
 import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/workerClient";
+import type { ProfileDims } from "@/viewport3d/ProfileShapes";
 import { formatMm, formatRatio } from "@/lib/units";
 import {
   feaClient,
@@ -254,7 +255,18 @@ function ResultsPage() {
     harmonic,
     project.structure.beams,
     project.structure.nodes.length,
-  ]);
+]);
+
+  const sectionDimsConverted = useMemo(
+    () =>
+      new Map<string, ProfileDims>(
+        Array.from(sectionDims.entries()).map(([k, v]) => [
+          k,
+          { shape: v.shape, h: v.h ?? undefined, b: v.b ?? undefined, tw: v.tw ?? undefined, tf: v.tf ?? undefined },
+        ]),
+      ),
+    [sectionDims],
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
@@ -420,7 +432,7 @@ function ResultsPage() {
                 wireframe={false}
                 selectedBeamId={null}
                 onPick={() => {}}
-                sectionDims={sectionDims}
+                sectionDims={sectionDimsConverted}
               />
               <SupportMarkers
                 nodes={project.structure.nodes}

@@ -7,6 +7,7 @@ import { IconPlus, IconTrash } from "@/components/icons";
 import { BottomSheet } from "@/components/BottomSheet";
 import { Button } from "@/components/ui/button";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
+import type { ProfileDims } from "@/viewport3d/ProfileShapes";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
 import { ProfileIpe } from "@/components/icons/EngineeringIcons";
 import { useViewportStore } from "@/state/viewportStore";
@@ -178,6 +179,17 @@ function GeometryPage() {
     }
   };
 
+  const sectionDimsConverted = useMemo(
+    () =>
+      new Map<string, ProfileDims>(
+        Array.from(sectionDims.entries()).map(([k, v]) => [
+          k,
+          { shape: v.shape, h: v.h ?? undefined, b: v.b ?? undefined, tw: v.tw ?? undefined, tf: v.tf ?? undefined },
+        ]),
+      ),
+    [sectionDims],
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3 lg:flex-row">
       <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-panel border border-hairline bg-panel p-3">
@@ -229,7 +241,7 @@ function GeometryPage() {
                   wireframe={renderMode === "wireframe"}
                   selectedBeamId={selection.beamId}
                   onPick={(id) => selectBeam(id)}
-                  sectionDims={sectionDims}
+                  sectionDims={sectionDimsConverted}
                   hoveredBeamId={hoverBeamId}
                 />
               ) : null}

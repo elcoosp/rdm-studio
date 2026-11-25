@@ -11,7 +11,7 @@ test("supports mounts the 3D viewport and applies RDM 7 presets", async ({ page 
   // Preset buttons exist for the four RDM 7 patterns.
   await expect(page.getByTestId("preset-encastrement")).toBeVisible();
   await expect(page.getByTestId("preset-rotule")).toBeVisible();
-  await expect(page.getByTestId("preset-appui-simple")).toBeVisible();
+  await expect(page.getByTestId("preset-appui-simple-z")).toBeVisible();
   await expect(page.getByTestId("preset-glissiere")).toBeVisible();
   // The demo project starts isostatic: 2 supports x 3 locked DOFs = 6.
   await expect(page.getByTestId("kinematic-status")).toContainText(/Isostatique|Hyperstatique/);
@@ -38,10 +38,11 @@ test("loads mounts the viewport, distributed beam loads and resultants", async (
   // G | Q | W | Acc case tabs are present.
   await expect(page.getByTestId("case-tabs")).toContainText("G");
   await expect(page.getByTestId("case-tabs")).toContainText("Acc");
-  // Add a uniform load on the first member: the loads table gains a row.
+  // Add a uniform load on the first member: the loads table gains a row
+  // (v1.3.0 3-axis form defaults qz = -10 kN/m → magnitude 10).
   await page.getByRole("button", { name: "Uniforme" }).click();
   await page.getByRole("button", { name: "Ajouter la charge" }).click();
-  await expect(page.getByRole("cell", { name: "-10 → -10 kN/m" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "10.00 → 10.00 kN/m" })).toBeVisible();
   // Live resultant summary renders ΣFz (rolling digits container).
   await expect(page.getByTestId("resultant-summary")).toContainText("ΣFz");
   // Primary cobalt CTA navigates to Step 4.

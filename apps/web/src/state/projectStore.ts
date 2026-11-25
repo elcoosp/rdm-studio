@@ -141,6 +141,13 @@ interface ProjectState {
   clearBeamSelection: () => void;
   selectNode: (id: number | null) => void;
   setSupport: (nodeId: number, lockedDofs: boolean[]) => void;
+  /**
+   * v1.6.0: elastic spring stiffnesses `[kx..krz]` (N/m, N·m/rad) of one
+   * support — wired to `Support.spring_stiffness` in Step 2.
+   */
+  setSupportSprings: (nodeId: number, springs: number[]) => void;
+  /** v1.6.0: removes the support on one node (Step 2 `×` button). */
+  removeSupport: (nodeId: number) => void;
   /** Removes every support (v1.3.0 "Tout supprimer", undoable upstream). */
   clearSupports: () => void;
   addNodalLoad: (
@@ -149,7 +156,14 @@ interface ProjectState {
     loadCase: LoadCaseId,
     fx?: number,
     fy?: number,
+    moments?: { mx: number; my: number; mz: number },
   ) => void;
+  /**
+   * v1.6.0: splits one member into `N` equal collinear segments with
+   * intermediate nodes, preserving section, material, roll angle and
+   * `k_buckling` (Step 1 `Subdiviser en N tronçons`); undoable via zundo.
+   */
+  subdivideBeam: (beamId: number, segments: number) => void;
   /** Replaces the whole load list (v1.3.0: "Vider les charges" undo). */
   replaceLoads: (loads: LoadData[]) => void;
   removeLoad: (index: number) => void;
@@ -610,6 +624,7 @@ export const useProjectStore = create<ProjectState>()(
       setSupport: (nodeId, lockedDofs) =>
         set((st) => {
           const others = st.project.structure.supports.filter((s) => s.node_id !== nodeId);
+          const existing = st.project.structure.supports.find((s) => s.node_id === nodeId);
           return {
             project: {
               ...st.project,
@@ -620,13 +635,54 @@ export const useProjectStore = create<ProjectState>()(
                   {
                     node_id: nodeId,
                     locked_dofs: lockedDofs,
-                    spring_stiffness: [0, 0, 0, 0, 0, 0],
+                    spring_stiffness: existing?.spring_stiffness ?? [0, 0, 0, 0, 0, 0],
                   },
                 ],
               },
             },
           };
         }),
+      setSupportSprings: (nodeId, springs) =>
+        set((st) => {
+          const others = st.project.structure.supports.filter((s) => s.node_id !== nodeId);
+          const existing = st.project.structure.supports.find((s) => s.node_id === nodeId);
+          const normalized = [0, 0, 0, 0, 0, 0].map(
+            (fallback, i) => springs[i] ?? existing?.spring_stiffness[i] ?? fallback,
+          );
+          return {
+            project: {
+              ...st.project,
+              structure: {
+                ...st.project.structure,
+                supports: [
+                  ...others,
+                  {
+                    node_id: nodeId,
+                    locked_dofs: existing?.locked_dofs ?? [
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                    ],
+                    spring_stiffness: normalized,
+                  },
+                ],
+              },
+            },
+          };
+        }),
+      removeSupport: (nodeId) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            structure: {
+              ...st.project.structure,
+              supports: st.project.structure.supports.filter((s) => s.node_id !== nodeId),
+            },
+          },
+        })),
       replaceLoads: (loads) =>
         set((st) => ({
           project: {
@@ -634,7 +690,7 @@ export const useProjectStore = create<ProjectState>()(
             structure: { ...st.project.structure, loads },
           },
         })),
-      addNodalLoad: (nodeId, fz, loadCase, fx = 0, fy = 0) =>
+      addNodalLoad: (nodeId, fz, loadCase, fx = 0, fy = 0, moments) =>
         set((st) => ({
           project: {
             ...st.project,
@@ -646,12 +702,124 @@ export const useProjectStore = create<ProjectState>()(
                   case: loadCase,
                   kind: "Nodal",
                   node_id: nodeId,
-                  forces: { fx, fy, fz, mx: 0, my: 0, mz: 0 },
+                  forces: {
+                    fx,
+                    fy,
+                    fz,
+                    mx: moments?.mx ?? 0,
+                    my: moments?.my ?? 0,
+                    mz: moments?.mz ?? 0,
+                  },
                 },
               ],
             },
           },
         })),
+      subdivideBeam: (beamId, segments) =>
+        set((st) => {
+          // v1.6.0: N equal collinear segments; intermediate nodes inherit
+          // nothing, members keep section / material / roll / k_buckling.
+          const n = Math.min(24, Math.max(2, Math.round(segments)));
+          const beam = st.project.structure.beams.find((b) => b.id === beamId);
+          if (beam === undefined) {
+            return st;
+          }
+          const n1 = st.project.structure.nodes.find((p) => p.id === beam.n1);
+          const n2 = st.project.structure.nodes.find((p) => p.id === beam.n2);
+          if (n1 === undefined || n2 === undefined) {
+            return st;
+          }
+          let nextId = st.project.structure.nodes.reduce((m, p) => Math.max(m, p.id), 0) + 1;
+          const innerNodes: NodeData[] = [];
+          for (let i = 1; i < n; i++) {
+            const t = i / n;
+            innerNodes.push({
+              id: nextId,
+              x: n1.x + (n2.x - n1.x) * t,
+              y: n1.y + (n2.y - n1.y) * t,
+              z: n1.z + (n2.z - n1.z) * t,
+            });
+            nextId += 1;
+          }
+          const chain = [n1.id, ...innerNodes.map((p) => p.id), n2.id];
+          let nextBeamId = st.project.structure.beams.reduce((m, b) => Math.max(m, b.id), 0) + 1;
+          const segments2: BeamData[] = [];
+          for (let i = 0; i < chain.length - 1; i++) {
+            const start = chain[i];
+            const end = chain[i + 1];
+            if (start === undefined || end === undefined) {
+              continue;
+            }
+            segments2.push({
+              ...beam,
+              id: nextBeamId,
+              n1: start,
+              n2: end,
+              // Outer ends keep the original releases; interior joints are
+              // rigid so the subdivided member behaves as one continuous bar.
+              releases_start:
+                i === 0 ? [...beam.releases_start] : [false, false, false, false, false, false],
+              releases_end:
+                i === chain.length - 2
+                  ? [...beam.releases_end]
+                  : [false, false, false, false, false, false],
+            });
+            nextBeamId += 1;
+          }
+          // v1.6.0: span loads follow the subdivided member — a trapezoid
+          // is re-sampled per segment (exact for the linear variation), a
+          // point-on-span is re-targeted onto its host segment.
+          const remappedLoads: LoadData[] = [];
+          for (const load of st.project.structure.loads) {
+            if (load.kind === "Trapezoid" && load.beam_id === beamId) {
+              for (let i = 0; i < n; i++) {
+                const host = segments2[i];
+                if (host === undefined) {
+                  continue;
+                }
+                const q1 = load.q_start + (load.q_end - load.q_start) * (i / n);
+                const q2 = load.q_start + (load.q_end - load.q_start) * ((i + 1) / n);
+                remappedLoads.push({
+                  case: load.case,
+                  kind: "Trapezoid",
+                  beam_id: host.id,
+                  q_start: q1,
+                  q_end: q2,
+                  direction: { ...load.direction },
+                });
+              }
+              continue;
+            }
+            if (load.kind === "PointOnSpan" && load.beam_id === beamId && n > 1) {
+              const globalT = load.position_ratio * n;
+              const segmentIndex = Math.min(n - 1, Math.floor(globalT));
+              const host = segments2[segmentIndex];
+              if (host === undefined) {
+                remappedLoads.push(load);
+                continue;
+              }
+              remappedLoads.push({
+                ...load,
+                beam_id: host.id,
+                position_ratio: globalT - segmentIndex,
+              });
+              continue;
+            }
+            remappedLoads.push(load);
+          }
+          return {
+            project: {
+              ...st.project,
+              structure: {
+                ...st.project.structure,
+                nodes: [...st.project.structure.nodes, ...innerNodes],
+                beams: [...st.project.structure.beams.filter((b) => b.id !== beamId), ...segments2],
+                loads: remappedLoads,
+              },
+            },
+            selection: { ...st.selection, beamId: segments2[0]?.id ?? st.selection.beamId },
+          };
+        }),
       removeLoad: (index) =>
         set((st) => ({
           project: {

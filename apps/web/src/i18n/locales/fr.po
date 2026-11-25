@@ -64,6 +64,10 @@ msgid "Copier l'URL de partage"
 msgstr "Copier l'URL de partage"
 
 #: src/routes/results.tsx
+msgid "Deformee & exploitation (ULE)"
+msgstr "Deformee & exploitation (ULE)"
+
+#: src/routes/results.tsx
 msgid "Deplacements nodaux (G)"
 msgstr "Deplacements nodaux (G)"
 
@@ -153,6 +157,10 @@ msgstr "Profils utilises"
 msgid "Rapport de model"
 msgstr "Rapport de model"
 
+#: src/components/UpdatePrompt.tsx
+msgid "Recharger"
+msgstr "Recharger"
+
 #: src/routes/results.tsx
 msgid "Resultats de calcul"
 msgstr "Resultats de calcul"
@@ -164,3 +172,7 @@ msgstr "Type"
 #: src/routes/results.tsx
 msgid "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
 msgstr "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
+
+#: src/components/UpdatePrompt.tsx
+msgid "Une nouvelle version est disponible."
+msgstr "Une nouvelle version est disponible."

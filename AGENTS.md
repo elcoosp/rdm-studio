@@ -20,7 +20,7 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
    - Display conversions (`mm`, `kN`, `MPa`) and locale formatting (`Intl.NumberFormat`) live exclusively in `apps/web/`.
 2. **Zero Panics in WASM:**
    - **Never** use `.unwrap()`, `.expect()`, `todo!()`, or `panic!()` in `crates/rdm-solver`, `crates/rdm-cad`, or `bindings/rdm-wasm`. Propagate typed `thiserror` domain errors.
-   - Zero `#[allow(...)]` or `#[expect(...)]` attributes outside `[lints.clippy]` in `Cargo.toml`.
+   - Zero `#[allow(...)]` or `#[expect(...)]` attributes outside `[lints.clippy]` in `Cargo.toml` (use `clippy::pedantic` instead of bare `pedantic` in Rust 1.100+).
 3. **Zero Hardcoding:**
    - All Eurocode profile dimensions (`EN 10365`, `EN 10210`, `EN 10056`) and material properties (`EN 1993-1-1`, `EN 1993-1-4`, `EN 1999-1-1`) live in `crates/rdm-eurocode/data/*.json`.
 4. **Known Build & Dependency Guardrails (Already Solved — Do Not Regress):**

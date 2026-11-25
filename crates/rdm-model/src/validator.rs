@@ -258,12 +258,40 @@ fn check_loads(structure: &Structure, issues: &mut Vec<ModelIssue>) {
                     ));
                 }
             }
-            LoadKind::Trapezoid { beam_id, .. } => {
+            LoadKind::Trapezoid {
+                beam_id,
+                a_start,
+                a_end,
+                ..
+            } => {
                 if !beam_ids.contains(&beam_id) {
                     issues.push(ModelIssue::new(
                         ModelIssueCode::UnknownLoadBeam,
                         beam_id,
                         format!("distributed load targets missing beam {beam_id}"),
+                    ));
+                }
+                // v1.7.0: partial-span ratios must stay inside [0, 1] and
+                // leave a non-empty loaded segment.
+                if let (Some(a1), Some(a2)) = (a_start, a_end)
+                    && (!(0.0..=1.0).contains(&a1) || !(0.0..=1.0).contains(&a2) || a2 <= a1)
+                {
+                    issues.push(ModelIssue::new(
+                        ModelIssueCode::InvalidPositionRatio,
+                        beam_id,
+                        format!(
+                            "partial trapezoid span [{a1:.3}, {a2:.3}] is outside (0, 1) or empty"
+                        ),
+                    ));
+                }
+            }
+            LoadKind::Thermal { beam_id, .. } => {
+                // v1.7.0: thermal actions target a member like span loads.
+                if !beam_ids.contains(&beam_id) {
+                    issues.push(ModelIssue::new(
+                        ModelIssueCode::UnknownLoadBeam,
+                        beam_id,
+                        format!("thermal load targets missing beam {beam_id}"),
                     ));
                 }
             }
@@ -540,12 +568,16 @@ mod tests {
             node_id: 1,
             locked_dofs: [true, true, true, true, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         // Fork support at node 2: Uy+Uz (restrains the yaw rigid mode).
         s.supports.push(crate::Support {
             node_id: 2,
             locked_dofs: [false, true, true, false, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         s.loads.push(Load {
             case: LoadCase::Variable,
@@ -603,6 +635,8 @@ mod tests {
             node_id: 1,
             locked_dofs: [true, true, false, false, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         let issues = validate_model(&s).unwrap_err();
         let rigid_msgs: Vec<&str> = issues

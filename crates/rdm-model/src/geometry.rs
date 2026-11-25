@@ -90,6 +90,21 @@ pub struct SectionProperties {
 /// Local axes follow the beam axis convention: local `x` runs from `n1` to
 /// `n2`; local `y`/`z` are built from the global `Z` reference vector and
 /// rotated by [`Beam::roll_angle_rad`] about the local `x` axis.
+/// Axial behaviour of a member (v1.7.0): standard frame element, or the
+/// iterative tension-only / compression-only bracing models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum MemberBehavior {
+    /// Full stiffness in tension and compression.
+    #[default]
+    Standard,
+    /// Stiffness removed when the member goes into compression
+    /// (cable / bracing iteration).
+    TensionOnly,
+    /// Stiffness removed when the member goes into tension
+    /// (strut / buton iteration).
+    CompressionOnly,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Beam {
     /// Unique beam id.
@@ -103,15 +118,39 @@ pub struct Beam {
     /// Key into [`crate::Structure::materials`].
     pub material_id: String,
     /// Local roll angle `theta_x` (rad) rotating the section about its axis.
+    #[serde(default)]
     pub roll_angle_rad: f64,
     /// End releases at `n1`: `[Ux, Uy, Uz, Rx, Ry, Rz]`, `true` = released.
+    #[serde(default)]
     pub releases_start: [bool; 6],
     /// End releases at `n2`: `[Ux, Uy, Uz, Rx, Ry, Rz]`, `true` = released.
+    #[serde(default)]
     pub releases_end: [bool; 6],
     /// Buckling length ratio `Lcr,y / L` (default 1.0).
+    #[serde(default = "default_k_buckling")]
     pub k_buckling_y: f64,
     /// Buckling length ratio `Lcr,z / L` (default 1.0).
+    #[serde(default = "default_k_buckling")]
     pub k_buckling_z: f64,
+    /// v1.7.0: linear depth taper — scale of the section depth / `Iy` at
+    /// `n2` relative to `n1` (e.g. `2.0` doubles the haunch at `n2`).
+    /// `None` = prismatic member; the solver uses the member-average
+    /// properties (first-order) and interpolates for station stresses.
+    #[serde(default)]
+    pub taper_end_scale: Option<f64>,
+    /// v1.7.0: rigid end offsets along the member axis (m),
+    /// `[offset at n1, offset at n2]` — joint-centre to element-end
+    /// distances modeled as rigid links.
+    #[serde(default)]
+    pub end_offsets: Option<[f64; 2]>,
+    /// v1.7.0: axial behaviour (standard / tension-only / compression-only).
+    #[serde(default)]
+    pub behavior: MemberBehavior,
+}
+
+/// Serde default helper for the buckling length ratios.
+fn default_k_buckling() -> f64 {
+    1.0
 }
 
 /// Helper marking a DOF index pair as fully released (truss behaviour).
@@ -131,6 +170,9 @@ impl Beam {
             releases_end: [false; 6],
             k_buckling_y: 1.0,
             k_buckling_z: 1.0,
+            taper_end_scale: None,
+            end_offsets: None,
+            behavior: MemberBehavior::Standard,
         }
     }
 

@@ -23,9 +23,12 @@ pub mod project;
 pub mod validator;
 
 pub use boundary::Support;
-pub use geometry::{Beam, Node, SectionProperties, SectionShape};
+pub use geometry::{Beam, MemberBehavior, Node, SectionProperties, SectionShape};
 pub use loads::{Direction, GlobalForces, Load, LoadCase, LoadKind};
-pub use project::ProjectFile;
+pub use project::{
+    CaseCategory, CombinationMethod, Level, LoadCaseDef, MemberGroup, ModelSettings, NationalAnnex,
+    PROJECT_FORMAT_VERSION, ProjectFile, canonical_load_cases,
+};
 pub use validator::{ModelIssue, ModelIssueCode, validate_model};
 
 use std::collections::BTreeMap;
@@ -72,6 +75,18 @@ pub struct Structure {
     /// When true (the default) each beam's self-weight `rho * A * g` is added
     /// to the `Permanent` case, per ARCHITECTURE.md section 6.1.
     pub self_weight_enabled: bool,
+    /// v1.7.0 (schema v2): solver / standard settings.
+    #[serde(default)]
+    pub settings: project::ModelSettings,
+    /// v1.7.0 (schema v2): custom elementary load-case definitions.
+    #[serde(default)]
+    pub load_cases: Vec<project::LoadCaseDef>,
+    /// v1.7.0 (schema v2): named member groups.
+    #[serde(default)]
+    pub groups: Vec<project::MemberGroup>,
+    /// v1.7.0 (schema v2): storey levels.
+    #[serde(default)]
+    pub levels: Vec<project::Level>,
 }
 
 impl Default for Structure {
@@ -84,6 +99,10 @@ impl Default for Structure {
             sections: BTreeMap::new(),
             materials: BTreeMap::new(),
             self_weight_enabled: true,
+            settings: project::ModelSettings::default(),
+            load_cases: Vec::new(),
+            groups: Vec::new(),
+            levels: Vec::new(),
         }
     }
 }

@@ -149,6 +149,9 @@ pub enum LoadKind {
     },
     /// Trapezoidally distributed transverse load on a beam span,
     /// `q_start` at `n1` and `q_end` at `n2` (N/m), acting along `direction`.
+    /// v1.7.0: `a_start` / `a_end` restrict the load to a partial span
+    /// (`[0, 1]` ratios, default full span); `local_axes` interprets the
+    /// direction components in the MEMBER local frame instead of global.
     Trapezoid {
         /// Loaded beam id.
         beam_id: u32,
@@ -158,6 +161,28 @@ pub enum LoadKind {
         q_end: f64,
         /// Global direction of the load intensity vector.
         direction: Direction,
+        /// v1.7.0: partial-span start ratio (default `0.0`).
+        #[serde(default)]
+        a_start: Option<f64>,
+        /// v1.7.0: partial-span end ratio (default `1.0`).
+        #[serde(default)]
+        a_end: Option<f64>,
+        /// v1.7.0: interpret `direction` in member local axes.
+        #[serde(default)]
+        local_axes: Option<bool>,
+    },
+    /// v1.7.0: thermal action on a member — uniform temperature change
+    /// `delta_t` (K, axial) plus linear gradients `delta_ty` / `delta_tz`
+    /// (K across the section depth / width, bending about y / z).
+    Thermal {
+        /// Loaded beam id.
+        beam_id: u32,
+        /// Uniform temperature change (K, positive = expansion).
+        delta_t: f64,
+        /// Temperature gradient across the local-y width (K).
+        delta_ty: f64,
+        /// Temperature gradient across the local-z depth (K).
+        delta_tz: f64,
     },
     /// Global acceleration field as dimensionless multiples of
     /// `STANDARD_GRAVITY` (v1.3.0). The solver integrates the exact

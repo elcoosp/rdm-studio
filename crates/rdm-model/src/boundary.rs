@@ -8,6 +8,10 @@
 use serde::{Deserialize, Serialize};
 
 /// Restraint of a node, following the RDM 7 six-DOF matrix convention.
+///
+/// v1.7.0 additions: `incline` re-orients the translational restraint
+/// along a user axis (inclined roller), and `settlement` prescribes a
+/// support displacement on locked DOFs.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Support {
     /// Restrained node id.
@@ -16,6 +20,14 @@ pub struct Support {
     pub locked_dofs: [bool; 6],
     /// Spring stiffness `[N/m x3, N.m/rad x3]`, `0.0` when rigid/free.
     pub spring_stiffness: [f64; 6],
+    /// v1.7.0: inclined support direction (global unit vector) — the
+    /// `Uz`-type translational restraint acts along this axis.
+    #[serde(default)]
+    pub incline: Option<crate::loads::Direction>,
+    /// v1.7.0: prescribed support settlement `[ux, uy, uz, rx, ry, rz]`
+    /// (m / rad), applied on locked DOFs.
+    #[serde(default)]
+    pub settlement: [f64; 6],
 }
 
 impl Support {
@@ -25,6 +37,8 @@ impl Support {
             node_id,
             locked_dofs: [true; 6],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         }
     }
 
@@ -34,6 +48,8 @@ impl Support {
             node_id,
             locked_dofs: [true, true, true, false, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         }
     }
 
@@ -44,6 +60,20 @@ impl Support {
             node_id,
             locked_dofs: [false, false, true, false, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
+        }
+    }
+
+    /// v1.7.0: inclined roller — the translational restraint acts along
+    /// the given global direction instead of the `Uz` axis.
+    pub fn roller_inclined(node_id: u32, direction: crate::loads::Direction) -> Self {
+        Self {
+            node_id,
+            locked_dofs: [false, false, true, false, false, false],
+            spring_stiffness: [0.0; 6],
+            incline: Some(direction),
+            settlement: [0.0; 6],
         }
     }
 }

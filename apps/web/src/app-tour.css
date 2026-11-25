@@ -1,0 +1,87 @@
+/* v1.4.0 flagship onboarding tour (DESIGN.md §6 tokens): white popover,
+   hairline border, cobalt primary button, JetBrains Mono step counter,
+   smooth 350 ms stage highlight. Zero dark defaults. */
+
+.driver-popover-rdm {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 16px;
+  max-width: 340px;
+  font-family: var(--font-sans);
+}
+
+.driver-popover-rdm .driver-popover-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.driver-popover-rdm .driver-popover-description {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 18px;
+  color: #475569;
+}
+
+.driver-popover-rdm .driver-popover-progress-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.driver-popover-rdm .driver-popover-close-btn {
+  color: #94a3b8;
+}
+
+.driver-popover-rdm .driver-popover-footer button {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  text-shadow: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  transition:
+    background-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.driver-popover-rdm .driver-popover-footer button:hover {
+  background: #f1f5f9;
+}
+
+.driver-popover-rdm .driver-popover-next-btn,
+.driver-popover-rdm .driver-popover-done-btn {
+  background: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.driver-popover-rdm .driver-popover-next-btn:hover,
+.driver-popover-rdm .driver-popover-done-btn:hover {
+  background: #1e40af;
+}
+
+.driver-popover-rdm .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-color: #e2e8f0;
+}
+
+/* Smooth stage highlight (350 ms, instrument curve). */
+.driver-active-element {
+  outline: 2px solid #1d4ed8 !important;
+  outline-offset: 2px;
+  border-radius: 6px;
+  transition: outline-color 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#driver-highlighted-element-stage {
+  border-radius: 8px;
+  transition:
+    all 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}

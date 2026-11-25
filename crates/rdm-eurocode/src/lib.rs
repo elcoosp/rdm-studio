@@ -19,7 +19,8 @@ pub use en1993::{
     BucklingCurve, Classification, DeflectionLimit, LtbResult, MemberCheck, MemberCheckInput,
     buckling_curve_rolled, classify_section, deflection_limit, euler_critical_force,
     flexural_buckling_chi, lambda_bar, lateral_torsional_buckling, member_check,
-    reduce_to_bending_shear, shear_area_major, shear_area_minor, von_mises_utilisation,
+    reduce_to_bending_shear, shear_area_major, shear_area_minor, von_mises_stress,
+    von_mises_utilisation,
 };
 
 use std::sync::OnceLock;

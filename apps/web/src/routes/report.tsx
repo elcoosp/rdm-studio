@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BottomSheet } from "@/components/BottomSheet";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { encodeProject } from "@/lib/urlShare";
 import { useProjectStore } from "@/state/projectStore";
 import QRCode from "qrcode";
 import { toast } from "sonner";
-import { feaClient, getLastReport } from "@/wasmBridge/workerClient";
+import { feaClient, getLastModalReport, getLastReport } from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
 import { exportResultsCsv } from "@/export/csvExport";
 import { exportStandaloneHtml3d } from "@/export/standaloneHtml3d";
@@ -97,6 +97,7 @@ function ReportPage() {
           ))}
         </ul>
         <ReportTables />
+        <FingerprintFooter />
       </section>
       <BottomSheet testId="inspector-sheet" title={<Trans>Partage par URL</Trans>}>
         <p className="text-[12px] text-ink-secondary">
@@ -174,6 +175,33 @@ function ReportPage() {
 const fr = (v: number, digits = 3): string => v.toFixed(digits).replace(".", ",");
 
 /** 4 calculation tables (mockups tape_5) with 1-click TSV copy. */
+/** v1.4.0: deterministic SHA-256 model fingerprint footer. */
+function FingerprintFooter() {
+  const project = useProjectStore((s) => s.project);
+  const [hash, setHash] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const run = () => {
+      feaClient
+        .projectFingerprint(JSON.stringify(project))
+        .then((h) => {
+          if (!cancelled) setHash(h);
+        })
+        .catch(() => undefined);
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [project]);
+  return (
+    <p className="font-data mt-4 border-t border-hairline pt-2 text-[11px] text-ink-muted">
+      Empreinte du modèle (SHA-256) :{" "}
+      <span data-testid="model-fingerprint">{hash ?? "calcul…"}</span>
+    </p>
+  );
+}
+
 function ReportTables() {
   const project = useProjectStore((s) => s.project);
   const report = getLastReport();
@@ -203,9 +231,71 @@ function ReportTables() {
     `P${b.beam_id}`,
     fr(b.midspan_deflection * 1000, 1),
   ]);
+  // v1.4.0: the full EC3 breakdown (σvM, χ factors, η, status) per member.
+  const ec3Rows = (uls?.beams ?? []).map((b) => [
+    `P${b.beam_id}`,
+    fr(b.max_sigma_vm / 1e6, 1),
+    b.chi_y === null ? "—" : fr(b.chi_y),
+    b.chi_z === null ? "—" : fr(b.chi_z),
+    b.chi_lt === null ? "—" : fr(b.chi_lt),
+    fr(b.utilization),
+    b.utilization > 1 ? "NON VERIFIÉ" : "vérifié",
+  ]);
+  // v1.4.0: ELU support reactions (Rx, Ry, Rz) + Σ footer.
+  const permanent = report?.cases.find((c) => c.code === "G");
+  const variable = report?.cases.find((c) => c.code === "Q");
+  const reactionRows = project.structure.nodes
+    .filter((n) => project.structure.supports.some((sp) => sp.node_id === n.id))
+    .map((n) => {
+      const g = permanent?.reactions ?? [];
+      const q = variable?.reactions ?? [];
+      const rx = (g[n.id * 6] ?? 0) + 1.5 * (q[n.id * 6] ?? 0) + 0.35 * (g[n.id * 6] ?? 0);
+      const ry =
+        (g[n.id * 6 + 1] ?? 0) + 1.5 * (q[n.id * 6 + 1] ?? 0) + 0.35 * (g[n.id * 6 + 1] ?? 0);
+      const rz =
+        (g[n.id * 6 + 2] ?? 0) + 1.5 * (q[n.id * 6 + 2] ?? 0) + 0.35 * (g[n.id * 6 + 2] ?? 0);
+      return [`N${n.id}`, fr(rx / 1000, 2), fr(ry / 1000, 2), fr(rz / 1000, 2)];
+    });
+  const totalRx = reactionRows.reduce((m, r) => m + Number((r[1] ?? "0").replace(",", ".")), 0);
+  const totalRy = reactionRows.reduce((m, r) => m + Number((r[2] ?? "0").replace(",", ".")), 0);
+  const totalRz = reactionRows.reduce((m, r) => m + Number((r[3] ?? "0").replace(",", ".")), 0);
+  // v1.4.0: modal table (f + T) — last computed eigen report.
+  const modal = getLastModalReport();
+  const modalRows = (modal?.modes ?? [])
+    .slice(0, 6)
+    .map((m) => [`Mode ${m.mode_index}`, fr(m.frequency_hz, 2), fr(1 / m.frequency_hz, 2)]);
+  // v1.4.0: ELS extreme displacements (|U| from the SLS superposition).
+  const extremeDisplacement = (() => {
+    const slsCase = report?.cases.find((c) => c.code === "G");
+    if (slsCase === undefined) return "0,00";
+    let max = 0;
+    for (let i = 0; i < slsCase.displacements.length; i += 6) {
+      const ux = slsCase.displacements[i] ?? 0;
+      const uy = slsCase.displacements[i + 1] ?? 0;
+      const uz = slsCase.displacements[i + 2] ?? 0;
+      max = Math.max(max, Math.hypot(ux, uy, uz));
+    }
+    return fr(max * 1000, 2);
+  })();
   return (
     <div className="mt-4 space-y-4">
       {[
+        { title: "Fréquences propres (Hz)", headers: ["Mode", "f (Hz)", "T (s)"], rows: modalRows },
+        {
+          title: "Réactions d'appuis ELU (kN)",
+          headers: ["Appui", "Rx", "Ry", "Rz"],
+          rows: [...reactionRows, ["Σ", fr(totalRx, 2), fr(totalRy, 2), fr(totalRz, 2)]],
+        },
+        {
+          title: "Vérification Eurocode 3",
+          headers: ["Poutre", "σvM (MPa)", "χy", "χz", "χLT", "η", "Statut"],
+          rows: ec3Rows,
+        },
+        {
+          title: "Déplacements extrêmes ELS",
+          headers: ["Grandeur", "|U|max (mm)"],
+          rows: [["Déformée ELS", extremeDisplacement]],
+        },
         { title: "Nœuds", headers: ["ID", "X (m)", "Y (m)", "Z (m)"], rows: nodeRows },
         {
           title: "Profils utilisés",

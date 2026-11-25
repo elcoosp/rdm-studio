@@ -13,6 +13,7 @@
 
 use std::collections::BTreeMap;
 
+use nalgebra::DMatrix;
 use nalgebra::SMatrix;
 
 use rdm_model::Structure;
@@ -149,6 +150,56 @@ fn locked_dofs(structure: &Structure) -> Result<Vec<bool>, SolveError> {
 ///
 /// The structure is *not* re-validated: call it on a model that already
 /// passes `rdm_model::validate_model`.
+///
+/// # Errors
+///
+/// Returns [`ModalError`] on assembly/factorization failure or when the
+/// iteration budget is exhausted.
+/// Reduced elastic stiffness `(K_reduced, free DOFs)` shared by the
+/// modal and buckling eigen-solvers (v1.9.0).
+///
+/// # Errors
+///
+/// Returns [`SolveError`] when the model cannot be assembled.
+pub fn assemble_reduced_k(
+    structure: &Structure,
+) -> Result<(nalgebra::DMatrix<f64>, Vec<usize>), SolveError> {
+    let elements = build_elements(structure).map_err(SolveError::Load)?;
+    let ndof = 6 * structure.nodes.len();
+    let locked = locked_dofs(structure)?;
+    let free: Vec<usize> = (0..ndof).filter(|&d| !locked[d]).collect();
+    let mut free_index = vec![usize::MAX; ndof];
+    for (slot, &dof) in free.iter().enumerate() {
+        free_index[dof] = slot;
+    }
+    let n_free = free.len();
+    let mut k_map: BTreeMap<(usize, usize), f64> = BTreeMap::new();
+    for data in &elements {
+        let element = build_case_element(data, &crate::static_sparse::zero_load())
+            .map_err(|e| SolveError::Load(crate::loads::LoadVectorError::from(e)))?;
+        for i in 0..element.n_retained {
+            let gi = data.local_to_global[element.retained_local_dof[i]];
+            for j in 0..element.n_retained {
+                let gj = data.local_to_global[element.retained_local_dof[j]];
+                let kk = element.k_retained[(i, j)];
+                if kk != 0.0 {
+                    *k_map.entry((gi, gj)).or_insert(0.0) += kk;
+                }
+            }
+        }
+    }
+    let mut k_reduced = DMatrix::<f64>::zeros(n_free, n_free);
+    for (&(i, j), &v) in &k_map {
+        if locked[i] || locked[j] {
+            continue;
+        }
+        let (fi, fj) = (free_index[i], free_index[j]);
+        k_reduced[(fi, fj)] += v;
+    }
+    Ok((k_reduced, free))
+}
+
+/// Runs the modal eigen-analysis for the `n_modes` lowest frequencies.
 ///
 /// # Errors
 ///

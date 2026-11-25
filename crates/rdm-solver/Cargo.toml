@@ -6,6 +6,7 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
+serde = { workspace = true }
 rdm-model = { path = "../rdm-model" }
 rdm-eurocode = { path = "../rdm-eurocode" }
 faer = { workspace = true }

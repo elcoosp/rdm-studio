@@ -105,10 +105,9 @@ pub fn span_loads_local(
                     out.points.push((centroid.clamp(0.0, 1.0), fy, fz));
                 }
             }
-            LoadKind::Thermal { .. } => {
-                // v1.7.0: thermal actions enter through the end-force array
-                // (axial pair + fixed-end moment pair); no span load term.
-            }
+            // v1.7.0: thermal actions enter through the end-force array
+            // (axial pair + fixed-end moment pair) — no span load term, so
+            // they fall through the empty default arm below.
             LoadKind::AccelerationField { ax_g, ay_g, az_g } => {
                 // v1.3.0: the EC3 station superposition sees the same
                 // inertial body force the stiffness solve integrated.

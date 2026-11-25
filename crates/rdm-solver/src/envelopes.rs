@@ -5,8 +5,9 @@ use rdm_model::LoadCase;
 
 use crate::static_sparse::{SolveError, SolvedModel, superimpose};
 
-/// Min/max envelope of one member across the superposed combinations.
-#[derive(Debug, Clone, PartialEq)]
+/// Min/max envelope of one member across the superposed combinations
+/// (serialized for the wasm bridge).
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct BeamEnvelope {
     /// Beam id.
     pub beam_id: u32,

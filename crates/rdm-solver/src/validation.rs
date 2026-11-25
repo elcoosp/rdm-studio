@@ -9,8 +9,8 @@ use rdm_model::{
     Node, SectionProperties, SectionShape, Structure, Support,
 };
 
-/// Result of one benchmark.
-#[derive(Debug, Clone, PartialEq)]
+/// Result of one benchmark (serialized for the wasm Validation modal).
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct BenchResult {
     /// Stable benchmark id (`R01`..).
     pub id: &'static str,
@@ -733,15 +733,13 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
             .2
             .iter()
             .find(|(c, _)| c == "G")
-            .map(|(_, f)| *f)
-            .unwrap_or(0.0);
-        let q = uls
+            .map_or(0.0, |(_, f)| *f);
+        let _q = uls
             .2
             .iter()
             .find(|(c, _)| c == "Q")
-            .map(|(_, f)| *f)
-            .unwrap_or(0.0);
-        let _ = q;
+            .map_or(0.0, |(_, f)| *f);
+
         out.push(score("E05", "γG of the 6.10 ULS recipe", 1.35, g, "-"));
     }
     // E06 6.10a/b produces two ULS recipes per leading case.
@@ -905,7 +903,7 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         let mut eb = s.clone();
         eb.settings.shear_deformation = false;
         let d1 = solve_model(&eb).expect("solve").cases[0].1.displacements[8].abs();
-        for load in s.loads.iter_mut() {
+        for load in &mut s.loads {
             if let LoadKind::Trapezoid { q_start, q_end, .. } = &mut load.kind {
                 *q_start *= 3.0;
                 *q_end *= 3.0;
@@ -951,7 +949,7 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         out.push(score(
             "R22",
             "Symmetric load — R1 = R2",
-            (r1 + r2) / 2.0,
+            r1.midpoint(r2),
             r1,
             "N",
         ));

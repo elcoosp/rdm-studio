@@ -166,7 +166,6 @@ pub fn local_stiffness_matrix_shear(
     phi_y: f64,
     phi_z: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, ELEMENT_DOFS> {
-    let length = length;
     let mut k = SMatrix::<f64, ELEMENT_DOFS, ELEMENT_DOFS>::zeros();
     // Axial: DOFs 0 (ux1) and 6 (ux2).
     let ax = ea / length;
@@ -374,6 +373,14 @@ pub fn trapezoid_local_vector(
 /// Gauss-Legendre integration of the cubic Hermite shape functions —
 /// exact for linear intensity (integrand degree 4). `axis = 0` axial,
 /// `1` local y, `2` local z.
+/// 4-point Gauss-Legendre nodes/weights on `[-1, 1]`.
+const GL_4: [(f64, f64); 4] = [
+    (-0.861_136_311_594_052_6, 0.347_854_845_137_453_85),
+    (-0.339_981_043_584_856_3, 0.652_145_154_862_546_1),
+    (0.339_981_043_584_856_3, 0.652_145_154_862_546_1),
+    (0.861_136_311_594_052_6, 0.347_854_845_137_453_85),
+];
+
 pub fn partial_trapezoid_local_vector(
     q1: f64,
     q2: f64,
@@ -382,23 +389,16 @@ pub fn partial_trapezoid_local_vector(
     axis: usize,
     length: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, 1> {
-    let length = length;
-    // 4-point Gauss-Legendre nodes/weights on [-1, 1].
-    const GL: [(f64, f64); 4] = [
-        (-0.861_136_311_594_052_6, 0.347_854_845_137_453_85),
-        (-0.339_981_043_584_856_3, 0.652_145_154_862_546_1),
-        (0.339_981_043_584_856_3, 0.652_145_154_862_546_1),
-        (0.861_136_311_594_052_6, 0.347_854_845_137_453_85),
-    ];
+    // 4-point Gauss-Legendre quadrature, module-level constant (see GL_4).
     let lo = a1.clamp(0.0, 1.0);
     let hi = a2.clamp(0.0, 1.0);
     if hi <= lo {
         return SMatrix::zeros();
     }
     let half = (hi - lo) / 2.0;
-    let mid = (hi + lo) / 2.0;
+    let mid = lo.midpoint(hi);
     let mut v = SMatrix::<f64, ELEMENT_DOFS, 1>::zeros();
-    for &(xi, w) in &GL {
+    for &(xi, w) in &GL_4 {
         // Map the quadrature node to the span ratio a and the physical x.
         let a = mid + half * xi;
         let x = a * length;
@@ -447,7 +447,7 @@ pub fn point_local_vector(
     length: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, 1> {
     let mut v = SMatrix::<f64, ELEMENT_DOFS, 1>::zeros();
-    let length = length;
+
     let a = position_ratio.clamp(0.0, 1.0);
     let li = 1.0 - a;
     // Axial + torsion: linear distribution.

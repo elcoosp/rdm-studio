@@ -116,13 +116,12 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
     })
 }
 
-/// One full assembly + factorization + solve pass; returns the case
-/// solutions plus the members whose axial behavior was violated
-/// (tension-only in compression / compression-only in tension).
-fn solve_once(
-    structure: &Structure,
-    active: &[bool],
-) -> Result<(Vec<(LoadCase, CaseSolution)>, Vec<u32>), SolveError> {
+/// One solve pass: `(case solutions, members whose axial behavior was
+/// violated — tension-only in compression / compression-only in tension)`.
+pub type SolvePass = (Vec<(LoadCase, CaseSolution)>, Vec<u32>);
+
+/// One full assembly + factorization + solve pass.
+fn solve_once(structure: &Structure, active: &[bool]) -> Result<SolvePass, SolveError> {
     let elements = build_elements(structure)?;
     let ndof = 6 * structure.nodes.len();
 
@@ -251,10 +250,8 @@ fn solve_once(
         let mut solutions = Vec::with_capacity(cases.len());
         for case in &cases {
             let rhs = assemble_case_vector(structure, &elements, *case)?;
-            let mut displacements = vec![0.0f64; ndof];
-            for dof in 0..ndof {
-                displacements[dof] = settlement_of(structure, dof);
-            }
+            let displacements: Vec<f64> =
+                (0..ndof).map(|dof| settlement_of(structure, dof)).collect();
             let mut reactions = vec![0.0f64; ndof];
             for (&(i, j), &v) in &stiffness {
                 if i == j {
@@ -297,7 +294,7 @@ fn solve_once(
                 },
             ));
         }
-        return behavior_check(structure, active, solutions);
+        return Ok(behavior_check(structure, active, solutions));
     }
     let reduced_mat = SparseColMat::<usize, f64>::try_new_from_triplets(n_free, n_free, &reduced)
         .map_err(|e| SolveError::Sparse {
@@ -383,10 +380,11 @@ fn solve_once(
         }
         // Diagonal drops for locked DOFs: R_i = K_ii·u_i (prescribed motion).
         for dof in 0..ndof {
-            if locked[dof] {
-                if let Some(v) = stiffness.get(&(dof, dof)) {
-                    reactions[dof] += v * displacements[dof];
-                }
+            if !locked[dof] {
+                continue;
+            }
+            if let Some(v) = stiffness.get(&(dof, dof)) {
+                reactions[dof] += v * displacements[dof];
             }
         }
         for (i, r) in reactions.iter_mut().enumerate().take(ndof) {
@@ -442,7 +440,7 @@ fn solve_once(
         ));
     }
 
-    behavior_check(structure, active, solutions)
+    Ok(behavior_check(structure, active, solutions))
 }
 
 /// v1.7.0: tension-only / compression-only convergence check over the
@@ -451,15 +449,14 @@ fn behavior_check(
     structure: &Structure,
     active: &[bool],
     solutions: Vec<(LoadCase, CaseSolution)>,
-) -> Result<(Vec<(LoadCase, CaseSolution)>, Vec<u32>), SolveError> {
+) -> SolvePass {
     let mut deactivated: Vec<u32> = Vec::new();
     for (index, beam) in structure.beams.iter().enumerate() {
         if !active[index] {
             continue;
         }
-        let axial = match case_axial(&solutions, index) {
-            Some(n) => n,
-            None => continue,
+        let Some(axial) = case_axial(&solutions, index) else {
+            continue;
         };
         let violates = match beam.behavior {
             rdm_model::MemberBehavior::TensionOnly => axial < -1e-9,
@@ -470,7 +467,7 @@ fn behavior_check(
             deactivated.push(beam.id);
         }
     }
-    Ok((solutions, deactivated))
+    (solutions, deactivated)
 }
 
 /// Axial force of one beam in the Permanent case (N, tension positive).
@@ -553,6 +550,38 @@ fn diagnose_mechanism(
             offenders.join("; ")
         )
     }
+}
+
+/// Linear buckling analysis errors (v1.9.0).
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+pub enum BucklingError {
+    /// Assembly or factorization failure with context.
+    #[error("buckling assembly error: {0}")]
+    Assembly(String),
+    /// Load-vector failure during the axial map build.
+    #[error("buckling load error: {0}")]
+    Load(#[from] LoadVectorError),
+}
+
+/// Axial forces of every member under the Permanent case
+/// (N, tension positive) — the input of the geometric stiffness.
+///
+/// # Errors
+///
+/// Returns [`SolveError`] when the model cannot be solved.
+pub fn permanent_axial_forces(structure: &Structure) -> Result<Vec<f64>, SolveError> {
+    let solved = solve_model(structure)?;
+    let Some((_, solution)) = solved.cases.first() else {
+        return Ok(vec![0.0; structure.beams.len()]);
+    };
+    Ok((0..structure.beams.len())
+        .map(|index| {
+            solution
+                .beam_end_forces
+                .get(12 * index)
+                .map_or(0.0, |f| -*f)
+        })
+        .collect())
 }
 
 /// Superposed response vectors: `(displacements, reactions, end_forces)`.

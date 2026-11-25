@@ -4,15 +4,7 @@ import type { WorkerRequest } from "./fea.worker";
 export interface CombinationReport {
   kind: string;
   label: string;
-  beams: {
-    beam_id: number;
-    utilization: number;
-    /** v1.3.0: governing resistance name (`Mb,Rd`, `Von Mises`, …). */
-    governing_check: string;
-    /** v1.3.0: peak von Mises stress over the stations (Pa). */
-    max_sigma_vm: number;
-    midspan_deflection: number;
-  }[];
+  beams: { beam_id: number; utilization: number; midspan_deflection: number }[];
 }
 
 export interface CaseReport {
@@ -321,16 +313,6 @@ class FeaClient {
   }
 
   /** DXF import -> fresh .rdm project JSON (v1.0.0 CAD engine). */
-  /** v1.3.0: extension-dispatched CAD import (.dxf/.step/.stp/.igs/.iges). */
-  importCad(bytes: ArrayBuffer, filename: string, name: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      this.enqueue(
-        { type: "IMPORT_CAD", bytes, filename, name },
-        { onResult: (data) => resolve(data as string), onError: reject },
-      );
-    });
-  }
-
   importDxf(bytes: ArrayBuffer, name: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       this.enqueue(

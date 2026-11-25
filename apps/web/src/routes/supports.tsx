@@ -36,10 +36,10 @@ function SupportsPage() {
           </Trans>
         </p>
         <table className="w-full max-w-xl text-[13px]">
-          <thead className="text-left text-[11px] uppercase tracking-wide text-ink-muted">
+          <thead className="text-left text-[11px] text-ink-muted">
             <tr>
               <th className="py-1">
-                <Trans>Noeud</Trans>
+                <Trans>Nœud</Trans>
               </th>
               {DOF_LABELS.map((d) => (
                 <th key={d} className="font-data">

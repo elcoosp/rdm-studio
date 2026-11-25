@@ -748,35 +748,7 @@ pub fn section_stress_grid(
 /// Returns a `SolveFault`-shaped `JsValue` on parse or topology failure.
 #[wasm_bindgen]
 pub fn import_dxf(bytes: &[u8], project_name: &str) -> Result<JsValue, JsValue> {
-    let outcome = (|| -> Result<String, String> {
-        let segments = rdm_cad::import_dxf(bytes).map_err(|e| e.to_string())?;
-        let topology = rdm_cad::clean_topology(&segments, 1e-3).map_err(|e| e.to_string())?;
-        let nodes: Vec<rdm_model::Node> = topology
-            .nodes
-            .iter()
-            .map(|n| rdm_model::Node::new(n.id, n.position[0], n.position[1], n.position[2]))
-            .collect();
-        let beams: Vec<rdm_model::Beam> = topology
-            .beams
-            .iter()
-            .map(|b| rdm_model::Beam::frame(b.n1.max(b.n2), b.n1, b.n2, "IPE 200", "S235JR"))
-            .collect();
-        let structure = rdm_model::Structure {
-            nodes,
-            beams,
-            supports: Vec::new(),
-            loads: Vec::new(),
-            sections: BTreeMap::new(),
-            materials: BTreeMap::new(),
-            self_weight_enabled: true,
-        };
-        let project = rdm_model::ProjectFile {
-            version: 1,
-            name: project_name.to_owned(),
-            structure,
-        };
-        serde_json::to_string(&project).map_err(|e| e.to_string())
-    })();
+    let outcome = import_dxf_structure(bytes, project_name);
     match outcome {
         Ok(json) => serde_wasm_bindgen::to_value(&json).map_err(Into::into),
         Err(message) => serde_wasm_bindgen::to_value(&SolveFault {
@@ -784,5 +756,64 @@ pub fn import_dxf(bytes: &[u8], project_name: &str) -> Result<JsValue, JsValue> 
             message,
         })
         .map_err(Into::into),
+    }
+}
+
+/// Pure DXF -> `.rdm` import used by [`import_dxf`] (testable off-wasm).
+///
+/// # Errors
+///
+/// Returns a message string on parse or topology failure.
+fn import_dxf_structure(bytes: &[u8], project_name: &str) -> Result<String, String> {
+    let segments = rdm_cad::import_dxf(bytes).map_err(|e| e.to_string())?;
+    let topology = rdm_cad::clean_topology(&segments, 1e-3).map_err(|e| e.to_string())?;
+    let nodes: Vec<rdm_model::Node> = topology
+        .nodes
+        .iter()
+        .map(|n| rdm_model::Node::new(n.id, n.position[0], n.position[1], n.position[2]))
+        .collect();
+    // v1.1.0 bug 1: dense sequential 1-based member ids (the previous
+    // `n1.max(n2)` colliding id scheme silently dropped members).
+    let beams: Vec<rdm_model::Beam> = topology
+        .beams
+        .iter()
+        .enumerate()
+        .map(|(idx, b)| rdm_model::Beam::frame((idx + 1) as u32, b.n1, b.n2, "IPE 200", "S235JR"))
+        .collect();
+    let structure = rdm_model::Structure {
+        nodes,
+        beams,
+        supports: Vec::new(),
+        loads: Vec::new(),
+        sections: BTreeMap::new(),
+        materials: BTreeMap::new(),
+        self_weight_enabled: true,
+    };
+    let project = rdm_model::ProjectFile {
+        version: 1,
+        name: project_name.to_owned(),
+        structure,
+    };
+    serde_json::to_string(&project).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod dxf_import_tests {
+    use super::*;
+
+    const TWO_BEAM_DXF: &str = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nRDM\n10\n0.0\n11\n4.0\n20\n0.0\n21\n0.0\n30\n0.0\n31\n0.0\n0\nLINE\n8\nRDM\n10\n4.0\n11\n4.0\n20\n0.0\n21\n0.0\n30\n0.0\n31\n3.0\n0\nENDSEC\n0\nEOF\n";
+
+    #[test]
+    fn import_dxf_assigns_sequential_distinct_beam_ids() {
+        let json = import_dxf_structure(TWO_BEAM_DXF.as_bytes(), "plan").expect("import");
+        let project: rdm_model::ProjectFile = serde_json::from_str(&json).expect("parse");
+        let ids: Vec<u32> = project.structure.beams.iter().map(|b| b.id).collect();
+        assert_eq!(project.structure.beams.len(), 2);
+        assert_eq!(ids, vec![1, 2], "ids must be dense 1..n, got {ids:?}");
+    }
+
+    #[test]
+    fn import_dxf_rejects_garbage() {
+        assert!(import_dxf_structure(b"junk", "x").is_err());
     }
 }

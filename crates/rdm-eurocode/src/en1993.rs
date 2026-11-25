@@ -166,9 +166,9 @@ pub fn classify_section(
             };
             Ok(Some(cls))
         }
-        // EN 1993-1-1 Table 5.2 does not cover single angles.
-        SectionShape::Angle => Ok(None),
-        SectionShape::General => Ok(None),
+        // EN 1993-1-1 Table 5.2 does not cover single angles or generic
+        // shapes: the caller reports the check as not applicable.
+        SectionShape::Angle | SectionShape::General => Ok(None),
     }
 }
 
@@ -261,12 +261,11 @@ pub fn buckling_curve_rolled(
                 Ok(BucklingCurve::D)
             }
         }
-        // Rolled channels: curve c about both axes (Table 6.2, sheet 3).
-        SectionShape::Channel => Ok(BucklingCurve::C),
+        // Rolled channels and single angles: curve c about both axes
+        // (Table 6.2, sheet 3).
+        SectionShape::Channel | SectionShape::Angle => Ok(BucklingCurve::C),
         // Hot-rolled hollow sections: curve a (Table 6.2, sheet 2).
         SectionShape::CircularHollow | SectionShape::RectangularHollow => Ok(BucklingCurve::A),
-        // Single angles: curve c (Table 6.2, sheet 3).
-        SectionShape::Angle => Ok(BucklingCurve::C),
         SectionShape::General => Err(missing_dims()),
     }
 }
@@ -400,7 +399,7 @@ pub fn lateral_torsional_buckling(
         .ok_or_else(|| Ec3Error::CheckUnavailable("Iw not tabulated".to_owned()))?;
     let b = props.b.ok_or_else(missing_dims)?;
     let h = props.h.ok_or_else(missing_dims)?;
-    if !(length > 0.0) || !(c1 > 0.0) {
+    if length <= 0.0 || c1 <= 0.0 {
         return Err(Ec3Error::CheckUnavailable(
             "length and C1 must be positive".to_owned(),
         ));
@@ -555,20 +554,19 @@ pub fn member_check(input: MemberCheckInput<'_>) -> Result<MemberCheck, Ec3Error
     // doubly-symmetric I-sections; otherwise plastic (class 1-2) or elastic
     // (class 3, or plastic data missing) resistance applies.
     let ltb = lateral_torsional_buckling(props, material, input.length, 1.0)?;
-    match &ltb {
-        Some(ltb) => utilizations.push(("Mb,Rd".to_owned(), my_ed.abs() / ltb.m_b_rd)),
-        None => {
-            let mel_rd = props.wel_y * material.fy / GAMMA_M0;
-            utilizations.push(("Mel,Rd,y".to_owned(), my_ed.abs() / mel_rd));
-        }
+    if let Some(ltb) = &ltb {
+        utilizations.push(("Mb,Rd".to_owned(), my_ed.abs() / ltb.m_b_rd));
+    } else {
+        let mel_rd = props.wel_y * material.fy / GAMMA_M0;
+        utilizations.push(("Mel,Rd,y".to_owned(), my_ed.abs() / mel_rd));
     }
-    if class.is_some_and(|c| c.index() <= 2) {
-        if let Some(wpl_y) = props.wpl_y {
-            utilizations.push((
-                "Mpl,Rd,y".to_owned(),
-                my_ed.abs() / (wpl_y * material.fy / GAMMA_M0),
-            ));
-        }
+    if class.is_some_and(|c| c.index() <= 2)
+        && let Some(wpl_y) = props.wpl_y
+    {
+        utilizations.push((
+            "Mpl,Rd,y".to_owned(),
+            my_ed.abs() / (wpl_y * material.fy / GAMMA_M0),
+        ));
     }
 
     utilizations.push(("Vpl,Rd".to_owned(), vz_ed.abs() / v_pl_rd));

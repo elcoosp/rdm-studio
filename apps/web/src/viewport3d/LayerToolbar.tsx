@@ -1,10 +1,14 @@
 import { useViewportStore } from "@/state/viewportStore";
+import { MagneticSnap, VolumetricMesh, WireframeMesh } from "@/components/icons/EngineeringIcons";
+import { Trans } from "@lingui/react/macro";
 
 /**
  * Floating layer toolbar (ARCHITECTURE.md section 5, `LayerToolbar.tsx`;
  * section 8.8): selective visibility (Nodes, Beams, Loads, Supports,
- * Deformed) and volumetric / wireframe rendering, plus the live M4 picking
- * latency readout when provided.
+ * Deformed), the v1.6.0 metrology toggles (`Repères N/P`, `Cotes`,
+ * `Réactions`), the `10 | 50 | 100 mm` magnetic snap grid selector and
+ * compact icon-led volumetric / wireframe rendering, plus the live M4
+ * picking latency readout when provided.
  */
 const LAYERS = [
   ["nodes", "Nœuds"],
@@ -14,15 +18,23 @@ const LAYERS = [
   ["deformed", "Déformée"],
 ] as const;
 
+const SNAP_STEPS = [
+  [0.01, "10"],
+  [0.05, "50"],
+  [0.1, "100"],
+] as const;
+
 export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) {
   const layers = useViewportStore((s) => s.layers);
   const toggleLayer = useViewportStore((s) => s.toggleLayer);
   const renderMode = useViewportStore((s) => s.renderMode);
   const setRenderMode = useViewportStore((s) => s.setRenderMode);
+  const snapStep = useViewportStore((s) => s.snapStep);
+  const setSnapStep = useViewportStore((s) => s.setSnapStep);
 
   return (
     <div
-      className="absolute top-2 left-2 z-10 flex flex-wrap gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
+      className="absolute top-2 left-2 z-30 flex max-w-[46%] flex-wrap items-center gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
       data-testid="layer-toolbar"
     >
       {LAYERS.map(([key, label]) => (
@@ -30,32 +42,78 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
           key={key}
           type="button"
           data-testid={`layer-${key}`}
-          className={`rounded px-2 py-1 text-[11px] ${layers[key] ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+          className={`rounded px-1.5 py-1 text-[11px] ${layers[key] ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
           onClick={() => toggleLayer(key)}
         >
           {label}
         </button>
       ))}
-      <span className="mx-1 w-px bg-hairline" />
+      <span className="mx-0.5 w-px self-stretch bg-hairline" />
+      {/* v1.6.0 metrology toggles (requirement 3). */}
+      <button
+        type="button"
+        data-testid="layer-labels"
+        className={`rounded px-1.5 py-1 text-[11px] ${layers.labels ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        onClick={() => toggleLayer("labels")}
+      >
+        <Trans>Repères N/P</Trans>
+      </button>
+      <button
+        type="button"
+        data-testid="layer-dims"
+        className={`rounded px-1.5 py-1 text-[11px] ${layers.dims ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        onClick={() => toggleLayer("dims")}
+      >
+        <Trans>Cotes</Trans>
+      </button>
+      <button
+        type="button"
+        data-testid="layer-reactions"
+        className={`rounded px-1.5 py-1 text-[11px] ${layers.reactions ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        onClick={() => toggleLayer("reactions")}
+      >
+        <Trans>Réactions</Trans>
+      </button>
+      <span className="mx-0.5 w-px self-stretch bg-hairline" />
+      {/* Compact icon-led render mode (≥ 24 px separation, 860 px safe). */}
       <button
         type="button"
         data-testid="render-volumetric"
-        className={`rounded px-2 py-1 text-[11px] ${renderMode === "volumetric" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        aria-label="Rendu volumique 3D"
+        className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${renderMode === "volumetric" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
         onClick={() => setRenderMode("volumetric")}
       >
-        Volumique
+        <VolumetricMesh size={14} />
       </button>
       <button
         type="button"
         data-testid="render-wireframe"
-        className={`rounded px-2 py-1 text-[11px] ${renderMode === "wireframe" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        aria-label="Rendu filaire"
+        className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${renderMode === "wireframe" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
         onClick={() => setRenderMode("wireframe")}
       >
-        Filaire
+        <WireframeMesh size={14} />
       </button>
+      <span className="mx-0.5 w-px self-stretch bg-hairline" />
+      {/* v1.6.0: metric snap grid selector (Grille : 10 | 50 | 100 mm). */}
+      <span className="flex items-center gap-0.5 rounded border border-hairline px-1 py-0.5">
+        <MagneticSnap size={13} />
+        {SNAP_STEPS.map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            data-testid={`snap-${label}`}
+            className={`font-data rounded px-1 py-0.5 text-[10px] ${snapStep === value ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+            onClick={() => setSnapStep(value)}
+          >
+            {label}
+          </button>
+        ))}
+        <span className="font-data text-[10px] text-ink-muted">mm</span>
+      </span>
       {lastSelectionMs !== undefined ? (
         <span
-          className="font-data rounded px-2 py-1 text-[11px] text-ink-muted"
+          className="font-data rounded px-1.5 py-1 text-[11px] text-ink-muted"
           data-testid="pick-latency"
         >
           {lastSelectionMs < 0.01 ? "<0.01" : lastSelectionMs.toFixed(2)} ms

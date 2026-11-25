@@ -1,24 +1,28 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
-import type { BeamData, NodeData } from "@/state/projectStore";
+import { useProjectStore } from "@/state/projectStore";
 
 /**
  * Translucent Cobalt cutting plane (DESIGN.md §8.5): scrubbing `x ∈ [0, L]`
  * in the docked inspector translates this plane along the active member in
  * real time, synchronized with the uPlot cursor line.
+ *
+ * v1.6.0 security/perf audit D: the plane + edge outline geometries are
+ * memoized and `.dispose()`d when the placement (or the beam) changes —
+ * the old inline `new THREE.PlaneGeometry(...)` inside JSX args leaked one
+ * GPU buffer per scrub frame.
  */
 export function CuttingPlane({
-  nodes,
-  beams,
   beamId,
   ratio,
 }: {
-  nodes: NodeData[];
-  beams: BeamData[];
-  beamId: number | null;
+  /** Member id under inspection. */
+  beamId: number;
   /** Position along the member, `x / L` in [0, 1]. */
   ratio: number;
 }) {
+  const nodes = useProjectStore((s) => s.project.structure.nodes);
+  const beams = useProjectStore((s) => s.project.structure.beams);
   const placement = useMemo(() => {
     const beam = beams.find((b) => b.id === beamId);
     if (beam === undefined) {
@@ -47,13 +51,24 @@ export function CuttingPlane({
     return { center, quaternion, length, size };
   }, [nodes, beams, beamId, ratio]);
 
+  const width = placement === null ? 0 : placement.size * 2;
+  const height = placement === null ? 0 : placement.size * 2.5;
+  // v1.6.0 audit D: memoized geometries, disposed on replacement.
+  const planeGeometry = useMemo(() => new THREE.PlaneGeometry(width, height), [width, height]);
+  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(planeGeometry), [planeGeometry]);
+  useEffect(() => {
+    return () => {
+      planeGeometry.dispose();
+      edgesGeometry.dispose();
+    };
+  }, [planeGeometry, edgesGeometry]);
+
   if (placement === null) {
     return null;
   }
   return (
     <group position={placement.center} quaternion={placement.quaternion}>
-      <mesh data-testid="cutting-plane">
-        <planeGeometry args={[placement.size * 2, placement.size * 2.5]} />
+      <mesh data-testid="cutting-plane" geometry={planeGeometry}>
         <meshBasicMaterial
           color="#1D4ED8"
           transparent
@@ -62,8 +77,7 @@ export function CuttingPlane({
           depthWrite={false}
         />
       </mesh>
-      <lineSegments>
-        <edgesGeometry args={[new THREE.PlaneGeometry(placement.size * 2, placement.size * 2.5)]} />
+      <lineSegments geometry={edgesGeometry}>
         <lineBasicMaterial color="#1D4ED8" transparent opacity={0.6} />
       </lineSegments>
     </group>

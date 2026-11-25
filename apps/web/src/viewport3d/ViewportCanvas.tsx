@@ -243,10 +243,10 @@ function ViewportFallback() {
 }
 
 const VIEW_PRESETS = [
-  ["iso", "3D Iso", "I"],
-  ["top-xy", "Dessus XY", "X"],
-  ["face-xz", "Face XZ", "Y"],
-  ["side-yz", "Côté YZ", "Z"],
+  ["iso", "Iso", "I"],
+  ["top-xy", "XY", "X"],
+  ["face-xz", "XZ", "Y"],
+  ["side-yz", "YZ", "Z"],
 ] as const;
 
 const setViewportMounted = (mounted: boolean) =>
@@ -314,7 +314,10 @@ export function ViewportCanvas({
     <div className="relative h-full min-h-0 w-full" data-testid={testId}>
       <ViewportErrorBoundary>
         {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
-        <div className="absolute top-2 right-2 z-10 flex gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
+        {/* v1.6.0: compact `Iso | XY | XZ | YZ` presets, z-30 so they stay
+            above the persistent stage overlay (fixed z-10) at 860 px with
+            ≥ 24 px separation from the left toolbar. */}
+        <div className="absolute top-2 right-2 z-30 flex gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
           {VIEW_PRESETS.map(([preset, label, hint]) => (
             <button
               key={preset}
@@ -331,7 +334,10 @@ export function ViewportCanvas({
         <Canvas
           dpr={[1, 2]}
           camera={{ position: PRESET_POSITIONS.iso, fov: 45 }}
-          gl={{ antialias: true }}
+          // v1.6.0: preserveDrawingBuffer keeps the depth/color buffer alive
+          // so `captureViewportPng()` can embed a live 3D snapshot into the
+          // Step 5 A4 sheet & Takumi PDF.
+          gl={{ antialias: true, preserveDrawingBuffer: true }}
           style={{ background: "var(--color-canvas)" }}
           onCreated={({ gl, camera }) => {
             gl.toneMapping = THREE.NoToneMapping;

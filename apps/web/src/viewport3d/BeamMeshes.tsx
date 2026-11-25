@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { BeamData, NodeData } from "@/state/projectStore";
 import { beamProfileLookup, profileOutline, type ProfileDims } from "./ProfileShapes";
@@ -313,6 +313,13 @@ interface BeamMeshesProps {
   sectionDims?: Map<string, ProfileDims>;
   /** Table-hover highlight (v1.3.0 Step 1, `#93C5FD`). */
   hoveredBeamId?: number | null;
+  /**
+   * v1.6.0: shared BVH-indexed geometry from the persistent stage — when
+   * provided it is rendered as-is (the stage owns its lifecycle), and the
+   * duplicate local build is skipped so ONE BufferGeometry serves both
+   * rendering and picking.
+   */
+  geometry?: THREE.BufferGeometry;
 }
 
 export function BeamMeshes({
@@ -326,17 +333,29 @@ export function BeamMeshes({
   onPick,
   sectionDims,
   hoveredBeamId = null,
+  geometry: sharedGeometry,
 }: BeamMeshesProps) {
   const geometry = useMemo(
     () =>
+      sharedGeometry ??
       buildBeamGeometry(nodes, beams, {
         colorRatios,
         displacements,
         deformScale,
         profiles: sectionDims === undefined ? undefined : beamProfileLookup(beams, sectionDims),
       }),
-    [nodes, beams, colorRatios, displacements, deformScale, sectionDims],
+    [sharedGeometry, nodes, beams, colorRatios, displacements, deformScale, sectionDims],
   );
+  // v1.6.0 GPU-hygiene: internally-built geometries are disposed when
+  // replaced; the shared stage geometry belongs to PersistentStage.
+  useEffect(() => {
+    if (sharedGeometry !== undefined) {
+      return undefined;
+    }
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry, sharedGeometry]);
   const selectedGeometry = useMemo(() => {
     if (selectedBeamId === null) {
       return null;
@@ -353,6 +372,15 @@ export function BeamMeshes({
       dims === undefined ? undefined : new Map<number, ProfileDims>([[beam.id, dims]]);
     return buildBeamGeometry(nodes, [beam], { displacements, deformScale, width: 0.12, profiles });
   }, [nodes, beams, selectedBeamId, displacements, deformScale, sectionDims]);
+  // v1.6.0 GPU-hygiene: the rim geometry is disposed when selection moves.
+  useEffect(() => {
+    if (selectedGeometry === null) {
+      return undefined;
+    }
+    return () => {
+      selectedGeometry.dispose();
+    };
+  }, [selectedGeometry]);
 
   // Table -> viewport hover highlight (v1.3.0, `#93C5FD` edge tint).
   const hoveredGeometry = useMemo(() => {
@@ -368,6 +396,15 @@ export function BeamMeshes({
       dims === undefined ? undefined : new Map<number, ProfileDims>([[beam.id, dims]]);
     return buildBeamGeometry(nodes, [beam], { displacements, deformScale, profiles });
   }, [nodes, beams, hoveredBeamId, selectedBeamId, displacements, deformScale, sectionDims]);
+  // v1.6.0 GPU-hygiene: the hover rim geometry is disposed on unhover.
+  useEffect(() => {
+    if (hoveredGeometry === null) {
+      return undefined;
+    }
+    return () => {
+      hoveredGeometry.dispose();
+    };
+  }, [hoveredGeometry]);
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();

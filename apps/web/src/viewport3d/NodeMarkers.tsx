@@ -1,9 +1,22 @@
+import * as THREE from "three";
+
 /**
- * Instanced node pins (Points layer), v1.3.0: shared by Step 1 and
- * Step 2. `highlightNodeId` renders a larger cobalt marker (table-hover
- * highlight), and `onPickNode` enables 3D click-to-restrain in Step 2 —
- * the marker index maps back through `nodeIds`.
+ * Instanced node pins (v1.3.0), shared by every step through the
+ * persistent stage. `highlightNodeId` renders a larger cobalt marker
+ * (table-hover highlight), and `onPickNode` enables 3D click-to-restrain
+ * in Step 2 — the marker index maps back through `nodeIds`.
+ *
+ * v1.6.0 security/perf audit D: ONE module-level `SphereGeometry` and ONE
+ * shared `MeshStandardMaterial` serve every marker — the old per-marker
+ * inline `<sphereGeometry>`/`<meshStandardMaterial>` allocated (and
+ * leaked) two GPU objects per node per render.
  */
+
+const NODE_SPHERE = new THREE.SphereGeometry(0.055, 16, 12);
+const NODE_SPHERE_SELECTED = new THREE.SphereGeometry(0.085, 16, 12);
+const NODE_MATERIAL = new THREE.MeshStandardMaterial({ color: "#0F172A" });
+const NODE_MATERIAL_SELECTED = new THREE.MeshStandardMaterial({ color: "#1D4ED8" });
+
 export function NodeMarkers({
   positions,
   highlightNodeId = null,
@@ -16,8 +29,6 @@ export function NodeMarkers({
   nodeIds?: number[];
   onPickNode?: (nodeId: number | null) => void;
 }) {
-  // v1.4.0: crisp 3D spheres (r = 0.055 m) instead of 2D point sprites —
-  // visible outside IPE flanges and pickable per node id.
   // Explicit id list wins; otherwise fall back to dense 1-based ids.
   const ids: number[] =
     nodeIds !== undefined && nodeIds.length > 0
@@ -38,14 +49,13 @@ export function NodeMarkers({
               <mesh
                 key={id}
                 position={[x, y, z]}
+                geometry={selected ? NODE_SPHERE_SELECTED : NODE_SPHERE}
+                material={selected ? NODE_MATERIAL_SELECTED : NODE_MATERIAL}
                 onClick={(event) => {
                   event.stopPropagation();
                   onPickNode?.(id);
                 }}
-              >
-                <sphereGeometry args={[selected ? 0.085 : 0.055, 16, 12]} />
-                <meshStandardMaterial color={selected ? "#1D4ED8" : "#0F172A"} />
-              </mesh>
+              />
             );
           })
         : null}

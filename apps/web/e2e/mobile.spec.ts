@@ -48,7 +48,7 @@ test.describe("iPhone 13 viewport", () => {
 
     // 44px touch targets across the 5-step workflow.
     await page.getByRole("link", { name: "Étape 3" }).click();
-    await expect(page.getByRole("heading", { name: "Charge ponctuelle" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Charges et combinaisons EN 1990" })).toBeVisible();
     await page.getByRole("link", { name: "Étape 1" }).click();
     await expect(page.getByTestId("viewport-canvas")).toBeVisible();
   });

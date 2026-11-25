@@ -41,9 +41,9 @@ function makeGridBeams(count: number): { nodes: NodeData[]; beams: BeamData[] } 
 
 describe("FEA thermal spectrum (section 17, 3D-only)", () => {
   it("maps the stops exactly", () => {
-    expect(spectrumColor(0)).toEqual([0x25 / 0xff, 0x63 / 0xff, 0xeb / 0xff]);
+    expect(spectrumColor(0)).toEqual([0x1d / 0xff, 0x4e / 0xff, 0xd8 / 0xff]);
     expect(spectrumColor(0.5)[0]).toBeCloseTo(0x10 / 0xff, 5);
-    expect(spectrumColor(1)).toEqual([0xef / 0xff, 0x44 / 0xff, 0x44 / 0xff]);
+    expect(spectrumColor(1)).toEqual([0xdc / 0xff, 0x26 / 0xff, 0x26 / 0xff]);
   });
   it("clamps out-of-range ratios", () => {
     expect(spectrumColor(-5)).toEqual(spectrumColor(0));

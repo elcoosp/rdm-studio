@@ -14,7 +14,13 @@ authors = ["RDM Studio"]
 
 [workspace.dependencies]
 # --- Math engine ---
-faer = "0.24.4"
+# default-features = false drops faer's `rand` and `rayon` (getrandom /
+# spindle / atomic-wait), which have no wasm32 backend; the solver only
+# needs std + sparse-linalg and stays single-threaded by design.
+faer = { version = "0.24.4", default-features = false, features = [
+    "std",
+    "sparse-linalg",
+] }
 nalgebra = "0.35.0"
 glam = "0.34.3"
 approx = "0.6.0-rc2"
@@ -38,6 +44,11 @@ js-sys = "0.3.107"
 proptest = "1.6.0"
 insta = { version = "1.42.0", features = ["json"] }
 
+[workspace.lints.rust]
+# clippy 1.100 renamed the bare `pedantic` CLI spelling to `clippy::pedantic`;
+# the group is effectively configured through [lints.clippy] below.
+renamed_and_removed_lints = { level = "allow", priority = 1 }
+
 [workspace.lints.clippy]
 # Pedantic is enforced by the G0 gate (`cargo clippy ... -W pedantic`); the
 # targeted exceptions below carry an explicit engineering rationale each.
@@ -56,6 +67,16 @@ similar_names = { level = "allow", priority = 1 }
 # Technical docs reference identifiers and mixed-case symbols (LLᵀ, CSC,
 # Wel,y) that doc_markdown keeps flagging despite backticks.
 doc_markdown = { level = "allow", priority = 1 }
+# Constructors and presets (Node::new, Support::fixed, ...) return values
+# that every call site consumes; the attribute adds no safety here.
+must_use_candidate = { level = "allow", priority = 1 }
+# `solve_single_case` takes the pre-factorized solver context (matrix,
+# permutation, locked/free sets) as explicit arguments; a context struct
+# would only re-pack the same eight values.
+too_many_arguments = { level = "allow", priority = 1 }
+# `solve_model` reads as one linear pipeline (assemble -> factorize ->
+# per-case solve); splitting it further hides the gate ordering.
+too_many_lines = { level = "allow", priority = 1 }
 
 [profile.release]
 opt-level = 3

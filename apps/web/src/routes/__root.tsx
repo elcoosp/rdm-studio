@@ -9,6 +9,7 @@ import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { useProjectStore } from "@/state/projectStore";
+import { KeycapHint } from "@/components/KeycapHints";
 
 const STEPS = [
   { to: "/geometry", icon: IconFrame },
@@ -101,7 +102,7 @@ function RootLayout() {
           id="rdm-logo"
           className="flex shrink-0 items-center gap-1.5 text-accent"
         >
-          <IconFrame size={18} />
+          <img src="/logo-rdm-studio.svg" alt="RDM Studio" className="h-6 w-6 shrink-0" />
           <span className="hidden font-semibold tracking-tight sm:inline">RDM Studio</span>
           <span className="hidden text-[12px] text-ink-muted md:inline">/ {project.name}</span>
         </Link>
@@ -147,10 +148,11 @@ function RootLayout() {
         <button
           type="button"
           id="rdm-cmdk"
-          className="hidden shrink-0 rounded border border-hairline px-2 py-1 font-data text-[11px] text-ink-secondary md:inline"
+          className="relative hidden shrink-0 rounded border border-hairline px-2 py-1 font-data text-[11px] text-ink-secondary md:inline"
           onClick={() => setPaletteOpen(true)}
         >
           ⌘K
+          <KeycapHint label="⌘K" />
         </button>
         <OfflinePill />
         <button

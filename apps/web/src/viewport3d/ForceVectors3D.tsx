@@ -10,10 +10,15 @@ export function ForceVectors3D({ nodes, loads }: { nodes: NodeData[]; loads: Loa
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
   const maxAbs = useMemo(
     () =>
-      loads.reduce(
-        (m, l) => Math.max(m, l.kind === "Trapezoid" ? Math.abs(l.q_start) : Math.abs(l.forces.fz)),
-        1,
-      ),
+      loads.reduce((m, l) => {
+        const intensity =
+          l.kind === "Nodal" || l.kind === "PointOnSpan"
+            ? Math.abs(l.forces.fz)
+            : l.kind === "Trapezoid"
+              ? Math.abs(l.q_start)
+              : 0;
+        return Math.max(m, intensity);
+      }, 1),
     [loads],
   );
 

@@ -10,6 +10,12 @@ export type CameraPreset = "iso" | "top-xy" | "face-xz" | "side-yz";
 export type RenderMode = "volumetric" | "wireframe";
 
 interface ViewportState {
+  /** Active 3D tool mode (v1.4.0 hotkeys share it with Step 1). */
+  toolMode: "select" | "node" | "beam";
+  setToolMode: (mode: "select" | "node" | "beam") => void;
+  /** True while the WebGL canvas is mounted (gates `f` / `i` hotkeys). */
+  viewportMounted: boolean;
+  setViewportMounted: (mounted: boolean) => void;
   layers: {
     nodes: boolean;
     beams: boolean;
@@ -27,6 +33,10 @@ interface ViewportState {
 }
 
 export const useViewportStore = create<ViewportState>()((set) => ({
+  toolMode: "select",
+  setToolMode: (mode) => set({ toolMode: mode }),
+  viewportMounted: false,
+  setViewportMounted: (mounted) => set({ viewportMounted: mounted }),
   layers: { nodes: true, beams: true, loads: true, supports: true, deformed: false },
   renderMode: "volumetric",
   cameraPreset: "iso",

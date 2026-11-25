@@ -1,142 +1,131 @@
 # STATUS.md — RDM Studio milestone ledger
 
-Session 5 (2026-11-25): **v1.0.0 COMPLETE — final UI/UX fidelity overhaul,
-10-bug fix, remaining engines** on top of origin/main `c5ae8fa` (which
-landed the session-4 M7/M8 ships). Tree left dirty by design; per-file
-history lands via `ship.toml`.
+Session 8 (2026-11-25): **v1.4.0 — Base UI foundation, flagship onboarding,
+SHA-256 fingerprint, 12 audit/live regressions closed** on top of
+origin/main `42bf477` (which carries the committed v1.3.0 work). Tree left
+dirty by design; per-file history lands via `ship.toml`.
 
-## The 10 audit bugs — all fixed
+## UI foundation: Base UI + 24-component workstation suite
 
-1. **3D giant RGB blocks at (0,0,0)** — `<GizmoViewport/>` now renders
-   inside `<GizmoHelper alignment="top-right" margin={[72,72]}>`
-   (`ViewportCanvas.tsx`): corner HUD triad, no 1 m scene cube.
-2. **Real extruded profiles + auto-framed camera** — `ProfileShapes.ts`
-   builds true I/U/CHS/RHS/L outlines from catalog `h/b/tw/tf`;
-   `BeamMeshes.tsx` extrudes them (caps via `ShapeUtils.triangulateShape`,
-   side walls, holes); square-box path kept as benchmark fallback.
-   `catalog_section_shapes()` export feeds the dims. `FitCamera` frames
-   the model bounding box on mount/model change. Viewport embedded on
-   steps 1–4.
-3. **EC3 governing-section check** — `member_check` now evaluates span
-   stations `[0, 0.25, 0.5, 0.75, 1.0]` with simply-supported superposition
-   of span loads (`internal_forces.rs`: point `PL·a(1-b)`, trapezoid
-   closed-form that closes exactly at a=0/1, verified by unit tests
-   `qL²/8`, `PL/4`, linear end-moment interpolation). Governing max
-   utilization reported per beam per combination.
-4. **Deep-link `?p=` hydration** — `main.tsx` parses the share payload
-   BEFORE first render and hydrates the store (Valibot-validated), so
-   `/report?p=…` restores arbitrary non-demo models (e2e covers it).
-5. **Step 1 beam creation** — explicit N1 → N2 selects + "Relier N1 → N2"
-   button replace the hardcoded demo pair; `updateBeam` store action added.
-6. **UpdatePrompt + clean SW registration** — mounted inside `RootLayout`;
-   `injectRegister: null` so `workbox-window` owns `/sw.js`.
-7. **results.tsx** — heading `Déplacements nodaux (Q)` now matches the
-   displayed case; dead `formatKn(0) === "0.0 kN" ? "" : ""` removed
-   (replaced with a real node/beam count line).
-8. **ULE → ELU + csvExport cleanup** — terminology fixed across
-   `csvExport.ts`, `pdfTakumiReport.tsx`, `standaloneHtml3d.ts`,
-   `exports.spec.ts`, routes and locales; unused `beamById` removed;
-   CSV filename gets an accent-preserving slug (`Poutre démo` →
-   `Poutre_demo-résultats.csv`).
-9. **Palette, diacritics, kickers** — all `#0891B2`/`#F9FAFB`/`#2563EB`
-   tier-1 replaced with `#1D4ED8` Deep Cobalt / `#F8FAFC` canvas
-   (DESIGN.md §2; spectrum tier-1/5 now `#1D4ED8`/`#DC2626`, enforced by
-   unit test); French diacritics fixed everywhere (`Nœuds`, `Déformée`,
-   `Résultats`, `Modèle`, `Profils utilisés`…); every
-   `uppercase tracking-wide` kicker removed (craft-floor ban).
-10. **Auto-reactive solving** — results re-solve 150 ms after any
-    geometry/support/load/profile mutation (debounced trailing edge);
-    Results never shows stale calculations.
+- `@base-ui/react@1.9` replaces every `@radix-ui/*` (removed from
+  package.json): `dialog`, `select`, `slider`, `switch`, `tabs`,
+  `tooltip` migrated; new `button` is radix-slot-free.
+- New suite in `apps/web/src/components/ui/`: `combobox` (searchable EN
+  10365 catalog with SVG icons, `items` render-function), `number-field`
+  (steppers), `resizable` (pinned v3 panels + `DesktopSplit`), `drawer`
+  (Vaul), `dropdown-menu`, `popover`, `accordion`, `collapsible`,
+  `alert`, `card`, `progress` (`UtilizationProgress` tiered fills),
+  `separator`, `scroll-area`, `kbd`, `data-table` (TanStack v8,
+  `tabular-nums`, Shift+Click rows), `toggle-group`, `checkbox`,
+  `input`, `textarea`, `label`. All styled strictly with the DESIGN.md
+  Daylight Swiss tokens (4px controls, 8px overlays, hairlines, cobalt).
+- `@tanstack/react-table` pinned to v8 (v9 removed `useReactTable`);
+  `react-resizable-panels` pinned to v3 (v4 is a docking framework).
+- `ProfileDims` accepts catalog `null` dims (precedent `1025bd8`).
 
-## Remaining engines — all implemented
+## Keyboard layer + onboarding
 
-- **`crates/rdm-solver/src/modal.rs`** — consistent-mass 12-DOF frame
-  element (translations ρAL/420, couplings ρAIL²/420, rotary ρAIL³/420)
-  + M-orthogonal deflated inverse-iteration eigensolver. Verified against
-  the analytical Euler-Bernoulli cantilever: weak-axis first mode and
-  strong-axis second mode within the documented 2-element discretization
-  brackets, ascending frequencies. Exposed via `modal_analysis()` wasm
-  export → Step 4 KPI 4.
-- **`crates/rdm-solver/src/section_cut.rs`** — `superimposed_beam_state`
-  + n-point `beam_forces_at` + `von_mises_grid` (axial + bi-axial bending
-  exact on the outline, thin-wall shear estimate documented); wasm
-  `section_stress_grid()` → Step 4 heatmap; `beam_span_forces()` →
-  synchronized uPlot My/Vz/N diagrams with the x ∈ [0, L] slider.
-- **`crates/rdm-cad/`** — `dxf = "0.6.2"` in the workspace; DXF `LINE` /
-  `LWPOLYLINE` / `POLYLINE` extraction (`dxf_importer.rs`, tested against
-  a real ASCII DXF fixture), coincident-node merging within ε via
-  quantized neighbour-cell hashing and T/X intersection splitting
-  (`topology_cleaner.rs`); wasm `import_dxf()` → Step 1 CAD import modal
-  (file input → worker → fresh `.rdm` with IPE 200/S235JR defaults).
+- `hooks/useAppHotkeys.ts` (react-hotkeys-hook): `mod+k` palette,
+  `mod+z` / `mod+shift+z` undo-redo (header ↩/↪ buttons),
+  `mod+enter` → /results, `mod+p` → /report, `v`/`n`/`b`/`escape` tool
+  modes (now shared via `viewportStore.toolMode`), `f`/`i` camera events
+  (gated on `viewportMounted`), `shift+mod+i` invert selection, `alt+r`
+  end-release toggle, `delete`/`backspace` removal. All ad-hoc keydown
+  listeners removed from CommandPalette, geometry and ViewportCanvas.
+- `OnboardingTour.tsx`: 8-stage driver.js tour navigating all 5 routes
+  (`onNextClick` → `router.navigate` + 150 ms settle), custom-styled in
+  `app-tour.css` (white popover, cobalt CTA, `1 / 8` mono counter, 350 ms
+  stage highlight, Passer/Précédent/Suivant/Commencer), auto-launch once
+  via `rdm-tour-done`, skipped for `?p=` deep links and `navigator.webdriver`,
+  re-launchable from the header `?`.
 
-## UI/UX fidelity (DESIGN.md v1.0.0 + mockups + impeccable craft)
+## WASM: full EC3 detail + fingerprint
 
-- **Navigation spine** — 44px header: logo link + project switcher
-  (`RDM Studio / <name> ▾` opening `ProjectGalleryModal`: idb-keyval
-  saves + 4 parametric templates: Treillis Warren 24 m, Portique
-  industriel, Potence encastrée, Poutre continue), 5-step tabs with
-  `2px #1D4ED8` active underline (desktop only — mobile gets the
-  thumb-friendly bottom tab bar, per the mobile mockups), node/beam
-  counter, ⌘K button, FR | EN toggle, offline pill, `?` driver.js tour.
-  No duplicate sidebar, no clipped avatars, no FPS bars.
-- **Step 1** — EN 10365 inspector row (A, Iy, Iz, It, Iw, Wel,y, Wpl,y,
-  Masse from the worker catalog), roll angle θx, N1/N2 end-release
-  checkboxes [Ux..Rz], ky/kz buckling lengths, inline X/Y/Z node coords,
-  N1→N2 connector, DXF import + welcoming empty state at 0 nodes.
-- **Step 2/3** — RDM 7 presets, 6-DOF checkboxes, isostatic status bar;
-  EN 1990 case tabs, self-weight toggle, nodal + span loads, crimson
-  force arrows, primary cobalt CTA.
-- **Step 4** — 4-KPI strip (Masse totale from ρ·A·L, Flèche max ELS,
-  Taux max EC3 with pass/fail badge + 1-click corrective profile upgrade
-  + 5 s sonner undo toast, 1er mode propre), amplification slider ×1–30,
-  calibrated 0→η 1.25 scale bar, docked bottom inspector: σ_vM SVG
-  heatmap + uPlot diagrams + station slider.
-- **Step 5** — centered A4 sheet (print stylesheet), date line, 4 tables
-  (Nœuds, Profils utilisés, Vérification ELU, Flèches ELS) each with
-  1-click `Copier pour Excel` (TSV), PDF/HTML-3D/CSV/URL exports.
-- **32 engineering icons** ported verbatim from `mockups/icons-sheet.html`
-  into `components/icons/EngineeringIcons.tsx` (24×24, 1.5px stroke,
-  token-bound accents).
-- **Tokens** — cobalt palette, 4px control radius, 1px `#E2E8F0`
-  hairlines, zero drop shadows on docked panels; text selection, focus
-  rings and scrollbars themed from the palette (craft floor); 16px inputs
-  under `lg` (iOS auto-zoom guard); `@media print` stylesheet.
-- **cmdk palette** (⌘K), **driver.js** onboarding (FR labels), full
-  Lingui catalogs: 61/61 EN strings translated (0 missing).
+- `BeamCombinationResult` += `checks` (every ratio at the governing
+  station), `class_index` (via new `Classification::as_u8`), `chi_y`,
+  `chi_z`, `chi_lt`, `m_rd` (Mb,Rd under LTB else Mel,Rd).
+- `project_fingerprint` wasm export (pure `project_fingerprint_structure`
+  helper) over `ProjectFile::fingerprint()` — canonical SHA-256; exposed
+  through the worker (`FINGERPRINT` request) and
+  `feaClient.projectFingerprint`; rendered as the Step 5 sheet footer.
 
-## Gates verified this session (all green)
+## The 12 audit/live regressions — all closed
 
-- G0: `cargo fmt --all --check` ok; `cargo clippy --workspace
-  --all-targets --all-features -- -D warnings` = 0; `oxfmt --check` ok;
-  `oxlint --deny-warnings` ok.
-- G1: `cargo test --workspace --all-features` **85 passed / 0 failed**
-  (was 12 suites pre-v1.0.0 — +modal, +internal-forces, +cad, +section
-  suites; RUSTFLAGS `-D warnings`).
-- G2: `wasm-pack build bindings/rdm-wasm --target web` rebuilt after
-  every Rust change; `uuid` wasm32 js-feature unification added for the
-  `dxf` dependency tree.
-- G3: `tsc --noEmit` ok; G4: i18n extract + compile, EN 61/61 = 100%.
-- G5: vitest **32/32** (spectrum tiers re-pinned to the v1.0.0 tokens,
-  exact-endpoint stop colors).
-- G6: Playwright **16/16 chromium + firefox** (workflow, PWA offline,
-  exports incl. accent-preserving CSV filename, deep links, mobile
-  viewports + touch).
+1. Dead empty-state "Importer DXF" (fileRef) → live "Importer CAO".
+2. Distributed `Trapezoid` (5-arrow array + tie bar) and `PointOnSpan`
+   loads render as crimson 3D arrows; hooks stay unconditional.
+3. `uplot-cursor` anchored via `plot.valToPos + bbox.left/dpr`; the plot
+   surface scrubs the station on pointer-down/move.
+4. `SnapOverlay` re-binds pointer listeners from a reactive
+   `runtimeReady` counter (WebGL init + resize).
+5. `BeamMeshes`: `sectionDims` in both geometry memos; selected beam
+   tinted `#2563EB` cobalt body + `#1D4ED8` edges.
+6. Canonical serialization: all six `updatedAt` injections removed from
+   `projectStore`; manifest `theme_color #1D4ED8` / `background_color
+   #F8FAFC`; `reuseExistingServer: !process.env.CI`.
+7. Step 1 inspector docks LEFT (`lg:flex-row-reverse`).
+8. Camera auto-reframe only on mount + project/template change (no more
+   re-fit per node edit).
+9. Node markers are real 3D spheres (r = 0.055 m, cobalt when selected,
+   keyed by `nodeIds`), profile Combobox applies immediately to the
+   selected beam, and the double-plus "+ Nœud" label is fixed.
+10. Drag-and-drop of `.rdm` / `.dxf` / `.step` / `.igs` onto the shell
+    (`useFileOpening` with drop affordance) + PWA `launchQueue` consumer.
+11. `vercel.json` at repo root: SPA rewrite, `application/wasm` headers,
+    `no-cache` on `/sw.js`.
+12. Header undo aria-labels de-duplicated from toast "Annuler" (strict
+    locator collision caught by the v130 suite).
 
-## Explicitly NOT done (residual, environmental only)
+## Mockup parity (16 screens)
 
-- WebKit execution: 8 system libraries missing in the sandbox and
-  `playwright install-deps webkit` requires sudo (no root). Chromium +
-  firefox validate the suite; webkit runs are expected green on a
-  provisioned machine.
-- Firefox touch-drag gesture in emulation (synthetic pointer stream
-  cancelled by the engine — chromium validates the gesture; firefox
-  validates sheet open/close via the button path).
-- Fuzz targets (b2) remain reserved (no stubs shipped); consistent/lumped
-  mass-matrix switch defaults to consistent only.
-- `ship.toml` ships one file per commit in dependency order; `.agents/`
-  + `skills-lock.json` (impeccable skill install) and `test-results/`
-  stay untracked, out of the delivery.
+- Step 1: quick-start pills (Treillis Warren 24 m, Portique 18 m,
+  Potence HEA 200, Poutre 3 travées) from new `quickStartProject`
+  parametric templates; gallery metadata cards (node/beam counts, span,
+  height, standard tags), "+ Nouveau projet vierge" and a direct import
+  picker; batch inspector ΣL / Σm totals.
+- Step 2: selected node `(X, Y, Z)` coordinates + free/locked DOF count.
+- Step 3: estimated self-weight mass beside the 1g toggle + equilibrium
+  status pill (Système équilibré / Appuis incomplets).
+- Step 4: 4-clause EC3 breakdown card (`checks` + `UtilizationProgress`
+  bars + Classe/χy/χz/χLT badges) with the "Maintien latéral mi-travée
+  (kz = 0,5)" mitigation CTA.
+- Step 5: Fréquences propres (f + T), Réactions ELU with Σ footer,
+  Vérification Eurocode 3 (σvM, χy, χz, χLT, η, statut), Déplacements
+  extrêmes ELS and the existing Nœuds/Profils/ELU/ELS tables — all with
+  TSV copy — plus the SHA-256 fingerprint footer.
+
+## Gates (G0 → G6) — all green
+
+- G0: `cargo fmt --check` ✓; clippy `-D warnings` **0** (collapsed
+  if-lets, `map_or`, `Path::extension`); oxfmt ✓; oxlint ✓.
+- G1: `cargo test --workspace --all-features` **94 passed / 0 failed**
+  (new: full EC3 detail + 64-hex fingerprint).
+- G2: wasm-pack rebuilt with the new exports.
+- G3: `tsr generate` ✓; `tsc --noEmit` ✓; G4: i18n 89/89 EN.
+- G5: vitest **32/32** (fixtures extended for checks/χ/m_rd).
+- G6: Playwright **34/34** chromium + firefox across 6 suites incl. the
+  new `v140`: Combobox search+apply, tour cross-route stepping, gallery
+  blank-project + quick pills, Step 5 Σ reactions + SHA-256 fingerprint,
+  EC3 breakdown visibility.
+
+## Notable engineering caught by the new tests
+
+- The Sonner undo toasts and the new header undo button collided on the
+  accessible name "Annuler" — Playwright strict mode surfaced it; the
+  header uses "Annuler la dernière action" and tests scope to the toast.
+- Base UI Combobox requires `items` + a render-function list for the
+  filter to engage; the plain-JSX variant listed all 144 profiles.
+
+## Explicitly NOT done (residual)
+
+- WebKit e2e remains sandbox-blocked (no sudo for system libs).
+- `NumberField` steppers are wired into the component suite but not yet
+  swapped into every numeric table cell (NodeTable keeps inline inputs
+  at 16px iOS-safe sizing).
+- uPlot dashed ±M_Rd capacity lines land with the next cursor pass; the
+  My/Vz/N readouts and the EC3 card already expose the values.
 
 ## Next session
-1. Webkit run on a provisioned machine (only environmental residual).
-2. Optional hardening: lumped-mass option, fuzz targets (b2), STEP import.
+1. Swap NodeTable coordinate cells to `NumberField`.
+2. uPlot capacity lines + cross-route undo stack surfacing.
+3. WebKit on a provisioned machine.

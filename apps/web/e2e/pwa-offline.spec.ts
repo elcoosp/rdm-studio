@@ -59,6 +59,6 @@ test("offline reload serves the precached app shell", async ({ page, context }) 
   await expect(page.getByRole("heading", { name: "Charges" })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByText("Charge ponctuelle")).toBeVisible();
+  await expect(page.getByText("Charges et combinaisons EN 1990")).toBeVisible();
   await context.setOffline(false);
 });

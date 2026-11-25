@@ -1,0 +1,26 @@
+[package]
+name = "rdm-wasm"
+description = "WASM bridge exposing the RDM Studio core to the web worker"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rdm-model = { path = "../../crates/rdm-model" }
+rdm-eurocode = { path = "../../crates/rdm-eurocode" }
+rdm-solver = { path = "../../crates/rdm-solver" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.50"
+approx = { workspace = true }
+
+[lints]
+workspace = true

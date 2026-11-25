@@ -10,14 +10,14 @@ import type { BeamData, NodeData } from "@/state/projectStore";
 export interface ProfileDims {
   /** Shape family name from the catalog (`DoubleSymmetricI`, ...). */
   shape: string;
-  /** Overall depth (m). */
-  h?: number;
+  /** Overall depth (m) — catalog rows may carry null for N/A dims. */
+  h?: number | null;
   /** Flange width (m). */
-  b?: number;
+  b?: number | null;
   /** Web thickness (m). */
-  tw?: number;
+  tw?: number | null;
   /** Flange thickness (m). */
-  tf?: number;
+  tf?: number | null;
 }
 
 export interface ProfileContour {

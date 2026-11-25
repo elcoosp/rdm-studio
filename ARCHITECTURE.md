@@ -45,7 +45,7 @@
    All matrix computations (`faer`), the OpenCascade parser (`occt-import-js`), and PDF generation (`@takumi-rs/wasm`) run in a **dedicated Web Worker** with **zero-copy** `Float64Array` linear-memory exchange (_Transferable Objects_).
 
 4. **"Daylight CAD Workstation" Design System (Linear Light Mode)**
-   Surgical interface in light mode (`#F9FAFB` / `#FFFFFF` / `1px #E5E7EB` borders / accent `#0891B2`), `Inter` + `JetBrains Mono` typography (`tabular-nums`), FEA thermal spectrum (`#2563EB` → `#06B6D4` → `#10B981` → `#F59E0B` → `#EF4444`) strictly reserved for the 3D model, force vectors, and section cuts.
+   Surgical interface in light mode (`#F8FAFC` / `#FFFFFF` / `1px #E2E8F0` borders / accent `#1D4ED8`), `Inter` + `JetBrains Mono` typography (`tabular-nums`), FEA thermal spectrum (`#1D4ED8` → `#06B6D4` → `#10B981` → `#F59E0B` → `#DC2626`) strictly reserved for the 3D model, force vectors, and section cuts.
 
 5. **PWA First-Class & Mobile-Ready from Day One**
    Full Progressive Web App with service-worker caching of WASM binaries, OS file handlers (`.rdm`, `.dxf`, `.step`), window-controls-overlay, and a fully responsive UI (bottom-sheet inspectors on mobile, touch-friendly 3D controls, 100dvh viewport).
@@ -255,11 +255,11 @@ flowchart TB
     GH_ACTIONS -.->|Runs| QA
     GH_ACTIONS -.->|Runs| RUST
 
-    classDef web fill:#F9FAFB,stroke:#0891B2,stroke-width:2px,color:#111827
+    classDef web fill:#F8FAFC,stroke:#1D4ED8,stroke-width:2px,color:#111827
     classDef worker fill:#ECFEFF,stroke:#06B6D4,stroke-width:2px,color:#111827
     classDef wasm fill:#F0FDF4,stroke:#10B981,stroke-width:2px,color:#111827
     classDef rust fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px,color:#111827
-    classDef fuzz fill:#FEE2E2,stroke:#EF4444,stroke-width:2px,color:#111827
+    classDef fuzz fill:#FEE2E2,stroke:#DC2626,stroke-width:2px,color:#111827
     classDef pwa fill:#EDE9FE,stroke:#8B5CF6,stroke-width:2px,color:#111827
     classDef qa fill:#F3E8FF,stroke:#A855F7,stroke-width:2px,color:#111827
     classDef router fill:#DBEAFE,stroke:#3B82F6,stroke-width:2px,color:#111827
@@ -426,7 +426,7 @@ rdm-studio/
         │   │   └── en.po               # English catalog
         │   └── setup.ts                # i18n.load + i18n.activate
         ├── styles/
-        │   └── app.css                 # @import "tailwindcss"; + @theme { --color-canvas: #F9FAFB; --color-accent: #0891B2; ... }
+        │   └── app.css                 # @import "tailwindcss"; + @theme { --color-canvas: #F8FAFC; --color-accent: #1D4ED8; ... }
         ├── domain/
         │   └── types.ts                # TS interfaces mirroring rdm-wasm contracts
         ├── schemas/                    # Valibot validation schemas
@@ -584,15 +584,15 @@ The UI layer has been elevated to **Linear-grade polish** with a full PWA shell.
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #F9FAFB;
+  --color-canvas: #F8FAFC;
   --color-panel: #FFFFFF;
-  --color-border-subtle: #E5E7EB;
-  --color-accent: #0891B2;
-  --color-spectrum-cold: #2563EB;
+  --color-border-subtle: #E2E8F0;
+  --color-accent: #1D4ED8;
+  --color-spectrum-cold: #1D4ED8;
   --color-spectrum-cool: #06B6D4;
   --color-spectrum-neutral: #10B981;
   --color-spectrum-warm: #F59E0B;
-  --color-spectrum-hot: #EF4444;
+  --color-spectrum-hot: #DC2626;
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
@@ -969,7 +969,7 @@ flowchart BT
     classDef l1 fill:#F0FDF4,stroke:#10B981,stroke-width:2px,color:#111827
     classDef l2 fill:#ECFEFF,stroke:#06B6D4,stroke-width:2px,color:#111827
     classDef l3 fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px,color:#111827
-    classDef l4 fill:#FEE2E2,stroke:#EF4444,stroke-width:2px,color:#111827
+    classDef l4 fill:#FEE2E2,stroke:#DC2626,stroke-width:2px,color:#111827
     classDef l5 fill:#EDE9FE,stroke:#8B5CF6,stroke-width:2px,color:#111827
 
     class L0 l0
@@ -1089,17 +1089,17 @@ What was previously hardcoded in the HTML prototype and how the new architecture
 
 | Token                      | Value               | Usage                                   |
 | :------------------------- | :------------------ | :-------------------------------------- |
-| `--color-canvas`           | `#F9FAFB`           | Application background                  |
+| `--color-canvas`           | `#F8FAFC`           | Application background                  |
 | `--color-panel`            | `#FFFFFF`           | Panels, inspectors, bars                |
-| `--color-border-subtle`    | `1px solid #E5E7EB` | Separators (never nested boxes)         |
-| `--color-accent`           | `#0891B2`           | Primary actions, active selection       |
+| `--color-border-subtle`    | `1px solid #E2E8F0` | Separators (never nested boxes)         |
+| `--color-accent`           | `#1D4ED8`           | Primary actions, active selection       |
 | `--color-text-primary`     | `#111827`           | Primary text                            |
 | `--color-text-secondary`   | `#6B7280`           | Labels, units                           |
-| `--color-spectrum-cold`    | `#2563EB`           | Cold end of FEA spectrum                |
+| `--color-spectrum-cold`    | `#1D4ED8`           | Cold end of FEA spectrum                |
 | `--color-spectrum-cool`    | `#06B6D4`           | Cool intermediate zone                  |
 | `--color-spectrum-neutral` | `#10B981`           | Neutral zone (low stresses)             |
 | `--color-spectrum-warm`    | `#F59E0B`           | Alert zone                              |
-| `--color-spectrum-hot`     | `#EF4444`           | Critical zone (> 100% of EC3 criterion) |
+| `--color-spectrum-hot`     | `#DC2626`           | Critical zone (> 100% of EC3 criterion) |
 
 ### Typography
 

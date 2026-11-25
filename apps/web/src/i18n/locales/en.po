@@ -7,9 +7,19 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#. placeholder {0}: generated.structure.nodes.length
+#. placeholder {1}: generated.structure.beams.length
+#: src/components/ProjectGalleryModal.tsx
+msgid "{0} nœuds · {1} poutres (moteur Rust rdm-cad)."
+msgstr "{0} nodes · {1} beams (Rust engine rdm-cad)."
+
 #: src/routes/geometry.tsx
 #~ msgid "+ Nœud"
 #~ msgstr "+ Node"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "+ Nouveau projet vierge"
+msgstr "+ New blank project"
 
 #: src/routes/geometry.tsx
 msgid "+ Placer un premier nœud"
@@ -28,16 +38,29 @@ msgid "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un pla
 msgstr "Add nodes, connect them with N1 → N2 members, import a DXF drawing or pick a template from the project gallery."
 
 #: src/routes/results.tsx
-msgid "Amplification"
-msgstr "Amplification"
+#~ msgid "Amplification"
+#~ msgstr "Amplification"
 
 #: src/components/CadImportDialog.tsx
 msgid "Annuler"
 msgstr "Undo"
 
 #: src/routes/supports.tsx
+msgid "Appliquer les ressorts à N{nodeId}"
+msgstr "Apply the springs to N{nodeId}"
+
+#. placeholder {0}: CASES.find((c) => c.id === caseId)?.label
+#: src/routes/loads.tsx
+msgid "Appliqués aux charges nodales et ponctuelles de travée du cas <0>{0}</0>."
+msgstr "Applied to the nodal and point-on-span loads of case <0>{0}</0>."
+
+#: src/routes/supports.tsx
 msgid "Appuis actifs"
 msgstr "Active supports"
+
+#: src/routes/supports.tsx
+msgid "Appuis élastiques (kx..krz)"
+msgstr "Elastic supports (kx..krz)"
 
 #: src/routes/supports.tsx
 msgid "Aucun appui — sélectionnez un nœud puis choisissez un preset."
@@ -55,9 +78,17 @@ msgstr "No loads yet — pick an acceleration scenario or add a load."
 #~ msgid "Aucune charge définie."
 #~ msgstr "No load defined."
 
+#: src/routes/geometry.tsx
+msgid "Barre de treillis (articuler N1/N2)"
+msgstr "Truss member (pin-joint N1/N2)"
+
 #: src/routes/results.tsx
 msgid "Calculer"
 msgstr "Calculate"
+
+#: src/routes/report.tsx
+msgid "Capture temps réel de la vue 3D (étape 1–4)"
+msgstr "Live snapshot of the 3D view (steps 1–4)"
 
 #: src/routes/loads.tsx
 msgid "Cas"
@@ -91,6 +122,14 @@ msgstr "Choose a file…"
 msgid "Cible"
 msgstr "Target"
 
+#: src/routes/geometry.tsx
+msgid "cliquez deux nœuds pour relier (N départ cyan)"
+msgstr "click two nodes to connect (cyan start node)"
+
+#: src/routes/geometry.tsx
+msgid "cliquez le plan de grille pour poser un nœud (accrochage magnétique)"
+msgstr "click the grid plane to place a node (magnetic snapping)"
+
 #: src/routes/supports.tsx
 msgid "Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui."
 msgstr "Click a node in the 3D view to select it, then apply a support."
@@ -111,6 +150,18 @@ msgstr "Copied!"
 msgid "Copier l'URL de partage"
 msgstr "Copy share URL"
 
+#: src/viewport3d/LayerToolbar.tsx
+msgid "Cotes"
+msgstr "Dimensions"
+
+#: src/routes/results.tsx
+msgid "Coupe 2D σvM"
+msgstr "2D σvM section"
+
+#: src/routes/geometry.tsx
+msgid "Coupe EN — dimensions en mm"
+msgstr "EN section — dimensions in mm"
+
 #: src/routes/geometry.tsx
 msgid "Créer une poutre"
 msgstr "Create a member"
@@ -128,16 +179,38 @@ msgid "Déjà reliés"
 msgstr "Already linked"
 
 #: src/routes/results.tsx
+msgid "Déplacements nodaux"
+msgstr "Nodal displacements"
+
+#: src/routes/results.tsx
 #~ msgid "Déplacements nodaux (G)"
 #~ msgstr "Nodal displacements (G)"
 
 #: src/routes/results.tsx
-msgid "Déplacements nodaux (Q)"
-msgstr "Nodal displacements (Q)"
+#~ msgid "Déplacements nodaux (Q)"
+#~ msgstr "Nodal displacements (Q)"
+
+#. placeholder {0}: inspected.beam_id
+#. placeholder {1}: inspected.governing_check
+#: src/routes/results.tsx
+msgid "Diagnostic EN 1993-1-1 — P{0} ({1})"
+msgstr "EN 1993-1-1 diagnosis — P{0} ({1})"
+
+#: src/routes/results.tsx
+msgid "Efforts internes (5 courbes)"
+msgstr "Internal forces (5 curves)"
+
+#: src/routes/supports.tsx
+msgid "élastique"
+msgstr "elastic"
 
 #: src/components/CadImportDialog.tsx
 msgid "Encastrer le nœud le plus à gauche"
 msgstr "Fix the leftmost node"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Enregistrer le projet courant"
+msgstr "Save the current project"
 
 #. placeholder {0}: index + 1
 #: src/routes/__root.tsx
@@ -148,13 +221,22 @@ msgstr "Step {0}"
 #~ msgid "Exploitation EC3"
 #~ msgstr "EC3 utilization"
 
+#: src/components/ProjectGalleryModal.tsx
+#: src/routes/report.tsx
+msgid "Exporter (.rdm)"
+msgstr "Export (.rdm)"
+
 #: src/routes/report.tsx
 msgid "Exports (étape 5)"
 msgstr "Exports (step 5)"
 
 #: src/components/BottomSheet.tsx
-msgid "Fermer"
-msgstr "Close"
+#~ msgid "Fermer"
+#~ msgstr "Close"
+
+#: src/routes/report.tsx
+msgid "Fichier canonique réimportable à l'identique (round-trip Valibot)."
+msgstr "Canonical file, re-importable as-is (Valibot round-trip)."
 
 #: src/components/CadImportDialog.tsx
 msgid "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
@@ -164,9 +246,31 @@ msgstr "Wireframes: DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) and IGES (110
 #~ msgid "Fz (kN, négatif vers le bas)"
 #~ msgstr "Fz (kN, negative downward)"
 
+#: src/components/ProjectGalleryModal.tsx
+msgid "Gabarit"
+msgstr "Template"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Générateur paramétrique (Rust)"
+msgstr "Parametric generator (Rust)"
+
+#. placeholder {0}: fault.message ?? "paramètres invalides"
+#: src/components/ProjectGalleryModal.tsx
+msgid "Génération impossible : {0}"
+msgstr "Generation failed: {0}"
+
+#: src/components/ProjectGalleryModal.tsx
 #: src/routes/report.tsx
 msgid "Génération…"
 msgstr "Rendering…"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Générer la structure"
+msgstr "Generate the structure"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Hauteur H (m)"
+msgstr "Height H (m)"
 
 #: src/routes/report.tsx
 msgid "HTML 3D"
@@ -228,6 +332,10 @@ msgstr "Connections (RDM 7)"
 msgid "Longueurs de flambement"
 msgstr "Buckling lengths"
 
+#: src/routes/results.tsx
+msgid "Maintien latéral mi-travée (kz = 0,5)"
+msgstr "Mid-span lateral restraint (kz = 0.5)"
+
 #: src/routes/geometry.tsx
 msgid "Matériau"
 msgstr "Material"
@@ -236,9 +344,22 @@ msgstr "Material"
 msgid "Matrice 6 DDL des appuis"
 msgstr "6-DOF support matrix"
 
+#: src/components/ProjectGalleryModal.tsx
+#: src/routes/report.tsx
+msgid "Modèle .rdm exporté"
+msgstr ".rdm model exported"
+
 #: src/routes/geometry.tsx
 msgid "Modèle vide — commencez par poser un nœud."
 msgstr "Empty model — start by placing a node."
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Modèles types"
+msgstr "Templates"
+
+#: src/routes/loads.tsx
+msgid "Moments concentrés (Mx, My, Mz en kN·m)"
+msgstr "Concentrated moments (Mx, My, Mz in kN·m)"
 
 #: src/routes/geometry.tsx
 #: src/routes/loads.tsx
@@ -266,6 +387,11 @@ msgstr "Standards"
 msgid "Note de calcul A4 / PDF"
 msgstr "A4 / PDF calculation note"
 
+#. placeholder {0}: beam.id
+#: src/routes/geometry.tsx
+msgid "P{0} subdivisée en {segments} tronçons"
+msgstr "P{0} subdivided into {segments} segments"
+
 #: src/routes/report.tsx
 #~ msgid "Partage par URL"
 #~ msgstr "URL sharing"
@@ -289,6 +415,10 @@ msgstr "Self-weight (1g −Z)"
 #: src/routes/loads.tsx
 #~ msgid "Poids propre automatique (cas G)"
 #~ msgstr "Automatic self-weight (G case)"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Portée L (m)"
+msgstr "Span L (m)"
 
 #: src/routes/loads.tsx
 msgid "Poutre"
@@ -314,9 +444,21 @@ msgstr "Support presets"
 msgid "Profil (EN 10365)"
 msgstr "Profile (EN 10365)"
 
+#: src/components/ProjectGalleryModal.tsx
+msgid "Profilé principal"
+msgstr "Primary section"
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Profilé secondaire"
+msgstr "Secondary section"
+
 #: src/routes/report.tsx
 msgid "Profils utilisés"
 msgstr "Profiles used"
+
+#: src/routes/supports.tsx
+msgid "Raideurs N/m (translations) et N·m/rad (rotations). Un DDL bloqué ignore son ressort ; un DDL libre élastique participe à la raideur (EN 1993-1-1)."
+msgstr "Stiffnesses in N/m (translations) and N·m/rad (rotations). A locked DOF ignores its spring; a free elastic DOF contributes to the stiffness (EN 1993-1-1)."
 
 #: src/routes/report.tsx
 #~ msgid "Rapport 3D autonome (HTML)"
@@ -334,6 +476,10 @@ msgstr "PDF report"
 #~ msgid "Rapport PDF (takumi)"
 #~ msgstr "PDF report (takumi)"
 
+#: src/viewport3d/LayerToolbar.tsx
+msgid "Réactions"
+msgstr "Reactions"
+
 #: src/components/UpdatePrompt.tsx
 msgid "Recharger"
 msgstr "Reload"
@@ -349,6 +495,14 @@ msgstr "Release N1/N2 moments"
 #: src/routes/geometry.tsx
 msgid "Relier N1 → N2"
 msgstr "Connect N1 → N2"
+
+#: src/routes/results.tsx
+msgid "Renforcer le profil (1 clic)"
+msgstr "Upgrade the profile (1 click)"
+
+#: src/viewport3d/LayerToolbar.tsx
+msgid "Repères N/P"
+msgstr "N/P labels"
 
 #: src/routes/report.tsx
 #~ msgid "Resultats CSV (Excel)"
@@ -366,9 +520,25 @@ msgstr "Calculation results"
 msgid "Roulis θx (°)"
 msgstr "Roll angle θx (°)"
 
+#: src/routes/supports.tsx
+msgid "Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts."
+msgstr "Select a node in the 3D view to edit its springs."
+
 #: src/routes/geometry.tsx
 msgid "Sélectionnez une poutre pour éditer ses caractéristiques."
 msgstr "Select a member to edit its properties."
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Structure paramétrique générée"
+msgstr "Parametric structure generated"
+
+#: src/routes/geometry.tsx
+msgid "Subdiviser"
+msgstr "Subdivide"
+
+#: src/routes/geometry.tsx
+msgid "Subdiviser en N tronçons"
+msgstr "Subdivide into N segments"
 
 #: src/routes/supports.tsx
 msgid "Suivant : Définir les charges →"
@@ -381,6 +551,14 @@ msgstr "Next: define the connections →"
 #: src/routes/supports.tsx
 msgid "Tout supprimer"
 msgstr "Delete all"
+
+#: src/routes/results.tsx
+msgid "Toutes les vérifications EC3 sont vérifiées (η ≤ 1,00)."
+msgstr "All EC3 checks pass (η ≤ 1.00)."
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Travées / panneaux"
+msgstr "Spans / panels"
 
 #: src/routes/loads.tsx
 msgid "Type"
@@ -401,12 +579,16 @@ msgstr "A new version is available."
 #. placeholder {0}: uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id
 #. placeholder {1}: (maxUls * 100).toFixed(1).replace(".", ",")
 #: src/routes/results.tsx
-msgid "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
-msgstr "EC3 check exceeded — governing member: P{0} (η ={1} %). A 1-click reinforcement is offered."
+#~ msgid "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
+#~ msgstr "EC3 check exceeded — governing member: P{0} (η ={1} %). A 1-click reinforcement is offered."
 
 #: src/routes/loads.tsx
 msgid "Vider les charges"
 msgstr "Clear all loads"
+
+#: src/routes/report.tsx
+msgid "Vue 3D du modèle"
+msgstr "3D view of the model"
 
 #: src/viewport3d/ViewportCanvas.tsx
 #~ msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."

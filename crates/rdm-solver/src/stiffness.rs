@@ -51,7 +51,7 @@ pub fn beam_local_frame(
 ) -> Result<LocalFrame, FrameError> {
     let axis = p2 - p1;
     let length = axis.length();
-    if !(length > 1e-12) {
+    if length <= 1e-12 || length.is_nan() {
         return Err(FrameError::DegenerateGeometry);
     }
     let ex = axis / length;

@@ -16,6 +16,8 @@ export async function activateLocale(locale: Locale): Promise<void> {
   i18n.load(locale, messages as never);
   i18n.activate(locale);
   localStorage.setItem("rdm-locale", locale);
+  // v1.3.0: notify the header's active-locale pill.
+  window.dispatchEvent(new Event("rdm-locale-change"));
   document.documentElement.lang = locale;
 }
 

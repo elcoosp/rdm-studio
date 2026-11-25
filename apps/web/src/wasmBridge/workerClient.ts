@@ -4,7 +4,25 @@ import type { WorkerRequest } from "./fea.worker";
 export interface CombinationReport {
   kind: string;
   label: string;
-  beams: { beam_id: number; utilization: number; midspan_deflection: number }[];
+  beams: {
+    beam_id: number;
+    utilization: number;
+    /** v1.3.0: governing resistance name (`Mb,Rd`, `Von Mises`, …). */
+    governing_check: string;
+    /** v1.4.0: every individual check ratio at the governing station. */
+    checks: [string, number][];
+    /** v1.4.0: cross-section class 1..=4 (null = n/a). */
+    class_index: number | null;
+    /** v1.4.0: flexural buckling factors / LTB reduction. */
+    chi_y: number | null;
+    chi_z: number | null;
+    chi_lt: number | null;
+    /** v1.4.0: governing bending resistance (N·m) for the capacity line. */
+    m_rd: number;
+    /** v1.3.0: peak von Mises stress over the stations (Pa). */
+    max_sigma_vm: number;
+    midspan_deflection: number;
+  }[];
 }
 
 export interface CaseReport {
@@ -138,6 +156,7 @@ class FeaClient {
         | { type: "STRESS_RESULT"; grid: StressGrid }
         | { type: "STRESS_FAULT"; fault: SolveFault }
         | { type: "DXF_RESULT"; json: string }
+        | { type: "FINGERPRINT_RESULT"; hash: string }
         | { type: "DXF_FAULT"; fault: SolveFault }
         | { type: "CATALOG_PROPS_RESULT"; props: unknown }
         | { type: "CATALOG_PROPS_FAULT"; fault: SolveFault }
@@ -162,11 +181,14 @@ class FeaClient {
       ) {
         pending.onError(data.fault);
       } else if (data.type === "MODAL_RESULT") {
+        lastModalReport = data.report;
         pending.onResult(data.report);
       } else if (data.type === "STRESS_RESULT") {
         pending.onResult(data.grid);
       } else if (data.type === "DXF_RESULT") {
         pending.onResult(data.json);
+      } else if (data.type === "FINGERPRINT_RESULT") {
+        pending.onResult(data.hash);
       } else if (data.type === "SPAN_FORCES_FAULT") {
         pending.onError(data.fault);
       } else if (data.type === "SPAN_FORCES_RESULT") {
@@ -313,6 +335,26 @@ class FeaClient {
   }
 
   /** DXF import -> fresh .rdm project JSON (v1.0.0 CAD engine). */
+  /** v1.4.0: canonical SHA-256 fingerprint of the `.rdm` model. */
+  projectFingerprint(projectJson: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.enqueue(
+        { type: "FINGERPRINT", projectJson },
+        { onResult: (data) => resolve(data as string), onError: reject },
+      );
+    });
+  }
+
+  /** v1.3.0: extension-dispatched CAD import (.dxf/.step/.stp/.igs/.iges). */
+  importCad(bytes: ArrayBuffer, filename: string, name: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.enqueue(
+        { type: "IMPORT_CAD", bytes, filename, name },
+        { onResult: (data) => resolve(data as string), onError: reject },
+      );
+    });
+  }
+
   importDxf(bytes: ArrayBuffer, name: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       this.enqueue(
@@ -333,3 +375,10 @@ class FeaClient {
 }
 
 export const feaClient = new FeaClient();
+
+/** v1.4.0: last eigen-mode report getter for the report sheet. */
+let lastModalReport: ModalReport | null = null;
+
+export function getLastModalReport(): ModalReport | null {
+  return lastModalReport;
+}

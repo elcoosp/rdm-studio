@@ -23,14 +23,14 @@ test("CSV export carries the UTF-8 BOM", async ({ page }) => {
   const downloadPromise = page.waitForEvent("download", { timeout: 30_000 });
   await page.getByTestId("export-csv").click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/-resultats\.csv$/);
+  expect(download.suggestedFilename()).toMatch(/-résultats\.csv$/);
   const path = await download.path();
   const { readFileSync } = await import("node:fs");
   const bytes = readFileSync(path!);
   expect(bytes[0]).toBe(0xef);
   expect(bytes[1]).toBe(0xbb);
   expect(bytes[2]).toBe(0xbf);
-  expect(bytes.toString("utf8")).toContain("eta ULE");
+  expect(bytes.toString("utf8")).toContain("eta ELU");
 });
 
 test("standalone 3D HTML report embeds three.js offline", async ({ page }) => {

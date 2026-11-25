@@ -63,8 +63,8 @@ fn clamped_udl_reactions_and_deflection() {
     approx::assert_abs_diff_eq!(sol.reactions[2], 2000.0, epsilon = 1e-9);
     approx::assert_abs_diff_eq!(sol.reactions[8], 2000.0, epsilon = 1e-9);
     // Fixed-end moments: |q| L^2 / 12, antisymmetric about +y.
-    approx::assert_abs_diff_eq!(sol.reactions[4], -1333.3333333333333, epsilon = 1e-9);
-    approx::assert_abs_diff_eq!(sol.reactions[10], 1333.3333333333333, epsilon = 1e-9);
+    approx::assert_abs_diff_eq!(sol.reactions[4], -1_333.333_333_333_333_3, epsilon = 1e-9);
+    approx::assert_abs_diff_eq!(sol.reactions[10], 1_333.333_333_333_333_3, epsilon = 1e-9);
     let defl = rdm_solver::midspan_deflection_metric(&s, &solved, 0, &[(LoadCase::Variable, 1.0)])
         .unwrap();
     approx::assert_abs_diff_eq!(

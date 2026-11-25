@@ -1,62 +1,74 @@
 # STATUS.md — RDM Studio milestone ledger
 
-Last session: 2026-11-25. Base commit: see `ship.toml` `base_commit`.
+Sessions: 2026-11-25 (M0–M2 core) and 2026-11-25 (this one: M2 completion +
+M3 + full gates). Base commit: see `ship.toml` `base_commit`.
 Tree left dirty by design (no commits; per-file history lands via `ship.toml`).
 
 ## Milestones completed
 
-### M0 — CI green (ARCHITECTURE.md §18, §19.5) — **done**
-- Root `Cargo.toml` workspace (§5.1, minus `dxf`/`arbitrary` which join with
-  `rdm-cad`/fuzz in Phase 2+; cargo rejects unused workspace deps).
-- `package.json` + `pnpm-workspace.yaml` monorepo scripts, `.gitignore`.
-- `.github/workflows/ci.yml` = §19.5 verbatim (G0→G6).
-- Verified locally: `cargo fmt --all --check` clean, `cargo test --workspace`
-  71/71 green, zero warnings.
+### M0 — CI green (§18, §19.5) — **done**
+Root `Cargo.toml` workspace, `package.json` + `pnpm-workspace.yaml`
+(workspace + overrides), `.gitignore`, `.github/workflows/ci.yml` (§19.5).
 
 ### M1 — Stable Rust core (§18 Phase 1) — **done**
-- `crates/rdm-model`: §19.4 canonical structs (`Node`, `Beam` with
-  `roll_angle_rad`/`releases`/`k_buckling`, `Support`), `LoadCase` G/Q/W/S/Acc,
-  `ModelValidator` (orphan nodes, duplicate beams, <1e-4 m, pedagogical
-  rigid-body diagnostics), `.rdm` project file + SHA-256 fingerprint.
-- `crates/rdm-eurocode`: data-driven catalogs embedded via `include_str!` —
-  **144 profiles** (IPE 80-600, HEA/HEB 100-600, HEM 100-400, UPN 50-400,
-  UPE 80-300, CHS/SHS/RHS, angles) cross-validated between civilaxis,
-  eurocodeapplied and the legacy prototype (≤1.2 %, torsion ≤5 %); 7 materials
-  per EN 1993-1-1 Table 3.1 / EN 1993-1-4 Table 2.1 / EN 1999-1-1 Table 3.2a.
-  EN 1990 combinations (1.35G+1.50Q, psi0 per Annex A1), EN 1993-1-1:
-  classification Table 5.2, buckling curves Table 6.2/6.1, chi §6.3.1.2,
-  LTB §6.3.2.2 with published Iw, shear areas §6.2.6, Von Mises §6.2.1/6.2.7,
-  deflection limits L/200-300.
-- `crates/rdm-solver`: 12×12 Euler-Bernoulli element + roll angle,
-  end-release condensation (truss members verified), consistent load vectors
-  (point on span, trapezoid, automatic self-weight rho·A·g), sparse CSC
-  assembly + faer `SymbolicLlt`/`Llt` single factorization with per-case
-  back-substitution, mechanism detection (`UnstableMechanism`), reactions,
-  local end forces, exact interior deflections (Hermite + clamped
-  particular, analytic integration), linear superposition for ULS/SLS.
-- Tests: 71 green = unit tests (model/eurocode/solver/wasm) +
-  `tests/analytical_benchmarks.rs` at 1e-12 (SS point/UDL, cantilevers,
-  axial, Euler + chi, clamped UDL reactions) + wasm report tests.
+- `crates/rdm-model`: §19.4 canonical SI structs, LoadCase G/Q/W/S/Acc,
+  ModelValidator (pedagogical rigid-body diagnostics), `.rdm` + SHA-256.
+- `crates/rdm-eurocode`: 144 cross-validated profiles + 7 materials
+  (EN 1993-1-1 Table 3.1 / EN 1993-1-4 Table 2.1 / EN 1999-1-1 Table 3.2a),
+  EN 1990 combinations, EN 1993-1-1 classification/curves/χ/LTB/Von Mises.
+- `crates/rdm-solver`: 12×12 EB element + roll angle + release condensation,
+  consistent load vectors, faer sparse LLᵀ (one factorization, per-case
+  solve), mechanism detection, reactions, end forces, exact interior
+  deflections, ULS/SLS superposition.
+- **This session**: `tests/physics_invariants.rs` (proptest, 1000 cases:
+  equilibrium, Maxwell-Betti, mirror symmetry) and `tests/report_snapshots.rs`
+  (insta JSON snapshots of EC3 member checks).
 
-### M2 — Operational WASM (§18 Phase 2 b1) — **done (core + binding)**
-- `bindings/rdm-wasm`: `solve()` (validate → catalogs → solve → ULS/SLS
-  combinations → per-beam EN 1993 checks), `catalog_sections()`,
-  `catalog_materials()`, `SolveFault` typed errors, zero-copy
-  `Float64Array` views in `buffers.rs`.
-- Verified: wasm demo model reproduces P L³/48EI + self-weight exactly;
-  `wasm-pack build` = Gate G2 (see session report for run status).
+### M2 — Operational WASM (§18 b1) — **done**
+- `bindings/rdm-wasm`: `solve()` / catalog facades / zero-copy buffers.
+- **This session**: wasm-pack G2 build green. The faer default features
+  (`rand` -> getrandom, `rayon` -> spindle/atomic-wait) have no wasm32
+  backend; solved with `default-features = false`,
+  `features = ["std", "sparse-linalg"]`.
+- `.rdm` v1 format decision: `LoadKind` is serde-internally-tagged
+  (`{ case, kind, ... }`) and flattened into `Load`, matching the Valibot
+  schema in `apps/web/src/schemas/project.schema.ts`.
 
-## Explicitly NOT done this session (next steps)
-- **M3 — Type-safe routing**: `apps/web` is scaffolded (package.json with the
-  pinned §2.3 versions) but the Vite app, route tree, worker wiring and UI
-  are NOT built. M3 is the exact next milestone.
-- fuzz targets (b2), `rdm-cad`, modal analysis (`modal.rs`), `section_cut.rs` —
-  their §5 slots are reserved but unimplemented by design (no stubs shipped).
-- Proptest invariants + insta snapshots (§14 L2) — planned next session.
+### M3 — Type-safe routing (§18 c1/c2, gates G2.5–G5) — **done**
+- `apps/web`: Vite 8 config per §19.1 (TanStackRouterVite before react(),
+  Lingui SWC plugin, tailwindcss, wasm, VitePWA with
+  `maximumFileSizeToCacheInBytes: 15 * 1024 * 1024`), tsconfig per §19.3.
+- Route tree per §9.2: `__root` (motion stepper + FR/EN switch), `index`
+  (redirect), `geometry` (node/beam editor + catalog inspector), `supports`
+  (6-DOF matrix), `loads` (EN 1990 cases), `results`
+  (`v.parse(SearchParamsSchema, s)`), `report` (summary + lz-string share).
+- `routeTree.gen.ts` generated; `<Link>` navigation compile-time checked.
+- Lingui fr/en catalogs (39 messages, 100% translated) + compile gates.
+- Zustand + Zundo undo + idb-keyval persistence store (c3), FEA worker +
+  typed client (c4) calling rdm-wasm — the real solve runs in the worker.
+- Tests: vitest 19/19 (units, cn, urlShare, schemas, store, linkedom DOM)
+  and Playwright e2e (chromium): full 5-step workflow with a real FE calc.
 
-## Next session instructions
-1. Build `apps/web` (Vite 8 + React 19 + TanStack Router + Lingui fr/en per
-   §19.1-§19.3), wire `fea.worker.ts` to `rdm-wasm`, satisfy G2.5-G6.
-2. Add `tests/physics_invariants.rs` (equilibrium, Maxwell-Betti, rotation
-   invariance) and `tests/report_snapshots.rs` (insta).
-3. M4 next after M3: 3D viewport (three-mesh-bvh).
+## Gates verified this session (all green)
+- G0: `cargo fmt --all --check` ok, `cargo clippy -D warnings -W pedantic`
+  0 errors, lint-attribute grep 0, `oxfmt --check` ok, `oxlint
+  --deny-warnings` ok
+- G1: `cargo test --workspace` 12/12 suites (85 tests incl. proptest+insta)
+- G2: `wasm-pack build bindings/rdm-wasm --target web` ok
+- G2.5: route tree generated (routeTree.gen.ts) ok, G3: `tsc --noEmit` ok
+- G4: `i18n:extract` + `i18n:compile` ok, G5: `vitest` 19/19 ok
+- G6: `playwright test:e2e` 1/1 ok (chromium)
+
+## Explicitly NOT done (next milestones)
+- **M4 — Interactive 3D viewport** (three-mesh-bvh, R3F) is the exact next
+  milestone; results currently show numeric tables, no 3D canvas yet.
+- PWA installability *proof* (Lighthouse >= 95, offline) = M5; the manifest
+  and service worker are already produced by the build.
+- Fuzz targets (b2), `rdm-cad` DXF import, `modal.rs`, `section_cut.rs`:
+  reserved, no stubs shipped.
+
+## Next session
+1. M4: R3F viewport + BVH picking on `/geometry`, FEA vertex colors on
+   `/results` (FEA spectrum tokens already in `app.css`).
+2. M5: offline proof + Lighthouse audit.
+3. Modal analysis (`modal.rs`) once the viewport needs mode shapes.

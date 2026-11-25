@@ -1,0 +1,67 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/rdm-model",
+    "crates/rdm-eurocode",
+    "crates/rdm-solver",
+    "bindings/rdm-wasm",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["RDM Studio"]
+
+[workspace.dependencies]
+# --- Math engine ---
+faer = "0.24.4"
+nalgebra = "0.35.0"
+glam = "0.34.3"
+approx = "0.6.0-rc2"
+
+# --- Serialization & errors ---
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.145"
+thiserror = "2.0.21"
+sha2 = "0.10.9"
+
+# NOTE: `dxf` and `arbitrary` (ARCHITECTURE.md section 5.1) join the
+# workspace when crates/rdm-cad and the fuzz targets land (Phase 2+);
+# cargo rejects unused workspace dependencies.
+
+# --- WASM bridge ---
+wasm-bindgen = "0.2.130"
+serde-wasm-bindgen = "0.6.5"
+js-sys = "0.3.107"
+
+# --- Tests ---
+proptest = "1.6.0"
+insta = { version = "1.42.0", features = ["json"] }
+
+[workspace.lints.clippy]
+# Pedantic is enforced by the G0 gate (`cargo clippy ... -W pedantic`); the
+# targeted exceptions below carry an explicit engineering rationale each.
+pedantic = { level = "warn", priority = -1 }
+# SI-unit code converts between metres/millimetres and node indices constantly;
+# lossy `as` casts on physically bounded magnitudes are reviewed by unit tests.
+cast_precision_loss = { level = "allow", priority = 1 }
+cast_possible_truncation = { level = "allow", priority = 1 }
+cast_sign_loss = { level = "allow", priority = 1 }
+cast_possible_wrap = { level = "allow", priority = 1 }
+# Canonical geometry structs are named after RDM conventions (Node x/y/z,
+# Beam n1/n2, theta_x): renaming them would break the plan's domain contract
+# (ARCHITECTURE.md section 19.4).
+struct_field_names = { level = "allow", priority = 1 }
+similar_names = { level = "allow", priority = 1 }
+# Technical docs reference identifiers and mixed-case symbols (LLᵀ, CSC,
+# Wel,y) that doc_markdown keeps flagging despite backticks.
+doc_markdown = { level = "allow", priority = 1 }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+# NOTE: panic = "abort" and strip = true are intentionally omitted here.
+# They are applied only during the final wasm-pack build via RUSTFLAGS
+# to avoid breaking `cargo test --release` and to preserve wasm-bindgen
+# metadata required for .d.ts generation.

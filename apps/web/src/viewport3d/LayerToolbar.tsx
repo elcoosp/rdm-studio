@@ -7,7 +7,7 @@ import { useViewportStore } from "@/state/viewportStore";
  * latency readout when provided.
  */
 const LAYERS = [
-  ["nodes", "Noeuds"],
+  ["nodes", "Nœuds"],
   ["beams", "Poutres"],
   ["loads", "Charges"],
   ["supports", "Appuis"],

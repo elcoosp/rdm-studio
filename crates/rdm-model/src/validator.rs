@@ -152,14 +152,14 @@ fn check_topology(structure: &Structure, issues: &mut Vec<ModelIssue>) {
         }
 
         let length = beam_length(structure, beam);
-        if let Ok(len) = length {
-            if len < 1e-4 {
-                issues.push(ModelIssue::new(
-                    ModelIssueCode::TooShortBeam,
-                    beam.id,
-                    format!("beam length {len:.3e} m is below the 1e-4 m tolerance"),
-                ));
-            }
+        if let Ok(len) = length
+            && len < 1e-4
+        {
+            issues.push(ModelIssue::new(
+                ModelIssueCode::TooShortBeam,
+                beam.id,
+                format!("beam length {len:.3e} m is below the 1e-4 m tolerance"),
+            ));
         }
 
         if beam.releases_start.iter().all(|&r| r) && beam.releases_end.iter().all(|&r| r) {
@@ -439,8 +439,8 @@ fn free_modes(constraints: &[[f64; 6]]) -> Vec<usize> {
         };
         a.swap(r, pivot_row);
         let pivot_val = a[r][col];
-        for j in 0..COLS {
-            a[r][j] /= pivot_val;
+        for value in &mut a[r] {
+            *value /= pivot_val;
         }
         for i in 0..rows {
             if i == r {
@@ -450,8 +450,9 @@ fn free_modes(constraints: &[[f64; 6]]) -> Vec<usize> {
             if factor == 0.0 {
                 continue;
             }
-            for j in 0..COLS {
-                a[i][j] -= factor * a[r][j];
+            let pivot_row = a[r];
+            for (av, pv) in a[i].iter_mut().zip(pivot_row.iter()) {
+                *av -= factor * *pv;
             }
         }
         pivot_cols.push(col);

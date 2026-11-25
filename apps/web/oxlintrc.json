@@ -1,0 +1,7 @@
+{
+  "categories": {
+    "correctness": "error"
+  },
+  "extends": ["recommended"],
+  "ignorePatterns": ["src/wasm-pkg/**", "src/routeTree.gen.ts", "dist/**"]
+}

@@ -35,22 +35,27 @@ export function SnapOverlay({
   nodes,
   beams,
   runtimeRef,
+  runtimeReady,
 }: {
   nodes: NodeData[];
   beams: BeamData[];
   runtimeRef: RefObject<ViewportRuntime | null>;
+  /** Increments on every WebGL init/resize (listener re-attachment). */
+  runtimeReady: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<HoverInfo>({ snap: null, beamHover: null, shift: false });
   const [ready, setReady] = useState(0);
   const hapticRef = useRef<string>("");
 
-  // Re-attach when the runtime (camera/canvas) becomes available.
+  // Re-attach when the runtime (camera/canvas) becomes available — the
+  // parent bumps `runtimeReady` on every WebGL (re)init and on resize,
+  // so pointer listeners always bind to a live canvas (v1.4.0 fix).
   useEffect(() => {
     if (runtimeRef.current !== null) {
       setReady((n) => n + 1);
     }
-  }, [runtimeRef]);
+  }, [runtimeReady, runtimeRef]);
 
   useEffect(() => {
     const runtime = runtimeRef.current;

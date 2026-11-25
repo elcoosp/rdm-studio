@@ -10,11 +10,11 @@
 //!
 //! # Layout
 //!
-//! - [`geometry`]: [`Node`] and [`Beam`] (the 12-DOF frame element definition)
-//! - [`boundary`]: [`Support`] (6-DOF restraint matrix per node)
-//! - [`loads`]: elementary load cases (`G`, `Q`, `W`, `S`, `Acc`) and loads
-//! - [`validator`]: pre-solve model validation with pedagogical diagnostics
-//! - [`project`]: the `.rdm` canonical JSON file format + SHA-256 fingerprint
+//! - `geometry` module: [`Node`] and [`Beam`] (the 12-DOF frame element)
+//! - `boundary` module: [`Support`] (6-DOF restraint matrix per node)
+//! - `loads` module: elementary load cases (`G`, `Q`, `W`, `S`, `Acc`)
+//! - `validator` module: pre-solve validation with pedagogical diagnostics
+//! - `project` module: the `.rdm` canonical JSON file + SHA-256 fingerprint
 
 pub mod boundary;
 pub mod geometry;

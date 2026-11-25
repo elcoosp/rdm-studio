@@ -17,8 +17,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
-import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
-import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
+import { StageContent, useStageSlot } from "@/state/stageStore";
 import {
   useProjectStore,
   type LoadCaseId,
@@ -30,11 +29,12 @@ export const Route = createFileRoute("/loads")({
   component: LoadsPage,
 });
 
-/** EN 1990 elementary cases (G | Q | W | Acc tabs, §8.6 layoutId). */
+/** EN 1990 elementary cases (G | Q | W | S | Acc tabs, §8.6 layoutId). */
 const CASES: { id: LoadCaseId; label: string }[] = [
   { id: "Permanent", label: "G" },
   { id: "Variable", label: "Q" },
   { id: "Wind", label: "W" },
+  { id: "Snow", label: "S" },
   { id: "Acceleration", label: "Acc" },
 ];
 
@@ -96,6 +96,13 @@ function LoadsPage() {
   const [axG, setAxG] = useState(0);
   const [ayG, setAyG] = useState(0);
   const [azG, setAzG] = useState(0);
+  // v1.6.0: concentrated moments (kN·m) on nodal & point-on-span loads.
+  const [momentsOpen, setMomentsOpen] = useState(false);
+  const [mx, setMx] = useState(0);
+  const [my, setMy] = useState(0);
+  const [mz, setMz] = useState(0);
+  // v1.6.0: the persistent stage slot pane.
+  const slotRef = useStageSlot("loads");
 
   const field = loads.find((l) => l.kind === "AccelerationField");
   // v1.4.0: 6 locked DOFs make the system equilibrated (iso- or hyperstatic).
@@ -154,12 +161,16 @@ function LoadsPage() {
   };
 
   const add = () => {
+    const moments = { mx: mx * 1000, my: my * 1000, mz: mz * 1000 };
     if (tab === "nodal") {
       const px = fx * 1000;
       const py = fy * 1000;
       const pz = fz * 1000;
       if (px !== 0 || py !== 0 || pz !== 0) {
-        addNodalLoad(nodeId, pz, caseId, px, py);
+        addNodalLoad(nodeId, pz, caseId, px, py, moments);
+      } else if (moments.mx !== 0 || moments.my !== 0 || moments.mz !== 0) {
+        // Pure moment load: zero forces, non-zero Mx/My/Mz.
+        addNodalLoad(nodeId, 0, caseId, 0, 0, moments);
       }
       return;
     }
@@ -201,7 +212,14 @@ function LoadsPage() {
         loadCase: caseId,
         kind: "PointOnSpan",
         positionRatio: Math.min(1, Math.max(0, a)),
-        forces: { fx: 0, fy: 0, fz: value, mx: 0, my: 0, mz: 0 },
+        forces: {
+          fx: 0,
+          fy: 0,
+          fz: value,
+          mx: mx * 1000,
+          my: my * 1000,
+          mz: mz * 1000,
+        },
       });
     }
   };
@@ -539,6 +557,40 @@ function LoadsPage() {
         </Button>
       </section>
 
+      {/* v1.6.0: collapsible Moments concentrés (Mx, My, Mz) section. */}
+      <details
+        className="border-t border-hairline pt-3"
+        data-testid="moments-section"
+        open={momentsOpen}
+        onToggle={(e) => setMomentsOpen((e.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary className="cursor-pointer text-xs font-medium text-ink-secondary">
+          <Trans>Moments concentrés (Mx, My, Mz en kN·m)</Trans>
+        </summary>
+        <p className="mt-1 text-[11px] text-ink-muted">
+          <Trans>
+            Appliqués aux charges nodales et ponctuelles de travée du cas{" "}
+            <span className="font-data">{CASES.find((c) => c.id === caseId)?.label}</span>.
+          </Trans>
+        </p>
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
+          {(
+            [
+              ["Mx", mx, setMx],
+              ["My", my, setMy],
+              ["Mz", mz, setMz],
+            ] as const
+          ).map(([label, value, setter]) => (
+            <label key={label} className="flex flex-col gap-0.5 text-[10px] text-ink-muted">
+              <span className="font-data">{label} (kN·m)</span>
+              <NumberFieldRoot value={value} step={1} onValueChange={(v) => setter(v ?? 0)}>
+                <NumberFieldInput className="font-data h-8 w-full px-1 text-[11px]" />
+              </NumberFieldRoot>
+            </label>
+          ))}
+        </div>
+      </details>
+
       {/* Live force resultants — rolling tabular digits (§8.1). */}
       <dl
         className="grid grid-cols-3 gap-2 border-t border-hairline pt-3"
@@ -614,11 +666,14 @@ function LoadsPage() {
 
   const main = (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
-        <ViewportCanvas nodes={nodes} beams={beams} testId="viewport-canvas">
-          <ForceVectors3D nodes={nodes} beams={beams} loads={loads} />
-        </ViewportCanvas>
-      </div>
+      <div
+        ref={slotRef}
+        className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"
+        data-testid="loads-stage-slot"
+      />
+      <StageContent k="loads" options={{ wireframe: false }}>
+        {null}
+      </StageContent>
       <div className="shrink-0 overflow-hidden rounded border border-hairline bg-panel">
         <div className="max-h-40 overflow-auto">
           <table className="w-full text-[13px]">

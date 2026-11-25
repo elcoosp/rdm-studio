@@ -11,7 +11,6 @@ import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import { computeModelMassKg, nextHeavierProfile } from "@/lib/resultsMath";
 import { NumberFlowValue } from "@/components/NumberFlowValue";
-import { CuttingPlane } from "@/viewport3d/CuttingPlane";
 import { SectionCut, DeflectionLimit, ModalVibration } from "@/components/icons/EngineeringIcons";
 import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/workerClient";
 import { formatMm } from "@/lib/units";
@@ -24,23 +23,32 @@ import {
   type SolveReport,
 } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
-import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
-import { BeamMeshes } from "@/viewport3d/BeamMeshes";
+import { StageContent, useStageSlot } from "@/state/stageStore";
+import { useViewportStore } from "@/state/viewportStore";
 import { spectrumColor } from "@/viewport3d/BeamMeshes";
-import { SupportMarkers } from "@/viewport3d/SupportMarkers";
-import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
 
 export const Route = createFileRoute("/results")({
   validateSearch: (search) => v.parse(SearchParamsSchema, search),
   component: ResultsPage,
 });
 
+/** EN 1990 SLS deflection allowances (requirement: L/200 | L/250 | L/300). */
+const SLS_LIMITS = [
+  [200, "L/200"],
+  [250, "L/250"],
+  [300, "L/300"],
+] as const;
+
 /**
- * Step 4 (DESIGN.md §4 metrology layout, mockups tape_4): compact 4-KPI
- * strip → full-bleed deformed viewport (consolidated top-right control
- * bar + bottom-center thermal legend) → h-[220px] precision dock (2D σvM
- * cross-section + fiber stress readouts | uPlot internal forces with
- * dashed crimson ±M_Rd capacity lines and live cursor readouts).
+ * Step 4 (DESIGN.md §4 metrology layout, mockups tape_4, v1.6.0): 3-zone
+ * zero-scroll metrology cockpit — compact 4-KPI strip → full-bleed
+ * deformed persistent viewport with the combination selector (every
+ * computed EN 1990 ULS/SLS combination + Modes propres 1..6), the
+ * `L/200 | L/250 | L/300` SLS selector and the right 340px EC3
+ * diagnostic rail (`Classe · χy · χz · χLT`, `Npl,Rd · Vpl,Rd · Mcr ·
+ * λLT`, both mitigation buttons) → h-[220px] precision dock (2D σvM
+ * cross-section + fiber stresses | uPlot My/Mz/Vz/N/T with dashed
+ * crimson ±M_Rd capacity lines, ResizeObserver-backed).
  */
 function ResultsPage() {
   const project = useProjectStore((s) => s.project);
@@ -51,6 +59,8 @@ function ResultsPage() {
   const [busy, setBusy] = useState(false);
   const isMobile = useMediaQuery("(max-width: 767px)");
   const navigate = useNavigate();
+  const slotRef = useStageSlot("results");
+  const setCutting = useViewportStore((s) => s.setCutting);
 
   const run = () => {
     setBusy(true);
@@ -79,24 +89,17 @@ function ResultsPage() {
     return () => clearTimeout(timer);
   }, [modelSignature]);
 
-  const uls = report?.combinations.find((c) => c.kind === "ULS");
-  const sls = report?.combinations.find((c) => c.kind === "SLS");
-
-  // v1.0.0 Step 4: amplification slider (x1..x30 around the calibrated
-  // base scale), eigenmode selector, corrective upgrade with undo toast.
-  const [amplification, setAmplification] = useState(1);
+  const combinations = report?.combinations ?? [];
+  // v1.6.0: selector across ALL computed EN 1990 ULS/SLS combinations.
+  const [viewKey, setViewKey] = useState<string>("SLS:0");
+  const [slsDenominator, setSlsDenominator] = useState<number>(250);
   const [modal, setModal] = useState<ModalReport | null>(null);
   const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
-  // Combination / eigenmode selector + harmonic modal play (§ mockups tape_4).
-  const [viewMode, setViewMode] = useState<"ELU" | "ELS" | "MODE">("ELS");
-  // v1.3.0: 3 calibrated thermal scale modes driven by the real fields.
   const [scaleMode, setScaleMode] = useState<"ec3" | "svm" | "auto">("ec3");
-  const [eigenIndex, setEigenIndex] = useState(0);
+  const [eigenIndex, _setEigenIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [harmonic, setHarmonic] = useState(1);
-  // v1.5.0: the 4-clause EC3 breakdown expands/collapses under the strip.
   const [breakdownOpen, setBreakdownOpen] = useState(true);
-  // Cutting plane sync (§8.5): beam + x/L scrubbed from the docked inspector.
   const [cutBeamId, setCutBeamId] = useState<number>(project.structure.beams[0]?.id ?? 0);
   const [station, setStation] = useState(0.5);
   const [massKg, setMassKg] = useState<number | null>(null);
@@ -114,15 +117,11 @@ function ResultsPage() {
         ipeSeriesRef.current = catalog.sections.map((x) => x.designation);
         // v1.1.0 bug 3: Step 4 extrudes the true catalog profiles too.
         setSectionDims(new Map(catalog.sectionDims.map((d) => [d.designation, d])));
-        // Catalog areas for the what-if mass delta preview (§7.4).
-        const areas = new Map<string, number>();
-        await Promise.all(
-          catalog.sectionDims.slice(0, 40).map(async (d) => {
-            const props = await feaClient.catalogSectionProperties(d.designation).catch(() => null);
-            if (props !== null) areas.set(d.designation, props.a);
-          }),
+        // v1.6.0 audit C: exact catalog areas ride the shapes catalog —
+        // ZERO extra `catalogSectionProperties` worker roundtrips.
+        areasRef.current = new Map(
+          catalog.sectionDims.filter((d) => d.a > 0).map((d) => [d.designation, d.a]),
         );
-        areasRef.current = areas;
       }
       setModal(modalReport);
     })();
@@ -131,8 +130,8 @@ function ResultsPage() {
     };
   }, [project]);
   useEffect(() => {
-    setMassKg(computeModelMassKg(project));
-  }, [project]);
+    setMassKg(computeModelMassKg(project, areasRef.current));
+  }, [project, sectionDims]);
   useEffect(() => {
     if (!playing) {
       setHarmonic(1);
@@ -149,10 +148,37 @@ function ResultsPage() {
     return () => cancelAnimationFrame(raf);
   }, [playing]);
 
+  // Keep the cutting-plane target valid as members come and go.
+  useEffect(() => {
+    if (project.structure.beams.length === 0) {
+      return;
+    }
+    if (!project.structure.beams.some((b) => b.id === cutBeamId)) {
+      setCutBeamId(project.structure.beams[0]?.id ?? 0);
+    }
+  }, [project.structure.beams, cutBeamId]);
+  // v1.6.0: the docked inspector drives the 3D cutting plane through the
+  // viewport store (the persistent stage renders it on /results only).
+  useEffect(() => {
+    setCutting({ beamId: cutBeamId, ratio: station });
+    return () => setCutting(null);
+  }, [cutBeamId, station, setCutting]);
+
+  const uls = combinations.find((c) => c.kind === "ULS");
+  const sls = combinations.find((c) => c.kind === "SLS");
   const maxUls = uls !== undefined ? uls.beams.reduce((m, b) => Math.max(m, b.utilization), 0) : 0;
   const overloaded = (uls?.beams ?? []).filter((b) => b.utilization > 1);
   const maxSlsDeflMm =
     sls !== undefined ? sls.beams.reduce((m, b) => Math.max(m, b.midspan_deflection * 1000), 0) : 0;
+  // v1.6.0: longest member drives the SLS allowance (L/200 | L/250 | L/300).
+  const maxBeamLength = project.structure.beams.reduce((m, b) => {
+    const n1 = project.structure.nodes.find((n) => n.id === b.n1);
+    const n2 = project.structure.nodes.find((n) => n.id === b.n2);
+    if (n1 === undefined || n2 === undefined) return m;
+    return Math.max(m, Math.hypot(n2.x - n1.x, n2.y - n1.y, n2.z - n1.z));
+  }, 0);
+  const slsAllowanceMm = (maxBeamLength / slsDenominator) * 1000;
+  const slsPass = maxSlsDeflMm > 0 ? maxSlsDeflMm <= slsAllowanceMm : true;
 
   const upgradeOverloaded = () => {
     if (overloaded.length === 0 || ipeSeriesRef.current.length === 0) return;
@@ -191,22 +217,29 @@ function ResultsPage() {
     );
   };
 
-  // Deformed-shape inputs: characteristic SLS superposition (1.00G + 1.00Q)
-  // for displacements, ULS utilizations for the thermal vertex colors.
+  // Deformed-shape inputs: the SELECTED combination's exact multipliers
+  // superpose every elementary case (v1.6.0: no more hardcoded 1.35/1.50).
+  const selectedCombo = useMemo(() => {
+    const [kindPart, indexPart] = viewKey.split(":");
+    const index = Number(indexPart ?? 0);
+    const matches = combinations.filter((c) => c.kind === kindPart);
+    return matches[index] ?? sls ?? combinations[0];
+  }, [viewKey, combinations, sls]);
+  const isModeView = viewKey.startsWith("MODE");
+
   const deformed = useMemo(() => {
-    if (report === null) {
+    if (report === null || selectedCombo === undefined) {
       return null;
     }
-    const g = report.cases.find((c) => c.code === "G");
-    const q = report.cases.find((c) => c.code === "Q");
     const ndof = report.n_nodes * 6;
     const displacements = Array.from<number>({ length: ndof }).fill(0);
-    for (const c of [g, q]) {
+    for (const [code, factor] of selectedCombo.multipliers) {
+      const c = report.cases.find((k) => k.code === code);
       if (c === undefined) {
         continue;
       }
       for (let i = 0; i < ndof; i++) {
-        displacements[i] = (displacements[i] ?? 0) + (c.displacements[i] ?? 0);
+        displacements[i] = (displacements[i] ?? 0) + factor * (c.displacements[i] ?? 0);
       }
     }
     // v1.3.0: 3 calibrated thermal scales — EC3 utilization (0 → 1,00),
@@ -234,14 +267,13 @@ function ResultsPage() {
     );
     const deformScale = (0.05 * modelExtent) / maxDefl;
     return { displacements, colorRatios, deformScale };
-  }, [report, uls, project, scaleMode]);
-  const amplificationRef = useRef(amplification);
-  amplificationRef.current = amplification;
+  }, [report, uls, project, scaleMode, selectedCombo]);
+  const amplification = 1;
   const scaledDeformed = useMemo(() => {
     if (deformed === null) {
       return null;
     }
-    if (viewMode === "MODE" && modal !== null) {
+    if (isModeView && modal !== null) {
       const mode = modal.modes[eigenIndex] ?? modal.modes[0];
       if (mode !== undefined) {
         const ndof = project.structure.nodes.length * 6;
@@ -252,18 +284,13 @@ function ResultsPage() {
         const colorRatios = new Map<number, number>(
           project.structure.beams.map((b) => [b.id, 0.5]),
         );
-        return {
-          displacements,
-          colorRatios,
-          deformScale: deformed.deformScale * amplification,
-        };
+        return { displacements, colorRatios, deformScale: deformed.deformScale };
       }
     }
     return { ...deformed, deformScale: deformed.deformScale * amplification };
   }, [
     deformed,
-    amplification,
-    viewMode,
+    isModeView,
     modal,
     eigenIndex,
     harmonic,
@@ -271,29 +298,53 @@ function ResultsPage() {
     project.structure.nodes.length,
   ]);
 
+  const inspected =
+    uls !== undefined
+      ? (uls.beams.find((b) => b.beam_id === (selection?.beamId ?? -1)) ??
+        uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)))
+      : null;
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 p-3">
-      {/* Compact solve header (title + Calculer + inline fault). */}
+      {/* Zone 1 — compact solve header + KPI strip. */}
       <div className="flex shrink-0 items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold">
           <Trans>Résultats de calcul</Trans>
         </h2>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-[13px] text-white disabled:opacity-40"
-          disabled={busy}
-          onClick={run}
-        >
-          <IconPlay size={12} />
-          <Trans>Calculer</Trans>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* v1.6.0: SLS deflection limit selector (L/200 | L/250 | L/300). */}
+          <span
+            className="flex items-center gap-0.5 rounded border border-hairline bg-panel p-0.5"
+            data-testid="sls-limit-selector"
+          >
+            {SLS_LIMITS.map(([denominator, label]) => (
+              <button
+                key={denominator}
+                type="button"
+                data-testid={`sls-limit-${denominator}`}
+                className={`font-data rounded px-1.5 py-0.5 text-[10px] ${slsDenominator === denominator ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+                onClick={() => setSlsDenominator(denominator)}
+              >
+                {label}
+              </button>
+            ))}
+          </span>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-[13px] text-white disabled:opacity-40"
+            disabled={busy}
+            onClick={run}
+          >
+            <IconPlay size={12} />
+            <Trans>Calculer</Trans>
+          </button>
+        </div>
       </div>
       {fault !== null ? (
         <p className="shrink-0 rounded border border-fea-max/40 bg-fea-max/10 p-2 text-[12px] text-fea-max">
           {fault.kind}: {fault.message}
         </p>
       ) : null}
-      {/* 4-KPI strip (mockups tape_4) — p-2.5 cards, tabular digits. */}
       {report !== null ? (
         <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4" data-testid="kpi-strip">
           <KpiCard
@@ -312,6 +363,11 @@ function ResultsPage() {
             }
             value={maxSlsDeflMm}
             suffix="mm"
+            pass={slsPass}
+            passLabels={{
+              pass: `≤ ${slsAllowanceMm.toFixed(1).replace(".", ",")} mm (${SLS_LIMITS.find(([d]) => d === slsDenominator)?.[1]})`,
+              fail: `> ${slsAllowanceMm.toFixed(1).replace(".", ",")} mm`,
+            }}
             testId="kpi-deflection"
           />
           <KpiCard
@@ -344,154 +400,48 @@ function ResultsPage() {
           />
         </div>
       ) : null}
-      {/* Expandable 4-clause EC3 breakdown (Kz = 0,5 mitigation CTA). */}
-      {uls !== undefined && breakdownOpen ? (
-        <>
-          {(() => {
-            const inspected =
-              uls.beams.find((b) => b.beam_id === (selection?.beamId ?? -1)) ??
-              uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m));
-            return (
-              <div
-                className="shrink-0 rounded-panel border border-hairline bg-panel p-2.5"
-                data-testid="ec3-breakdown"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-[13px] font-semibold text-ink-secondary">
-                    Vérification EN 1993-1-1 — {uls.label} — P{inspected.beam_id} (
-                    {inspected.governing_check})
-                  </h3>
-                  <div className="font-data flex flex-wrap items-center gap-1 text-[11px]">
-                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                      Classe {inspected.class_index ?? "—"}
-                    </span>
-                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                      χy = {(inspected.chi_y ?? 1).toFixed(2)}
-                    </span>
-                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                      χz = {(inspected.chi_z ?? 1).toFixed(2)}
-                    </span>
-                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                      χLT = {inspected.chi_lt == null ? "1,00" : inspected.chi_lt.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                <dl className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2">
-                  {inspected.checks.map(([name, ratio]) => (
-                    <div key={name} className="flex items-center gap-2">
-                      <dt className="font-data w-24 shrink-0 text-[11px] text-ink-secondary">
-                        {name}
-                      </dt>
-                      <UtilizationProgress value={ratio} className="flex-1" />
-                      <dd className="font-data w-16 shrink-0 text-right text-[11px] text-ink-primary">
-                        {(ratio * 100).toFixed(1).replace(".", ",")} %
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                {inspected.utilization > 1 ? (
-                  <button
-                    type="button"
-                    className="mt-2 rounded border border-hairline px-2 py-1 text-[12px] text-accent hover:bg-accent-tint"
-                    data-testid="mitigate-lateral"
-                    onClick={() => {
-                      const target = inspected.beam_id;
-                      updateBeam(target, { k_buckling_z: 0.5 });
-                      toast("Maintien latéral mi-travée (kz = 0,5)", {
-                        description: "Recalcul automatique en cours…",
-                      });
-                    }}
-                  >
-                    Maintien latéral mi-travée (kz = 0,5)
-                  </button>
-                ) : null}
-              </div>
-            );
-          })()}
-          <div
-            className={`shrink-0 rounded border border-fail-border bg-fail-bg p-2 text-[12px] text-fail-text ${maxUls > 1 ? "" : "hidden"}`}
-            data-testid="governing-diagnostic"
+      {/* Zone 2 — viewport row: persistent stage slot + 340px EC3 rail. */}
+      <div className="flex min-h-0 flex-1 gap-2">
+        <section className="relative min-w-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
+          <div ref={slotRef} className="h-full w-full" data-testid="results-stage-slot" />
+          <StageContent
+            k="results"
+            options={{
+              colorRatios: scaledDeformed?.colorRatios,
+              displacements: scaledDeformed?.displacements,
+              deformScale: scaledDeformed?.deformScale,
+              wireframe: false,
+              selectedBeamId: null,
+            }}
           >
-            <Trans>
-              Vérification EC3 dépassée — élément déterminant : P
-              {uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id} (η =
-              {(maxUls * 100).toFixed(1).replace(".", ",")} %). Un renforcement en 1 clic est
-              proposé.
-            </Trans>
-          </div>
-        </>
-      ) : null}
-      {/* Center: full-bleed deformed viewport with the consolidated control
-          bar docked below the camera presets (top-right) and the thermal
-          legend bar bottom-center. */}
-      {report !== null && scaledDeformed !== null ? (
-        <section className="relative min-h-[260px] flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
-          <ViewportCanvas
-            testId="results-viewport"
-            nodes={project.structure.nodes}
-            beams={project.structure.beams}
-          >
-            <BeamMeshes
-              nodes={project.structure.nodes}
-              beams={project.structure.beams}
-              colorRatios={scaledDeformed.colorRatios}
-              displacements={scaledDeformed.displacements}
-              deformScale={scaledDeformed.deformScale}
-              wireframe={false}
-              selectedBeamId={null}
-              onPick={() => {}}
-              sectionDims={sectionDims}
-            />
-            <SupportMarkers nodes={project.structure.nodes} supports={project.structure.supports} />
-            <ForceVectors3D
-              nodes={project.structure.nodes}
-              beams={project.structure.beams}
-              loads={project.structure.loads}
-            />
-            <CuttingPlane
-              nodes={project.structure.nodes}
-              beams={project.structure.beams}
-              beamId={cutBeamId}
-              ratio={station}
-            />
-          </ViewportCanvas>
-          {/* Single consolidated control bar (combination / eigenmode 1..6,
-              harmonic play, thermal scale, amplification, mobile PDF). */}
+            {null}
+          </StageContent>
+          {/* Single consolidated control bar (combination / eigenmode,
+              thermal scale, mobile PDF). */}
           <div
-            className="absolute right-2 top-12 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-1.5 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
+            className="absolute right-2 top-12 z-30 flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-1.5 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
             data-testid="results-controls"
           >
-            <div
-              className="flex items-center gap-0.5 rounded border border-hairline p-0.5"
-              data-testid="view-selector"
+            <select
+              className="font-data h-7 rounded border border-hairline bg-panel px-1 text-[11px]"
+              data-testid="combination-selector"
+              value={viewKey}
+              onChange={(e) => setViewKey(e.currentTarget.value)}
             >
-              {(["ELU", "ELS"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  className={`rounded px-1.5 py-0.5 text-[11px] ${viewMode === mode ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
-                  onClick={() => setViewMode(mode)}
-                >
-                  {mode === "ELU" ? "ELU 1.35G + 1.50Q" : "ELS 1.00G + 1.00Q"}
-                </button>
+              {combinations.map((c, i) => (
+                <option key={`${c.kind}:${i}`} value={`${c.kind}:${i}`}>
+                  {c.label}
+                </option>
               ))}
               {modal !== null
                 ? modal.modes.slice(0, 6).map((m) => (
-                    <button
-                      key={m.mode_index}
-                      type="button"
-                      className={`rounded px-1.5 py-0.5 text-[11px] ${viewMode === "MODE" && eigenIndex === m.mode_index - 1 ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
-                      onClick={() => {
-                        setEigenIndex(m.mode_index - 1);
-                        setViewMode("MODE");
-                      }}
-                    >
-                      Mode {m.mode_index} ({m.frequency_hz.toFixed(2)} Hz)
-                    </button>
+                    <option key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
+                      {`Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`}
+                    </option>
                   ))
                 : null}
-            </div>
-            {viewMode === "MODE" ? (
+            </select>
+            {isModeView ? (
               <button
                 type="button"
                 className="relative rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary"
@@ -525,19 +475,6 @@ function ResultsPage() {
                 </button>
               ))}
             </div>
-            <label className="flex items-center gap-1.5 text-[11px] text-ink-secondary">
-              <Trans>Amplification</Trans>
-              <input
-                type="range"
-                min={1}
-                max={30}
-                step={1}
-                value={amplification}
-                className="w-24"
-                onChange={(e) => setAmplification(Number(e.currentTarget.value))}
-              />
-              <span className="font-data">×{amplification}</span>
-            </label>
             {/* v1.5.0 mobile: 1-tap hand-off to the A4/PDF note. */}
             <button
               type="button"
@@ -550,7 +487,7 @@ function ResultsPage() {
           </div>
           {/* Bottom-center horizontal thermal legend bar (η = 0 → 1.25). */}
           <div
-            className="absolute bottom-2 left-1/2 z-10 flex w-64 max-w-[70%] -translate-x-1/2 items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
+            className="absolute bottom-2 left-1/2 z-30 flex w-64 max-w-[70%] -translate-x-1/2 items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
             data-testid="fea-legend"
           >
             <span className="font-data text-[11px] text-ink-muted">η = 0</span>
@@ -568,9 +505,106 @@ function ResultsPage() {
             <span className="font-data text-[11px] text-ink-muted">η = 1.25</span>
           </div>
         </section>
-      ) : null}
-      {/* Bottom precision dock (h-[220px]): σvM cut + fiber stresses |
-          uPlot forces with ±M_Rd capacity lines. */}
+        {/* v1.6.0: right 340px EC3 diagnostic rail (zero-scroll cockpit). */}
+        {report !== null && inspected !== null ? (
+          <aside
+            className="hidden w-[340px] shrink-0 flex-col gap-2 overflow-y-auto rounded-panel border border-hairline bg-panel p-2.5 md:flex"
+            data-testid="ec3-rail"
+          >
+            <h3 className="text-[13px] font-semibold text-ink-secondary">
+              <Trans>
+                Diagnostic EN 1993-1-1 — P{inspected.beam_id} ({inspected.governing_check})
+              </Trans>
+            </h3>
+            <div className="font-data flex flex-wrap items-center gap-1 text-[11px]">
+              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                Classe {inspected.class_index ?? "—"}
+              </span>
+              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                χy = {(inspected.chi_y ?? 1).toFixed(2).replace(".", ",")}
+              </span>
+              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                χz = {(inspected.chi_z ?? 1).toFixed(2).replace(".", ",")}
+              </span>
+              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                χLT ={" "}
+                {inspected.chi_lt == null ? "1,00" : inspected.chi_lt.toFixed(2).replace(".", ",")}
+              </span>
+            </div>
+            <dl className="font-data grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-ink-secondary">
+              <dt>Npl,Rd</dt>
+              <dd className="text-right">
+                {(inspected.n_pl_rd / 1000).toFixed(1).replace(".", ",")} kN
+              </dd>
+              <dt>Vpl,Rd</dt>
+              <dd className="text-right">
+                {(inspected.v_pl_rd / 1000).toFixed(1).replace(".", ",")} kN
+              </dd>
+              <dt>Mcr</dt>
+              <dd className="text-right">
+                {inspected.m_cr == null
+                  ? "—"
+                  : `${(inspected.m_cr / 1000).toFixed(1).replace(".", ",")} kN·m`}
+              </dd>
+              <dt>λLT</dt>
+              <dd className="text-right">
+                {inspected.lambda_lt == null
+                  ? "—"
+                  : inspected.lambda_lt.toFixed(2).replace(".", ",")}
+              </dd>
+              <dt>Mb,Rd</dt>
+              <dd className="text-right">
+                {(inspected.m_rd / 1000).toFixed(1).replace(".", ",")} kN·m
+              </dd>
+              <dt>L</dt>
+              <dd className="text-right">{inspected.length.toFixed(2).replace(".", ",")} m</dd>
+            </dl>
+            <dl className="grid gap-x-4 gap-y-1">
+              {inspected.checks.map(([name, ratio]) => (
+                <div key={name} className="flex items-center gap-2">
+                  <dt className="font-data w-24 shrink-0 text-[11px] text-ink-secondary">{name}</dt>
+                  <UtilizationProgress value={ratio} className="flex-1" />
+                  <dd className="font-data w-16 shrink-0 text-right text-[11px] text-ink-primary">
+                    {(ratio * 100).toFixed(1).replace(".", ",")} %
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {/* v1.6.0: BOTH mitigation buttons. */}
+            {inspected.utilization > 1 ? (
+              <div className="mt-auto flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  className="rounded border border-hairline px-2 py-1 text-[12px] text-accent hover:bg-accent-tint"
+                  data-testid="mitigate-lateral"
+                  onClick={() => {
+                    const target = inspected.beam_id;
+                    updateBeam(target, { k_buckling_z: 0.5 });
+                    toast("Maintien latéral mi-travée (kz = 0,5)", {
+                      description: "Recalcul automatique en cours…",
+                    });
+                  }}
+                >
+                  <Trans>Maintien latéral mi-travée (kz = 0,5)</Trans>
+                </button>
+                <button
+                  type="button"
+                  className="rounded bg-accent px-2 py-1 text-[12px] text-white"
+                  data-testid="rail-upgrade"
+                  onClick={upgradeOverloaded}
+                >
+                  <Trans>Renforcer le profil (1 clic)</Trans>
+                </button>
+              </div>
+            ) : (
+              <p className="font-data mt-auto text-[11px] text-pass-text">
+                <Trans>Toutes les vérifications EC3 sont vérifiées (η ≤ 1,00).</Trans>
+              </p>
+            )}
+          </aside>
+        ) : null}
+      </div>
+      {/* Zone 3 — bottom precision dock (h-[220px]). */}
       {report !== null && project.structure.beams.length > 0 ? (
         <DockedInspector
           project={project}
@@ -586,7 +620,7 @@ function ResultsPage() {
       ) : null}
       {/* Phone drawer: nodal displacements + SI/UI conversion note. */}
       {isMobile ? (
-        <BottomSheet testId="inspector-sheet" title={<Trans>Déplacements nodaux (Q)</Trans>}>
+        <BottomSheet testId="inspector-sheet" title={<Trans>Déplacements nodaux</Trans>}>
           {report === null ? (
             <p className="text-[13px] text-ink-muted">
               <Trans>Lancer un calcul pour afficher les résultats.</Trans>
@@ -594,9 +628,8 @@ function ResultsPage() {
           ) : (
             <table className="w-full text-[13px]">
               <tbody className="font-data">
-                {report.cases
-                  .find((c) => c.code === "Q")
-                  ?.displacements.filter((_, i) => i % 6 === 2)
+                {(report.cases.find((c) => c.code === "G")?.displacements ?? [])
+                  .filter((_, i) => i % 6 === 2)
                   .slice(0, 12)
                   .map((d, i) => (
                     <tr key={i} className="border-t border-hairline">
@@ -629,6 +662,7 @@ function KpiCard({
   suffix = "",
   decimals = 2,
   pass,
+  passLabels,
   onCorrective,
   expandable,
   expanded,
@@ -640,6 +674,7 @@ function KpiCard({
   suffix?: string;
   decimals?: number;
   pass?: boolean;
+  passLabels?: { pass: string; fail: string };
   onCorrective?: () => void;
   expandable?: boolean;
   expanded?: boolean;
@@ -665,7 +700,7 @@ function KpiCard({
                 : "border-fail-border bg-fail-bg text-fail-text"
             }`}
           >
-            {pass ? "Conforme EC3" : "Dépassement EC3"}
+            {pass ? (passLabels?.pass ?? "Conforme EC3") : (passLabels?.fail ?? "Dépassement EC3")}
           </span>
         ) : null}
         {onCorrective !== undefined ? (
@@ -695,10 +730,11 @@ function KpiCard({
 }
 
 /**
- * Bottom precision dock (v1.5.0, h-[220px], grid-cols-[280px_1fr]): the 2D
+ * Bottom precision dock (v1.6.0, h-[220px], grid-cols-[280px_1fr]): the 2D
  * σvM cross-section heatmap with TOP / neutral-axis / BOTTOM fiber stress
- * readouts beside the uPlot internal-force diagrams (My, Vz, N) with the
- * dashed crimson ±M_Rd capacity lines and live cursor force readouts.
+ * readouts beside the uPlot internal-force diagrams (My, Mz, Vz, N, T —
+ * all 5 curves) with the dashed crimson ±M_Rd capacity lines, live cursor
+ * force readouts and a ResizeObserver keeping the plot glued to its pane.
  */
 function DockedInspector({
   project,
@@ -798,8 +834,10 @@ function DockedInspector({
     const lerp = (x: number, y: number) => x + (y - x) * t;
     return {
       my: lerp(a.my, b.my) / 1000,
+      mz: lerp(a.mz, b.mz) / 1000,
       vz: lerp(a.vz, b.vz) / 1000,
       n: lerp(a.n, b.n) / 1000,
+      t: lerp(a.t, b.t) / 1000,
     };
   }, [forces, station]);
 
@@ -810,8 +848,10 @@ function DockedInspector({
     const data: uPlot.AlignedData = [
       forces.map((f) => f.ratio),
       forces.map((f) => f.my / 1e3),
+      forces.map((f) => f.mz / 1e3),
       forces.map((f) => f.vz / 1e3),
       forces.map((f) => f.n / 1e3),
+      forces.map((f) => f.t / 1e3),
       ...(mRd !== null ? [forces.map(() => mRd / 1000), forces.map(() => -mRd / 1000)] : []),
     ] as unknown as uPlot.AlignedData;
     const opts: uPlot.Options = {
@@ -822,8 +862,10 @@ function DockedInspector({
       series: [
         {},
         { label: "My (kN·m)", stroke: "#1d4ed8", width: 1.5 },
+        { label: "Mz (kN·m)", stroke: "#06b6d4", width: 1.5 },
         { label: "Vz (kN)", stroke: "#dc2626", width: 1.5 },
         { label: "N (kN)", stroke: "#10b981", width: 1.5 },
+        { label: "T (kN·m)", stroke: "#f59e0b", width: 1.5 },
         ...(mRd !== null
           ? [
               { label: "+M_Rd", stroke: "#dc2626", width: 1.5, dash: [6, 4] },
@@ -834,11 +876,30 @@ function DockedInspector({
     };
     const plot = new uPlot(opts, data, plotRef.current);
     uplotRef.current = plot;
+    syncCursor();
     return () => {
       plot.destroy();
       uplotRef.current = null;
     };
-  }, [forces, mRd]);
+  }, [forces, mRd, syncCursor]);
+
+  // v1.6.0 bug 5: ResizeObserver keeps uPlot glued to its pane (the old
+  // fixed-width build overflowed / clipped on pane resizes).
+  useEffect(() => {
+    const el = plotRef.current;
+    if (el === null) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      const plot = uplotRef.current;
+      if (plot !== null) {
+        plot.setSize({ width: el.clientWidth, height: 150 });
+        syncCursor();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [syncCursor]);
 
   return (
     <section
@@ -847,7 +908,9 @@ function DockedInspector({
     >
       <div className="flex min-h-0 flex-col">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-medium text-ink-secondary">Coupe 2D σvM</h3>
+          <h3 className="text-xs font-medium text-ink-secondary">
+            <Trans>Coupe 2D σvM</Trans>
+          </h3>
           <select
             className="font-data h-7 rounded border border-hairline px-1 text-[11px]"
             value={beamId}
@@ -894,7 +957,9 @@ function DockedInspector({
       </div>
       <div className="flex min-h-0 flex-col">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-xs font-medium text-ink-secondary">Efforts internes</h3>
+          <h3 className="text-xs font-medium text-ink-secondary">
+            <Trans>Efforts internes (5 courbes)</Trans>
+          </h3>
           {/* Live cursor readouts at the scrubbed station. */}
           <div
             className="font-data flex gap-2 text-[10px] text-ink-secondary"
@@ -902,8 +967,9 @@ function DockedInspector({
           >
             {cursorForces !== null ? (
               <span>
-                My = {cursorForces.my.toFixed(1)} kN·m · Vz = {cursorForces.vz.toFixed(1)} kN · N ={" "}
-                {cursorForces.n.toFixed(1)} kN
+                My = {cursorForces.my.toFixed(1)} · Mz = {cursorForces.mz.toFixed(1)} kN·m · Vz ={" "}
+                {cursorForces.vz.toFixed(1)} kN · N = {cursorForces.n.toFixed(1)} kN · T ={" "}
+                {cursorForces.t.toFixed(1)} kN·m
               </span>
             ) : null}
           </div>

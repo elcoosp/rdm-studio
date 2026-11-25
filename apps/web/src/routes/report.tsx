@@ -2,13 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { encodeProject } from "@/lib/urlShare";
-import { useProjectStore } from "@/state/projectStore";
+import { useProjectStore, type ProjectData } from "@/state/projectStore";
 import QRCode from "qrcode";
 import { toast } from "sonner";
+import { t } from "@lingui/core/macro";
 import { feaClient, getLastModalReport, getLastReport } from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
 import { exportResultsCsv } from "@/export/csvExport";
 import { exportStandaloneHtml3d } from "@/export/standaloneHtml3d";
+import { captureViewportPng } from "@/state/stageStore";
+import { downloadText } from "@/export/csvExport";
 
 export const Route = createFileRoute("/report")({
   component: ReportPage,
@@ -30,12 +33,16 @@ function downloadBytes(filename: string, bytes: Uint8Array): void {
 }
 
 /**
- * Step 5 (DESIGN.md §4 + mockups tape_5, v1.5.0): centered A4 engineering
- * sheet (`max-w-[794px]`, p-8) with the logo header, 2-column metadata
- * grid, aligned monospace tables (tabular-nums, right-aligned numeric
- * columns, 1-click TSV copy) and the QR + SHA-256 fingerprint footer,
- * beside the sticky 320px export rail (PDF Takumi / CSV Excel / HTML 3D /
- * Imprimer).
+ * Step 5 (DESIGN.md §4 + mockups tape_5, v1.6.0): centered A4 engineering
+ * sheet (`max-w-[794px]`, p-8) with the logo header, the LIVE 3D snapshot
+ * of the persistent stage, 2-column metadata grid, aligned monospace
+ * tables (tabular-nums, right-aligned numeric columns, 1-click TSV copy)
+ * and the QR + SHA-256 fingerprint footer, beside the sticky 320px export
+ * rail (PDF Takumi / CSV Excel / HTML 3D / Exporter (.rdm) / Imprimer).
+ *
+ * v1.6.0: ELU support reactions are superposed from the ACTUAL EN 1990
+ * multipliers of the solved ULS combination (`("G", 1.35)`, `("Q", 1.5)`,
+ * plus W/S when present) across all cases — no more hardcoded 1.35/1.50.
  */
 function ReportPage() {
   const project = useProjectStore((s) => s.project);
@@ -51,6 +58,19 @@ function ReportPage() {
     void QRCode.toDataURL(shareUrl, { margin: 1, width: 176 }).then(setQrDataUrl);
   }, [shareUrl]);
 
+  /** v1.6.0: one-click canonical `.rdm` export (Step 5 + header menu). */
+  const exportRdm = () => {
+    const canonical = JSON.stringify(project, null, 2);
+    downloadText(
+      `${project.name.replace(/[^\w-]+/g, "_")}.rdm`,
+      canonical,
+      "application/json;charset=utf-8",
+    );
+    toast(t`Modèle .rdm exporté`, {
+      description: t`Fichier canonique réimportable à l'identique (round-trip Valibot).`,
+    });
+  };
+
   const exportPdf = async () => {
     setBusy("pdf");
     try {
@@ -59,7 +79,20 @@ function ReportPage() {
       const qrPng = qrDataUrl
         ? { src: "share-qr.png", data: await dataUrlToBytes(qrDataUrl) }
         : undefined;
-      const { html, images } = buildReportHtml(project, report, { shareUrl, fresh: true }, qrPng);
+      // v1.6.0: live 3D snapshot from the persistent stage (hidden on
+      // Step 5 but still rendering — captureViewportPng stays available).
+      const snapshot = captureViewportPng();
+      const stagePng =
+        snapshot !== null
+          ? { src: "stage-3d.png", data: await dataUrlToBytes(snapshot) }
+          : undefined;
+      const { html, images } = buildReportHtml(
+        project,
+        report,
+        { shareUrl, fresh: true },
+        qrPng,
+        stagePng,
+      );
       const pdf = await feaClient.renderReportPdf(html, images);
       downloadBytes(`${project.name.replace(/[^\w-]+/g, "_")}-rapport.pdf`, pdf);
     } finally {
@@ -81,6 +114,20 @@ function ReportPage() {
               {new Date().toISOString().slice(0, 10)}
             </span>
           </div>
+          {/* v1.6.0: live 3D snapshot of the persistent stage. */}
+          <figure
+            className="rounded-panel border border-hairline bg-panel-subtle p-2"
+            data-testid="report-3d-snapshot"
+          >
+            <img
+              src={captureViewportPng() ?? "/logo-rdm-studio.svg"}
+              alt={t`Vue 3D du modèle`}
+              className="max-h-[360px] w-full rounded object-contain"
+            />
+            <figcaption className="font-data mt-1 text-[10px] text-ink-muted">
+              <Trans>Capture temps réel de la vue 3D (étape 1–4)</Trans>
+            </figcaption>
+          </figure>
           {/* 2-column metadata grid. */}
           <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-[13px]">
             <dt className="text-ink-muted">
@@ -158,6 +205,16 @@ function ReportPage() {
               }
             >
               <Trans>HTML 3D</Trans>
+            </button>
+            {/* v1.6.0: canonical `.rdm` round-trip export. */}
+            <button
+              type="button"
+              data-testid="export-rdm"
+              disabled={busy !== null}
+              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
+              onClick={exportRdm}
+            >
+              <Trans>Exporter (.rdm)</Trans>
             </button>
             <button
               type="button"
@@ -285,23 +342,33 @@ function ReportTables() {
     fr(b.utilization),
     b.utilization > 1 ? "NON VERIFIÉ" : "vérifié",
   ]);
-  // v1.5.0 defect fix: support reactions are indexed by the node's 0-based
-  // ARRAY position (nodeIndex * 6), matching `Structure::dof_offset` in the
-  // Rust solver — the old `n.id * 6` was 1-based and reported wrong rows
-  // whenever node ids are not contiguous (DXF import, deletions).
-  const permanent = report?.cases.find((c) => c.code === "G");
-  const variable = report?.cases.find((c) => c.code === "Q");
+  // v1.6.0: ELU reactions superpose the ACTUAL ULS multipliers of every
+  // elementary case (G, Q, W, S) — the hardcoded 1.35/1.50 ignored the
+  // combination table and double-counted wind/snow leading variants.
   const reactionRows = project.structure.nodes
     .filter((n) => project.structure.supports.some((sp) => sp.node_id === n.id))
     .map((n) => {
       const nodeIndex = project.structure.nodes.findIndex((x) => x.id === n.id);
-      const g = permanent?.reactions ?? [];
-      const q = variable?.reactions ?? [];
+      const multipliers = uls?.multipliers ?? [
+        ["G", 1.35],
+        ["Q", 1.5],
+      ];
+      const byCode = new Map(
+        (report?.cases ?? []).map((c) => [c.code, c.reactions as number[] | undefined]),
+      );
+      let rx = 0;
+      let ry = 0;
+      let rz = 0;
       const i = nodeIndex * 6;
-      // ELU superposition 1.35G + 1.50Q per EN 1990 (6.10b additive form).
-      const rx = 1.35 * (g[i] ?? 0) + 1.5 * (q[i] ?? 0);
-      const ry = 1.35 * (g[i + 1] ?? 0) + 1.5 * (q[i + 1] ?? 0);
-      const rz = 1.35 * (g[i + 2] ?? 0) + 1.5 * (q[i + 2] ?? 0);
+      for (const [code, factor] of multipliers) {
+        const reactions = byCode.get(code);
+        if (reactions === undefined) {
+          continue;
+        }
+        rx += factor * (reactions[i] ?? 0);
+        ry += factor * (reactions[i + 1] ?? 0);
+        rz += factor * (reactions[i + 2] ?? 0);
+      }
       return [`N${n.id}`, fr(rx / 1000, 2), fr(ry / 1000, 2), fr(rz / 1000, 2)];
     });
   const totalRx = reactionRows.reduce((m, r) => m + Number((r[1] ?? "0").replace(",", ".")), 0);
@@ -330,7 +397,7 @@ function ReportTables() {
       {[
         { title: "Fréquences propres (Hz)", headers: ["Mode", "f (Hz)", "T (s)"], rows: modalRows },
         {
-          title: "Réactions d'appuis ELU (kN)",
+          title: `Réactions d'appuis ELU (kN)${uls !== undefined ? ` — ${uls.label}` : ""}`,
           headers: ["Appui", "Rx", "Ry", "Rz"],
           rows: [...reactionRows, ["Σ", fr(totalRx, 2), fr(totalRy, 2), fr(totalRz, 2)]],
         },
@@ -391,3 +458,6 @@ function ReportTables() {
     </div>
   );
 }
+
+/** Type guard helper so ProjectData stays explicit for the export. */
+export type { ProjectData };

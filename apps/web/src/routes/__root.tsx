@@ -13,6 +13,7 @@ import { UpdatePrompt } from "@/components/UpdatePrompt";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { useProjectStore } from "@/state/projectStore";
+import { PersistentStage } from "@/viewport3d/PersistentStage";
 import { KeycapHint } from "@/components/KeycapHints";
 
 const STEPS = [
@@ -78,7 +79,7 @@ function OfflinePill() {
   }, []);
   if (online) {
     return (
-      <span className="hidden font-data text-[11px] text-ink-muted md:inline">
+      <span className="hidden font-data text-[11px] text-ink-muted xl:inline">
         Enregistré en local
       </span>
     );
@@ -131,10 +132,13 @@ function RootLayout() {
             / {project.name}
           </span>
         </div>
-        {/* Center zone: the 5-step flow with the shared gliding underline. */}
+        {/* Center zone: the 5-step flow with the shared gliding underline.
+            v1.6.0 bug 1: NO overflow-x-auto — the step labels compact to
+            `N` + icon below xl so `FR | EN` stays 100% visible at 860 px
+            with zero horizontal scrolling. */}
         <nav
           id="rdm-steps"
-          className="mx-auto hidden min-w-0 items-center gap-1 overflow-x-auto md:flex"
+          className="mx-auto hidden min-w-0 items-center gap-0.5 md:flex"
           aria-label="workflow"
         >
           {STEPS.map((step, index) => {
@@ -144,10 +148,11 @@ function RootLayout() {
                 key={step.to}
                 to={step.to}
                 aria-label={`Étape ${index + 1}`}
-                className={`relative flex min-h-11 shrink-0 items-center gap-1.5 rounded px-2 py-1.5 text-[13px] text-ink-secondary hover:bg-canvas ${active ? "text-accent" : ""}`}
+                className={`relative flex min-h-11 shrink-0 items-center gap-1 rounded px-1.5 py-1.5 text-[13px] text-ink-secondary hover:bg-canvas ${active ? "text-accent" : ""}`}
               >
                 <step.icon size={14} />
-                <span className="hidden sm:inline">
+                <span className="font-data xl:hidden">{index + 1}</span>
+                <span className="hidden xl:inline">
                   <Trans>Étape {index + 1}</Trans>
                 </span>
                 {active ? (
@@ -212,6 +217,11 @@ function RootLayout() {
         <Outlet />
         <UpdatePrompt />
       </main>
+      {/* v1.6.0 requirement 1: the ONE persistent 3D stage. Mounted once at
+          the root, it overlays the active route's registered slot pane on
+          Steps 1–4 and never remounts — orbit/zoom/pan survive navigation,
+          and one BVH-indexed geometry serves rendering & picking. */}
+      <PersistentStage />
       {/* Thumb-friendly bottom tab bar, phones only (< 768 px). */}
       {isMobile ? (
         <nav

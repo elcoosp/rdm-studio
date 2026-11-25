@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import * as THREE from "three";
-import { useThree } from "@react-three/fiber";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trans } from "@lingui/react/macro";
+import { toast } from "sonner";
+import { t } from "@lingui/core/macro";
 import { IconPlus, IconTrash } from "@/components/icons";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
@@ -12,16 +12,20 @@ import { DataTable } from "@/components/ui/data-table";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
-import { ProfileIpe } from "@/components/icons/EngineeringIcons";
 import { useViewportStore } from "@/state/viewportStore";
+import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { quickStartProject } from "@/state/projectStore";
-import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
-import { BeamMeshes, buildBeamGeometry, nodePositions } from "@/viewport3d/BeamMeshes";
-import { SupportMarkers } from "@/viewport3d/SupportMarkers";
-import { NodeMarkers } from "@/viewport3d/NodeMarkers";
-import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
-import { useBeamBoundsTree, pickBeamAtRay } from "@/viewport3d/useBvhPicking";
+import {
+  ProfileAngle,
+  ProfileChs,
+  ProfileHea,
+  ProfileIpe,
+  ProfileRhs,
+  ProfileUpn,
+  ReleaseHinge,
+  TorqueMoment,
+} from "@/components/icons/EngineeringIcons";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { CadImportDialog } from "@/components/CadImportDialog";
 import {
@@ -31,33 +35,26 @@ import {
   ComboboxItem,
   ComboboxRoot,
 } from "@/components/ui/combobox";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/geometry")({
   component: GeometryPage,
 });
 
 /**
- * Step 1 (DESIGN.md §4 desktop + mockups tape_1): locked `md+` workstation
- * — 320px left inspector (`DesktopSplit`, inspector FIRST) beside a
- * full-height 3D viewport commanding 75%+ of the screen with a collapsible
- * bottom data dock (Nœuds/Poutres, Base UI NumberField inline editing).
- * Phone (< 768 px): the inspector becomes the Vaul drawer and the dock
- * lives inside it.
+ * Step 1 (DESIGN.md §4 desktop + mockups tape_1, v1.6.0): locked `md+`
+ * workstation — 320px left inspector beside a full-height 3D viewport
+ * (the PERSISTENT stage slot) with a collapsible bottom data dock. The
+ * 3D canvas lives in `__root.tsx` and never remounts across Steps 1–4.
  */
 function GeometryPage() {
   const project = useProjectStore((s) => s.project);
   const selection = useProjectStore((s) => s.selection);
-  const layers = useViewportStore((s) => s.layers);
   const renderMode = useViewportStore((s) => s.renderMode);
   const addNode = useProjectStore((s) => s.addNode);
   const addBeam = useProjectStore((s) => s.addBeam);
-  const selectBeam = useProjectStore((s) => s.selectBeam);
   const loadProject = useProjectStore((s) => s.loadProject);
   const updateBeam = useProjectStore((s) => s.updateBeam);
   const [sections, setSections] = useState<SectionSummary[]>([]);
-  const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
-  const [pickMs, setPickMs] = useState<number | undefined>(undefined);
   const [newSection, setNewSection] = useState("IPE 200");
   const [beamN1, setBeamN1] = useState<number | null>(null);
   const [beamN2, setBeamN2] = useState<number | null>(null);
@@ -70,23 +67,23 @@ function GeometryPage() {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [cadOpen, setCadOpen] = useState(false);
   const [cadBusy, setCadBusy] = useState(false);
-  // v1.3.0 Step 1: segmented tool modes with keyboard shortcuts.
-  // v1.4.0: tool mode lives in the viewport store, shared with hotkeys.
-  const toolMode = useViewportStore((s) => s.toolMode);
-  const setToolMode = useViewportStore((s) => s.setToolMode);
+  // v1.6.0: compact X/Y/Z placement fields beside the `+ Nœud` button.
+  const [nodeX, setNodeX] = useState<number | null>(null);
+  const [nodeY, setNodeY] = useState<number | null>(null);
+  const [nodeZ, setNodeZ] = useState<number | null>(null);
   const [hoverBeamId, setHoverBeamId] = useState<number | null>(null);
-  const [hoverNodeId, setHoverNodeId] = useState<number | null>(null);
   // v1.5.0: the data dock rides inside the drawer on phones.
   const isMobile = useMediaQuery("(max-width: 767px)");
+  // v1.6.0: the persistent stage slot pane.
+  const slotRef = useStageSlot("geometry");
+  const toolMode = useViewportStore((s) => s.toolMode);
+  const setToolMode = useViewportStore((s) => s.setToolMode);
 
   useEffect(() => {
     void feaClient.fetchCatalog().then((c) => {
       setSections(c.sections);
-      setSectionDims(new Map(c.sectionDims.map((d) => [d.designation, d])));
     });
   }, []);
-
-  // v1.4.0: V / N / B shortcuts live in the centralized useAppHotkeys layer.
 
   const navigate = useNavigate();
   const ipeSections = sections;
@@ -148,6 +145,15 @@ function GeometryPage() {
     return [maxX + 2.0, 0, 0];
   };
 
+  /** v1.6.0: X/Y/Z fields win when filled; otherwise walk +2 m. */
+  const placeNode = () => {
+    const fallback = nextDefaultPosition();
+    const x = nodeX ?? fallback[0];
+    const y = nodeY ?? fallback[1];
+    const z = nodeZ ?? fallback[2];
+    addNode(x, y, z);
+  };
+
   /** v1.5.0 profile legend: active sections + member counts. */
   const sectionCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -190,20 +196,33 @@ function GeometryPage() {
 
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
-      {/* Flat action row — nested card borders stay out of the inspector. */}
-      <div className="flex flex-wrap gap-2">
+      {/* Flat action row — nested card borders stay out of the inspector.
+          v1.6.0: 3 compact X/Y/Z NumberFields (mm → m) beside `+ Nœud`. */}
+      <div className="flex flex-wrap items-end gap-2" data-testid="node-placement">
         <button
           type="button"
           className="flex items-center gap-1 rounded bg-accent px-2.5 py-1.5 text-[13px] text-white"
           data-testid="add-node"
-          onClick={() => {
-            const [x, y, z] = nextDefaultPosition();
-            addNode(x, y, z);
-          }}
+          onClick={placeNode}
         >
           <IconPlus size={12} />
           <Trans>Nœud</Trans>
         </button>
+        {(
+          [
+            ["X", nodeX, setNodeX],
+            ["Y", nodeY, setNodeY],
+            ["Z", nodeZ, setNodeZ],
+          ] as const
+        ).map(([axis, value, setter]) => (
+          <NumberFieldRoot key={axis} value={value} step={0.05} onValueChange={(v) => setter(v)}>
+            <NumberFieldInput
+              className="font-data h-8 w-16 px-1 py-0 text-[12px]"
+              aria-label={`Placement ${axis} (m)`}
+              placeholder={axis}
+            />
+          </NumberFieldRoot>
+        ))}
         <button
           type="button"
           className="rounded border border-hairline px-2.5 py-1.5 text-[13px] text-ink-secondary"
@@ -251,8 +270,7 @@ function GeometryPage() {
             <ProfileIpe size={14} />
             <Trans>Profil (EN 10365)</Trans>
           </label>
-          {/* v1.4.0: searchable Base UI Combobox with cross-section icons —
-              applies immediately to the selected member. */}
+          {/* v1.6.0: family-accurate cross-section icons per designation. */}
           <ComboboxRoot
             items={ipeSections.map((s) => s.designation)}
             value={selectedBeam?.section_id ?? newSection}
@@ -264,11 +282,11 @@ function GeometryPage() {
               }
             }}
           >
-            <ComboboxInput className="h-8" />
+            <ComboboxInput id="section-search" className="h-8" />
             <ComboboxContent
               renderItem={(designation: string) => (
                 <ComboboxItem key={designation} value={designation}>
-                  <ProfileIpe size={14} />
+                  <ProfileFamilyIcon designation={designation} />
                   <span className="font-data flex-1">{designation}</span>
                 </ComboboxItem>
               )}
@@ -360,7 +378,7 @@ function GeometryPage() {
         error={cadError}
       />
 
-      {isMobile ? <DataDock onHoverNode={setHoverNodeId} onHoverBeam={setHoverBeamId} /> : null}
+      {isMobile ? <DataDock onHoverBeam={setHoverBeamId} /> : null}
 
       {/* v1.3.0 Step 2 hand-off. */}
       <button
@@ -377,7 +395,13 @@ function GeometryPage() {
 
   const main = (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
+      {/* v1.6.0: the persistent stage slot — the ONE canvas in __root.tsx
+          overlays this pane, so orbit/zoom survive every step switch. */}
+      <div
+        ref={slotRef}
+        className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"
+        data-testid="geometry-stage-slot"
+      >
         {project.structure.nodes.length === 0 ? (
           <div
             className="flex h-full flex-col items-center justify-center gap-2 bg-canvas text-center"
@@ -433,80 +457,43 @@ function GeometryPage() {
               </Trans>
             </p>
           </div>
-        ) : (
-          <>
-            <ViewportCanvas
-              pickLatency={pickMs}
-              nodes={project.structure.nodes}
-              beams={project.structure.beams}
-            >
-              {layers.beams ? (
-                <BeamMeshes
-                  nodes={project.structure.nodes}
-                  beams={project.structure.beams}
-                  wireframe={renderMode === "wireframe"}
-                  selectedBeamId={selection.beamId}
-                  onPick={(id) => selectBeam(id)}
-                  sectionDims={sectionDims}
-                  hoveredBeamId={hoverBeamId}
-                />
-              ) : null}
-              {layers.supports ? (
-                <SupportMarkers
-                  nodes={project.structure.nodes}
-                  supports={project.structure.supports}
-                />
-              ) : null}
-              {layers.loads ? (
-                <ForceVectors3D
-                  nodes={project.structure.nodes}
-                  beams={project.structure.beams}
-                  loads={project.structure.loads}
-                />
-              ) : null}
-              {layers.nodes ? (
-                <NodeMarkers
-                  positions={nodePositions(project.structure.nodes)}
-                  highlightNodeId={hoverNodeId}
-                />
-              ) : null}
-              <BvhPickLayer
-                nodes={project.structure.nodes}
-                beams={project.structure.beams}
-                onPick={(beamId, ms) => {
-                  setPickMs(ms);
-                  selectBeam(beamId);
-                }}
-              />
-            </ViewportCanvas>
-            {/* v1.5.0 HUD corners: LayerToolbar top-left and camera presets
-                top-right render inside ViewportCanvas; the profile legend
-                owns bottom-left and the hint bottom-center — GizmoHelper
-                keeps bottom-right (all four stay non-overlapping). */}
-            {sectionCounts.length > 0 ? (
-              <div
-                className="absolute bottom-2 left-2 z-10 flex max-w-[62%] flex-wrap gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
-                data-testid="profile-legend"
+        ) : null}
+        {/* v1.5.0 HUD corners: LayerToolbar (inside the persistent stage)
+            top-left and camera presets top-right; the profile legend owns
+            bottom-left and the hint bottom-center (z-30 > stage z-10). */}
+        {sectionCounts.length > 0 && project.structure.nodes.length > 0 ? (
+          <div
+            className="pointer-events-none absolute bottom-2 left-2 z-30 flex max-w-[62%] flex-wrap gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
+            data-testid="profile-legend"
+          >
+            {sectionCounts.map(([designation, count]) => (
+              <span
+                key={designation}
+                className="font-data rounded bg-panel-subtle px-1.5 py-0.5 text-[10px] text-ink-secondary"
               >
-                {sectionCounts.map(([designation, count]) => (
-                  <span
-                    key={designation}
-                    className="font-data rounded bg-panel-subtle px-1.5 py-0.5 text-[10px] text-ink-secondary"
-                  >
-                    {designation} × {count}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            <p
-              className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 font-data text-[10px] text-ink-muted md:block"
-              data-testid="viewport-hint"
-            >
-              Clic G Sélection · Clic D Orbite · Maj+Glisser Pan · Suppr Effacer
-            </p>
-          </>
-        )}
+                {designation} × {count}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        <p
+          className="pointer-events-none absolute bottom-2 left-1/2 z-30 hidden -translate-x-1/2 font-data text-[10px] text-ink-muted md:block"
+          data-testid="viewport-hint"
+        >
+          Clic G Sélection · Clic D Orbite · Maj+Glisser Pan · Suppr Effacer
+        </p>
       </div>
+      {/* Route render inputs for the shared stage geometry. */}
+      <StageContent
+        k="geometry"
+        options={{
+          wireframe: renderMode === "wireframe",
+          selectedBeamId: selection.beamId,
+          hoveredBeamId: hoverBeamId,
+        }}
+      >
+        {null}
+      </StageContent>
       {/* v1.3.0 Step 1: segmented 3D tool modes ([V]/[N]/[B]). */}
       <div
         className="flex shrink-0 items-center gap-1 rounded border border-hairline bg-panel p-0.5"
@@ -536,15 +523,41 @@ function GeometryPage() {
         ))}
         {toolMode === "node" ? (
           <span className="hidden px-2 text-[11px] text-ink-muted lg:inline">
-            le bouton + Nœud place au-delà du dernier point (magnétique)
+            <Trans>cliquez le plan de grille pour poser un nœud (accrochage magnétique)</Trans>
+          </span>
+        ) : null}
+        {toolMode === "beam" ? (
+          <span className="hidden px-2 text-[11px] text-ink-muted lg:inline">
+            <Trans>cliquez deux nœuds pour relier (N départ cyan)</Trans>
           </span>
         ) : null}
       </div>
-      {!isMobile ? <DataDock onHoverNode={setHoverNodeId} onHoverBeam={setHoverBeamId} /> : null}
+      {!isMobile ? <DataDock onHoverBeam={setHoverBeamId} /> : null}
     </section>
   );
 
   return <DesktopSplit inspector={inspector} main={main} />;
+}
+
+/** Family-accurate profile icon (EN 10365 / 10210 / 10056 designations). */
+export function ProfileFamilyIcon({ designation }: { designation: string }) {
+  const d = designation.toUpperCase();
+  if (d.startsWith("HE")) {
+    return <ProfileHea size={14} />;
+  }
+  if (d.startsWith("UP") || d.startsWith("UPE")) {
+    return <ProfileUpn size={14} />;
+  }
+  if (d.startsWith("CHS")) {
+    return <ProfileChs size={14} />;
+  }
+  if (d.startsWith("RHS") || d.startsWith("SHS")) {
+    return <ProfileRhs size={14} />;
+  }
+  if (d.startsWith("L ") || d.includes("ANGLE")) {
+    return <ProfileAngle size={14} />;
+  }
+  return <ProfileIpe size={14} />;
 }
 
 /**
@@ -557,7 +570,7 @@ function DataDock({
   onHoverNode,
   onHoverBeam,
 }: {
-  onHoverNode: (id: number | null) => void;
+  onHoverNode?: (id: number | null) => void;
   onHoverBeam: (id: number | null) => void;
 }) {
   const [tab, setTab] = useState<"nodes" | "beams">("nodes");
@@ -720,8 +733,16 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
   const selection = useProjectStore((s) => s.selection);
   const batchUpdateBeams = useProjectStore((s) => s.batchUpdateBeams);
   const [batchIds, setBatchIds] = useState<number[]>([]);
-  const columns = useMemo<ColumnDef<BeamData, unknown>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<BeamData, unknown>[]>(() => {
+    const lengthOf = (beam: BeamData): number => {
+      const n1 = storeNodes.find((n) => n.id === beam.n1);
+      const n2 = storeNodes.find((n) => n.id === beam.n2);
+      if (n1 === undefined || n2 === undefined) {
+        return 0;
+      }
+      return Math.hypot(n2.x - n1.x, n2.y - n1.y, n2.z - n1.z);
+    };
+    return [
       {
         accessorKey: "id",
         header: "ID",
@@ -733,6 +754,17 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
         accessorKey: "section_id",
         header: "Profil",
         cell: (ctx) => <span className="font-data">{ctx.row.original.section_id}</span>,
+      },
+      {
+        // v1.6.0: computed member length column (mono, French comma).
+        id: "length",
+        header: "L (m)",
+        meta: { numeric: true },
+        cell: (ctx: { row: { original: BeamData } }) => (
+          <span className="font-data">
+            {lengthOf(ctx.row.original).toFixed(2).replace(".", ",")}
+          </span>
+        ),
       },
       {
         id: "remove",
@@ -751,9 +783,8 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
           </button>
         ),
       },
-    ],
-    [removeBeam],
-  );
+    ];
+  }, [removeBeam, storeNodes]);
   return (
     <>
       <DataTable<BeamData>
@@ -807,7 +838,8 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
             const mass = totalLength * (unitMassKgM[designation] ?? 22.4);
             return (
               <p className="font-data text-[11px] text-ink-muted">
-                ΣL = {totalLength.toFixed(2)} m · Σm ≈ {mass.toFixed(1)} kg
+                ΣL = {totalLength.toFixed(2).replace(".", ",")} m · Σm ≈{" "}
+                {mass.toFixed(1).replace(".", ",")} kg
               </p>
             );
           })()}
@@ -844,10 +876,14 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
   );
 }
 
-/** Roll angle, end releases and buckling lengths of the selected member. */
+/** Roll angle, releases, treillis toggle, subdivision and buckling lengths. */
 function BeamPatchPanel({ beam }: { beam: BeamData }) {
   const updateBeam = useProjectStore((s) => s.updateBeam);
+  const subdivideBeam = useProjectStore((s) => s.subdivideBeam);
   const releaseLabels = ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz"];
+  const [segments, setSegments] = useState<number | null>(4);
+  const isTruss =
+    beam.releases_start.slice(1).every(Boolean) && beam.releases_end.slice(1).every(Boolean);
   return (
     <div>
       <p className="font-data text-[12px] text-ink-secondary">
@@ -888,6 +924,59 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
           ))}
         </div>
       </div>
+      {/* v1.6.0: 1-click `Beam::truss` articulation toggle (RDM practice). */}
+      <button
+        type="button"
+        data-testid="toggle-truss"
+        className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded border px-2 py-1.5 text-[12px] ${
+          isTruss
+            ? "border-accent bg-accent-tint text-accent"
+            : "border-hairline text-ink-secondary hover:border-accent hover:text-accent"
+        }`}
+        onClick={() => {
+          // Barre de treillis : libère Uy/Uz/Rx/Ry/Rz aux deux extrémités
+          // (seul l'effort normal reste), exactement `Beam::truss` en Rust.
+          const released = [false, true, true, true, true, true];
+          const rigid = [false, false, false, false, false, false];
+          const next = isTruss ? rigid : released;
+          updateBeam(beam.id, { releases_start: next, releases_end: next });
+        }}
+      >
+        <ReleaseHinge size={14} />
+        <Trans>Barre de treillis (articuler N1/N2)</Trans>
+      </button>
+      {/* v1.6.0: subdivide the member into N collinear tronçons. */}
+      <div
+        className="mt-2 flex items-center justify-between gap-2 border-t border-hairline pt-2"
+        data-testid="subdivide-panel"
+      >
+        <span className="flex items-center gap-1.5 text-[12px] text-ink-secondary">
+          <TorqueMoment size={14} />
+          <Trans>Subdiviser en N tronçons</Trans>
+        </span>
+        <NumberFieldRoot
+          value={segments}
+          step={1}
+          min={2}
+          max={24}
+          onValueChange={(v) => setSegments(v)}
+        >
+          <NumberFieldInput className="font-data h-8 w-14" aria-label="Nombre de tronçons" />
+        </NumberFieldRoot>
+        <button
+          type="button"
+          data-testid="subdivide-beam"
+          className="rounded border border-accent px-2 py-1 text-[12px] text-accent hover:bg-accent-tint disabled:opacity-40"
+          disabled={segments === null || segments < 2}
+          onClick={() => {
+            if (segments === null || segments < 2) return;
+            subdivideBeam(beam.id, segments);
+            toast(t`P${beam.id} subdivisée en ${segments} tronçons`, { duration: 3_000 });
+          }}
+        >
+          <Trans>Subdiviser</Trans>
+        </button>
+      </div>
       <p className="mt-2 text-[12px] text-ink-secondary">
         <Trans>Relâchements N1 / N2</Trans>
       </p>
@@ -920,7 +1009,11 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
   );
 }
 
-/** EN 10365 property row for the selected designation (worker catalog). */
+/**
+ * EN 10365 property row + scaled 2D cross-section SVG diagram (v1.6.0):
+ * `h, b, tw, tf` dimensions annotated in mm, drawn to scale from the
+ * catalog outline.
+ */
 function SectionCatalogRow({ designation }: { designation: string }) {
   const [props, setProps] = useState<{
     a: number;
@@ -942,6 +1035,17 @@ function SectionCatalogRow({ designation }: { designation: string }) {
       cancelled = true;
     };
   }, [designation]);
+  const [dims, setDims] = useState<SectionDims | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void feaClient.fetchCatalog().then((c) => {
+      const found = c.sectionDims.find((d) => d.designation === designation) ?? null;
+      if (!cancelled) setDims(found);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [designation]);
   if (props === null) {
     return null;
   }
@@ -949,75 +1053,130 @@ function SectionCatalogRow({ designation }: { designation: string }) {
   const cm4 = (v: number) => (v * 1e8).toFixed(1);
   const cm3 = (v: number) => (v * 1e6).toFixed(1);
   return (
-    <dl className="font-data mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-ink-secondary">
-      <dt>A</dt>
-      <dd className="text-right">{mm2(props.a)} mm²</dd>
-      <dt>Iy</dt>
-      <dd className="text-right">{cm4(props.iy)} cm⁴</dd>
-      <dt>Iz</dt>
-      <dd className="text-right">{cm4(props.iz)} cm⁴</dd>
-      <dt>It</dt>
-      <dd className="text-right">{cm4(props.it)} cm⁴</dd>
-      {props.iw !== null ? (
-        <>
-          <dt>Iw</dt>
-          <dd className="text-right">{(props.iw * 1e12).toFixed(2)} cm⁶</dd>
-        </>
-      ) : null}
-      <dt>Wel,y</dt>
-      <dd className="text-right">{cm3(props.wel_y)} cm³</dd>
-      {props.wpl_y !== null ? (
-        <>
-          <dt>Wpl,y</dt>
-          <dd className="text-right">{cm3(props.wpl_y)} cm³</dd>
-        </>
-      ) : null}
-      <dt>Masse</dt>
-      <dd className="text-right">{props.mass_per_m.toFixed(1)} kg/m</dd>
-    </dl>
+    <>
+      {dims?.h != null && dims.b != null ? <SectionDiagram dims={dims} /> : null}
+      <dl className="font-data mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-ink-secondary">
+        <dt>A</dt>
+        <dd className="text-right">{mm2(props.a)} mm²</dd>
+        <dt>Iy</dt>
+        <dd className="text-right">{cm4(props.iy)} cm⁴</dd>
+        <dt>Iz</dt>
+        <dd className="text-right">{cm4(props.iz)} cm⁴</dd>
+        <dt>It</dt>
+        <dd className="text-right">{cm4(props.it)} cm⁴</dd>
+        {props.iw !== null ? (
+          <>
+            <dt>Iw</dt>
+            <dd className="text-right">{(props.iw * 1e12).toFixed(2)} cm⁶</dd>
+          </>
+        ) : null}
+        <dt>Wel,y</dt>
+        <dd className="text-right">{cm3(props.wel_y)} cm³</dd>
+        {props.wpl_y !== null ? (
+          <>
+            <dt>Wpl,y</dt>
+            <dd className="text-right">{cm3(props.wpl_y)} cm³</dd>
+          </>
+        ) : null}
+        <dt>Masse</dt>
+        <dd className="text-right">{props.mass_per_m.toFixed(1).replace(".", ",")} kg/m</dd>
+      </dl>
+    </>
   );
 }
 
 /**
- * Canvas-level pointer picking through the accelerated BVH path; measures
- * and reports the wall-clock selection cost (M4: < 0.2 ms @ 10k elements).
+ * Scaled 2D cross-section diagram (v1.6.0): the true catalog outline
+ * (`DoubleSymmetricI`, `Channel`, hollow, angle) drawn in an SVG viewBox
+ * with `h / b / tw / tf` mm annotations, from `catalog_section_shapes`.
  */
-function BvhPickLayer({
-  nodes,
-  beams,
-  onPick,
-}: {
-  nodes: NodeData[];
-  beams: BeamData[];
-  onPick: (beamId: number | null, ms: number) => void;
-}) {
-  const geometry = useMemo(() => {
-    if (beams.length === 0) {
-      return null;
-    }
-    return buildBeamGeometry(nodes, beams);
-  }, [nodes, beams]);
-  useBeamBoundsTree(geometry);
-  const { camera, gl } = useThree();
-
-  useEffect(() => {
-    if (geometry === null) {
-      return;
-    }
-    const dom = gl.domElement;
-    const handler = (event: PointerEvent) => {
-      const rect = dom.getBoundingClientRect();
-      const ndc = {
-        x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
-      };
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
-      const result = pickBeamAtRay(raycaster, geometry);
-      onPick(result.beamId, result.lastSelectionMs);
-    };
-    dom.addEventListener("pointerdown", handler);
-    return () => dom.removeEventListener("pointerdown", handler);
-  }, [geometry, camera, gl, onPick]);
-  return null;
+export function SectionDiagram({ dims }: { dims: SectionDims }) {
+  const mm = (v: number | null): number => (v ?? 0) * 1000;
+  const h = mm(dims.h);
+  const b = mm(dims.b);
+  const tw = mm(dims.tw);
+  const tf = mm(dims.tf);
+  const isChs = dims.shape === "CircularHollow";
+  const maxDim = Math.max(h, b, 1);
+  const scale = 100 / maxDim;
+  const vbW = Math.max(b * scale, 60) + 44;
+  const vbH = h * scale + 44;
+  const cx = vbW / 2;
+  const cy = vbH / 2;
+  return (
+    <figure
+      className="mt-2 rounded border border-hairline bg-panel-subtle p-2"
+      data-testid="section-diagram"
+    >
+      <svg viewBox={`0 0 ${vbW} ${vbH}`} className="h-24 w-full" role="img" aria-label="Coupe 2D">
+        <g stroke="#1D4ED8" fill="#EFF6FF" strokeWidth="1">
+          {isChs ? (
+            <>
+              <circle cx={cx} cy={cy} r={(h / 2) * scale} />
+              <circle
+                cx={cx}
+                cy={cy}
+                r={Math.max((h / 2) * scale - tf * scale, 2)}
+                fill="#F8FAFC"
+              />
+            </>
+          ) : dims.shape === "RectangularHollow" ? (
+            <>
+              <rect
+                x={cx - (b * scale) / 2}
+                y={cy - (h * scale) / 2}
+                width={b * scale}
+                height={h * scale}
+              />
+              <rect
+                x={cx - (b * scale) / 2 + tw * scale}
+                y={cy - (h * scale) / 2 + tf * scale}
+                width={Math.max(b * scale - 2 * tw * scale, 2)}
+                height={Math.max(h * scale - 2 * tf * scale, 2)}
+                fill="#F8FAFC"
+              />
+            </>
+          ) : dims.shape === "Channel" ? (
+            <path
+              d={`M ${cx - (b * scale) / 2} ${cy - (h * scale) / 2}
+                  h ${b * scale} v ${tf * scale} h -${(b - tw) * scale} v ${(h - 2 * tf) * scale} h ${(b - tw) * scale} v ${tf * scale} h -${b * scale} Z`}
+            />
+          ) : (
+            /* Doubly-symmetric I */
+            <path
+              d={`M ${cx - (b * scale) / 2} ${cy - (h * scale) / 2}
+                  h ${b * scale} v ${tf * scale} h -${((b - tw) / 2) * scale} v ${(h - 2 * tf) * scale} h ${((b - tw) / 2) * scale} v ${tf * scale} h -${b * scale} Z`}
+            />
+          )}
+        </g>
+        {/* Metric annotations (mm, JetBrains Mono, tabular). */}
+        <g stroke="#475569" strokeWidth="0.75" fill="#475569" fontSize="8">
+          <line
+            x1={cx + (b * scale) / 2 + 4}
+            y1={cy - (h * scale) / 2}
+            x2={cx + (b * scale) / 2 + 4}
+            y2={cy + (h * scale) / 2}
+          />
+          <text x={cx + (b * scale) / 2 + 7} y={cy} dominantBaseline="middle">
+            h = {h.toFixed(0)}
+          </text>
+          <line
+            x1={cx - (b * scale) / 2}
+            y1={cy + (h * scale) / 2 + 4}
+            x2={cx + (b * scale) / 2}
+            y2={cy + (h * scale) / 2 + 4}
+          />
+          <text x={cx} y={cy + (h * scale) / 2 + 12} textAnchor="middle">
+            b = {b.toFixed(0)}
+          </text>
+          <text x={cx} y={cy - (h * scale) / 2 - 4} textAnchor="middle" fontSize="7">
+            tf = {tf.toFixed(1)} · tw = {tw.toFixed(1)}
+          </text>
+        </g>
+      </svg>
+      <figcaption className="font-data text-[10px] text-ink-muted">
+        <Trans>Coupe EN — dimensions en mm</Trans>
+      </figcaption>
+    </figure>
+  );
 }

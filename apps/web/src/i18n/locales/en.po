@@ -80,9 +80,21 @@ msgstr "Step {0}"
 msgid "Exploitation EC3"
 msgstr "EC3 utilization"
 
+#: src/routes/report.tsx
+msgid "Exports (etape 5)"
+msgstr "Exports (step 5)"
+
+#: src/components/BottomSheet.tsx
+msgid "Fermer"
+msgstr "Close"
+
 #: src/routes/loads.tsx
 msgid "Fz (kN, négatif vers le bas)"
 msgstr "Fz (kN, negative downward)"
+
+#: src/routes/report.tsx
+msgid "Generation…"
+msgstr "Rendering…"
 
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
@@ -154,12 +166,24 @@ msgid "Profils utilises"
 msgstr "Profiles used"
 
 #: src/routes/report.tsx
+msgid "Rapport 3D autonome (HTML)"
+msgstr "Standalone 3D report (HTML)"
+
+#: src/routes/report.tsx
 msgid "Rapport de model"
 msgstr "Model report"
+
+#: src/routes/report.tsx
+msgid "Rapport PDF (takumi)"
+msgstr "PDF report (takumi)"
 
 #: src/components/UpdatePrompt.tsx
 msgid "Recharger"
 msgstr "Reload"
+
+#: src/routes/report.tsx
+msgid "Resultats CSV (Excel)"
+msgstr "Results CSV (Excel)"
 
 #: src/routes/results.tsx
 msgid "Resultats de calcul"
@@ -176,3 +200,7 @@ msgstr "Case factors give the order of magnitude: SI to display conversions live
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
 msgstr "A new version is available."
+
+#: src/viewport3d/ViewportCanvas.tsx
+msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
+msgstr "3D view unavailable (WebGL) — editing and solving remain active."

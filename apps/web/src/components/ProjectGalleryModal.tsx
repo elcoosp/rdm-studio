@@ -166,7 +166,16 @@ const TEMPLATES = [
   { kind: "continue", label: "Poutre continue" },
 ];
 
-export function ProjectGalleryModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ProjectGalleryModal({
+  open,
+  onClose,
+  onImportFile,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** v1.4.0: direct import surface (.rdm model or CAD wireframe). */
+  onImportFile?: (file: File) => void;
+}) {
   const loadProject = useProjectStore((s) => s.loadProject);
   const [entries, setEntries] = useState<GalleryEntry[]>([]);
   useEffect(() => {
@@ -187,22 +196,81 @@ export function ProjectGalleryModal({ open, onClose }: { open: boolean; onClose:
           <h2 className="text-[15px] font-semibold">Projets</h2>
         </div>
         <div className="p-3">
-          <h3 className="text-[12px] text-ink-secondary">Modèles types</h3>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.kind}
-                type="button"
-                className="rounded border border-hairline p-2 text-left text-[12px] hover:border-accent hover:bg-accent-tint"
-                onClick={() => {
-                  loadProject(buildTemplate(t.kind));
-                  onClose();
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between">
+            <h3 className="text-[12px] text-ink-secondary">Modèles types</h3>
+            {/* v1.4.0: fresh 0-node project. */}
+            <button
+              type="button"
+              className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-accent hover:text-accent"
+              data-testid="new-blank-project"
+              onClick={() => {
+                loadProject({
+                  version: 1,
+                  name: "Nouveau projet",
+                  structure: {
+                    nodes: [],
+                    beams: [],
+                    supports: [],
+                    loads: [],
+                    sections: {},
+                    materials: {},
+                    self_weight_enabled: false,
+                  },
+                });
+                onClose();
+              }}
+            >
+              + Nouveau projet vierge
+            </button>
           </div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {TEMPLATES.map((t) => {
+              // v1.4.0: rich metadata cards (node/beam counts, span, tags).
+              const preview = buildTemplate(t.kind);
+              const nodeCount = preview.structure.nodes.length;
+              const beamCount = preview.structure.beams.length;
+              const xs = preview.structure.nodes.map((n) => n.x);
+              const zs = preview.structure.nodes.map((n) => n.z);
+              const span = xs.length > 0 ? Math.max(...xs) - Math.min(...xs) : 0;
+              const height = zs.length > 0 ? Math.max(...zs) - Math.min(...zs) : 0;
+              return (
+                <button
+                  key={t.kind}
+                  type="button"
+                  className="rounded border border-hairline p-2 text-left text-[12px] hover:border-accent hover:bg-accent-tint"
+                  data-testid={`gallery-${t.kind}`}
+                  onClick={() => {
+                    loadProject(preview);
+                    onClose();
+                  }}
+                >
+                  <span className="font-medium text-ink-primary">{t.label}</span>
+                  <span className="font-data mt-1 block text-[11px] text-ink-muted">
+                    {nodeCount} nœuds · {beamCount} poutres · portée {span.toFixed(0)} m
+                    {height > 0 ? ` · h ${height.toFixed(1)} m` : ""}
+                  </span>
+                  <span className="mt-1 block text-[11px] text-accent">EN 1993 · S235JR</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* v1.4.0: direct file import (.rdm / CAD). */}
+          <label className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded border border-hairline px-2 py-1 text-[11px] text-ink-secondary hover:border-accent hover:text-accent">
+            Importer (.rdm, .dxf, .step, .igs)
+            <input
+              type="file"
+              accept=".rdm,.dxf,.step,.stp,.igs,.iges"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.currentTarget.files?.[0];
+                if (file !== undefined) {
+                  onImportFile?.(file);
+                  onClose();
+                }
+                e.currentTarget.value = "";
+              }}
+            />
+          </label>
           <h3 className="mt-4 text-[12px] text-ink-secondary">Enregistrés en local</h3>
           {entries.length === 0 ? (
             <p className="mt-1 text-[12px] text-ink-muted">Aucun projet enregistré.</p>

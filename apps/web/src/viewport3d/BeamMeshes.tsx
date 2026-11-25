@@ -337,7 +337,7 @@ export function BeamMeshes({
         deformScale,
         profiles: sectionDims === undefined ? undefined : beamProfileLookup(beams, sectionDims),
       }),
-    [nodes, beams, colorRatios, displacements, deformScale, sectionDims],
+    [nodes, beams, colorRatios, displacements, deformScale],
   );
   const selectedGeometry = useMemo(() => {
     if (selectedBeamId === null) {
@@ -347,10 +347,7 @@ export function BeamMeshes({
     if (beam === undefined) {
       return null;
     }
-    const dims = sectionDims?.get(beam.section_id);
-    const profiles =
-      dims === undefined ? undefined : new Map<number, ProfileDims>([[beam.id, dims]]);
-    return buildBeamGeometry(nodes, [beam], { displacements, deformScale, profiles });
+    return buildBeamGeometry(nodes, [beam], { displacements, deformScale, width: 0.12 });
   }, [nodes, beams, selectedBeamId, displacements, deformScale]);
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {

@@ -25,4 +25,12 @@ apps/web/src/i18n/locales/*.compiled.*
 # Session-local handoff artifacts (never committed)
 ship.toml
 .github/pr-body.md
-docs/launch
+
+# session tooling (impeccable skill install, playwright artifacts, crash dumps)
+.agents/
+skills-lock.json
+apps/web/.agents/
+apps/web/skills-lock.json
+test-results/
+playwright-report/
+core

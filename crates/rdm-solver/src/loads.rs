@@ -211,7 +211,6 @@ pub fn beam_case_load_local(
             continue;
         }
         match load.kind {
-            LoadKind::Nodal { .. } => {}
             LoadKind::PointOnSpan {
                 beam_id,
                 position_ratio,
@@ -220,7 +219,6 @@ pub fn beam_case_load_local(
                 let local = global_to_local_forces(&data.rotation, &forces);
                 f_local += point_local_vector(&local, position_ratio, data.frame.length);
             }
-            LoadKind::PointOnSpan { .. } => {}
             LoadKind::Trapezoid {
                 beam_id,
                 q_start,
@@ -235,7 +233,7 @@ pub fn beam_case_load_local(
                     l,
                 );
             }
-            LoadKind::Trapezoid { .. } => {}
+            _ => {}
         }
     }
 
@@ -278,8 +276,7 @@ pub fn scatter_element_load(data: &BeamElementData, element: &Element, rhs: &mut
         f_full_local[(element.retained_local_dof[slot], 0)] = element.f_retained[(slot, 0)];
     }
     let f_global = data.rotation.transpose() * f_full_local;
-    for slot in 0..element.n_retained {
-        let local_dof = element.retained_local_dof[slot];
+    for &local_dof in &element.retained_local_dof[..element.n_retained] {
         let global = data.local_to_global[local_dof];
         rhs[global] += f_global[(local_dof, 0)];
     }

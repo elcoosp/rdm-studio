@@ -159,6 +159,19 @@ pub enum LoadKind {
         /// Global direction of the load intensity vector.
         direction: Direction,
     },
+    /// Global acceleration field as dimensionless multiples of
+    /// `STANDARD_GRAVITY` (v1.3.0). The solver integrates the exact
+    /// inertial body force `q = ρ·A·g·(ax, ay, az)` (N/m) on every
+    /// member, so quick scenarios (Poids propre 1g −Z, Transport
+    /// 0,8g X / 1,5g −Z) solve analytically in Rust.
+    AccelerationField {
+        /// Acceleration along the global X axis (× g).
+        ax_g: f64,
+        /// Acceleration along the global Y axis (× g).
+        ay_g: f64,
+        /// Acceleration along the global Z axis (× g).
+        az_g: f64,
+    },
 }
 
 /// Load definition errors.

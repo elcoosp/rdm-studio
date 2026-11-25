@@ -28,6 +28,7 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
    - **Vite 8 plugin order (`apps/web/vite.config.ts`):** `TanStackRouterVite` MUST precede `@vitejs/plugin-react-swc` (with `@lingui/swc-plugin`). Keep `workbox.maximumFileSizeToCacheInBytes: 15 * 1024 * 1024` for `.wasm` caching and `optimizeDeps.exclude: ["rdm-wasm", "occt-import-js", "@takumi-rs/wasm"]`.
    - **Valibot v1 API:** Use `v.parse(SearchParamsSchema, search)` (never `Schema.parse(...)`).
    - **i18n (`fr` default, `en` secondary):** Keep `compileNamespace: "es"` in `lingui.config.ts` (prevents `module.exports` crash in Vite 8 ESM) and wrap all user-facing strings in Lingui macros (`t`, `<Trans>`). Never use ALL-CAPS eyebrow kickers in UI copy (`DESIGN.md` §1).
+   - **`shadcn/ui` Component Primitives:** Use `shadcn/ui` (`apps/web/src/components/ui/*` + `components.json` for Tailwind v4) for all interactive UI controls (`Select`, `Dialog`, `Command`, `Tabs`, `Switch`, `Slider`, `Tooltip`, `Sheet`, `Table`), themed strictly with `DESIGN.md` tokens (`#1D4ED8` Cobalt, `4px` radius, `1px #E2E8F0` borders).
    - **32 Custom Engineering Icons:** Port the exact `<svg viewBox="0 0 24 24">` paths from `mockups/icons-sheet.html` into `apps/web/src/components/icons/EngineeringIcons.tsx` (`strokeWidth="1.5"`, `#0F172A` + `#1D4ED8`).
 
 ---

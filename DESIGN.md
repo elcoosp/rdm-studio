@@ -112,7 +112,9 @@ sheet-top: 16px
 
 ---
 
-## 6. Core Components & Eurocode 3 Indicators
+## 6. Core Components (`shadcn/ui`) & Eurocode 3 Indicators
+
+All interactive UI primitives (`Button`, `Select`, `Dialog`, `Command`, `Tabs`, `Switch`, `Slider`, `Tooltip`, `Sheet`, `Table`) are built on **`shadcn/ui`** (`apps/web/src/components/ui/`) themed strictly with the Swiss Metrology daylight tokens (`#1D4ED8` Cobalt accent, `4px` control radius, `1px #E2E8F0` hairlines, zero dark-mode defaults).
 
 - **Primary CTA Button:** `#1D4ED8` background, `#FFFFFF` text, `4px` radius, `32px` desktop / `44px` mobile height, `Inter` `13px` weight `600`, `2px #93C5FD` focus ring.
 - **Horizontal Property Row:** Left label (`Inter` `12px`, `#475569`), right value/control (`JetBrains Mono` `12px`, `#0F172A`) + unit suffix (`#94A3B8`), separated by `1px solid #F1F5F9`.

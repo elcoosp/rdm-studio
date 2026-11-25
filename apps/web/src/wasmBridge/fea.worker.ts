@@ -1,4 +1,14 @@
-import init, { catalog_materials, catalog_sections, solve } from "../wasm-pkg/rdm_wasm.js";
+import init, {
+  beam_span_forces,
+  catalog_materials,
+  catalog_section_properties,
+  catalog_section_shapes,
+  catalog_sections,
+  import_dxf,
+  modal_analysis,
+  section_stress_grid,
+  solve,
+} from "../wasm-pkg/rdm_wasm.js";
 
 /**
  * fea.worker.ts (ARCHITECTURE.md section 4): every matrix computation runs
@@ -14,13 +24,53 @@ export interface CatalogRequest {
   type: "FETCH_CATALOG";
 }
 
+export interface ModalRequest {
+  type: "MODAL_ANALYSIS";
+  project: unknown;
+  nModes: number;
+}
+
+export interface SectionStressRequest {
+  type: "SECTION_STRESS";
+  project: unknown;
+  beamId: number;
+  ratio: number;
+  gridN: number;
+}
+
+export interface SpanForcesRequest {
+  type: "SPAN_FORCES";
+  project: unknown;
+  beamId: number;
+  nRatios: number;
+}
+
+export interface CatalogPropertiesRequest {
+  type: "CATALOG_PROPERTIES";
+  designation: string;
+}
+
+export interface ImportDxfRequest {
+  type: "IMPORT_DXF";
+  bytes: ArrayBuffer;
+  name: string;
+}
+
 export interface RenderPdfRequest {
   type: "RENDER_PDF";
   html: string;
   images?: { src: string; data: Uint8Array }[];
 }
 
-export type WorkerRequest = SolveRequest | CatalogRequest | RenderPdfRequest;
+export type WorkerRequest =
+  | SolveRequest
+  | CatalogRequest
+  | RenderPdfRequest
+  | ModalRequest
+  | SectionStressRequest
+  | ImportDxfRequest
+  | CatalogPropertiesRequest
+  | SpanForcesRequest;
 
 /**
  * takumi-pdf state (ARCHITECTURE.md section 6: PDF generation runs in the
@@ -67,7 +117,65 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   if (request.type === "FETCH_CATALOG") {
     const sections = catalog_sections();
     const materials = catalog_materials();
-    self.postMessage({ type: "CATALOG", sections, materials });
+    // v1.0.0 bug 2: true SI outline dims for the 3D extrusion.
+    const sectionDims = catalog_section_shapes();
+    self.postMessage({ type: "CATALOG", sections, materials, sectionDims });
+    return;
+  }
+  if (request.type === "MODAL_ANALYSIS") {
+    const report = modal_analysis(JSON.stringify(request.project), request.nModes);
+    if ((report as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "MODAL_FAULT", fault: report });
+      return;
+    }
+    self.postMessage({ type: "MODAL_RESULT", report });
+    return;
+  }
+  if (request.type === "SECTION_STRESS") {
+    const grid = section_stress_grid(
+      JSON.stringify(request.project),
+      request.beamId,
+      "ULS",
+      request.ratio,
+      request.gridN,
+    );
+    if ((grid as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "STRESS_FAULT", fault: grid });
+      return;
+    }
+    self.postMessage({ type: "STRESS_RESULT", grid });
+    return;
+  }
+  if (request.type === "SPAN_FORCES") {
+    const forces = beam_span_forces(
+      JSON.stringify(request.project),
+      request.beamId,
+      "ULS",
+      request.nRatios,
+    );
+    if ((forces as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "SPAN_FORCES_FAULT", fault: forces });
+      return;
+    }
+    self.postMessage({ type: "SPAN_FORCES_RESULT", forces });
+    return;
+  }
+  if (request.type === "CATALOG_PROPERTIES") {
+    const props = catalog_section_properties(request.designation);
+    if ((props as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "CATALOG_PROPS_FAULT", fault: props });
+      return;
+    }
+    self.postMessage({ type: "CATALOG_PROPS_RESULT", props });
+    return;
+  }
+  if (request.type === "IMPORT_DXF") {
+    const json = import_dxf(new Uint8Array(request.bytes), request.name);
+    if ((json as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "DXF_FAULT", fault: json });
+      return;
+    }
+    self.postMessage({ type: "DXF_RESULT", json });
     return;
   }
   if (request.type === "RENDER_PDF") {

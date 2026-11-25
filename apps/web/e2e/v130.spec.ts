@@ -71,8 +71,9 @@ test("step 2 exposes the grouped RDM 7 library and clear-all", async ({ page }) 
   await expect(page.getByTestId("kinematic-status")).toContainText("Isostatique");
   await page.getByTestId("clear-supports").click();
   await expect(page.getByTestId("kinematic-status")).toContainText("Hypostatique");
-  // Undo restores the isostatic state.
-  await page.getByRole("button", { name: "Annuler" }).click();
+  // Undo inside the toast restores the isostatic state (scoped like the
+  // step-3 suite: the header undo button shares the "Annuler" substring).
+  await page.locator("[data-sonner-toast]").getByRole("button", { name: "Annuler" }).click();
   await expect(page.getByTestId("kinematic-status")).toContainText("Isostatique");
 });
 
@@ -90,10 +91,7 @@ test("step 3 quick scenarios write acceleration fields and clear undoably", asyn
   await page.getByTestId("clear-loads").click();
   await expect(page.locator("table tbody")).not.toContainText("×g");
   // Undo inside the toast (scoped: the header undo button shares no label).
-  await page
-    .locator("[data-sonner-toast]")
-    .getByRole("button", { name: "Annuler" })
-    .click();
+  await page.locator("[data-sonner-toast]").getByRole("button", { name: "Annuler" }).click();
   await expect(page.locator("table tbody")).toContainText("×g");
 });
 

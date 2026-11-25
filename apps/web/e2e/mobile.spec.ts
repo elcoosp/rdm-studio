@@ -68,11 +68,15 @@ test.describe("iPhone 13 viewport", () => {
 test.describe("iPad Mini viewport", () => {
   test.use({ viewport: { width: 768, height: 1024 }, hasTouch: true, isMobile: true });
 
-  test("bottom sheet opens, drag closes, stepper navigates", async ({ page, browserName }) => {
+  // v1.5.0: 768 px is now the desktop threshold — the tablet renders the
+  // LOCKED side-by-side workstation (docked 320px left inspector) with
+  // zero drawer chrome, never the phone bottom sheet.
+  test("renders the docked left inspector with no drawer chrome", async ({ page }) => {
     await page.goto("/geometry");
     await expect(page.getByTestId("inspector-sheet")).toBeVisible();
-    await closeSheet(page, browserName);
+    await expect(page.getByTestId("sheet-drag-handle")).toHaveCount(0);
+    await expect(page.getByTestId("viewport-canvas")).toBeVisible();
     await page.getByRole("link", { name: "Étape 5" }).click();
-    await expect(page.getByRole("heading", { name: "Partage par URL" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Rapport de calcul/ })).toBeVisible();
   });
 });

@@ -8,22 +8,32 @@ import { expect, test } from "@playwright/test";
 
 test("combobox searches and applies profiles to the selected beam", async ({ page }) => {
   await page.goto("/geometry");
-  // Select the first member (beam table), then search the catalog.
-  await page.locator("table").nth(1).locator("tbody tr").first().click();
-  const input = page.locator('[data-testid="inspector-sheet"] input[type="text"], [data-testid="inspector-sheet"] input').first();
+  // v1.5.0 data dock: open the Poutres tab, then select the first member.
+  await page.getByTestId("dock-tab-beams").click();
+  await page.locator("table").last().locator("tbody tr").first().click();
+  const input = page
+    .locator(
+      '[data-testid="inspector-sheet"] input[type="text"], [data-testid="inspector-sheet"] input',
+    )
+    .first();
   await input.click();
   await input.fill("IPE 300");
   const option = page.getByRole("option", { name: /IPE 300/ }).first();
   await expect(option).toBeVisible();
   await option.click();
   // The beam table (second table) reflects the immediate application.
-  await expect(page.locator("table").nth(1)).toContainText("IPE 300");
+  await expect(page.locator("table").last()).toContainText("IPE 300");
 });
 
-test("gallery offers a blank project and quick pills load templates in 1 click", async ({ page }) => {
+test("gallery offers a blank project and quick pills load templates in 1 click", async ({
+  page,
+}) => {
   await page.goto("/geometry");
   // Gallery: blank project resets to the 0-node empty state.
-  await page.getByRole("button", { name: /Galerie de projets|▾/ }).first().click();
+  await page
+    .getByRole("button", { name: /Galerie de projets|▾/ })
+    .first()
+    .click();
   await page.getByTestId("new-blank-project").click();
   await expect(page.getByTestId("empty-state")).toBeVisible();
   // Quick-start pills load a full template without further dialogs.

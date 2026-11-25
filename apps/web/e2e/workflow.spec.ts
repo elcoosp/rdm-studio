@@ -26,5 +26,5 @@ test("5-step workflow runs a real FE calculation", async ({ page }) => {
   // Step 5: the report shows the model summary and a share URL.
   await page.getByRole("link", { name: /Étape 5/ }).click();
   await expect(page).toHaveURL(/\/report/);
-  await expect(page.getByText("Poutre démo")).toBeVisible();
+  await expect(page.getByText("Poutre démo", { exact: true })).toBeVisible();
 });

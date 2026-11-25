@@ -11,7 +11,7 @@ export default defineConfig({
     // worker only exists in the built artifact.
     command: "pnpm exec vite build && pnpm exec vite preview --port 5173 --strictPort",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 60_000,
   },
   // M8 (section 18): e2e green on Chromium + Firefox (+ Safari/WebKit).

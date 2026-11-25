@@ -34,3 +34,4 @@ apps/web/skills-lock.json
 test-results/
 playwright-report/
 core
+docs/launch

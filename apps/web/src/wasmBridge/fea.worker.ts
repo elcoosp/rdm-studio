@@ -4,6 +4,8 @@ import init, {
   catalog_section_properties,
   catalog_section_shapes,
   catalog_sections,
+  import_cad,
+  project_fingerprint,
   import_dxf,
   modal_analysis,
   section_stress_grid,
@@ -56,6 +58,20 @@ export interface ImportDxfRequest {
   name: string;
 }
 
+/** v1.4.0: canonical SHA-256 fingerprint request. */
+export interface FingerprintRequest {
+  type: "FINGERPRINT";
+  projectJson: string;
+}
+
+/** v1.3.0: extension-dispatched DXF/STEP/IGES import. */
+export interface ImportCadRequest {
+  type: "IMPORT_CAD";
+  bytes: ArrayBuffer;
+  filename: string;
+  name: string;
+}
+
 export interface RenderPdfRequest {
   type: "RENDER_PDF";
   html: string;
@@ -69,6 +85,8 @@ export type WorkerRequest =
   | ModalRequest
   | SectionStressRequest
   | ImportDxfRequest
+  | ImportCadRequest
+  | FingerprintRequest
   | CatalogPropertiesRequest
   | SpanForcesRequest;
 
@@ -167,6 +185,26 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       return;
     }
     self.postMessage({ type: "CATALOG_PROPS_RESULT", props });
+    return;
+  }
+  if (request.type === "FINGERPRINT") {
+    // v1.4.0: deterministic model hash for the report sheet and PDF.
+    const hash = project_fingerprint(request.projectJson);
+    if ((hash as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "DXF_FAULT", fault: hash });
+      return;
+    }
+    self.postMessage({ type: "FINGERPRINT_RESULT", hash });
+    return;
+  }
+  if (request.type === "IMPORT_CAD") {
+    // v1.3.0: extension-dispatched DXF/STEP/IGES import.
+    const json = import_cad(new Uint8Array(request.bytes), request.filename, request.name);
+    if ((json as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "DXF_FAULT", fault: json });
+      return;
+    }
+    self.postMessage({ type: "DXF_RESULT", json });
     return;
   }
   if (request.type === "IMPORT_DXF") {

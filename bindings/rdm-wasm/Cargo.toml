@@ -9,6 +9,7 @@ authors.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+rdm-cad = { path = "../../crates/rdm-cad" }
 rdm-model = { path = "../../crates/rdm-model" }
 rdm-eurocode = { path = "../../crates/rdm-eurocode" }
 rdm-solver = { path = "../../crates/rdm-solver" }

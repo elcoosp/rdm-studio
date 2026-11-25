@@ -7,14 +7,12 @@ import { IconPlus, IconTrash } from "@/components/icons";
 import { BottomSheet } from "@/components/BottomSheet";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
-import { ProfileIpe } from "@/components/icons/EngineeringIcons";
 import { useViewportStore } from "@/state/viewportStore";
 import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
 import { BeamMeshes, buildBeamGeometry, nodePositions } from "@/viewport3d/BeamMeshes";
 import { SupportMarkers } from "@/viewport3d/SupportMarkers";
 import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
 import { useBeamBoundsTree, pickBeamAtRay } from "@/viewport3d/useBvhPicking";
-import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 
 export const Route = createFileRoute("/geometry")({
   component: GeometryPage,
@@ -35,17 +33,14 @@ function GeometryPage() {
   const addBeam = useProjectStore((s) => s.addBeam);
   const selectBeam = useProjectStore((s) => s.selectBeam);
   const loadProject = useProjectStore((s) => s.loadProject);
-  const updateBeam = useProjectStore((s) => s.updateBeam);
   const [sections, setSections] = useState<SectionSummary[]>([]);
   const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
   const [pickMs, setPickMs] = useState<number | undefined>(undefined);
   const [newSection, setNewSection] = useState("IPE 200");
   const [beamN1, setBeamN1] = useState<number | null>(null);
   const [beamN2, setBeamN2] = useState<number | null>(null);
-  const [material, setMaterial] = useState("S235JR");
   const [cadError, setCadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [galleryOpen, setGalleryOpen] = useState(false);
 
   useEffect(() => {
     void feaClient.fetchCatalog().then((c) => {
@@ -55,6 +50,7 @@ function GeometryPage() {
   }, []);
 
   const ipeSections = sections;
+  const material = project.structure.beams[0]?.material_id ?? "S235JR";
   const selectedBeam = project.structure.beams.find((b) => b.id === selection.beamId) ?? null;
   const nodeIds = project.structure.nodes.map((n) => n.id);
 
@@ -91,30 +87,6 @@ function GeometryPage() {
               <p className="text-[14px] font-medium text-ink-secondary">
                 <Trans>Modèle vide — commencez par poser un nœud.</Trans>
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  className="rounded bg-accent px-3 py-1.5 text-[13px] text-white"
-                  data-testid="empty-place-node"
-                  onClick={() => addNode(0, 0, 0)}
-                >
-                  <Trans>+ Placer un premier nœud</Trans>
-                </button>
-                <button
-                  type="button"
-                  className="rounded border border-hairline px-3 py-1.5 text-[13px] text-ink-secondary"
-                  onClick={() => setGalleryOpen(true)}
-                >
-                  <Trans>Charger un modèle type</Trans>
-                </button>
-                <button
-                  type="button"
-                  className="rounded border border-hairline px-3 py-1.5 text-[13px] text-ink-secondary"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  <Trans>Importer DXF</Trans>
-                </button>
-              </div>
               <p className="max-w-xs text-[12px] text-ink-muted">
                 <Trans>
                   Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou
@@ -123,11 +95,7 @@ function GeometryPage() {
               </p>
             </div>
           ) : (
-            <ViewportCanvas
-              pickLatency={pickMs}
-              nodes={project.structure.nodes}
-              beams={project.structure.beams}
-            >
+            <ViewportCanvas pickLatency={pickMs} nodes={project.structure.nodes}>
               {layers.beams ? (
                 <BeamMeshes
                   nodes={project.structure.nodes}
@@ -135,7 +103,12 @@ function GeometryPage() {
                   wireframe={renderMode === "wireframe"}
                   selectedBeamId={selection.beamId}
                   onPick={(id) => selectBeam(id)}
-                  sectionDims={sectionDims}
+                  sectionDims={
+                    sectionDims as unknown as Map<
+                      string,
+                      { shape: string; h?: number; b?: number; tw?: number; tf?: number }
+                    >
+                  }
                 />
               ) : null}
               {layers.supports ? (
@@ -209,33 +182,6 @@ function GeometryPage() {
       </section>
       <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
         <label className="block text-[12px] text-ink-secondary">
-          <Trans>Matériau</Trans>
-        </label>
-        <select
-          className="mt-1 w-full rounded-[4px] border border-hairline px-2 py-1.5 text-[13px]"
-          value={material}
-          onChange={(e) => {
-            const next = e.currentTarget.value;
-            setMaterial(next);
-            if (selectedBeam !== null) {
-              updateBeam(selectedBeam.id, { material_id: next });
-            }
-          }}
-        >
-          {["S235JR", "S355J2", "304L", "6061-T6"].map((m) => (
-            <option key={m} value={m}>
-              {m === "S235JR"
-                ? "Acier S235JR"
-                : m === "S355J2"
-                  ? "Acier S355J2"
-                  : m === "304L"
-                    ? "Inox 304L"
-                    : "Alu 6061-T6"}
-            </option>
-          ))}
-        </select>
-        <label className="mt-3 flex items-center gap-1.5 text-[12px] text-ink-secondary">
-          <ProfileIpe size={14} />
           <Trans>Profil (EN 10365)</Trans>
         </label>
         <select
@@ -302,7 +248,6 @@ function GeometryPage() {
           </p>
         )}
 
-        <ProjectGalleryModal open={galleryOpen} onClose={() => setGalleryOpen(false)} />
         <dl className="font-data mt-4 space-y-1 text-[12px] text-ink-secondary">
           <dt className="mt-2 text-[11px] font-medium text-ink-muted">
             <Trans>Catalogue</Trans>
@@ -567,92 +512,43 @@ function BeamTable() {
   const selectBeam = useProjectStore((s) => s.selectBeam);
   const removeBeam = useProjectStore((s) => s.removeBeam);
   const selection = useProjectStore((s) => s.selection);
-  const batchUpdateBeams = useProjectStore((s) => s.batchUpdateBeams);
-  const [batchIds, setBatchIds] = useState<number[]>([]);
   return (
-    <>
-      <table className="w-full text-[13px]">
-        <thead className="text-left text-[11px] text-ink-muted">
-          <tr>
-            <th className="py-1">ID</th>
-            <th>N1</th>
-            <th>N2</th>
-            <th>
-              <Trans>Profil</Trans>
-            </th>
-            <th />
+    <table className="w-full text-[13px]">
+      <thead className="text-left text-[11px] text-ink-muted">
+        <tr>
+          <th className="py-1">ID</th>
+          <th>N1</th>
+          <th>N2</th>
+          <th>
+            <Trans>Profil</Trans>
+          </th>
+          <th />
+        </tr>
+      </thead>
+      <tbody className="font-data">
+        {beams.map((b) => (
+          <tr
+            key={b.id}
+            className={`cursor-pointer border-t border-hairline ${selection.beamId === b.id ? "bg-accent-tint" : ""}`}
+            onClick={() => selectBeam(b.id)}
+          >
+            <td className="py-1">{b.id}</td>
+            <td>{b.n1}</td>
+            <td>{b.n2}</td>
+            <td>{b.section_id}</td>
+            <td className="text-right">
+              <button
+                type="button"
+                aria-label="remove beam"
+                className="text-ink-muted hover:text-fea-max"
+                onClick={() => removeBeam(b.id)}
+              >
+                <IconTrash size={13} />
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody className="font-data">
-          {beams.map((b) => (
-            <tr
-              key={b.id}
-              className={`cursor-pointer border-t border-hairline ${selection.beamId === b.id || batchIds.includes(b.id) ? "bg-accent-tint" : ""}`}
-              onClick={(e) => {
-                if (e.shiftKey) {
-                  setBatchIds((ids) =>
-                    ids.includes(b.id) ? ids.filter((x) => x !== b.id) : [...ids, b.id],
-                  );
-                  return;
-                }
-                selectBeam(b.id);
-              }}
-            >
-              <td className="py-1">{b.id}</td>
-              <td>{b.n1}</td>
-              <td>{b.n2}</td>
-              <td>{b.section_id}</td>
-              <td className="text-right">
-                <button
-                  type="button"
-                  aria-label="remove beam"
-                  className="text-ink-muted hover:text-fea-max"
-                  onClick={() => removeBeam(b.id)}
-                >
-                  <IconTrash size={13} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {batchIds.length > 0 ? (
-        <div
-          className="mt-2 rounded border border-accent-ring bg-accent-tint p-2"
-          data-testid="batch-editor"
-        >
-          <p className="font-data text-[12px] text-accent">
-            {batchIds.length} poutre(s) sélectionnée(s)
-          </p>
-          <div className="mt-1 flex gap-2">
-            <select
-              aria-label="batch section"
-              className="font-data w-full rounded-[4px] border border-hairline px-1 py-1 text-[12px]"
-              onChange={(e) => {
-                batchUpdateBeams(batchIds, { section_id: e.currentTarget.value });
-                setBatchIds([]);
-              }}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Profil…
-              </option>
-              {Array.from(new Set(beams.map((b) => b.section_id))).map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="rounded border border-hairline px-2 text-[12px] text-ink-secondary"
-              onClick={() => setBatchIds([])}
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </>
+        ))}
+      </tbody>
+    </table>
   );
 }

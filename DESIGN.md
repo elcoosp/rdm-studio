@@ -1,240 +1,122 @@
 ---
-name: Daylight CAD Workstation
+
+name: RDM Studio — Swiss Metrology Workstation
+version: 1.0.0
 colors:
-  surface: '#f6fafd'
-  surface-dim: '#d6dbdd'
-  surface-bright: '#f6fafd'
-  surface-container-lowest: '#ffffff'
-  surface-container-low: '#f0f4f7'
-  surface-container: '#eaeef1'
-  surface-container-high: '#e5e9eb'
-  surface-container-highest: '#dfe3e6'
-  on-surface: '#171c1e'
-  on-surface-variant: '#3e484d'
-  inverse-surface: '#2c3133'
-  inverse-on-surface: '#edf1f4'
-  outline: '#6e797e'
-  outline-variant: '#bdc8ce'
-  surface-tint: '#006780'
-  primary: '#00647c'
-  on-primary: '#ffffff'
-  primary-container: '#007f9d'
-  on-primary-container: '#fafdff'
-  inverse-primary: '#6cd3f7'
-  secondary: '#555f6d'
-  on-secondary: '#ffffff'
-  secondary-container: '#d6e0f1'
-  on-secondary-container: '#596372'
-  tertiary: '#4551b8'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#5f6bd3'
-  on-tertiary-container: '#fffbff'
-  error: '#ba1a1a'
-  on-error: '#ffffff'
-  error-container: '#ffdad6'
-  on-error-container: '#93000a'
-  primary-fixed: '#b7eaff'
-  primary-fixed-dim: '#6cd3f7'
-  on-primary-fixed: '#001f28'
-  on-primary-fixed-variant: '#004e61'
-  secondary-fixed: '#d9e3f4'
-  secondary-fixed-dim: '#bdc7d8'
-  on-secondary-fixed: '#121c28'
-  on-secondary-fixed-variant: '#3e4755'
-  tertiary-fixed: '#dfe0ff'
-  tertiary-fixed-dim: '#bdc2ff'
-  on-tertiary-fixed: '#000965'
-  on-tertiary-fixed-variant: '#2e3aa2'
-  background: '#f6fafd'
-  on-background: '#171c1e'
-  surface-variant: '#dfe3e6'
-  canvas-base: '#F9FAFB'
-  surface-panel: '#FFFFFF'
-  border-hairline: '#E5E7EB'
-  border-subtle: '#D1D5DB'
-  text-primary: '#111827'
-  text-secondary: '#4B5563'
-  text-muted: '#6B7280'
-  fea-stress-min: '#2563EB'
-  fea-stress-low: '#0891B2'
-  fea-stress-mid: '#10B981'
-  fea-stress-warn: '#F59E0B'
-  fea-stress-max: '#EF4444'
+canvas: '#F8FAFC'
+surface: '#FFFFFF'
+surface-subtle: '#F1F5F9'
+border: '#E2E8F0'
+border-strong: '#CBD5E1'
+ink-primary: '#0F172A'
+ink-secondary: '#475569'
+ink-muted: '#94A3B8'
+accent: '#1D4ED8'
+accent-hover: '#1E40AF'
+accent-tint: '#EFF6FF'
+accent-ring: '#93C5FD'
+fea-tier-1: '#1D4ED8'
+fea-tier-2: '#06B6D4'
+fea-tier-3: '#10B981'
+fea-tier-4: '#F59E0B'
+fea-tier-5: '#DC2626'
+status-pass-bg: '#ECFDF5'
+status-pass-border: '#A7F3D0'
+status-pass-text: '#065F46'
+status-fail-bg: '#FEF2F2'
+status-fail-border: '#FECACA'
+status-fail-text: '#991B1B'
 typography:
-  headline-lg:
-    fontFamily: Inter
-    fontSize: 24px
-    fontWeight: '600'
-    lineHeight: 32px
-    letterSpacing: -0.02em
-  headline-md:
-    fontFamily: Inter
-    fontSize: 18px
-    fontWeight: '600'
-    lineHeight: 24px
-    letterSpacing: -0.015em
-  headline-sm:
-    fontFamily: Inter
-    fontSize: 14px
-    fontWeight: '600'
-    lineHeight: 20px
-    letterSpacing: -0.01em
-  body-lg:
-    fontFamily: Inter
-    fontSize: 14px
-    fontWeight: '400'
-    lineHeight: 20px
-  body-md:
-    fontFamily: Inter
-    fontSize: 13px
-    fontWeight: '400'
-    lineHeight: 18px
-  body-sm:
-    fontFamily: Inter
-    fontSize: 12px
-    fontWeight: '400'
-    lineHeight: 16px
-  data-mono-lg:
-    fontFamily: JetBrains Mono
-    fontSize: 13px
-    fontWeight: '500'
-    lineHeight: 18px
-  data-mono-md:
-    fontFamily: JetBrains Mono
-    fontSize: 12px
-    fontWeight: '500'
-    lineHeight: 16px
-  data-mono-sm:
-    fontFamily: JetBrains Mono
-    fontSize: 11px
-    fontWeight: '400'
-    lineHeight: 14px
-  label-ui:
-    fontFamily: Inter
-    fontSize: 11px
-    fontWeight: '500'
-    lineHeight: 14px
-    letterSpacing: 0.02em
-  label-code:
-    fontFamily: JetBrains Mono
-    fontSize: 10px
-    fontWeight: '500'
-    lineHeight: 12px
-    letterSpacing: 0.04em
+headline-lg: { fontFamily: Inter, fontSize: 24px, fontWeight: '600', lineHeight: 32px }
+headline-md: { fontFamily: Inter, fontSize: 18px, fontWeight: '600', lineHeight: 24px }
+headline-sm: { fontFamily: Inter, fontSize: 15px, fontWeight: '600', lineHeight: 20px }
+body-lg: { fontFamily: Inter, fontSize: 14px, fontWeight: '400', lineHeight: 20px }
+body-md: { fontFamily: Inter, fontSize: 13px, fontWeight: '400', lineHeight: 18px }
+body-sm: { fontFamily: Inter, fontSize: 12px, fontWeight: '400', lineHeight: 16px }
+mono-lg: { fontFamily: JetBrains Mono, fontSize: 13px, fontWeight: '500', lineHeight: 16px }
+mono-md: { fontFamily: JetBrains Mono, fontSize: 12px, fontWeight: '500', lineHeight: 16px }
+mono-sm: { fontFamily: JetBrains Mono, fontSize: 11px, fontWeight: '400', lineHeight: 14px }
 rounded:
-  sm: 0.125rem
-  DEFAULT: 0.25rem
-  md: 0.375rem
-  lg: 0.5rem
-  xl: 0.75rem
-  full: 9999px
-spacing:
-  gutter: 0.75rem
-  margin: 1rem
-  space-xs: 0.25rem
-  space-sm: 0.5rem
-  space-md: 0.75rem
-  space-lg: 1rem
-  space-xl: 1.5rem
+badge: 2px
+control: 4px
+overlay: 8px
+sheet-top: 16px
 ---
 
-## Brand & Style
+## 1. Brand & Aesthetic Foundation
 
-This design system targets structural calculation specialists, civil engineers, and FEA (Finite Element Analysis) practitioners who demand uncompromising clarity during sustained technical workflows. Drawing from high-performance developer tool ergonomics and the International Typographic Style, the interface replaces dim, neon-lit CAD environments with a clean daylight workstation aesthetic.
+**RDM Studio** fuses classic Swiss metrological precision with the high-cadence, keyboard-first restraint of modern engineering workstations. Every pixel serves structural calculation, 3D finite element analysis (FEA), and Eurocode 3 compliance.
 
-### Aesthetic Principles
-- **Surgical Restraint:** Pure functional surfaces, zero extraneous decorative panels, and strict visual economy. Every UI pixel is dedicated to engineering clarity.
-- **Instrument Precision:** Hairline 1px dividers, tabular alignment, and crisp contrast tiers replace bulky card containers and excessive drop shadows.
-- **Cognitive Daylight:** A soft, high-key canvas palette calibrated to reduce optical strain during 8+ hour computational analysis, modeling, and meshing sessions.
+- **Single Navigation Spine:** A single 5-step workflow bar (`Géométrie & Profilés`, `Liaisons`, `Charges`, `Calcul 3D & Eurocode 3`, `Rapport`) governs navigation—never duplicate step lists in sidebars or add decorative bottom telemetry bars.
+- **Strict Spectrum Isolation:** The 5-tier thermal spectrum (`#1D4ED8` → `#06B6D4` → `#10B981` → `#F59E0B` → `#DC2626`) is strictly quarantined to 3D deformed meshes, force vector arrows, cross-section Von Mises heatmaps, and utilization bars. Interface controls remain monolithic neutral + Deep Cobalt (`#1D4ED8`).
+- **Copy Demeanor:** Natural sentence-case French (`fr` default) and English (`en`) everywhere. **All-caps eyebrow kickers are strictly prohibited.** Minimum text size is `11px` (`16px` on mobile inputs to prevent iOS Safari auto-zoom).
 
-## Colors
+---
 
-The color architecture enforces strict separation between background canvas infrastructure, structural panels, text legibility, and technical telemetry.
+## 2. Color System
 
-### Palette Allocation
-- **Primary (`#0891B2`):** Reserved for focal triggers, active tool toggles, active node selections, and focused input boundaries.
-- **Secondary (`#4B5563`):** Governs structural icons, interactive subheadings, and secondary tool toggles.
-- **Tertiary (`#5E6AD2`):** Serves auxiliary software integrations, version branch trees, and metadata badges.
-- **Canvas Base (`#F9FAFB`):** Ambient background providing contrast behind pure white operational panels.
-- **Surface Panel (`#FFFFFF`):** Workstation inspectors, property lists, coordinate strips, and docked toolbars.
-- **Structural Lines (`#E5E7EB`):** Crisp 1px separations for panels, cell grids, and coordinate matrices.
+### Core Daylight Chrome
 
-### Color Usage Rules
-- Pure white (`#FFFFFF`) is strictly used as an operational surface layer over the `#F9FAFB` canvas.
-- Colored backgrounds are prohibited on data rows; state is communicated via hairline indicators and primary text emphasis.
-- The FEA stress spectrum (`#2563EB` through `#EF4444`) is isolated exclusively to mesh visualizations, stress maps, and failure analysis limit flags.
+- **3D Viewport Canvas (`#F8FAFC`):** Architectural off-white canvas with a subtle 3D metric floor grid (never place decorative grids behind sidebars or forms).
+- **Surface Chrome (`#FFFFFF`):** Pure white sidebars, top header bar, and bottom inspector sheets.
+- **Hairline Borders (`#E2E8F0` / hover `#CBD5E1`):** `1px solid` borders define all docked panels with zero drop shadows.
+- **Text Hierarchy:** `#0F172A` (Primary ink), `#475569` (Labels & Eurocode references), `#94A3B8` (Units & disabled states).
+- **Primary Brand Accent (`#1D4ED8`):** Deep Cobalt Blue matching the isometric IPE emblem (`hover: #1E40AF`, `tint: #EFF6FF`, `focus ring: #93C5FD`).
 
-## Typography
+### FEA Thermal Spectrum (Analytical Meshes & Charts Only)
 
-Typography balances rapid UI navigation with numerical certitude. Two typeface engines divide these cognitive tasks:
+- **Tier 1 (`0.0 – 0.2` / Nominal):** `#1D4ED8` (Cobalt Blue)
+- **Tier 2 (`0.2 – 0.5` / Low):** `#06B6D4` (Cyan)
+- **Tier 3 (`0.5 – 0.8` / Elastic):** `#10B981` (Emerald)
+- **Tier 4 (`0.8 – 1.0` / Plastic Limit Approach):** `#F59E0B` (Amber)
+- **Tier 5 (`> 1.0` / Yield or Buckling Failure):** `#DC2626` (Crimson)
 
-- **Inter:** Handles structural navigation, control triggers, hierarchical labels, and natural prose.
-- **JetBrains Mono:** Mandated for all mathematical entities, vectors, spatial coordinates $(X, Y, Z)$, physical units, matrix arrays, and telemetry data tables.
+---
 
-### Typographic Rules
-- Always apply tabular figures (`font-variant-numeric: tabular-nums`) across all mono levels to ensure alignment across stacked columns.
-- Units of measure (such as `kN`, `MPa`, `mm`, `kg/m³`) must be rendered with an immutable non-breaking space after numerical tokens.
-- Keep label and property hierarchy compact; line-heights are constrained to match dense parameter grids without vertical overflow.
+## 3. Typography & Numerical Alignment
 
-## Layout & Spacing
+- **Inter:** All UI labels, navigation tabs, headings, and calculation notes in sentence case.
+- **JetBrains Mono:** All numerical values, coordinates (`X, Y, Z`), Eurocode formulas (`EN 1993-1-1`, `χy`, `χz`, `Wpl,y`), forces (`kN`, `kN·m`), stresses (`MPa`), and profile designations (`IPE 200`, `HEA 180`).
+- **Tabular Alignment:** Enforce `font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "zero" 1;` on all numeric readouts, with a non-breaking space before units (`235 MPa`, `4,82 mm`).
 
-The workstation layout follows a fixed-docking modular grid calibrated for high-resolution screens (1440px minimum width, optimized for 1920x1080 and 4K displays).
+---
 
-### Shell Model
-- **Command Header:** Fixed 44px height spanning the viewport. Houses global actions, active document state, and workspace mode switcher.
-- **Model Hierarchy Pane (Left):** Width fixed at 260px (collapsible to 40px icon rail).
-- **Primary Viewport (Center):** Fluid CAD/FEA canvas stretching across all available screen space.
-- **Inspector Pane (Right):** Width fixed at 300px. Houses parameter lists, material coefficients, and solve parameters.
-- **Status & Telemetry Rail (Bottom):** Fixed 28px height displaying cursor coordinates, unit scale, and solver latency.
+## 4. Adaptive Layout & Responsive Architecture
 
-### Spacing Principles
-- Spacing units adhere strictly to a 4px/8px baseline rhythm.
-- Vertical density in property inspector panels favors 28px–32px row heights to maximize visible parameter bandwidth without scrolling.
+### Desktop (`≥ 1024px`)
 
-## Elevation & Depth
+- **Top Header Bar (`44px`):** Isometric thermal IPE logo + clickable project switcher (`RDM Studio / Treillis-L240 ▾`) on left; 5-step horizontal tabs with `2px solid #1D4ED8` active underline in center; node/beam counter, `⌘K` trigger, `FR | EN` toggle, and `?` onboarding button on right.
+- **Left Inspector Sidebar (`320px`, `#FFFFFF`, `1px` right border `#E2E8F0`):** Flat horizontal property rows (`28px–32px` height), closed single-line selects (`30px`), zero nested boxes.
+- **Center 3D Viewport (`flex-1`, `#F8FAFC`):** Full-height WebGL2 canvas with floating top-left view controls (`3D Iso`, `Dessus XY`, `Face XZ`, `Côté YZ`, `Volumique 3D`) and top-right XYZ gizmo.
+- **Step 4 Docked Bottom Inspector (`240px` height):** Split `32%` calibrated 2D cross-section thermal heatmap / `68%` synchronized `uPlot` internal force diagrams (`My`, `Vz`, `N`) with vertical crimson cursor `x`.
 
-Visual hierarchy is maintained through crisp hairline borders and tonal surfaces rather than heavy blur shadows, preserving a light, flat engineering plane.
+### Tablet & Phone (`< 1024px`, Field & Site Ready)
 
-### Surface Tiers
-- **Tier 0 (Canvas Base):** Background substrate `#F9FAFB`.
-- **Tier 1 (Structural Workspaces):** Pure white `#FFFFFF` panels separated strictly by 1px solid `#E5E7EB` borders.
-- **Tier 2 (Floating Viewport Tools & Palettes):** Surface `#FFFFFF` bordered by 1px solid `#D1D5DB` with a subtle technical drop: `0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 8px -2px rgba(0, 0, 0, 0.03)`.
-- **Tier 3 (Modal Dialogs & Export Consoles):** Surface `#FFFFFF`, bordered by 1px solid `#D1D5DB`, elevated by `0 8px 24px -4px rgba(0, 0, 0, 0.08)`, seated on a translucent backdrop of `rgba(17, 24, 39, 0.20)`.
+- **Full-Bleed 3D Viewport (`100dvh`):** Respects `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)`.
+- **Compact Mobile Top Bar (`48px`):** Logo + project name on left; `⌘K` search icon (`44×44px`) and `FR | EN` pill on right.
+- **Draggable Tactile Bottom Sheet (`motion` `drag="y"`):** `16px` top radius (`rounded-t-2xl`), centered `36×4px` grabber pill (`#CBD5E1`), 3 snap states (_Collapsed `84px`_, _Half `48dvh`_, _Expanded `85dvh`_).
+- **Thumb-Friendly Bottom Tab Bar (`56px`):** 5 equal touch targets (`≥ 44×44px`) with `20px` custom SVG icons + concise labels (`Géométrie`, `Liaisons`, `Charges`, `Résultats`, `Rapport`).
+- **Touch CAD Ergonomics:** `44px` minimum touch target height, `inputMode="decimal"` with `16px` font on numeric inputs, and `24px` touch picking radius in 3D.
 
-## Shapes
+---
 
-Corner radii prioritize mechanical precision. The shape language stays between 2px and 6px to avoid ballooned geometry that compromises data density.
+## 5. Elevation, Shapes & Custom Engineering Iconography
 
-### Radius Assignments
-- **Compact Radii (2px):** Table row focus tags, status dots, and indicator ticks.
-- **Component Radii (4px):** Form controls, inputs, action buttons, select menus, and tool rail buttons.
-- **Overlay Radii (6px):** Floating viewport toolbars, dropdown containers, context menus, and modal frames.
-- **Full Radii (9999px):** Node vertex handles in the 3D viewport and circular scalar indicators.
+- **Elevation:** Zero drop shadows on docked sidebars, headers, and bottom tab bars (`box-shadow: none`). Soft shadows (`0 8px 24px rgba(15, 23, 42, 0.08)`) are reserved strictly for floating overlays (`⌘K`, modals, mobile bottom sheet).
+- **Corner Radii:** `2px` on rectangular status badges, `4px` on inputs/buttons/selects (no pill-shaped functional buttons), `8px` on modals/popovers, `16px` top corners on mobile bottom sheet.
+- **24 Custom Engineering SVG Icons (`24×24` optical grid, `1.5px` stroke):**
+  - _Sections:_ `IPE`, `HEA/HEB`, `UPN/UPE`, `CHS`, `SHS/RHS`, `Cornière L`.
+  - _Supports & Releases:_ `Encastrement`, `Rotule`, `Appui simple`, `Glissière`, `Appui élastique`, `Relâchement N1/N2`.
+  - _Loads:_ `Force ponctuelle`, `Charge uniforme`, `Charge trapézoïdale`, `Moment/Torsion`, `Poids propre 1g`, `Accélération`.
+  - _CAD & EC3:_ `Roulis θx`, `Accrochage magnétique`, `Fusion nœuds`, `Coupe section 2D`, `Flambement χ`, `Mode propre`.
 
-## Components
+---
 
-### Buttons & Interactive Controls
-- **Primary Action:** Solid `#0891B2` background, `#FFFFFF` text, 4px radius, 28px height, padding 0 10px. Hover: `#0E7490`. Active: `#155E75`. Focus outline: 1px solid `#0891B2` with 2px offset.
-- **Secondary Tool:** `#FFFFFF` background, 1px solid `#E5E7EB`, `#111827` text. Hover: `#F9FAFB` surface and `#D1D5DB` border.
-- **Ghost Utility:** Borderless `#FFFFFF` surface, `#4B5563` text. Hover: `#F3F4F6` background, `#111827` text.
+## 6. Core Components & Eurocode 3 Indicators
 
-### Flat Property List Rhythm
-- Key-value pairs arranged with zero outer box containment.
-- Keys styled in `label-ui` (`#6B7280`), right-aligned or left-aligned within a clean grid row.
-- Values styled in `data-mono-md` (`#111827`).
-- Separated only by 1px hairline rules (`#E5E7EB`) with 6px vertical cell padding.
-
-### Numeric & Dimension Inputs
-- Height: 26px.
-- Background: `#FFFFFF`. Border: 1px solid `#E5E7EB`.
-- Text: `data-mono-md` (`#111827`).
-- Embedded right-hand suffix: fixed-width unit label (`label-code` in `#6B7280`).
-- Focus state: Border transitions to `#0891B2`, with a crisp 1px box-shadow ring in `#0891B2`.
-
-### Checkboxes & Segmented Toggles
-- **Checkboxes:** 14px square, 3px corner radius, 1px solid `#D1D5DB`. Checked: `#0891B2` fill with white check vector.
-- **Segmented Tool Switchers:** Pure white `#FFFFFF` enclosure, 1px solid `#E5E7EB`, housing 22px segmented toggle buttons. Selected option: `#F3F4F6` background, `#111827` text, and subtle 1px border.
-
-### Status Indicators & Badges
-- 18px height, 4px corner radius, padding 0 6px.
-- Subtle tinted fill: background at 8% opacity of status color, text rendered in full intensity (e.g., `#0891B2` for active state, `#EF4444` for mesh constraint error).
+- **Primary CTA Button:** `#1D4ED8` background, `#FFFFFF` text, `4px` radius, `32px` desktop / `44px` mobile height, `Inter` `13px` weight `600`, `2px #93C5FD` focus ring.
+- **Horizontal Property Row:** Left label (`Inter` `12px`, `#475569`), right value/control (`JetBrains Mono` `12px`, `#0F172A`) + unit suffix (`#94A3B8`), separated by `1px solid #F1F5F9`.
+- **Eurocode 3 Compliance Badges (`2px` radius, `JetBrains Mono` `11px`):**
+  - **Pass ($\eta \le 1.00$):** `#ECFDF5` fill, `1px solid #A7F3D0` border, `#065F46` text (e.g., `η = 0,74 Conforme EC3`).
+  - **Fail ($\eta > 1.00$):** `#FEF2F2` fill, `1px solid #FECACA` border, `#991B1B` text (e.g., `η = 1,25 Dépassement χz`) paired with a 1-click corrective action button.
+- **Utilization Progress Track:** `4px` height, `#F1F5F9` track, dynamic fill (`#10B981` for $\eta \le 0.80$, `#F59E0B` for $0.80 < \eta \le 1.00$, `#DC2626` for $\eta > 1.00$).

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { 'colors': { 'inverse-primary': '#b7c4ff', 'tertiary': '#004f35', 'on-surface': '#0b1c30', 'primary-fixed': '#dce1ff', 'secondary-fixed-dim': '#4cd7f6', 'inverse-on-surface': '#eaf1ff', 'surface-container-low': '#eff4ff', 'surface-container': '#e5eeff', 'on-error-container': '#93000a', 'surface': '#f8f9ff', 'surface-bright': '#f8f9ff', 'on-secondary': '#ffffff', 'on-primary-fixed': '#001551', 'on-secondary-fixed-variant': '#004e5c', 'on-tertiary': '#ffffff', 'tertiary-fixed-dim': '#4edea3', 'surface-variant': '#d3e4fe', 'on-surface-variant': '#434655', 'tertiary-container': '#006a48', 'primary-fixed-dim': '#b7c4ff', 'primary-container': '#1d4ed8', 'secondary-fixed': '#acedff', 'on-primary-fixed-variant': '#0039b5', 'error': '#ba1a1a', 'surface-container-highest': '#d3e4fe', 'outline-variant': '#c4c5d7', 'tertiary-fixed': '#6ffbbe', 'on-tertiary-fixed': '#002113', 'on-primary-container': '#cad3ff', 'surface-container-high': '#dce9ff', 'error-container': '#ffdad6', 'secondary-container': '#57dffe', 'surface-tint': '#2151da', 'on-secondary-container': '#006172', 'on-secondary-fixed': '#001f26', 'surface-container-lowest': '#ffffff', 'primary': '#0037b0', 'secondary': '#00687a', 'on-tertiary-fixed-variant': '#005236', 'outline': '#747686', 'inverse-surface': '#213145', 'surface-dim': '#cbdbf5', 'on-primary': '#ffffff', 'on-background': '#0b1c30', 'background': '#f8f9ff', 'on-tertiary-container': '#60eeb1', 'on-error': '#ffffff' }, 'borderRadius': { 'DEFAULT': '0.125rem', 'lg': '0.25rem', 'xl': '0.5rem', 'full': '0.75rem' }, 'spacing': { 'space-sm': '0.25rem', 'space-md': '0.5rem', 'space-xl': '1rem', 'gutter': '0.5rem', 'space-lg': '0.75rem', 'space-xs': '0.125rem', 'margin': '0.75rem' }, 'fontFamily': { 'headline-lg': ['Inter'], 'label-sm': ['JetBrains Mono'], 'body-lg': ['Inter'], 'headline-md': ['Inter'], 'label-lg': ['JetBrains Mono'], 'body-sm': ['Inter'], 'body-md': ['Inter'], 'headline-sm': ['Inter'], 'data-metric': ['JetBrains Mono'], 'label-md': ['JetBrains Mono'] }, 'fontSize': { 'headline-lg': ['24px', { 'lineHeight': '32px', 'fontWeight': '600' }], 'label-sm': ['11px', { 'lineHeight': '14px', 'fontWeight': '400' }], 'body-lg': ['14px', { 'lineHeight': '20px', 'fontWeight': '400' }], 'headline-md': ['18px', { 'lineHeight': '24px', 'fontWeight': '600' }], 'label-lg': ['13px', { 'lineHeight': '16px', 'fontWeight': '500' }], 'body-sm': ['12px', { 'lineHeight': '16px', 'fontWeight': '400' }], 'body-md': ['13px', { 'lineHeight': '18px', 'fontWeight': '400' }], 'headline-sm': ['15px', { 'lineHeight': '20px', 'fontWeight': '600' }], 'data-metric': ['13px', { 'lineHeight': '16px', 'fontWeight': '600' }], 'label-md': ['12px', { 'lineHeight': '16px', 'fontWeight': '400' }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-11 bg-surface-container-lowest z-50 border-b border-surface-variant"><div class="h-11 w-full px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-lg"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/ALJJyrBkiJLhDXT42XCRLpddHeyCIDu7RNiQBcljaAFud9q_6i--pqUnO5LNqTYWaeWUacC2NR1avri-5EtcE_VwBenik2f1_BRVa1TNbyizlhB2ouXrmbh8uoD8oR-LwClx5u3f1rKjYIe5ODZyPgqRyd3JlFP_Kz47ZXGpOxEVKLg6kYW8mcq5X0oSmfEA7fuZ3YuOV-ed2lX8tg808eJ5FOYJAbIffwJ2HqccNn-zxm3pVCpm9jXXhhmRLnqH"/><div class="flex items-center gap-space-sm pl-space-xs"><button class="flex items-center gap-space-xs font-headline-sm text-headline-sm text-on-surface hover:text-primary transition-colors" type="button"><span>RDM Studio</span><span class="text-outline">/</span><span>Treillis-L240</span><span class="material-symbols-outlined text-[16px] text-outline ml-space-xs">expand_more</span></button></div></div><nav class="hidden lg:flex items-center h-11 gap-space-xl" data-active-classes="border-b-2 border-primary-container text-on-surface font-medium"><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="geometrie-profiles" href="#">Géométrie &amp; Profilés</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="liaisons" href="#">Liaisons</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="charges" href="#">Charges</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="calcul-3d-eurocode-3" href="#">Calcul 3D &amp; Eurocode 3</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="rapport" href="#">Rapport</a></nav><div class="flex items-center gap-space-lg"><div class="hidden sm:flex items-center gap-space-xs px-space-md py-space-xs bg-surface-container-low rounded border border-surface-variant"><span class="font-label-sm text-label-sm text-on-surface-variant">44 nœuds</span><span class="text-outline text-label-sm">·</span><span class="font-label-sm text-label-sm text-on-surface-variant">62 poutres</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs bg-surface rounded border border-surface-variant text-on-surface-variant font-label-sm text-label-sm"><kbd class="font-label-sm">⌘</kbd><kbd class="font-label-sm">K</kbd></div><div class="flex items-center text-label-sm font-label-sm border border-surface-variant rounded overflow-hidden"><span class="px-space-sm py-space-xs bg-surface-container-high text-on-surface font-semibold">FR</span><span class="px-space-sm py-space-xs bg-surface-container-lowest text-outline hover:text-on-surface transition-colors cursor-pointer">EN</span></div><button class="w-7 h-7 flex items-center justify-center rounded border border-surface-variant text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" title="Documentation &amp; Aide" type="button"><span class="material-symbols-outlined text-[16px]">help</span></button></div></div></header><aside class="fixed left-0 top-11 bottom-0 w-72 bg-surface-container-lowest z-40 border-r border-surface-variant flex flex-col justify-between"><div class="flex flex-col"><div class="h-9 px-space-lg flex items-center justify-between border-b border-surface-variant bg-surface-container-low"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Explorateur de modèle</span><span class="material-symbols-outlined text-[16px] text-outline">account_tree</span></div><nav class="p-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-on-surface font-medium"><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="geometrie-profiles" href="#"><span>Géométrie &amp; Profilés</span><span class="font-label-sm text-label-sm text-outline">IPE 240</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="liaisons" href="#"><span>Liaisons d'appuis</span><span class="font-label-sm text-label-sm text-outline">6 fixes</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="charges" href="#"><span>Cas de charges (G/Q/W)</span><span class="font-label-sm text-label-sm text-outline">12 comb.</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="calcul-3d-eurocode-3" href="#"><span>Vérification Eurocode 3</span><span class="font-label-sm text-label-sm text-tertiary font-semibold">EC3-1-1</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="rapport" href="#"><span>Notes de calcul &amp; Rapport</span><span class="font-label-sm text-label-sm text-outline">PDF/A</span></a></nav></div><div class="p-space-md border-t border-surface-variant bg-surface-container-lowest"><div class="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant"><span>Moteur EF 3D</span><span class="text-tertiary-container font-medium">Prêt (v4.2.1)</span></div></div></aside><div class="pl-72"><main class="relative pt-11 min-h-screen bg-surface"><div class="flex flex-col w-full h-[calc(100vh-2.75rem)] overflow-hidden select-none">
+<!-- Sub-header bar for CAD tools & active stage workflow -->
+<div class="h-9 px-space-lg bg-surface-container-lowest flex items-center justify-between shadow-sm z-20 flex-shrink-0">
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-medium text-on-surface">Étape 1 sur 5</span>
+<span class="text-outline">/</span>
+<span>Géométrie filaire &amp; bibliothèque des profilés</span>
+</div>
+<div class="hidden md:flex items-center gap-space-xs bg-surface-container-low px-space-sm py-space-xs rounded">
+<span class="font-label-sm text-label-sm text-outline">Système d'unités :</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">SI (m, kN, MPa)</span>
+</div>
+</div>
+<!-- Viewport quick action tools -->
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center bg-surface-container-low rounded p-space-xs gap-space-xs">
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest text-primary shadow-xs" title="Sélection poutre (V)" type="button">
+<span class="material-symbols-outlined text-[15px]">near_me</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors" title="Ajouter nœud (N)" type="button">
+<span class="material-symbols-outlined text-[15px]">add_circle</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors" title="Tracer barre (B)" type="button">
+<span class="material-symbols-outlined text-[15px]">horizontal_rule</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors" title="Cotation métrique (D)" type="button">
+<span class="material-symbols-outlined text-[15px]">straighten</span>
+</button>
+</div>
+<div class="h-4 w-px bg-surface-variant mx-space-xs"></div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-md h-6 flex items-center gap-space-xs rounded bg-surface-container text-on-surface font-body-sm text-body-sm hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px] text-outline">tune</span>
+<span>Filtres d'affichage</span>
+</button>
+<button class="px-space-md h-6 flex items-center gap-space-xs rounded bg-primary-container text-on-primary font-body-sm text-body-sm hover:bg-primary transition-all shadow-xs" type="button">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span>
+<span class="font-medium">Calculer maillage</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Primary Workspace: Left Inspector + Main 3D Viewport -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- LEFT INSPECTOR SIDEBAR (320px) -->
+<aside class="w-80 bg-surface-container-lowest flex flex-col justify-between z-10 flex-shrink-0 shadow-sm overflow-hidden">
+<!-- Top Inspector Header: Member ID & Status -->
+<div class="p-space-md bg-surface-container-low flex items-center justify-between flex-shrink-0">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-5 h-5 rounded bg-primary-container text-on-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[13px]">view_in_ar</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Poutre sélectionnée B-04</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container-highest text-on-surface-variant px-space-sm py-space-xs rounded font-medium flex-shrink-0">
+          N12 → N14
+        </span>
+</div>
+<!-- Scrollable Properties Panel -->
+<div class="flex-1 overflow-y-auto px-space-md py-space-sm flex flex-col gap-space-md">
+<!-- Member Section Selector Card -->
+<div class="flex flex-col gap-space-sm p-space-sm bg-surface-container-low rounded">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Profilé EN 10365</span>
+<span class="font-label-sm text-label-sm text-primary font-medium">IPE standard</span>
+</div>
+<div class="relative">
+<div class="w-full h-8 bg-surface-container-lowest rounded px-space-sm flex items-center justify-between cursor-pointer hover:bg-surface-bright transition-colors shadow-xs">
+<div class="flex items-center gap-space-sm">
+<!-- Tiny steel I-beam icon -->
+<svg class="text-primary-container" fill="currentColor" height="14" viewbox="0 0 16 16" width="14">
+<path d="M2 2h12v2.5h-4.5v7H14V14H2v-2.5h4.5v-7H2V2z"></path>
+</svg>
+<span class="font-label-md text-label-md font-semibold text-on-surface">IPE 200</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-outline">unfold_more</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Matériau structurel</span>
+</div>
+<div class="relative">
+<div class="w-full h-8 bg-surface-container-lowest rounded px-space-sm flex items-center justify-between cursor-pointer hover:bg-surface-bright transition-colors shadow-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface">Acier S235JR (fy = 235 MPa)</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-outline">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Metric Properties (Swiss Metrology Flat Alignment Table) -->
+<div class="flex flex-col">
+<div class="px-space-xs py-space-xs">
+<span class="font-body-sm text-body-sm text-outline font-medium">Caractéristiques géométriques</span>
+</div>
+<div class="flex flex-col bg-surface-container-low rounded overflow-hidden">
+<!-- Row: Length -->
+<div class="h-7 px-space-sm flex items-center justify-between hover:bg-surface-container transition-colors">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Longueur (L)</span>
+<div class="font-data-metric text-data-metric text-on-surface flex items-baseline gap-space-xs">
+<span>2,400</span>
+<span class="font-label-sm text-label-sm text-outline">m</span>
+</div>
+</div>
+<!-- Row: Area -->
+<div class="h-7 px-space-sm flex items-center justify-between bg-surface-container-lowest hover:bg-surface-container transition-colors">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Aire de section (A)</span>
+<div class="font-data-metric text-data-metric text-on-surface flex items-baseline gap-space-xs">
+<span>28,50</span>
+<span class="font-label-sm text-label-sm text-outline">cm²</span>
+</div>
+</div>
+<!-- Row: Iy -->
+<div class="h-7 px-space-sm flex items-center justify-between hover:bg-surface-container transition-colors">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Inertie forte (Iy)</span>
+<div class="font-data-metric text-data-metric text-on-surface flex items-baseline gap-space-xs">
+<span>1 943</span>
+<span class="font-label-sm text-label-sm text-outline">cm⁴</span>
+</div>
+</div>
+<!-- Row: Iz -->
+<div class="h-7 px-space-sm flex items-center justify-between bg-surface-container-lowest hover:bg-surface-container transition-colors">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Inertie faible (Iz)</span>
+<div class="font-data-metric text-data-metric text-on-surface flex items-baseline gap-space-xs">
+<span>142,0</span>
+<span class="font-label-sm text-label-sm text-outline">cm⁴</span>
+</div>
+</div>
+<!-- Row: Wely -->
+<div class="h-7 px-space-sm flex items-center justify-between hover:bg-surface-container transition-colors">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Module élastique (Wely)</span>
+<div class="font-data-metric text-data-metric text-on-surface flex items-baseline gap-space-xs">
+<span>194,3</span>
+<span class="font-label-sm text-label-sm text-outline">cm³</span>
+</div>
+</div>
+<!-- Row: Mass -->
+<div class="h-7 px-space-sm flex items-center justify-between bg-surface-container-lowest hover:bg-surface-container transition-colors">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Masse linéique</span>
+<div class="font-data-metric text-data-metric text-on-surface flex items-baseline gap-space-xs">
+<span>22,40</span>
+<span class="font-label-sm text-label-sm text-outline">kg/m</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Orientation & articulations -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-body-sm text-body-sm text-outline font-medium px-space-xs">Orientation &amp; articulations</span>
+<div class="p-space-sm bg-surface-container-low rounded flex flex-col gap-space-sm">
+<!-- Roulis input -->
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Angle de roulis (θx)</span>
+<div class="flex items-center bg-surface-container-lowest rounded px-space-sm h-6 shadow-xs w-24 justify-end">
+<input class="w-12 text-right bg-transparent font-label-sm text-label-sm text-on-surface focus:outline-none" type="text" value="0.0"/>
+<span class="font-label-sm text-label-sm text-outline pl-space-xs">°</span>
+</div>
+</div>
+<!-- Relâchements N1 -->
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Relâchements N1</span>
+<div class="flex items-center gap-space-xs">
+<button class="w-6 h-5 rounded text-label-sm font-label-sm bg-surface-container-lowest text-outline hover:text-on-surface" type="button">Rx</button>
+<button class="w-6 h-5 rounded text-label-sm font-label-sm bg-primary-container text-on-primary font-medium" type="button">Ry</button>
+<button class="w-6 h-5 rounded text-label-sm font-label-sm bg-primary-container text-on-primary font-medium" type="button">Rz</button>
+</div>
+</div>
+<!-- Relâchements N2 -->
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Relâchements N2</span>
+<div class="flex items-center gap-space-xs">
+<button class="w-6 h-5 rounded text-label-sm font-label-sm bg-surface-container-lowest text-outline hover:text-on-surface" type="button">Rx</button>
+<button class="w-6 h-5 rounded text-label-sm font-label-sm bg-surface-container-lowest text-outline hover:text-on-surface" type="button">Ry</button>
+<button class="w-6 h-5 rounded text-label-sm font-label-sm bg-surface-container-lowest text-outline hover:text-on-surface" type="button">Rz</button>
+</div>
+</div>
+<!-- Flambement -->
+<div class="flex items-center justify-between pt-space-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Flambement (ky / kz)</span>
+<div class="flex items-center gap-space-xs">
+<div class="bg-surface-container-lowest rounded px-space-xs h-6 flex items-center shadow-xs">
+<span class="font-label-sm text-label-sm text-outline pr-space-xs">ky</span>
+<input class="w-8 text-center bg-transparent font-label-sm text-label-sm text-on-surface focus:outline-none" type="text" value="1,00"/>
+</div>
+<div class="bg-surface-container-lowest rounded px-space-xs h-6 flex items-center shadow-xs">
+<span class="font-label-sm text-label-sm text-outline pr-space-xs">kz</span>
+<input class="w-8 text-center bg-transparent font-label-sm text-label-sm text-on-surface focus:outline-none" type="text" value="1,00"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Création rapide de coordonnées -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-body-sm text-body-sm text-outline font-medium px-space-xs">Création rapide de géométrie</span>
+<div class="p-space-sm bg-surface-container-low rounded flex flex-col gap-space-sm">
+<div class="grid grid-cols-3 gap-space-xs">
+<div class="flex flex-col bg-surface-container-lowest rounded p-space-xs shadow-xs">
+<span class="font-label-sm text-label-sm text-outline">X</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">2400 mm</span>
+</div>
+<div class="flex flex-col bg-surface-container-lowest rounded p-space-xs shadow-xs">
+<span class="font-label-sm text-label-sm text-outline">Y</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">0 mm</span>
+</div>
+<div class="flex flex-col bg-surface-container-lowest rounded p-space-xs shadow-xs">
+<span class="font-label-sm text-label-sm text-outline">Z</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">1200 mm</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-space-xs">
+<button class="flex-1 h-7 rounded bg-surface-container-lowest hover:bg-surface-container-high text-primary font-body-sm text-body-sm font-medium flex items-center justify-center gap-space-xs transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Insérer nœud</span>
+</button>
+<button class="flex-1 h-7 rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm flex items-center justify-center gap-space-xs transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[14px]">polyline</span>
+<span>Tracer poutre</span>
+</button>
+</div>
+<div class="pt-space-xs flex justify-end">
+<button class="w-full h-6 rounded text-error hover:bg-error-container hover:text-on-error-container text-body-sm font-body-sm flex items-center justify-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">delete</span>
+<span>Supprimer la poutre (Del)</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section: Analyse locale des contraintes (Micro-preview inspired by thermal stress map) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-space-xs">
+<span class="font-body-sm text-body-sm text-outline font-medium">Contraintes von Mises (Élément B-04)</span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-semibold">142 MPa (OK)</span>
+</div>
+<div class="relative rounded overflow-hidden shadow-xs bg-surface-container-lowest p-space-sm flex flex-col gap-space-xs">
+<!-- Simulated micro gradient field -->
+<div class="h-16 w-full rounded relative overflow-hidden bg-gradient-to-r from-primary via-secondary-container via-tertiary-fixed to-error flex items-center justify-center">
+<div class="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_50%,#ba1a1a,transparent_60%)]"></div>
+<!-- Wireframe overlay -->
+<svg class="absolute inset-0 w-full h-full stroke-surface/30 stroke-1" preserveaspectratio="none" viewbox="0 0 100 40">
+<line x1="0" x2="100" y1="10" y2="10"></line>
+<line x1="0" x2="100" y1="20" y2="20"></line>
+<line x1="0" x2="100" y1="30" y2="30"></line>
+<line x1="20" x2="20" y1="0" y2="40"></line>
+<line x1="40" x2="40" y1="0" y2="40"></line>
+<line x1="60" x2="60" y1="0" y2="40"></line>
+<line x1="80" x2="80" y1="0" y2="40"></line>
+</svg>
+<div class="relative px-space-sm py-space-xs bg-surface-container-lowest/90 backdrop-blur rounded font-label-sm text-label-sm text-on-surface shadow-xs flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+<span>Pic contrainte : 188 MPa &lt; 235 MPa</span>
+</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-outline px-space-xs">
+<span>0 MPa</span>
+<span>118 MPa</span>
+<span>235 MPa</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Import Bar at Bottom -->
+<div class="p-space-md bg-surface-container-lowest border-t border-surface-variant flex items-center justify-between flex-shrink-0">
+<button class="w-full h-8 rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-body-sm text-body-sm flex items-center justify-center gap-space-sm transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">upload_file</span>
+<span>Importer CAO (.dxf, .step, .igs)</span>
+</button>
+</div>
+</aside>
+<!-- MAIN 3D VIEWPORT CANVAS (F8FAFC) -->
+<section class="flex-1 relative bg-surface-bright overflow-hidden flex flex-col">
+<!-- Viewport Background Grid (Subtle Swiss Metrology hairlines) -->
+<div class="absolute inset-0 pointer-events-none opacity-30 bg-[linear-gradient(to_right,#d3e4fe_1px,transparent_1px),linear-gradient(to_bottom,#d3e4fe_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+<!-- Top-left floating camera view selector (Pill segmented control) -->
+<div class="absolute top-space-md left-space-md z-30 flex items-center gap-space-xs bg-surface-container-lowest/95 backdrop-blur rounded-full p-space-xs shadow-md">
+<button class="px-space-md py-space-xs rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold transition-all" type="button">
+          3D Iso
+        </button>
+<button class="px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" type="button">
+          Dessus XY
+        </button>
+<button class="px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" type="button">
+          Face XZ
+        </button>
+<button class="px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-all" type="button">
+          Côté YZ
+        </button>
+<div class="w-px h-3 bg-surface-variant mx-space-xs"></div>
+<button class="px-space-md py-space-xs rounded-full text-primary font-label-sm text-label-sm font-medium flex items-center gap-space-xs hover:bg-surface-container-low transition-all" type="button">
+<span class="material-symbols-outlined text-[14px]">view_in_ar</span>
+<span>Rendu volumique</span>
+</button>
+</div>
+<!-- Top-right 3D Orientation Cube & XYZ Triad Gizmo -->
+<div class="absolute top-space-md right-space-md z-30 flex flex-col items-end gap-space-sm pointer-events-auto">
+<!-- 3D View Cube -->
+<div class="w-16 h-16 bg-surface-container-lowest/90 backdrop-blur rounded shadow-md p-space-xs flex items-center justify-center relative cursor-pointer hover:shadow-lg transition-shadow">
+<div class="w-10 h-10 border border-primary/40 rounded-xs flex items-center justify-center bg-surface-container-low/80 text-on-surface font-label-sm text-label-sm font-semibold transform rotate-12 -skew-x-12">
+            ISO
+          </div>
+<span class="absolute top-1 text-[9px] font-label-sm text-outline">HAUT</span>
+<span class="absolute bottom-1 text-[9px] font-label-sm text-outline">AVANT</span>
+</div>
+<!-- Metric XYZ Triad -->
+<div class="bg-surface-container-lowest/90 backdrop-blur rounded px-space-md py-space-xs shadow-md flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-0.5 bg-error rounded-full"></span>
+<span class="font-label-sm text-label-sm font-medium text-error">X</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-0.5 bg-tertiary rounded-full"></span>
+<span class="font-label-sm text-label-sm font-medium text-tertiary">Y</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-0.5 bg-primary-container rounded-full"></span>
+<span class="font-label-sm text-label-sm font-medium text-primary-container">Z</span>
+</div>
+</div>
+</div>
+<!-- 3D Canvas Visual Representation (Detailed Isometric Truss Structure SVG) -->
+<div class="flex-1 w-full h-full relative flex items-center justify-center p-space-xl">
+<!-- Structural Canvas SVG (Treillis Warren 24m) -->
+<svg class="w-full h-full max-w-5xl" fill="none" viewbox="0 0 960 520" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<!-- Beam B-04 Glow Filter -->
+<filter height="140%" id="beam-glow" width="140%" x="-20%" y="-20%">
+<fedropshadow dx="0" dy="0" flood-color="#1d4ed8" flood-opacity="0.6" stddeviation="4"></fedropshadow>
+</filter>
+<!-- Gradient for stress highlight on active beam -->
+<lineargradient id="stress-beam" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#1d4ed8"></stop>
+<stop offset="50%" stop-color="#2151da"></stop>
+<stop offset="100%" stop-color="#1d4ed8"></stop>
+</lineargradient>
+<!-- Marker for dimension lines -->
+<marker id="dim-arrow-start" markerheight="6" markerwidth="6" orient="auto" refx="0" refy="3">
+<path d="M6,0 L0,3 L6,6" fill="none" stroke="#747686" stroke-width="1"></path>
+</marker>
+<marker id="dim-arrow-end" markerheight="6" markerwidth="6" orient="auto" refx="6" refy="3">
+<path d="M0,0 L6,3 L0,6" fill="none" stroke="#747686" stroke-width="1"></path>
+</marker>
+</defs>
+<!-- Ground projection grid shadow -->
+<ellipse cx="480" cy="450" fill="#0b1c30" fill-opacity="0.04" rx="380" ry="40"></ellipse>
+<!-- Back Plane Framing (Depth perspective layer) -->
+<g opacity="0.35" stroke-dasharray="2 3">
+<line stroke="#0037b0" stroke-width="2" x1="200" x2="800" y1="290" y2="290"></line>
+<line stroke="#0037b0" stroke-width="2" x1="260" x2="740" y1="210" y2="210"></line>
+<!-- Diagonals back -->
+<line stroke="#004f35" stroke-width="1.5" x1="200" x2="260" y1="290" y2="210"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="260" x2="350" y1="210" y2="290"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="350" x2="440" y1="290" y2="210"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="440" x2="530" y1="210" y2="290"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="530" x2="620" y1="290" y2="210"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="620" x2="710" y1="210" y2="290"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="710" x2="740" y1="290" y2="210"></line>
+<line stroke="#004f35" stroke-width="1.5" x1="740" x2="800" y1="210" y2="290"></line>
+</g>
+<!-- Transverse cross-tie beams connecting front & back trusses -->
+<g opacity="0.6" stroke="#00687a" stroke-linecap="round" stroke-width="1.5">
+<line x1="120" x2="200" y1="360" y2="290"></line>
+<line x1="270" x2="350" y1="360" y2="290"></line>
+<line x1="420" x2="530" y1="360" y2="290"></line>
+<line x1="570" x2="620" y1="360" y2="290"></line>
+<line x1="720" x2="710" y1="360" y2="290"></line>
+<line x1="840" x2="800" y1="360" y2="290"></line>
+<line x1="195" x2="260" y1="250" y2="210"></line>
+<line x1="345" x2="440" y1="250" y2="210"></line>
+<line x1="495" x2="620" y1="250" y2="210"></line>
+<line x1="645" x2="740" y1="250" y2="210"></line>
+</g>
+<!-- FRONT MAIN TRUSS (Treillis Warren - Forefront) -->
+<!-- 1. Lower Chord Beams (Cobalt #1D4ED8) -->
+<g stroke-linecap="round" stroke-linejoin="round">
+<!-- B-01 -->
+<line stroke="#0037b0" stroke-width="3.5" x1="120" x2="270" y1="360" y2="360"></line>
+<!-- B-02 -->
+<line stroke="#0037b0" stroke-width="3.5" x1="270" x2="420" y1="360" y2="360"></line>
+<!-- B-03 -->
+<line stroke="#0037b0" stroke-width="3.5" x1="420" x2="570" y1="360" y2="360"></line>
+<!-- B-04: THE ACTIVELY SELECTED BEAM -->
+<line filter="url(#beam-glow)" stroke="url(#stress-beam)" stroke-width="6" x1="570" x2="720" y1="360" y2="360"></line>
+<!-- B-05 -->
+<line stroke="#0037b0" stroke-width="3.5" x1="720" x2="840" y1="360" y2="360"></line>
+<!-- Upper Chord Beams (Cobalt #1D4ED8) -->
+<line stroke="#0037b0" stroke-width="3.5" x1="195" x2="345" y1="250" y2="250"></line>
+<line stroke="#0037b0" stroke-width="3.5" x1="345" x2="495" y1="250" y2="250"></line>
+<line stroke="#0037b0" stroke-width="3.5" x1="495" x2="645" y1="250" y2="250"></line>
+<line stroke="#0037b0" stroke-width="3.5" x1="645" x2="765" y1="250" y2="250"></line>
+</g>
+<!-- 2. Vertical Struts (Cyan #0891B2 / #00687a) -->
+<g stroke="#00687a" stroke-linecap="round" stroke-width="2.5">
+<line opacity="0.4" stroke-dasharray="2 3" x1="195" x2="195" y1="250" y2="360"></line>
+<line opacity="0.4" stroke-dasharray="2 3" x1="345" x2="345" y1="250" y2="360"></line>
+<line opacity="0.4" stroke-dasharray="2 3" x1="495" x2="495" y1="250" y2="360"></line>
+<line opacity="0.4" stroke-dasharray="2 3" x1="645" x2="645" y1="250" y2="360"></line>
+</g>
+<!-- 3. Diagonal Bracing Bars (Emerald #004f35 / #10B981) -->
+<g stroke="#004f35" stroke-linecap="round" stroke-width="3">
+<!-- N01 to N02 -->
+<line x1="120" x2="195" y1="360" y2="250"></line>
+<!-- N02 to N03 -->
+<line x1="195" x2="270" y1="250" y2="360"></line>
+<!-- N03 to N04 -->
+<line x1="270" x2="345" y1="360" y2="250"></line>
+<!-- N04 to N05 -->
+<line x1="345" x2="420" y1="250" y2="360"></line>
+<!-- N05 to N06 -->
+<line x1="420" x2="495" y1="360" y2="250"></line>
+<!-- N06 to N12 -->
+<line x1="495" x2="570" y1="250" y2="360"></line>
+<!-- N12 to N13 -->
+<line x1="570" x2="645" y1="360" y2="250"></line>
+<!-- N13 to N14 -->
+<line x1="645" x2="720" y1="250" y2="360"></line>
+<!-- N14 to N15 -->
+<line x1="720" x2="765" y1="360" y2="250"></line>
+<!-- N15 to N16 -->
+<line x1="765" x2="840" y1="250" y2="360"></line>
+</g>
+<!-- Dimension Callout Line for Beam B-04 -->
+<g>
+<line marker-end="url(#dim-arrow-end)" marker-start="url(#dim-arrow-start)" stroke="#747686" stroke-width="1" x1="570" x2="720" y1="380" y2="380"></line>
+<line stroke="#747686" stroke-dasharray="2 2" stroke-width="0.75" x1="570" x2="570" y1="365" y2="388"></line>
+<line stroke="#747686" stroke-dasharray="2 2" stroke-width="0.75" x1="720" x2="720" y1="365" y2="388"></line>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" text-anchor="middle" x="645" y="396">L = 2,400 m</text>
+</g>
+<!-- Global length dimension callout below structure -->
+<g opacity="0.7">
+<line marker-end="url(#dim-arrow-end)" marker-start="url(#dim-arrow-start)" stroke="#747686" stroke-width="1" x1="120" x2="840" y1="425" y2="425"></line>
+<line stroke="#747686" stroke-dasharray="2 2" stroke-width="0.75" x1="120" x2="120" y1="370" y2="433"></line>
+<line stroke="#747686" stroke-dasharray="2 2" stroke-width="0.75" x1="840" x2="840" y1="370" y2="433"></line>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="11" text-anchor="middle" x="480" y="440">Portée totale L = 24,000 m (10 mailles Warren)</text>
+</g>
+<!-- Structural Boundary Supports (Appuis simples & rotules) -->
+<!-- Left Pin Support (Rotule fixe) -->
+<g transform="translate(120, 360)">
+<polygon fill="#eff4ff" points="0,0 -10,16 10,16" stroke="#0037b0" stroke-width="1.5"></polygon>
+<line stroke="#0b1c30" stroke-width="2" x1="-14" x2="14" y1="16" y2="16"></line>
+<line stroke="#747686" stroke-width="1" x1="-12" x2="-8" y1="20" y2="16"></line>
+<line stroke="#747686" stroke-width="1" x1="-4" x2="0" y1="20" y2="16"></line>
+<line stroke="#747686" stroke-width="1" x1="4" x2="8" y1="20" y2="16"></line>
+<text fill="#0037b0" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" text-anchor="end" x="-16" y="8">Appui A (Fixe)</text>
+</g>
+<!-- Right Roller Support (Appui glissant) -->
+<g transform="translate(840, 360)">
+<polygon fill="#eff4ff" points="0,0 -10,12 10,12" stroke="#0037b0" stroke-width="1.5"></polygon>
+<circle cx="-5" cy="15" fill="#eff4ff" r="2.5" stroke="#0037b0" stroke-width="1"></circle>
+<circle cx="5" cy="15" fill="#eff4ff" r="2.5" stroke="#0037b0" stroke-width="1"></circle>
+<line stroke="#0b1c30" stroke-width="2" x1="-14" x2="14" y1="19" y2="19"></line>
+<text fill="#0037b0" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="600" x="18" y="8">Appui B (Glissant X)</text>
+</g>
+<!-- NODES (Crisp white circles with dark border) -->
+<g>
+<!-- Lower Nodes -->
+<!-- N01 -->
+<circle cx="120" cy="360" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="120" y="350">N01</text>
+<!-- N03 -->
+<circle cx="270" cy="360" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="270" y="350">N03</text>
+<!-- N05 -->
+<circle cx="420" cy="360" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="420" y="350">N05</text>
+<!-- N12: START NODE OF SELECTED BEAM -->
+<circle cx="570" cy="360" fill="#1d4ed8" r="6" stroke="#ffffff" stroke-width="2"></circle>
+<text fill="#0037b0" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" text-anchor="middle" x="570" y="348">N12</text>
+<!-- N14: END NODE OF SELECTED BEAM -->
+<circle cx="720" cy="360" fill="#1d4ed8" r="6" stroke="#ffffff" stroke-width="2"></circle>
+<text fill="#0037b0" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" text-anchor="middle" x="720" y="348">N14</text>
+<!-- N16 -->
+<circle cx="840" cy="360" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="840" y="350">N16</text>
+<!-- Upper Nodes -->
+<!-- N02 -->
+<circle cx="195" cy="250" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="195" y="240">N02</text>
+<!-- N04 -->
+<circle cx="345" cy="250" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="345" y="240">N04</text>
+<!-- N06 -->
+<circle cx="495" cy="250" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="495" y="240">N06</text>
+<!-- N13 -->
+<circle cx="645" cy="250" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="645" y="240">N13</text>
+<!-- N15 -->
+<circle cx="765" cy="250" fill="#ffffff" r="4.5" stroke="#0b1c30" stroke-width="2"></circle>
+<text fill="#434655" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" x="765" y="240">N15</text>
+</g>
+</svg>
+<!-- Dynamic Floating Callout Badge over Beam B-04 -->
+<div class="absolute top-[48%] left-[64%] -translate-x-1/2 -translate-y-full z-20 pointer-events-auto">
+<div class="bg-surface-container-lowest border border-primary-container px-space-md py-space-xs rounded shadow-lg flex items-center gap-space-sm text-on-surface">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Poutre B-04</span>
+<span class="text-outline">·</span>
+<span class="font-label-sm text-label-sm font-semibold text-primary">IPE 200</span>
+<span class="font-label-sm text-label-sm text-outline">(2,400 m)</span>
+</div>
+<button class="ml-space-xs text-outline hover:text-on-surface flex items-center" title="Édition rapide" type="button">
+<span class="material-symbols-outlined text-[14px]">edit</span>
+</button>
+</div>
+<!-- Little down pointer arrow -->
+<div class="w-2.5 h-2.5 bg-surface-container-lowest border-r border-b border-primary-container transform rotate-45 mx-auto -mt-1 shadow-xs"></div>
+</div>
+</div>
+<!-- Bottom Interactive Legend & Quick Status Ribbons -->
+<div class="absolute bottom-space-md left-space-md right-space-md flex items-center justify-between pointer-events-none">
+<!-- Legend Bar (Glassmorphic) -->
+<div class="pointer-events-auto bg-surface-container-lowest/90 backdrop-blur rounded px-space-md py-space-xs shadow-md flex items-center gap-space-lg text-label-sm font-label-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="text-on-surface font-medium">IPE 200</span>
+<span class="text-outline">(Membrures)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="text-on-surface font-medium">HEA 180</span>
+<span class="text-outline">(Montants)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<span class="text-on-surface font-medium">Tube 100×5</span>
+<span class="text-outline">(Diagonales)</span>
+</div>
+</div>
+<!-- Viewport Navigation Hints -->
+<div class="pointer-events-auto hidden sm:flex items-center gap-space-md bg-surface-container-lowest/80 backdrop-blur rounded px-space-md py-space-xs shadow-sm font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-xs">
+<kbd class="px-1 py-0.5 bg-surface-container rounded font-label-sm text-[10px]">Clic G</kbd>
+<span>Sélectionner</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<kbd class="px-1 py-0.5 bg-surface-container rounded font-label-sm text-[10px]">Clic D</kbd>
+<span>Rotation 3D</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<kbd class="px-1 py-0.5 bg-surface-container rounded font-label-sm text-[10px]">Molette</kbd>
+<span>Zoom</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<kbd class="px-1 py-0.5 bg-surface-container rounded font-label-sm text-[10px]">Maj + Glisser</kbd>
+<span>Panoramique</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div></main></div></body></html>

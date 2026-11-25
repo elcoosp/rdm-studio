@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { 'colors': { 'inverse-primary': '#b7c4ff', 'tertiary': '#004f35', 'on-surface': '#0b1c30', 'primary-fixed': '#dce1ff', 'secondary-fixed-dim': '#4cd7f6', 'inverse-on-surface': '#eaf1ff', 'surface-container-low': '#eff4ff', 'surface-container': '#e5eeff', 'on-error-container': '#93000a', 'surface': '#f8f9ff', 'surface-bright': '#f8f9ff', 'on-secondary': '#ffffff', 'on-primary-fixed': '#001551', 'on-secondary-fixed-variant': '#004e5c', 'on-tertiary': '#ffffff', 'tertiary-fixed-dim': '#4edea3', 'surface-variant': '#d3e4fe', 'on-surface-variant': '#434655', 'tertiary-container': '#006a48', 'primary-fixed-dim': '#b7c4ff', 'primary-container': '#1d4ed8', 'secondary-fixed': '#acedff', 'on-primary-fixed-variant': '#0039b5', 'error': '#ba1a1a', 'surface-container-highest': '#d3e4fe', 'outline-variant': '#c4c5d7', 'tertiary-fixed': '#6ffbbe', 'on-tertiary-fixed': '#002113', 'on-primary-container': '#cad3ff', 'surface-container-high': '#dce9ff', 'error-container': '#ffdad6', 'secondary-container': '#57dffe', 'surface-tint': '#2151da', 'on-secondary-container': '#006172', 'on-secondary-fixed': '#001f26', 'surface-container-lowest': '#ffffff', 'primary': '#0037b0', 'secondary': '#00687a', 'on-tertiary-fixed-variant': '#005236', 'outline': '#747686', 'inverse-surface': '#213145', 'surface-dim': '#cbdbf5', 'on-primary': '#ffffff', 'on-background': '#0b1c30', 'background': '#f8f9ff', 'on-tertiary-container': '#60eeb1', 'on-error': '#ffffff' }, 'borderRadius': { 'DEFAULT': '0.125rem', 'lg': '0.25rem', 'xl': '0.5rem', 'full': '0.75rem' }, 'spacing': { 'space-sm': '0.25rem', 'space-md': '0.5rem', 'space-xl': '1rem', 'gutter': '0.5rem', 'space-lg': '0.75rem', 'space-xs': '0.125rem', 'margin': '0.75rem' }, 'fontFamily': { 'headline-lg': ['Inter'], 'label-sm': ['JetBrains Mono'], 'body-lg': ['Inter'], 'headline-md': ['Inter'], 'label-lg': ['JetBrains Mono'], 'body-sm': ['Inter'], 'body-md': ['Inter'], 'headline-sm': ['Inter'], 'data-metric': ['JetBrains Mono'], 'label-md': ['JetBrains Mono'] }, 'fontSize': { 'headline-lg': ['24px', { 'lineHeight': '32px', 'fontWeight': '600' }], 'label-sm': ['11px', { 'lineHeight': '14px', 'fontWeight': '400' }], 'body-lg': ['14px', { 'lineHeight': '20px', 'fontWeight': '400' }], 'headline-md': ['18px', { 'lineHeight': '24px', 'fontWeight': '600' }], 'label-lg': ['13px', { 'lineHeight': '16px', 'fontWeight': '500' }], 'body-sm': ['12px', { 'lineHeight': '16px', 'fontWeight': '400' }], 'body-md': ['13px', { 'lineHeight': '18px', 'fontWeight': '400' }], 'headline-sm': ['15px', { 'lineHeight': '20px', 'fontWeight': '600' }], 'data-metric': ['13px', { 'lineHeight': '16px', 'fontWeight': '600' }], 'label-md': ['12px', { 'lineHeight': '16px', 'fontWeight': '400' }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-11 bg-surface-container-lowest z-50 border-b border-surface-variant"><div class="h-11 w-full px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-lg"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/ALJJyrBkiJLhDXT42XCRLpddHeyCIDu7RNiQBcljaAFud9q_6i--pqUnO5LNqTYWaeWUacC2NR1avri-5EtcE_VwBenik2f1_BRVa1TNbyizlhB2ouXrmbh8uoD8oR-LwClx5u3f1rKjYIe5ODZyPgqRyd3JlFP_Kz47ZXGpOxEVKLg6kYW8mcq5X0oSmfEA7fuZ3YuOV-ed2lX8tg808eJ5FOYJAbIffwJ2HqccNn-zxm3pVCpm9jXXhhmRLnqH"/><div class="flex items-center gap-space-sm pl-space-xs"><button class="flex items-center gap-space-xs font-headline-sm text-headline-sm text-on-surface hover:text-primary transition-colors" type="button"><span>RDM Studio</span><span class="text-outline">/</span><span>Treillis-L240</span><span class="material-symbols-outlined text-[16px] text-outline ml-space-xs">expand_more</span></button></div></div><nav class="hidden lg:flex items-center h-11 gap-space-xl" data-active-classes="border-b-2 border-primary-container text-on-surface font-medium"><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="geometrie-profiles" href="#">Géométrie &amp; Profilés</a><a aria-current="page" class="h-11 flex items-center transition-colors px-space-xs border-b-2 border-primary-container text-on-surface font-medium" data-path="liaisons" href="#">Liaisons</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="charges" href="#">Charges</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="calcul-3d-eurocode-3" href="#">Calcul 3D &amp; Eurocode 3</a><a class="h-11 flex items-center text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors px-space-xs" data-path="rapport" href="#">Rapport</a></nav><div class="flex items-center gap-space-lg"><div class="hidden sm:flex items-center gap-space-xs px-space-md py-space-xs bg-surface-container-low rounded border border-surface-variant"><span class="font-label-sm text-label-sm text-on-surface-variant">44 nœuds</span><span class="text-outline text-label-sm">·</span><span class="font-label-sm text-label-sm text-on-surface-variant">62 poutres</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs bg-surface rounded border border-surface-variant text-on-surface-variant font-label-sm text-label-sm"><kbd class="font-label-sm">⌘</kbd><kbd class="font-label-sm">K</kbd></div><div class="flex items-center text-label-sm font-label-sm border border-surface-variant rounded overflow-hidden"><span class="px-space-sm py-space-xs bg-surface-container-high text-on-surface font-semibold">FR</span><span class="px-space-sm py-space-xs bg-surface-container-lowest text-outline hover:text-on-surface transition-colors cursor-pointer">EN</span></div><button class="w-7 h-7 flex items-center justify-center rounded border border-surface-variant text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" title="Documentation &amp; Aide" type="button"><span class="material-symbols-outlined text-[16px]">help</span></button></div></div></header><aside class="fixed left-0 top-11 bottom-0 w-72 bg-surface-container-lowest z-40 border-r border-surface-variant flex flex-col justify-between"><div class="flex flex-col"><div class="h-9 px-space-lg flex items-center justify-between border-b border-surface-variant bg-surface-container-low"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Explorateur de modèle</span><span class="material-symbols-outlined text-[16px] text-outline">account_tree</span></div><nav class="p-space-sm flex flex-col gap-space-xs" data-active-classes="bg-surface-container text-on-surface font-medium"><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="geometrie-profiles" href="#"><span>Géométrie &amp; Profilés</span><span class="font-label-sm text-label-sm text-outline">IPE 240</span></a><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm rounded transition-all bg-surface-container text-on-surface font-medium" data-path="liaisons" href="#"><span>Liaisons d'appuis</span><span class="font-label-sm text-label-sm text-outline">6 fixes</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="charges" href="#"><span>Cas de charges (G/Q/W)</span><span class="font-label-sm text-label-sm text-outline">12 comb.</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="calcul-3d-eurocode-3" href="#"><span>Vérification Eurocode 3</span><span class="font-label-sm text-label-sm text-tertiary font-semibold">EC3-1-1</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="rapport" href="#"><span>Notes de calcul &amp; Rapport</span><span class="font-label-sm text-label-sm text-outline">PDF/A</span></a></nav></div><div class="p-space-md border-t border-surface-variant bg-surface-container-lowest"><div class="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant"><span>Moteur EF 3D</span><span class="text-tertiary-container font-medium">Prêt (v4.2.1)</span></div></div></aside><div class="pl-72"><main class="relative pt-11 min-h-screen bg-surface"><div class="flex flex-col w-full">
+<div class="flex flex-row w-full h-[calc(100vh-2.75rem)] overflow-hidden bg-surface">
+<!-- LEFT INSPECTOR SIDEBAR (320px, calibrated Swiss metrology density) -->
+<aside class="w-80 flex-shrink-0 bg-surface-container-lowest flex flex-col justify-between shadow-sm z-20 overflow-hidden">
+<div class="flex flex-col flex-1 overflow-y-auto">
+<!-- Sidebar Section Header -->
+<div class="h-10 px-space-lg flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[15px] text-primary">link</span>
+<span class="font-headline-sm text-body-sm text-on-surface">Conditions aux limites</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-primary font-medium px-space-md py-space-xs rounded">Nœud N04</span>
+</div>
+<div class="p-space-lg flex flex-col gap-space-lg">
+<!-- Property Rows Block -->
+<div class="flex flex-col rounded bg-surface-container-lowest">
+<!-- Row: Coordonnées -->
+<div class="flex items-center justify-between h-7 px-space-sm bg-surface-container-low/40 rounded-t">
+<span class="font-body-sm text-label-md text-on-surface-variant">Coordonnées</span>
+<span class="font-label-sm text-label-sm text-on-surface tracking-tight font-medium">6,000 ; 0,000 ; 3,200 m</span>
+</div>
+<!-- Row: Type RDM 7 Dropdown -->
+<div class="flex flex-col gap-space-xs py-space-sm">
+<label class="font-body-sm text-label-md text-on-surface-variant flex items-center justify-between">
+<span>Type de liaison RDM 7</span>
+<span class="font-label-sm text-label-sm text-outline">Code : ART_SPH</span>
+</label>
+<div class="relative">
+<button class="w-full h-8 px-space-md bg-surface-container-lowest flex items-center justify-between rounded text-left shadow-sm hover:bg-surface-container-low transition-colors" type="button">
+<span class="font-body-sm text-label-lg text-on-surface flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+                    Rotule sphérique (Ux, Uy, Uz)
+                  </span>
+<span class="material-symbols-outlined text-[16px] text-outline">unfold_more</span>
+</button>
+</div>
+</div>
+<!-- 2x3 DOF Checkbox Matrix -->
+<div class="mt-space-xs flex flex-col gap-space-sm bg-surface-container-low/60 p-space-md rounded">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-label-sm font-semibold text-on-surface">Degrés de liberté bloqués</span>
+<span class="font-label-sm text-label-sm text-primary font-medium">3 / 6 DDL</span>
+</div>
+<!-- Translation Vector -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-[10px] text-outline uppercase tracking-wider">Translations</span>
+<div class="grid grid-cols-3 gap-space-xs">
+<label class="flex items-center gap-space-xs p-space-xs rounded bg-surface-container-lowest shadow-sm cursor-pointer hover:bg-surface-container">
+<input checked="" class="w-3.5 h-3.5 accent-primary-container rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Ux</span>
+<span class="font-label-sm text-[9px] text-outline">Longit.</span>
+</div>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded bg-surface-container-lowest shadow-sm cursor-pointer hover:bg-surface-container">
+<input checked="" class="w-3.5 h-3.5 accent-primary-container rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Uy</span>
+<span class="font-label-sm text-[9px] text-outline">Transv.</span>
+</div>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded bg-surface-container-lowest shadow-sm cursor-pointer hover:bg-surface-container">
+<input checked="" class="w-3.5 h-3.5 accent-primary-container rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Uz</span>
+<span class="font-label-sm text-[9px] text-outline">Vertic.</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Rotation Vector -->
+<div class="flex flex-col gap-space-xs mt-space-xs">
+<span class="font-label-sm text-[10px] text-outline uppercase tracking-wider">Rotations</span>
+<div class="grid grid-cols-3 gap-space-xs">
+<label class="flex items-center gap-space-xs p-space-xs rounded bg-surface-container-lowest/80 opacity-80 cursor-pointer hover:opacity-100">
+<input class="w-3.5 h-3.5 accent-primary-container rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Rx</span>
+<span class="font-label-sm text-[9px] text-outline">Torsion</span>
+</div>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded bg-surface-container-lowest/80 opacity-80 cursor-pointer hover:opacity-100">
+<input class="w-3.5 h-3.5 accent-primary-container rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Ry</span>
+<span class="font-label-sm text-[9px] text-outline">Flex. y</span>
+</div>
+</label>
+<label class="flex items-center gap-space-xs p-space-xs rounded bg-surface-container-lowest/80 opacity-80 cursor-pointer hover:opacity-100">
+<input class="w-3.5 h-3.5 accent-primary-container rounded cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Rz</span>
+<span class="font-label-sm text-[9px] text-outline">Flex. z</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- Primary Action Button -->
+<button class="mt-space-md w-full h-8 bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-body-sm rounded shadow-sm flex items-center justify-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>Valider la liaison sur N04</span>
+</button>
+</div>
+<!-- Section: Liaisons Actives -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Liaisons actives (3)</span>
+<span class="font-label-sm text-label-sm text-outline">10 DDL contraints</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<!-- Item 1: N01 Encastrement -->
+<div class="group flex items-center justify-between p-space-md bg-surface-container-low rounded hover:bg-surface-container transition-all">
+<div class="flex items-center gap-space-md">
+<div class="w-6 h-6 rounded bg-error/10 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[16px]">grid_4x4</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">N01</span>
+<span class="text-outline text-label-sm">·</span>
+<span class="font-body-sm text-label-md text-on-surface">Encastrement</span>
+</div>
+<span class="font-label-sm text-[10px] text-outline">6 DDL (Ux,Uy,Uz,Rx,Ry,Rz)</span>
+</div>
+</div>
+<button class="text-outline hover:text-error opacity-60 group-hover:opacity-100 transition-opacity" title="Supprimer la liaison" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Item 2: N04 Rotule (ACTIVE) -->
+<div class="group flex items-center justify-between p-space-md bg-surface-container rounded shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-6 h-6 rounded bg-secondary-fixed-dim/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[16px]">change_history</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm font-bold text-primary">N04</span>
+<span class="text-outline text-label-sm">·</span>
+<span class="font-body-sm text-label-md text-on-surface font-medium">Rotule sphérique</span>
+</div>
+<span class="font-label-sm text-[10px] text-on-surface-variant font-medium">3 DDL (Ux, Uy, Uz)</span>
+</div>
+</div>
+<button class="text-outline hover:text-error opacity-60 group-hover:opacity-100 transition-opacity" title="Supprimer la liaison" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Item 3: N09 Appui simple -->
+<div class="group flex items-center justify-between p-space-md bg-surface-container-low rounded hover:bg-surface-container transition-all">
+<div class="flex items-center gap-space-md">
+<div class="w-6 h-6 rounded bg-primary-fixed/40 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">radio_button_checked</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">N09</span>
+<span class="text-outline text-label-sm">·</span>
+<span class="font-body-sm text-label-md text-on-surface">Appui simple</span>
+</div>
+<span class="font-label-sm text-[10px] text-outline">1 DDL (Uz bloqué)</span>
+</div>
+</div>
+<button class="text-outline hover:text-error opacity-60 group-hover:opacity-100 transition-opacity" title="Supprimer la liaison" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Docked Bottom Diagnostic Banner -->
+<div class="p-space-md bg-surface-container-lowest shadow-md">
+<div class="p-space-md rounded bg-tertiary-container/10 flex items-start gap-space-md">
+<div class="relative flex h-2.5 w-2.5 mt-0.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-tertiary"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-tertiary">Système isostatique valide</span>
+<span class="font-label-sm text-[11px] text-tertiary/90 mt-space-xs">h = 0 · Rang de rigidité [K] = 44</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant mt-space-xs">Aucun mécanisme interne détecté selon Eurocode 3.</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- CENTER 3D VIEWPORT & METRIC STAGE -->
+<div class="flex-1 flex flex-col relative bg-surface-bright overflow-hidden">
+<!-- Top Viewport Control Bar -->
+<div class="h-10 px-space-lg flex items-center justify-between bg-surface-container-lowest/90 backdrop-blur z-10 shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center bg-surface-container-low rounded p-0.5">
+<button class="px-space-md py-1 rounded bg-surface-container-lowest shadow-xs text-on-surface font-label-sm text-label-sm font-medium" type="button">Perspective ISO</button>
+<button class="px-space-md py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Vue XY</button>
+<button class="px-space-md py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Vue XZ</button>
+<button class="px-space-md py-1 rounded text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm" type="button">Vue YZ</button>
+</div>
+<div class="w-px h-4 bg-surface-variant"></div>
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Repère global [X, Y, Z]</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="w-7 h-7 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant shadow-xs" title="Réinitialiser caméra" type="button">
+<span class="material-symbols-outlined text-[16px]">filter_center_focus</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant shadow-xs" title="Afficher grille métrique" type="button">
+<span class="material-symbols-outlined text-[16px]">grid_on</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant shadow-xs" title="Étiquettes de nœuds" type="button">
+<span class="material-symbols-outlined text-[16px]">label</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant shadow-xs" title="Plein écran" type="button">
+<span class="material-symbols-outlined text-[16px]">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- Canvas Area with SVG FEA Space Frame & Supports -->
+<div class="relative flex-1 w-full h-full flex items-center justify-center select-none bg-[radial-gradient(#d3e4fe_1px,transparent_1px)] [background-size:24px_24px]">
+<!-- Floating Context Card (Upper Left) -->
+<div class="absolute top-space-lg left-space-lg bg-surface-container-lowest/95 backdrop-blur rounded p-space-md shadow-md z-10 w-72">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-headline-sm text-body-sm font-semibold text-on-surface">Sélection : Nœud N04</span>
+</div>
+<span class="font-label-sm text-[10px] text-tertiary bg-tertiary-container/10 px-1.5 py-0.5 rounded font-medium">Contraint</span>
+</div>
+<div class="py-space-xs flex flex-col gap-0.5 font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex justify-between">
+<span>Position :</span>
+<span class="text-on-surface font-medium">[ 6.00, 0.00, 3.20 ] m</span>
+</div>
+<div class="flex justify-between">
+<span>Type de liaison :</span>
+<span class="text-on-surface font-medium">Rotule sphérique</span>
+</div>
+<div class="flex justify-between">
+<span>Conditions :</span>
+<span class="text-primary font-medium">Ux = Uy = Uz = 0</span>
+</div>
+</div>
+</div>
+<!-- 3D Spatial Truss Model with Color-Coded Kinematic Supports -->
+<svg class="w-full h-full max-w-5xl max-h-[640px]" fill="none" viewbox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<!-- Node Selection Pulse Glow -->
+<filter height="140%" id="glow" width="140%" x="-20%" y="-20%">
+<fedropshadow dx="0" dy="0" flood-color="#1d4ed8" flood-opacity="0.5" stddeviation="6"></fedropshadow>
+</filter>
+<!-- Mechanical Crosshatch Pattern for Ground Plinth -->
+<pattern height="8" id="hatch" patterntransform="rotate(45 0 0)" patternunits="userSpaceOnUse" width="8">
+<line opacity="0.4" stroke="#747686" stroke-width="1.2" x1="0" x2="0" y1="0" y2="8"></line>
+</pattern>
+</defs>
+<!-- Perspective Grid Surface Planes -->
+<g opacity="0.35">
+<path d="M120 440 L840 440 L920 490 L200 490 Z" fill="#eff4ff"></path>
+<!-- Grid lines along X -->
+<path d="M120 440 L200 490 M240 440 L320 490 M360 440 L440 490 M480 440 L560 490 M600 440 L680 490 M720 440 L800 490 M840 440 L920 490" stroke="#c4c5d7" stroke-width="1"></path>
+<!-- Grid lines along Z -->
+<path d="M140 452.5 L860 452.5 M160 465 L880 465 M180 477.5 L900 477.5" stroke="#c4c5d7" stroke-dasharray="2 2" stroke-width="1"></path>
+</g>
+<!-- Secondary/Shadow structural wireframe -->
+<g opacity="0.25" stroke="#747686" stroke-dasharray="3 3" stroke-width="1.5">
+<line x1="200" x2="480" y1="440" y2="440"></line>
+<line x1="480" x2="760" y1="440" y2="440"></line>
+<line x1="340" x2="620" y1="360" y2="360"></line>
+</g>
+<!-- TRUSS MEMBERS (3D Lattice Structure) -->
+<!-- Chords & Diagonals: Crisp steel profiles with technical line weights -->
+<g stroke="#0b1c30" stroke-linecap="round" stroke-linejoin="round" stroke-width="3">
+<!-- Lower Main Chord -->
+<line x1="200" x2="480" y1="420" y2="420"></line>
+<line x1="480" x2="760" y1="420" y2="420"></line>
+<!-- Upper Chord -->
+<line x1="200" x2="340" y1="220" y2="220"></line>
+<line x1="340" x2="480" y1="220" y2="220"></line>
+<line x1="480" x2="620" y1="220" y2="220"></line>
+<line x1="620" x2="760" y1="220" y2="220"></line>
+<!-- Vertical Posts -->
+<line stroke="#0037b0" stroke-width="3.5" x1="200" x2="200" y1="420" y2="220"></line>
+<line opacity="0.4" x1="340" x2="340" y1="420" y2="220"></line>
+<line stroke="#0037b0" stroke-width="3.5" x1="480" x2="480" y1="420" y2="220"></line>
+<line opacity="0.4" x1="620" x2="620" y1="420" y2="220"></line>
+<line stroke="#0037b0" stroke-width="3.5" x1="760" x2="760" y1="420" y2="220"></line>
+<!-- Diagonal Bracings -->
+<line stroke="#747686" stroke-width="2" x1="200" x2="340" y1="420" y2="220"></line>
+<line stroke="#747686" stroke-width="2" x1="340" x2="480" y1="220" y2="420"></line>
+<line stroke="#747686" stroke-width="2" x1="480" x2="620" y1="420" y2="220"></line>
+<line stroke="#747686" stroke-width="2" x1="620" x2="760" y1="220" y2="420"></line>
+<!-- 3D Rear Lattice Projection -->
+<g opacity="0.6" stroke="#747686" stroke-width="1.8">
+<line x1="260" x2="540" y1="180" y2="180"></line>
+<line x1="540" x2="820" y1="180" y2="180"></line>
+<line x1="200" x2="260" y1="220" y2="180"></line>
+<line x1="480" x2="540" y1="220" y2="180"></line>
+<line x1="760" x2="820" y1="220" y2="180"></line>
+<line stroke-dasharray="4 3" x1="260" x2="480" y1="180" y2="220"></line>
+<line stroke-dasharray="4 3" x1="540" x2="760" y1="180" y2="220"></line>
+</g>
+</g>
+<!-- STRUCTURAL NODES (Unselected - Minor) -->
+<g fill="#ffffff" stroke="#0b1c30" stroke-width="2">
+<circle cx="200" cy="220" r="4.5"></circle>
+<circle cx="340" cy="220" opacity="0.6" r="4"></circle>
+<circle cx="480" cy="220" r="4.5"></circle>
+<circle cx="620" cy="220" opacity="0.6" r="4"></circle>
+<circle cx="760" cy="220" r="4.5"></circle>
+<circle cx="260" cy="180" opacity="0.6" r="3.5"></circle>
+<circle cx="540" cy="180" opacity="0.6" r="3.5"></circle>
+<circle cx="820" cy="180" opacity="0.6" r="3.5"></circle>
+</g>
+<!-- ========================================================== -->
+<!-- SUPPORT 1 (N01) - ENCASTREMENT (Crimson Fixed Base Plinth) -->
+<!-- ========================================================== -->
+<g id="support-n01">
+<!-- Node N01 circle -->
+<circle cx="200" cy="420" fill="#ba1a1a" r="5" stroke="#0b1c30" stroke-width="2"></circle>
+<!-- Rigid fixed base collar -->
+<rect fill="#ffdad6" height="12" rx="1.5" stroke="#ba1a1a" stroke-width="1.8" width="36" x="182" y="420"></rect>
+<rect fill="#ba1a1a" height="6" width="48" x="176" y="432"></rect>
+<!-- Hatching lines for embedded rock/concrete fixture -->
+<rect fill="url(#hatch)" height="14" stroke="#ba1a1a" stroke-width="1" width="48" x="176" y="438"></rect>
+<!-- Technical Tag -->
+<g transform="translate(142, 466)">
+<rect fill="#ffffff" height="20" rx="3" stroke="#ffdad6" stroke-width="1" width="116" x="0" y="0"></rect>
+<text fill="#ba1a1a" font-family="JetBrains Mono" font-size="11" font-weight="600" x="8" y="14">N01 · Encastré</text>
+</g>
+</g>
+<!-- ========================================================== -->
+<!-- SUPPORT 2 (N04) - ROTULE SPHÉRIQUE (Amber/Gold Selection Ring) -->
+<!-- TARGET NODE HIGHLIGHTED -->
+<!-- ========================================================== -->
+<g id="support-n04">
+<!-- Active Selection Glowing Halo Rings -->
+<circle class="animate-spin" cx="480" cy="420" fill="#1d4ed8" fill-opacity="0.08" r="24" stroke="#1d4ed8" stroke-dasharray="4 4" stroke-width="1.5" style="transform-origin: 480px 420px; animation-duration: 18s;"></circle>
+<circle cx="480" cy="420" fill="#1d4ed8" fill-opacity="0.15" filter="url(#glow)" r="14"></circle>
+<!-- Pin Triangle Mechanical Symbol (Rotule) -->
+<polygon fill="#57dffe" points="480,424 466,450 494,450" stroke="#004e5c" stroke-linejoin="round" stroke-width="2"></polygon>
+<circle cx="480" cy="428" fill="#ffffff" r="3.5" stroke="#004e5c" stroke-width="1.5"></circle>
+<!-- Fixed base bar under pin -->
+<line stroke="#004e5c" stroke-width="2.5" x1="460" x2="500" y1="450" y2="450"></line>
+<rect fill="url(#hatch)" height="10" stroke="#004e5c" stroke-width="0.8" width="40" x="460" y="450"></rect>
+<!-- Active Target Node Center Point -->
+<circle cx="480" cy="420" fill="#1d4ed8" r="6" stroke="#ffffff" stroke-width="2"></circle>
+<!-- Animated Target Marker Crosshairs -->
+<line stroke="#1d4ed8" stroke-width="1.5" x1="480" x2="480" y1="392" y2="402"></line>
+<line stroke="#1d4ed8" stroke-width="1.5" x1="480" x2="480" y1="438" y2="448"></line>
+<line stroke="#1d4ed8" stroke-width="1.5" x1="452" x2="462" y1="420" y2="420"></line>
+<line stroke="#1d4ed8" stroke-width="1.5" x1="498" x2="508" y1="420" y2="420"></line>
+<!-- Technical Callout Label -->
+<g transform="translate(422, 474)">
+<rect fill="#0037b0" height="22" rx="3" width="116" x="0" y="0"></rect>
+<text fill="#ffffff" font-family="JetBrains Mono" font-size="11" font-weight="600" text-anchor="middle" x="58" y="15">N04 · Rotule (3D)</text>
+</g>
+</g>
+<!-- ========================================================== -->
+<!-- SUPPORT 3 (N09) - APPUI SIMPLE ROULEAU (Cobalt Roller Symbol)-->
+<!-- ========================================================== -->
+<g id="support-n09">
+<!-- Node N09 circle -->
+<circle cx="760" cy="420" fill="#0037b0" r="5" stroke="#0b1c30" stroke-width="2"></circle>
+<!-- Triangle upper mount -->
+<polygon fill="#eff4ff" points="760,424 748,442 772,442" stroke="#0037b0" stroke-linejoin="round" stroke-width="2"></polygon>
+<circle cx="760" cy="428" fill="#0037b0" r="2.5"></circle>
+<!-- Roller Wheels (Cinématique libre en translation X) -->
+<circle cx="751" cy="447" fill="#ffffff" r="3.5" stroke="#0037b0" stroke-width="1.8"></circle>
+<circle cx="760" cy="447" fill="#ffffff" r="3.5" stroke="#0037b0" stroke-width="1.8"></circle>
+<circle cx="769" cy="447" fill="#ffffff" r="3.5" stroke="#0037b0" stroke-width="1.8"></circle>
+<!-- Sliding base rail -->
+<line stroke="#0037b0" stroke-width="2" x1="742" x2="778" y1="452" y2="452"></line>
+<rect fill="url(#hatch)" height="8" stroke="#0037b0" stroke-width="0.8" width="36" x="742" y="452"></rect>
+<!-- Freedom Arrow (Ux Déplacement libre horizontal) -->
+<g stroke="#0037b0" stroke-width="1.5">
+<line x1="734" x2="738" y1="440" y2="440"></line>
+<line x1="782" x2="786" y1="440" y2="440"></line>
+<polyline fill="none" points="736,437 733,440 736,443"></polyline>
+<polyline fill="none" points="784,437 787,440 784,443"></polyline>
+</g>
+<!-- Technical Tag -->
+<g transform="translate(712, 474)">
+<rect fill="#ffffff" height="20" rx="3" stroke="#d3e4fe" stroke-width="1" width="102" x="0" y="0"></rect>
+<text fill="#0037b0" font-family="JetBrains Mono" font-size="11" font-weight="600" x="8" y="14">N09 · Rouleau</text>
+</g>
+</g>
+<!-- 3D Coordinate Triad (Lower Left) -->
+<g transform="translate(60, 480)">
+<circle cx="0" cy="0" fill="#0b1c30" r="3"></circle>
+<!-- Axis X -->
+<line stroke="#ba1a1a" stroke-linecap="round" stroke-width="2" x1="0" x2="36" y1="0" y2="0"></line>
+<polygon fill="#ba1a1a" points="38,0 33,-3 33,3"></polygon>
+<text fill="#ba1a1a" font-family="JetBrains Mono" font-size="11" font-weight="700" x="44" y="4">X</text>
+<!-- Axis Y -->
+<line stroke="#006a48" stroke-linecap="round" stroke-width="2" x1="0" x2="18" y1="0" y2="-22"></line>
+<polygon fill="#006a48" points="20,-24 14,-21 19,-17"></polygon>
+<text fill="#006a48" font-family="JetBrains Mono" font-size="11" font-weight="700" x="24" y="-24">Y</text>
+<!-- Axis Z (Vertical) -->
+<line stroke="#0037b0" stroke-linecap="round" stroke-width="2" x1="0" x2="0" y1="0" y2="-36"></line>
+<polygon fill="#0037b0" points="0,-38 -3,-33 3,-33"></polygon>
+<text fill="#0037b0" font-family="JetBrains Mono" font-size="11" font-weight="700" x="-4" y="-42">Z</text>
+</g>
+</svg>
+<!-- Right Side Floating Metrology Quick Stats -->
+<div class="absolute right-space-lg top-space-lg flex flex-col gap-space-xs pointer-events-none">
+<div class="bg-surface-container-lowest/90 backdrop-blur px-space-md py-1.5 rounded shadow-sm flex items-center justify-between gap-space-lg">
+<span class="font-body-sm text-label-sm text-outline">Échelle géométrique</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">1:50 · Métrique</span>
+</div>
+<div class="bg-surface-container-lowest/90 backdrop-blur px-space-md py-1.5 rounded shadow-sm flex items-center justify-between gap-space-lg">
+<span class="font-body-sm text-label-sm text-outline">Matrice de raideur</span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">Définie positive</span>
+</div>
+<div class="bg-surface-container-lowest/90 backdrop-blur px-space-md py-1.5 rounded shadow-sm flex items-center justify-between gap-space-lg">
+<span class="font-body-sm text-label-sm text-outline">Module E (Acier S275)</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">210 000 MPa</span>
+</div>
+</div>
+</div>
+<!-- BOTTOM KINEMATIC STATUS STRIP -->
+<footer class="h-8 px-space-lg bg-surface-container-lowest shadow-sm flex items-center justify-between z-10">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Cinématique :</span>
+<span class="font-body-sm text-label-md text-on-surface">Déplacements rigides bloqués (0 mécanisme détecté)</span>
+</div>
+<span class="text-outline text-label-sm">·</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Conditions de Dirichlet satisfaites</span>
+</div>
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm">
+<span class="text-outline">Curseur :</span>
+<span class="font-mono text-on-surface">X: 6.000m  Y: 0.000m  Z: 3.200m</span>
+</div>
+<div class="w-px h-3 bg-surface-variant"></div>
+<button class="flex items-center gap-space-xs text-primary hover:text-primary-container font-label-sm text-label-sm font-medium transition-colors" type="button">
+<span>Étape 3 : Chargements</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</button>
+</div>
+</footer>
+</div>
+</div>
+</div></main></div></body></html>

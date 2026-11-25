@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "error-container": "#ffdad6", "on-primary-fixed": "#001551", "surface-container-high": "#dce9ff", "on-tertiary": "#ffffff", "error": "#ba1a1a", "primary-container": "#1d4ed8", "surface": "#f8f9ff", "inverse-surface": "#213145", "primary-fixed-dim": "#b7c4ff", "on-surface-variant": "#434655", "on-surface": "#0b1c30", "on-secondary-fixed-variant": "#004e5c", "on-error-container": "#93000a", "on-secondary": "#ffffff", "secondary-container": "#57dffe", "background": "#f8f9ff", "surface-bright": "#f8f9ff", "on-primary-fixed-variant": "#0039b5", "surface-container-highest": "#d3e4fe", "tertiary-container": "#006a48", "on-primary-container": "#cad3ff", "inverse-on-surface": "#eaf1ff", "secondary-fixed": "#acedff", "surface-tint": "#2151da", "on-secondary-container": "#006172", "on-tertiary-fixed-variant": "#005236", "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "surface-variant": "#d3e4fe", "outline": "#747686", "outline-variant": "#c4c5d7", "primary-fixed": "#dce1ff", "tertiary-fixed-dim": "#4edea3", "secondary": "#00687a", "surface-dim": "#cbdbf5", "secondary-fixed-dim": "#4cd7f6", "on-tertiary-fixed": "#002113", "tertiary": "#004f35", "on-secondary-fixed": "#001f26", "tertiary-fixed": "#6ffbbe", "on-tertiary-container": "#60eeb1", "surface-container": "#e5eeff", "inverse-primary": "#b7c4ff", "on-primary": "#ffffff", "primary": "#0037b0", "on-background": "#0b1c30", "surface-container-low": "#eff4ff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xs": "0.125rem", "gutter": "0.5rem", "space-lg": "0.75rem", "space-sm": "0.25rem", "space-xl": "1rem", "margin": "0.75rem", "space-md": "0.5rem" }, "fontFamily": { "data-metric": [ "JetBrains Mono" ], "headline-sm": [ "Inter" ], "body-lg": [ "Inter" ], "label-sm": [ "JetBrains Mono" ], "label-lg": [ "JetBrains Mono" ], "body-sm": [ "Inter" ], "headline-md": [ "Inter" ], "headline-lg": [ "Inter" ], "body-md": [ "Inter" ], "label-md": [ "JetBrains Mono" ] }, "fontSize": { "data-metric": [ "13px", { "lineHeight": "16px", "fontWeight": "600" } ], "headline-sm": [ "15px", { "lineHeight": "20px", "fontWeight": "600" } ], "body-lg": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "label-sm": [ "11px", { "lineHeight": "14px", "fontWeight": "400" } ], "label-lg": [ "13px", { "lineHeight": "16px", "fontWeight": "500" } ], "body-sm": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ], "headline-md": [ "18px", { "lineHeight": "24px", "fontWeight": "600" } ], "headline-lg": [ "24px", { "lineHeight": "32px", "fontWeight": "600" } ], "body-md": [ "13px", { "lineHeight": "18px", "fontWeight": "400" } ], "label-md": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ] } } } };</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-10 bg-surface-container-lowest border-b border-outline-variant/30 z-50 flex items-center justify-between px-margin select-none"><div class="flex items-center gap-space-lg h-full"><div class="flex items-center gap-space-sm"><div class="w-6 h-6 bg-primary-container text-on-primary flex items-center justify-center rounded-DEFAULT font-label-md text-label-md font-semibold tracking-wider">工</div><div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface"><span class="font-body-md text-body-md font-medium text-on-surface-variant">RDM Studio</span><span class="text-outline">/</span><button class="flex items-center gap-space-xs px-space-xs py-0.5 rounded-DEFAULT hover:bg-surface-container-low hover:text-on-surface transition-colors"><span class="font-label-md text-label-md font-semibold text-on-surface">Treillis-L240</span><span class="material-symbols-outlined text-outline text-[16px]">expand_more</span></button></div></div><div class="h-4 w-[1px] bg-outline-variant/40"></div><nav class="flex items-center h-full gap-space-xs" data-active-classes="bg-surface-container-high text-primary font-medium border-b-2 border-primary"><a class="h-full flex items-center px-space-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" data-path="geometrie-profiles" href="#">Géométrie &amp; Profilés</a><a class="h-full flex items-center px-space-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" data-path="liaisons" href="#">Liaisons</a><a class="h-full flex items-center px-space-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" data-path="charges" href="#">Charges</a><a class="h-full flex items-center px-space-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" data-path="calcul-3d-eurocode-3" href="#">Calcul 3D &amp; Eurocode 3</a><a class="h-full flex items-center px-space-md font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" data-path="rapport" href="#">Rapport</a></nav></div><div class="flex items-center gap-space-md h-full"><div class="flex items-center gap-space-xs px-space-sm py-0.5 bg-surface-container-low rounded-DEFAULT border border-outline-variant/30 font-label-sm text-label-sm text-on-surface-variant"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary-container"></span><span class="font-label-sm text-label-sm text-on-surface font-medium">44 nœuds</span><span class="text-outline">·</span><span class="font-label-sm text-label-sm text-on-surface font-medium">62 poutres</span></div><div class="flex items-center gap-space-xs px-space-xs py-0.5 bg-surface-container border border-outline-variant/40 rounded-DEFAULT text-on-surface-variant font-label-sm text-label-sm"><kbd class="font-label-sm text-label-sm font-medium">⌘</kbd><kbd class="font-label-sm text-label-sm font-medium">K</kbd></div><div class="flex items-center bg-surface-container-low rounded-DEFAULT border border-outline-variant/30 p-space-xs"><button class="px-space-xs py-0.5 font-label-sm text-label-sm rounded-DEFAULT bg-surface-container-lowest text-primary font-medium shadow-sm">FR</button><button class="px-space-xs py-0.5 font-label-sm text-label-sm rounded-DEFAULT text-on-surface-variant hover:text-on-surface transition-colors">EN</button></div><button class="flex items-center justify-center w-7 h-7 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[18px]">help</span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant/40 ml-space-xs" src="https://lh3.googleusercontent.com/aida/ALJJyrBkiJLhDXT42XCRLpddHeyCIDu7RNiQBcljaAFud9q_6i--pqUnO5LNqTYWaeWUacC2NR1avri-5EtcE_VwBenik2f1_BRVa1TNbyizlhB2ouXrmbh8uoD8oR-LwClx5u3f1rKjYIe5ODZyPgqRyd3JlFP_Kz47ZXGpOxEVKLg6kYW8mcq5X0oSmfEA7fuZ3YuOV-ed2lX8tg808eJ5FOYJAbIffwJ2HqccNn-zxm3pVCpm9jXXhhmRLnqH"/></div></header><aside class="fixed left-0 top-10 bottom-6 w-72 bg-surface-container-lowest border-r border-outline-variant/30 z-40 flex flex-col justify-between"><div class="flex flex-col h-full"><div class="h-8 px-margin flex items-center justify-between border-b border-outline-variant/20 bg-surface-container-low/50"><span class="font-label-sm text-label-sm text-on-surface-variant font-medium tracking-tight">EXPLORATEUR DU MODÈLE</span><div class="flex items-center gap-space-xs"><button class="w-5 h-5 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[14px]">add</span></button><button class="w-5 h-5 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[14px]">filter_list</span></button></div></div><nav class="flex-1 overflow-y-auto p-space-xs flex flex-col gap-0.5" data-active-classes="bg-surface-container-high text-primary font-medium"><div class="px-space-sm py-1 font-label-sm text-label-sm text-outline flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px]">expand_more</span><span>STRUCTURE MAÎTRESSE</span></div><a class="flex items-center justify-between px-space-sm py-1 rounded-DEFAULT font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="geometrie-profiles" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-outline">schema</span><span>Nœuds &amp; Coordonnées</span></div><span class="font-label-sm text-label-sm text-outline">44</span></a><a class="flex items-center justify-between px-space-sm py-1 rounded-DEFAULT font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="geometrie-profiles" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-outline">view_in_ar</span><span>Barres &amp; Profilés IPE</span></div><span class="font-label-sm text-label-sm text-outline">62</span></a><div class="px-space-sm pt-space-md pb-1 font-label-sm text-label-sm text-outline flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px]">expand_more</span><span>CONDITIONS LIMITES</span></div><a class="flex items-center justify-between px-space-sm py-1 rounded-DEFAULT font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="liaisons" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-outline">anchor</span><span>Appuis &amp; Encastrements</span></div><span class="font-label-sm text-label-sm text-outline">6</span></a><a class="flex items-center justify-between px-space-sm py-1 rounded-DEFAULT font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="charges" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-outline">vertical_align_bottom</span><span>Cas de Charges (ELS/ELU)</span></div><span class="font-label-sm text-label-sm text-outline">4</span></a><div class="px-space-sm pt-space-md pb-1 font-label-sm text-label-sm text-outline flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px]">expand_more</span><span>RÉGLEMENTATION EC3</span></div><a class="flex items-center justify-between px-space-sm py-1 rounded-DEFAULT font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="calcul-3d-eurocode-3" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-outline">verified</span><span>Vérifications EN 1993-1-1</span></div><span class="font-label-sm text-label-sm text-tertiary font-medium">OK</span></a><a class="flex items-center justify-between px-space-sm py-1 rounded-DEFAULT font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="rapport" href="#"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-outline">description</span><span>Note de Calcul &amp; Synthèse</span></div><span class="font-label-sm text-label-sm text-outline">PDF</span></a></nav></div></aside><div class="pl-72"><main class="w-full pt-10 pb-6 min-h-screen bg-surface"><div class="flex flex-col w-full">
+<div class="flex flex-col gap-space-md p-space-md bg-surface min-h-[calc(100vh-4rem)]">
+<!-- KPI STRIP (METROLOGICAL TELEMETRY) -->
+<div class="grid grid-cols-4 gap-space-md">
+<!-- KPI 1 -->
+<div class="bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-body-sm text-body-sm">Masse totale</span>
+<span class="material-symbols-outlined text-[16px] text-outline">scale</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-data-metric text-headline-md text-on-surface">412,5</span>
+<span class="font-label-sm text-label-sm text-outline">kg</span>
+</div>
+<div class="mt-space-xs font-label-sm text-label-sm text-outline flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Acier S235JR (ρ = 7850 kg/m³)</span>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-body-sm text-body-sm">Flèche max ELS</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-data-metric text-headline-md text-on-surface">6,15</span>
+<span class="font-label-sm text-label-sm text-outline">mm</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant ml-space-xs">(N09)</span>
+</div>
+<div class="mt-space-xs font-label-sm text-label-sm text-tertiary flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>Conforme &lt; L/300 (Limite 8,00 mm)</span>
+</div>
+</div>
+<!-- KPI 3: CRITICAL REGULATORY OVERRUN -->
+<div class="bg-error-container/30 p-space-md rounded-DEFAULT shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="flex items-center justify-between text-error">
+<span class="font-body-sm text-body-sm font-semibold tracking-tight">Taux critique Eurocode 3</span>
+<span class="material-symbols-outlined text-[18px] text-error animate-pulse">warning</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-sm">
+<span class="font-data-metric text-headline-lg font-bold text-error tracking-tight">124,8 %</span>
+<span class="px-space-xs py-0.5 rounded-DEFAULT bg-error text-on-error font-label-sm text-label-sm font-medium">DÉPASSEMENT</span>
+</div>
+<div class="mt-space-xs font-label-sm text-label-sm text-error flex items-center gap-space-xs font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span>Non conforme EN 1993-1-1 (Poutre B-14)</span>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-body-sm text-body-sm">1er Mode propre</span>
+<span class="material-symbols-outlined text-[16px] text-outline">vibration</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-data-metric text-headline-md text-on-surface">12,80</span>
+<span class="font-label-sm text-label-sm text-outline">Hz</span>
+</div>
+<div class="mt-space-xs font-label-sm text-label-sm text-outline flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Flexion latérale globale (Mode I)</span>
+</div>
+</div>
+</div>
+<!-- MAIN INTERACTIVE WORKSPACE: 3D VIEWPORT WITH REGULATORY HUD -->
+<div class="relative w-full h-[390px] bg-[#f8fafc] rounded-DEFAULT shadow-sm overflow-hidden flex">
+<!-- 3D Scene Simulation Canvas via Precise SVG Wireframe & Thermal Stress Mesh -->
+<div class="relative flex-1 h-full select-none cursor-crosshair">
+<!-- Structural Coordinate Grid Backdrop -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="40" id="grid-3d" patternunits="userSpaceOnUse" width="40">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#cbd5e1" stroke-dasharray="2,2" stroke-width="0.5"></path>
+</pattern>
+<lineargradient id="beam-stress-b14" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ea580c"></stop>
+<stop offset="50%" stop-color="#dc2626"></stop>
+<stop offset="100%" stop-color="#991b1b"></stop>
+</lineargradient>
+<lineargradient id="beam-nominal-stress" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#0284c7"></stop>
+<stop offset="100%" stop-color="#10b981"></stop>
+</lineargradient>
+<filter height="140%" id="crimson-glow" width="140%" x="-20%" y="-20%">
+<fegaussianblur result="blur" stddeviation="3"></fegaussianblur>
+<fecomposite in="SourceGraphic" in2="blur" operator="over"></fecomposite>
+</filter>
+</defs>
+<rect fill="url(#grid-3d)" height="100%" width="100%"></rect>
+</svg>
+<!-- Dynamic Truss Structure Topology -->
+<svg class="absolute inset-0 w-full h-full pointer-events-auto" fill="none" viewbox="0 0 1000 390" xmlns="http://www.w3.org/2000/svg">
+<!-- Foundation nodes & Ground indicators -->
+<g stroke="#94a3b8" stroke-width="1.5">
+<line x1="80" x2="80" y1="310" y2="330"></line>
+<line x1="60" x2="100" y1="330" y2="330"></line>
+<line x1="65" x2="75" y1="336" y2="330"></line>
+<line x1="80" x2="90" y1="336" y2="330"></line>
+<line x1="880" x2="880" y1="310" y2="330"></line>
+<line x1="860" x2="900" y1="330" y2="330"></line>
+<circle cx="880" cy="333" fill="#ffffff" r="3"></circle>
+</g>
+<!-- Lower Chord Bars (Tension - Blue/Greenish) -->
+<g stroke="#0284c7" stroke-linecap="round" stroke-width="3">
+<line x1="80" x2="280" y1="310" y2="310"></line>
+<line x1="280" x2="480" y1="310" y2="310"></line>
+<line x1="480" x2="680" y1="310" y2="310"></line>
+<line x1="680" x2="880" y1="310" y2="310"></line>
+</g>
+<!-- Diagonals & Vertical Stiffeners -->
+<g opacity="0.85" stroke="#64748b" stroke-linecap="round" stroke-width="2">
+<line x1="80" x2="180" y1="310" y2="160"></line>
+<line x1="280" x2="180" y1="310" y2="160"></line>
+<line x1="280" x2="380" y1="310" y2="160"></line>
+<!-- Diagonal leading to critical junction -->
+<line stroke="#f97316" stroke-width="2.5" x1="480" x2="380" y1="310" y2="160"></line>
+<line stroke="#f97316" stroke-width="2.5" x1="480" x2="580" y1="310" y2="160"></line>
+<line x1="680" x2="580" y1="310" y2="160"></line>
+<line x1="680" x2="780" y1="310" y2="160"></line>
+<line x1="880" x2="780" y1="310" y2="160"></line>
+</g>
+<!-- Upper Chord Members (Compression) -->
+<g stroke-linecap="round">
+<line stroke="#f59e0b" stroke-width="3.5" x1="180" x2="380" y1="160" y2="160"></line>
+<line stroke="#f59e0b" stroke-width="3.5" x1="580" x2="780" y1="160" y2="160"></line>
+</g>
+<!-- CRITICAL MEMBER B-14 (UPPER CENTRAL COMPRESSION CHORD) -->
+<!-- Deflected Buckled Line (Amplified out-of-plane lateral-torsional wave) -->
+<g class="cursor-pointer group" onclick="focusBeamB14()">
+<!-- Halo of criticality -->
+<path d="M 380 160 Q 480 135 580 160" filter="url(#crimson-glow)" opacity="0.25" stroke="#dc2626" stroke-width="12"></path>
+<!-- Main deformed member line -->
+<path d="M 380 160 Q 480 135 580 160" stroke="url(#beam-stress-b14)" stroke-linecap="round" stroke-width="5"></path>
+<!-- Theoretical straight axis comparison (dotted line) -->
+<line stroke="#991b1b" stroke-dasharray="3,3" stroke-width="1" x1="380" x2="580" y1="160" y2="160"></line>
+<!-- Buckling direction arrow -->
+<path d="M 480 160 L 480 142" marker-end="url(#arrow)" stroke="#dc2626" stroke-width="1.5"></path>
+<!-- Hotspot pulsator -->
+<circle class="animate-ping" cx="480" cy="147" fill="#dc2626" opacity="0.75" r="5"></circle>
+<circle cx="480" cy="147" fill="#991b1b" r="4"></circle>
+</g>
+<!-- Node Pins -->
+<g fill="#ffffff" stroke="#0f172a" stroke-width="1.5">
+<circle cx="80" cy="310" r="4"></circle>
+<circle cx="280" cy="310" r="4"></circle>
+<circle cx="480" cy="310" r="4"></circle>
+<circle cx="680" cy="310" r="4"></circle>
+<circle cx="880" cy="310" r="4"></circle>
+<circle cx="180" cy="160" r="4"></circle>
+<circle cx="380" cy="160" r="4.5" stroke="#dc2626" stroke-width="2"></circle>
+<circle cx="580" cy="160" r="4.5" stroke="#dc2626" stroke-width="2"></circle>
+<circle cx="780" cy="160" r="4"></circle>
+</g>
+<!-- Node Labels -->
+<g fill="#64748b" font-family="JetBrains Mono" font-size="10" text-anchor="middle">
+<text x="380" y="180">N12</text>
+<text x="580" y="180">N13</text>
+<text x="480" y="328">N09</text>
+<text fill="#dc2626" font-weight="bold" x="480" y="125">B-14 (L = 2,40 m)</text>
+</g>
+</svg>
+<!-- FLOATING REGULATORY CALLOUT PINNED TO B-14 -->
+<div class="absolute left-1/2 top-10 -translate-x-1/2 bg-surface-container-lowest border border-error-container rounded-DEFAULT shadow-xl p-space-md flex flex-col gap-space-xs z-30 max-w-md pointer-events-auto">
+<div class="flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+<span class="font-label-md text-label-md font-semibold text-error">Alerte B-14</span>
+<span class="text-outline">·</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Profilé actuel : IPE 200</span>
+</div>
+<span class="px-space-xs py-0.5 rounded-DEFAULT bg-error-container text-error font-data-metric text-label-sm font-bold">124,8 % &gt; 100 %</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-snug">
+            Flambement par compression hors-plan (axe faible <span class="font-data-metric font-semibold">z</span> · <span class="font-data-metric font-semibold">χz = 0,58</span>). Seuil élastoplastique critique dépassé sous combinaison ELU Fondamentale.
+          </p>
+<div class="flex items-center justify-between pt-space-xs border-t border-outline-variant/30 text-outline font-label-sm text-label-sm">
+<span>N_Ed = -142,5 kN</span>
+<span>N_b,Rd,z = 114,2 kN</span>
+<span class="text-error font-semibold">Δ = +28,3 kN (+24,8%)</span>
+</div>
+</div>
+<!-- VIEWPORT ORIENTATION CUBE & CONTROLS (METROLOGICAL HUD) -->
+<div class="absolute top-space-md left-space-md flex flex-col gap-space-xs bg-surface-container-lowest/90 backdrop-blur p-space-xs rounded-DEFAULT shadow-sm text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-space-sm px-space-xs py-0.5">
+<span class="font-medium text-on-surface">Vue :</span>
+<span class="px-space-xs bg-surface-container-high text-primary font-medium rounded-DEFAULT">3D Iso (Y-Up)</span>
+<button class="hover:text-on-surface">Face</button>
+<button class="hover:text-on-surface">Dessus</button>
+</div>
+<div class="flex items-center gap-space-md px-space-xs text-outline">
+<span>Échelle déformation: <strong>x25.0</strong></span>
+<span>Combinaison: <strong>1.35 G + 1.50 Q (ELU 101)</strong></span>
+</div>
+</div>
+<!-- CAMERA TOOLBAR BOTTOM-LEFT -->
+<div class="absolute bottom-space-md left-space-md flex items-center gap-space-xs bg-surface-container-lowest p-space-xs rounded-DEFAULT shadow-sm">
+<button class="w-6 h-6 flex items-center justify-center rounded-DEFAULT text-primary bg-surface-container-low hover:bg-surface-container-high transition-colors" title="Orbite 3D">
+<span class="material-symbols-outlined text-[16px]">rotate_90_degrees_cw</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" title="Panoramique">
+<span class="material-symbols-outlined text-[16px]">pan_tool</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" title="Zoom cadré">
+<span class="material-symbols-outlined text-[16px]">zoom_in</span>
+</button>
+<div class="w-[1px] h-4 bg-outline-variant/40 mx-0.5"></div>
+<button class="w-6 h-6 flex items-center justify-center rounded-DEFAULT text-primary hover:bg-surface-container-low transition-colors" title="Afficher les sections réelles">
+<span class="material-symbols-outlined text-[16px]">view_in_ar</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded-DEFAULT text-primary hover:bg-surface-container-low transition-colors" title="Afficher les contraintes von Mises">
+<span class="material-symbols-outlined text-[16px]">palette</span>
+</button>
+</div>
+</div>
+<!-- VERTICAL THERMAL VON MISES STRESS SCALE -->
+<div class="w-24 bg-surface-container-lowest border-l border-outline-variant/30 flex flex-col justify-between p-space-md select-none">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Contrainte</span>
+<span class="font-label-sm text-label-sm text-outline">von Mises (MPa)</span>
+</div>
+<div class="flex items-center gap-space-sm h-56 my-auto">
+<!-- Gradient Bar -->
+<div class="w-4 h-full rounded-DEFAULT relative overflow-hidden flex flex-col shadow-inner" style="background: linear-gradient(to bottom, #7f1d1d 0%, #dc2626 15%, #ea580c 35%, #f59e0b 55%, #10b981 75%, #0284c7 100%);">
+<!-- Limit marker for fy = 235 MPa -->
+<div class="absolute top-[18%] left-0 right-0 h-0.5 bg-surface-container-lowest shadow"></div>
+</div>
+<!-- Gauge ticks & values -->
+<div class="flex flex-col justify-between h-full font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-1 font-semibold text-error">
+<span>&gt; 290</span>
+</div>
+<div class="flex items-center gap-1 font-medium text-error">
+<span class="font-bold text-error">235</span>
+<span class="text-[9px] text-error font-semibold">fy</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span>180</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span>120</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span>60</span>
+</div>
+<div class="flex items-center gap-1 text-outline">
+<span>0</span>
+</div>
+</div>
+</div>
+<div class="bg-error-container/40 p-1.5 rounded-DEFAULT text-center">
+<span class="font-label-sm text-[10px] text-error font-medium leading-none block">Zone Plastifiée</span>
+</div>
+</div>
+</div>
+<!-- LOWER INSPECTOR & VERIFICATION PANEL (35% / 65% SPLIT) -->
+<div class="grid grid-cols-12 gap-space-md">
+<!-- LEFT COLUMN (35%): DIAGNOSTIC & 1-CLICK REMEDIATION -->
+<div class="col-span-4 bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs border-b border-outline-variant/30">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-error">troubleshoot</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Diagnostic &amp; Action corrective</h3>
+</div>
+<span class="font-label-sm text-label-sm text-outline">EC3-1-1 §6.3</span>
+</div>
+<!-- Technical Alert Diagnostic Box -->
+<div class="p-space-sm bg-error-container/20 border-l-2 border-error rounded-DEFAULT flex flex-col gap-1">
+<div class="flex items-center gap-space-xs text-error font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-[16px]">crisis_alert</span>
+<span>Instabilité par flambement flexuel</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed text-justify">
+              Instabilité détectée : Flambement par flexion axiale selon l'axe faible <strong class="font-data-metric">z</strong> (élancement réduit <span class="font-data-metric">λ̄z = 1,42</span>, coefficient de réduction <span class="font-data-metric">χz = 0,58</span>). L'effort normal de compression <span class="font-data-metric">N_Ed = -142,5 kN</span> dépasse la résistance de calcul <span class="font-data-metric font-semibold text-error">N_b,Rd = 114,2 kN</span>.
+            </p>
+</div>
+<!-- Cross section preview & inertia comparison -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="p-space-xs bg-surface-container-low rounded-DEFAULT flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Section en place</span>
+<span class="font-data-metric text-body-md text-on-surface font-semibold">IPE 200</span>
+<div class="flex justify-between font-label-sm text-[10px] text-on-surface-variant mt-1">
+<span>Iz = 142 cm⁴</span>
+<span>A = 28,5 cm²</span>
+</div>
+</div>
+<div class="p-space-xs bg-surface-container-high/60 rounded-DEFAULT flex flex-col">
+<span class="font-label-sm text-label-sm text-primary font-medium">Recommandée</span>
+<span class="font-data-metric text-body-md text-primary font-semibold">IPE 240</span>
+<div class="flex justify-between font-label-sm text-[10px] text-primary mt-1">
+<span>Iz = 284 cm⁴ (+100%)</span>
+<span>A = 39,1 cm²</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 1-Click Action Buttons -->
+<div class="flex flex-col gap-space-xs pt-space-md border-t border-outline-variant/30">
+<button class="w-full h-8 px-space-md bg-primary hover:bg-primary-container text-on-primary rounded-DEFAULT font-body-sm text-body-sm font-medium flex items-center justify-between transition-colors shadow-sm" id="btn-fix-profile" onclick="applyProfileCorrection()">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Remplacer B-14 par IPE 240</span>
+</div>
+<span class="font-data-metric text-label-sm bg-surface-container-lowest/20 px-space-xs py-0.5 rounded-DEFAULT">η = 68,4 % OK</span>
+</button>
+<button class="w-full h-8 px-space-md bg-surface-container-lowest hover:bg-surface-container-low text-on-surface border border-outline-variant/40 rounded-DEFAULT font-body-sm text-body-sm font-medium flex items-center justify-between transition-colors" onclick="applyLateralBracing()">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-outline">add_circle</span>
+<span>Ajouter un maintien latéral en mi-travée</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">L_cr = 1,20 m</span>
+</button>
+</div>
+</div>
+<!-- RIGHT COLUMN (65%): DETAILED EUROCODE 3 METROLOGICAL AUDIT & CHARTS -->
+<div class="col-span-8 bg-surface-container-lowest p-space-md rounded-DEFAULT shadow-sm flex flex-col justify-between">
+<div>
+<!-- Sub-header with barre identity -->
+<div class="flex items-center justify-between pb-space-xs border-b border-outline-variant/30">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Détail des vérifications de la barre B-14</span>
+<span class="px-space-xs py-0.5 rounded-DEFAULT bg-surface-container text-on-surface-variant font-data-metric text-label-sm">IPE 200 · L = 2,40 m</span>
+<span class="px-space-xs py-0.5 rounded-DEFAULT bg-surface-container-low text-outline font-data-metric text-label-sm">Axe faible z-z</span>
+</div>
+<div class="flex items-center gap-space-sm font-label-sm text-label-sm text-outline">
+<span>S235JR</span>
+<span>γM0 = 1,00</span>
+<span>γM1 = 1,00</span>
+</div>
+</div>
+<!-- Eurocode 3 Four-Check Table -->
+<div class="mt-space-sm flex flex-col">
+<!-- Row 1: Résistance Section -->
+<div class="h-9 flex items-center justify-between px-space-sm border-b border-outline-variant/20 hover:bg-surface-container-low/40 transition-colors">
+<div class="flex items-center gap-space-sm w-5/12">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">1. Résistance de section (Art. 6.2.4)</span>
+</div>
+<div class="flex items-center gap-space-md w-7/12">
+<div class="flex items-center gap-space-xs flex-1">
+<div class="w-full bg-surface-container h-2 rounded-DEFAULT overflow-hidden">
+<div class="bg-tertiary h-full rounded-DEFAULT" style="width: 60.8%;"></div>
+</div>
+</div>
+<div class="w-28 text-right font-data-metric text-label-md text-on-surface">
+                  N_Ed / N_c,Rd = <span class="font-semibold text-tertiary">60,8 %</span>
+</div>
+<span class="w-20 text-right font-label-sm text-label-sm text-tertiary font-medium">Conforme</span>
+</div>
+</div>
+<!-- Row 2: Flambement axe fort y -->
+<div class="h-9 flex items-center justify-between px-space-sm border-b border-outline-variant/20 hover:bg-surface-container-low/40 transition-colors">
+<div class="flex items-center gap-space-sm w-5/12">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+<span class="font-body-sm text-body-sm text-on-surface">2. Flambement axe fort y (Art. 6.3.1)</span>
+</div>
+<div class="flex items-center gap-space-md w-7/12">
+<div class="flex items-center gap-space-xs flex-1">
+<div class="w-full bg-surface-container h-2 rounded-DEFAULT overflow-hidden">
+<div class="bg-tertiary h-full rounded-DEFAULT" style="width: 74.5%;"></div>
+</div>
+</div>
+<div class="w-28 text-right font-data-metric text-label-md text-on-surface">
+                  N_Ed / N_b,Rd,y = <span class="font-semibold text-tertiary">74,5 %</span>
+</div>
+<span class="w-20 text-right font-label-sm text-label-sm text-tertiary font-medium">Conforme</span>
+</div>
+</div>
+<!-- Row 3: Flambement axe faible z (CRITICAL CRACK) -->
+<div class="h-9 flex items-center justify-between px-space-sm border-b border-outline-variant/20 bg-error-container/20">
+<div class="flex items-center gap-space-sm w-5/12">
+<span class="material-symbols-outlined text-[16px] text-error font-bold">cancel</span>
+<span class="font-body-sm text-body-sm text-error font-semibold">3. Flambement axe faible z (Art. 6.3.1)</span>
+</div>
+<div class="flex items-center gap-space-md w-7/12">
+<div class="flex items-center gap-space-xs flex-1">
+<div class="w-full bg-surface-container h-2 rounded-DEFAULT overflow-hidden relative">
+<div class="bg-error h-full rounded-DEFAULT" style="width: 100%;"></div>
+</div>
+</div>
+<div class="w-28 text-right font-data-metric text-label-md text-error font-bold">
+                  N_Ed / N_b,Rd,z = <span>124,8 %</span>
+</div>
+<span class="w-20 text-right font-label-sm text-label-sm text-error font-bold uppercase tracking-tight">NON CONFORME</span>
+</div>
+</div>
+<!-- Row 4: Interaction flexion-compression -->
+<div class="h-9 flex items-center justify-between px-space-sm border-b border-outline-variant/20 bg-error-container/10">
+<div class="flex items-center gap-space-sm w-5/12">
+<span class="material-symbols-outlined text-[16px] text-error">cancel</span>
+<span class="font-body-sm text-body-sm text-error font-medium">4. Interaction N+M (Art. 6.3.3)</span>
+</div>
+<div class="flex items-center gap-space-md w-7/12">
+<div class="flex items-center gap-space-xs flex-1">
+<div class="w-full bg-surface-container h-2 rounded-DEFAULT overflow-hidden">
+<div class="bg-error h-full rounded-DEFAULT" style="width: 100%;"></div>
+</div>
+</div>
+<div class="w-28 text-right font-data-metric text-label-md text-error font-bold">
+                  Formule (6.61) = <span>118,2 %</span>
+</div>
+<span class="w-20 text-right font-label-sm text-label-sm text-error font-bold uppercase tracking-tight">NON CONFORME</span>
+</div>
+</div>
+</div>
+</div>
+<!-- AXIAL FORCE DIAGRAM ALONG BEAM (N(x)) & CAPACITY THRESHOLD -->
+<div class="mt-space-md pt-space-xs border-t border-outline-variant/30 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px]">show_chart</span>
+<span>Distribution de l'effort normal N(x) vs Résistance de flambement N_b,Rd</span>
+</span>
+<div class="flex items-center gap-space-md font-label-sm text-label-sm">
+<span class="flex items-center gap-1 text-on-surface">
+<span class="w-3 h-0.5 bg-primary inline-block"></span> N_Ed(x) sollicitation (-142,5 kN)
+              </span>
+<span class="flex items-center gap-1 text-error">
+<span class="w-3 h-0.5 border-t border-dashed border-error inline-block"></span> Limite N_b,Rd (-114,2 kN)
+              </span>
+</div>
+</div>
+<!-- SVG Chart (Axial envelope) -->
+<div class="h-20 w-full bg-surface-container-low/50 rounded-DEFAULT relative overflow-hidden flex items-center px-space-md">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 600 70">
+<!-- Neutral zero axis -->
+<line stroke="#94a3b8" stroke-width="0.75" x1="0" x2="600" y1="12" y2="12"></line>
+<text fill="#64748b" font-family="JetBrains Mono" font-size="8" x="5" y="10">0 kN (Neutre)</text>
+<!-- Critical Resistance limit line (N_b,Rd = -114.2 kN) -->
+<line stroke="#dc2626" stroke-dasharray="4,4" stroke-width="1.5" x1="0" x2="600" y1="40" y2="40"></line>
+<text fill="#dc2626" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="500" y="36">N_b,Rd,z = -114,2 kN</text>
+<!-- Shaded Overstress Domain -->
+<polygon fill="#dc2626" fill-opacity="0.15" points="0,40 600,40 600,56 0,56"></polygon>
+<!-- Actual Constant Normal Force Curve (N_Ed = -142.5 kN) -->
+<line stroke="#0037b0" stroke-width="2" x1="0" x2="600" y1="56" y2="56"></line>
+<text fill="#0037b0" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="15" y="52">N_Ed = -142,5 kN (Compression pure)</text>
+<!-- Station points x=0, x=L/2, x=L -->
+<line stroke="#cbd5e1" stroke-width="1" x1="1" x2="1" y1="65" y2="10"></line>
+<line stroke="#cbd5e1" stroke-dasharray="2,2" stroke-width="1" x1="300" x2="300" y1="65" y2="10"></line>
+<line stroke="#cbd5e1" stroke-width="1" x1="599" x2="599" y1="65" y2="10"></line>
+</svg>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-outline px-1">
+<span>x = 0,00 m (Nœud N12)</span>
+<span>x = 1,20 m (Mi-travée - Flèche z_max)</span>
+<span>x = 2,40 m (Nœud N13)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function focusBeamB14() {
+    const btn = document.getElementById('btn-fix-profile');
+    if (btn) {
+      btn.classList.add('ring-2', 'ring-primary');
+      setTimeout(() => btn.classList.remove('ring-2', 'ring-primary'), 800);
+    }
+  }
+
+  function applyProfileCorrection() {
+    alert("Profilé B-14 mis à jour : IPE 240 appliqué. Recalcul statique et vérification EC3 en cours...");
+  }
+
+  function applyLateralBracing() {
+    alert("Maintien latéral L_cr = 1,20m inséré au nœud intermédiaire. Longueur de flambement divisée par 2.");
+  }
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-6 bg-surface-container-lowest border-t border-outline-variant/30 z-50 flex items-center justify-between px-margin font-label-sm text-label-sm select-none"><div class="flex items-center gap-space-lg text-on-surface-variant"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span><span class="text-on-surface font-medium">Moteur FEA: Prêt</span></div><span class="text-outline">|</span><span>Unité: SI (kN, mm, MPa)</span><span class="text-outline">|</span><span>Norme: Eurocode 3 (NF EN 1993)</span><span class="text-outline">|</span><span>Repère: Global XYZ [Z=Haut]</span></div><div class="flex items-center gap-space-md text-on-surface-variant"><span class="font-data-metric text-data-metric font-medium text-on-surface">FPS: 60.0</span><span class="text-outline">|</span><span>Curseur: X: 12.40m Y: 0.00m Z: 4.80m</span><span class="text-outline">|</span><span class="text-primary font-medium">RDM Studio v2.4-pro</span></div></footer></body></html>

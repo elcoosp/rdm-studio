@@ -25,15 +25,15 @@ export interface ReportMeta {
 /** Thermal tier text color for a utilization ratio (section 17 palette). */
 function utilizationColor(eta: number): string {
   if (eta >= 1) {
-    return "#EF4444";
+    return "#DC2626";
   }
   if (eta >= 0.75) {
     return "#F59E0B";
   }
   if (eta >= 0.25) {
-    return "#10B981";
+    return "#10b981";
   }
-  return "#2563EB";
+  return "#1D4ED8";
 }
 
 const escape = (value: string): string =>
@@ -57,7 +57,7 @@ export function buildReportHtml(
   const today = new Date().toISOString().slice(0, 10);
 
   const hypothesis = `
-	<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid #E5E7EB; border-radius: 6px;">
+	<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
 	  ${row("Projet", escape(project.name))}
 	  ${row("Date", today)}
 	  ${row(
@@ -72,7 +72,7 @@ export function buildReportHtml(
   const profiles = project.structure.beams
     .map(
       (b) =>
-        `<div style="display: flex; gap: 16px; padding: 3px 12px; font-family: JetBrains Mono; font-size: 10px; color: #4B5563;">
+        `<div style="display: flex; gap: 16px; padding: 3px 12px; font-family: JetBrains Mono; font-size: 10px; color: #475569;">
 		  <span style="width: 32px;">P${b.id}</span>
 		  <span style="width: 72px;">N${b.n1}-N${b.n2}</span>
 		  <span style="width: 90px;">${escape(b.section_id)}</span>
@@ -90,7 +90,7 @@ export function buildReportHtml(
 		  <span style="width: 90px;">${escape(beam?.section_id ?? "—")}</span>
 		  <span style="width: 96px; color: ${utilizationColor(eta)}; font-weight: 600;">eta = ${fmt(eta, 3)}</span>
 		  <span style="width: 120px;">delta_mid = ${fmt(b.midspan_deflection * 1000, 1)} mm</span>
-		  <span style="color: ${eta >= 1 ? "#EF4444" : "#10B981"};">${eta >= 1 ? "NON VERIFIE" : "verifie"}</span>
+		  <span style="color: ${eta >= 1 ? "#DC2626" : "#10b981"};">${eta >= 1 ? "NON VERIFIE" : "verifie"}</span>
 		</div>`;
     })
     .join("");
@@ -111,7 +111,7 @@ export function buildReportHtml(
 		  <span style="width: 48px;">P${b.beam_id}</span>
 		  <span style="width: 120px;">delta_mid = ${fmt(delta, 1)} mm</span>
 		  <span style="width: 110px;">limite L/250 = ${fmt(limit, 1)} mm</span>
-		  <span style="color: ${ok ? "#10B981" : "#EF4444"};">${ok ? "OK" : "KO"}</span>
+		  <span style="color: ${ok ? "#10b981" : "#DC2626"};">${ok ? "OK" : "KO"}</span>
 		</div>`;
     })
     .join("");
@@ -119,7 +119,7 @@ export function buildReportHtml(
   const reactions =
     caseG === undefined
       ? ""
-      : `<div style="padding: 3px 12px; font-family: JetBrains Mono; font-size: 10px; color: #4B5563;">
+      : `<div style="padding: 3px 12px; font-family: JetBrains Mono; font-size: 10px; color: #475569;">
 		Réactions max (G): ${fmt(Math.max(...caseG.reactions.map((r) => Math.abs(r))), 2)} kN
 	</div>`;
 
@@ -127,27 +127,27 @@ export function buildReportHtml(
   const images = qrPng ? [qrPng] : undefined;
 
   const html = `
-	<div style="display: flex; flex-direction: column; gap: 14px; font-family: Inter; color: #111827;">
-	  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0891B2; padding-bottom: 8px;">
+	<div style="display: flex; flex-direction: column; gap: 14px; font-family: Inter; color: #0F172A;">
+	  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1D4ED8; padding-bottom: 8px;">
 		<div style="display: flex; flex-direction: column;">
 		  <span style="font-size: 18px; font-weight: 700;">RDM Studio — Rapport de calcul</span>
-		  <span style="font-size: 11px; color: #6B7280;">Portique plan — verification EN 1990 / EN 1993-1-1</span>
+		  <span style="font-size: 11px; color: #94A3B8;">Portique plan — verification EN 1990 / EN 1993-1-1</span>
 		</div>
 		<div style="display: flex; flex-direction: column; align-items: flex-end;">
-		  <span style="font-size: 10px; color: #6B7280;">${meta.fresh ? "Resultats a jour" : "Modele modifie — relancer le calcul"}</span>
-		  <span style="font-size: 10px; color: #6B7280;">${today}</span>
+		  <span style="font-size: 10px; color: #94A3B8;">${meta.fresh ? "Resultats a jour" : "Modele modifie — relancer le calcul"}</span>
+		  <span style="font-size: 10px; color: #94A3B8;">${today}</span>
 		</div>
 	  </div>
 	  ${hypothesis}
 	  <div style="display: flex; flex-direction: column; gap: 4px;">
 		<span style="font-size: 13px; font-weight: 600;">Profils (EN 10365 / 10210 / 10056)</span>
-		${profiles || '<span style="font-size: 10px; color: #6B7280; padding-left: 12px;">Aucune poutre.</span>'}
+		${profiles || '<span style="font-size: 10px; color: #94A3B8; padding-left: 12px;">Aucune poutre.</span>'}
 	  </div>
 	  ${
       uls === null || uls === undefined
-        ? '<span style="font-size: 11px; color: #6B7280;">Aucun calcul — lancer l\'etape 4.</span>'
+        ? '<span style="font-size: 11px; color: #94A3B8;">Aucun calcul — lancer l\'etape 4.</span>'
         : `<div style="display: flex; flex-direction: column; gap: 4px;">
-		<span style="font-size: 13px; font-weight: 600;">Verification ULE — ${escape(uls.label)}</span>
+		<span style="font-size: 13px; font-weight: 600;">Verification ELU — ${escape(uls.label)}</span>
 		${ulsRows}
 	  </div>
 	  <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -156,12 +156,12 @@ export function buildReportHtml(
 	  </div>
 	  ${reactions}`
     }
-	  <div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid #E5E7EB; padding-top: 10px;">
+	  <div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 10px;">
 		${qrImage}
 		<div style="display: flex; flex-direction: column; gap: 2px;">
 		  <span style="font-size: 10px; font-weight: 600;">Lien interactif (3D)</span>
-		  <span style="font-size: 9px; color: #6B7280; font-family: JetBrains Mono;">${escape(meta.shareUrl.slice(0, 96))}</span>
-		  <span style="font-size: 9px; color: #6B7280;">Scannez pour rouvrir le modele dans RDM Studio.</span>
+		  <span style="font-size: 9px; color: #94A3B8; font-family: JetBrains Mono;">${escape(meta.shareUrl.slice(0, 96))}</span>
+		  <span style="font-size: 9px; color: #94A3B8;">Scannez pour rouvrir le modele dans RDM Studio.</span>
 		</div>
 	  </div>
 	</div>`;
@@ -171,7 +171,7 @@ export function buildReportHtml(
 
 function row(label: string, value: string): string {
   return `<div style="display: flex; gap: 16px; font-size: 11px;">
-	  <span style="width: 110px; color: #6B7280;">${escape(label)}</span>
+	  <span style="width: 110px; color: #94A3B8;">${escape(label)}</span>
 	  <span style="font-family: JetBrains Mono;">${escape(value)}</span>
 	</div>`;
 }

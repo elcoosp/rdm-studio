@@ -80,9 +80,21 @@ msgstr "Étape {0}"
 msgid "Exploitation EC3"
 msgstr "Exploitation EC3"
 
+#: src/routes/report.tsx
+msgid "Exports (etape 5)"
+msgstr "Exports (etape 5)"
+
+#: src/components/BottomSheet.tsx
+msgid "Fermer"
+msgstr "Fermer"
+
 #: src/routes/loads.tsx
 msgid "Fz (kN, négatif vers le bas)"
 msgstr "Fz (kN, négatif vers le bas)"
+
+#: src/routes/report.tsx
+msgid "Generation…"
+msgstr "Generation…"
 
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
@@ -154,12 +166,24 @@ msgid "Profils utilises"
 msgstr "Profils utilises"
 
 #: src/routes/report.tsx
+msgid "Rapport 3D autonome (HTML)"
+msgstr "Rapport 3D autonome (HTML)"
+
+#: src/routes/report.tsx
 msgid "Rapport de model"
 msgstr "Rapport de model"
+
+#: src/routes/report.tsx
+msgid "Rapport PDF (takumi)"
+msgstr "Rapport PDF (takumi)"
 
 #: src/components/UpdatePrompt.tsx
 msgid "Recharger"
 msgstr "Recharger"
+
+#: src/routes/report.tsx
+msgid "Resultats CSV (Excel)"
+msgstr "Resultats CSV (Excel)"
 
 #: src/routes/results.tsx
 msgid "Resultats de calcul"
@@ -176,3 +200,7 @@ msgstr "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichag
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
 msgstr "Une nouvelle version est disponible."
+
+#: src/viewport3d/ViewportCanvas.tsx
+msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
+msgstr "Vue 3D indisponible (WebGL) — edition et calculs actifs."

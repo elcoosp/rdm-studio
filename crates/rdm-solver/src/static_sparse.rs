@@ -289,7 +289,7 @@ pub fn superimpose(
     Ok((u, r, f))
 }
 
-fn zero_load() -> SMatrix<f64, ELEMENT_DOFS, 1> {
+pub(crate) fn zero_load() -> SMatrix<f64, ELEMENT_DOFS, 1> {
     SMatrix::zeros()
 }
 

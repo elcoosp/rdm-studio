@@ -4,12 +4,14 @@ import init, {
   catalog_section_properties,
   catalog_section_shapes,
   catalog_sections,
+  generate_parametric_structure,
   import_cad,
-  project_fingerprint,
   import_dxf,
   modal_analysis,
+  project_fingerprint,
   section_stress_grid,
   solve,
+  validate_model_issues,
 } from "../wasm-pkg/rdm_wasm.js";
 
 /**
@@ -78,6 +80,27 @@ export interface RenderPdfRequest {
   images?: { src: string; data: Uint8Array }[];
 }
 
+/** v1.6.0: structured pre-solve validation request. */
+export interface ModelIssuesRequest {
+  type: "MODEL_ISSUES";
+  project: unknown;
+}
+
+/** v1.6.0: parametric structure generation request. */
+export interface GenerateParametricRequest {
+  type: "GENERATE_PARAMETRIC";
+  params: {
+    template: string;
+    span_m: number;
+    height_m: number;
+    bays: number;
+    primary_section: string;
+    secondary_section: string;
+    material_id: string;
+  };
+  name: string;
+}
+
 export type WorkerRequest =
   | SolveRequest
   | CatalogRequest
@@ -88,7 +111,9 @@ export type WorkerRequest =
   | ImportCadRequest
   | FingerprintRequest
   | CatalogPropertiesRequest
-  | SpanForcesRequest;
+  | SpanForcesRequest
+  | ModelIssuesRequest
+  | GenerateParametricRequest;
 
 /**
  * takumi-pdf state (ARCHITECTURE.md section 6: PDF generation runs in the
@@ -214,6 +239,26 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       return;
     }
     self.postMessage({ type: "DXF_RESULT", json });
+    return;
+  }
+  if (request.type === "MODEL_ISSUES") {
+    // v1.6.0: structured pre-solve diagnostics for the Steps 1–3 badges.
+    const issues = validate_model_issues(JSON.stringify(request.project));
+    if ((issues as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "MODEL_ISSUES_FAULT", fault: issues });
+      return;
+    }
+    self.postMessage({ type: "MODEL_ISSUES_RESULT", issues });
+    return;
+  }
+  if (request.type === "GENERATE_PARAMETRIC") {
+    // v1.6.0: pure-Rust parametric structure generator.
+    const json = generate_parametric_structure(JSON.stringify(request.params), request.name);
+    if ((json as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "PARAMETRIC_FAULT", fault: json });
+      return;
+    }
+    self.postMessage({ type: "PARAMETRIC_RESULT", json });
     return;
   }
   if (request.type === "RENDER_PDF") {

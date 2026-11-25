@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import type { WorkerRequest } from "./fea.worker";
 
 /** Typed result of a solve (mirrors SolveReport in rdm-wasm). */
 export interface CombinationReport {
   kind: string;
   label: string;
+  /** v1.6.0: exact EN 1990 multipliers (`["G", 1.35]`, `["Q", 1.5]`, ...). */
+  multipliers: [string, number][];
   beams: {
     beam_id: number;
     utilization: number;
@@ -22,6 +25,16 @@ export interface CombinationReport {
     /** v1.3.0: peak von Mises stress over the stations (Pa). */
     max_sigma_vm: number;
     midspan_deflection: number;
+    /** v1.6.0: plastic axial resistance Npl,Rd (N). */
+    n_pl_rd: number;
+    /** v1.6.0: plastic shear resistance Vpl,Rd (N). */
+    v_pl_rd: number;
+    /** v1.6.0: elastic critical moment Mcr (N·m, null = LTB n/a). */
+    m_cr: number | null;
+    /** v1.6.0: LTB slenderness λLT (null = LTB n/a). */
+    lambda_lt: number | null;
+    /** v1.6.0: member length (m) for the SLS allowance readouts. */
+    length: number;
   }[];
 }
 
@@ -58,6 +71,8 @@ export interface SectionDims {
   b: number | null;
   tw: number | null;
   tf: number | null;
+  /** v1.6.0: exact catalog area A (m²) — zero extra property roundtrips. */
+  a: number;
 }
 
 /** One extracted eigenmode (v1.0.0 modal engine). */
@@ -86,6 +101,26 @@ export interface SpanForceSample {
   my: number;
   mz: number;
   vz: number;
+  /** v1.6.0: torsional moment T (N·m) — the 5th internal-force curve. */
+  t: number;
+}
+
+/** v1.6.0: structured pre-solve diagnostic (rdm_model::ModelIssue). */
+export interface ModelIssue {
+  code: string;
+  subject: string;
+  message: string;
+}
+
+/** v1.6.0: parametric generation request (mirrors ParametricParams). */
+export interface ParametricParamsInput {
+  template: "WarrenTruss" | "PortalFrame" | "Cantilever" | "ContinuousBeam";
+  span_m: number;
+  height_m: number;
+  bays: number;
+  primary_section: string;
+  secondary_section: string;
+  material_id: string;
 }
 
 export interface StressGrid {
@@ -161,7 +196,11 @@ class FeaClient {
         | { type: "CATALOG_PROPS_RESULT"; props: unknown }
         | { type: "CATALOG_PROPS_FAULT"; fault: SolveFault }
         | { type: "SPAN_FORCES_RESULT"; forces: SpanForceSample[] }
-        | { type: "SPAN_FORCES_FAULT"; fault: SolveFault };
+        | { type: "SPAN_FORCES_FAULT"; fault: SolveFault }
+        | { type: "MODEL_ISSUES_RESULT"; issues: ModelIssue[] }
+        | { type: "MODEL_ISSUES_FAULT"; fault: SolveFault }
+        | { type: "PARAMETRIC_RESULT"; json: string }
+        | { type: "PARAMETRIC_FAULT"; fault: SolveFault };
       const pending = this.queue.shift()?.pending;
       if (pending === undefined) {
         return;
@@ -171,6 +210,9 @@ class FeaClient {
         pending.onError(data.fault);
       } else if (data.type === "SOLVE_RESULT") {
         lastReport = data.report;
+        for (const listener of reportListeners) {
+          listener(lastReport);
+        }
         pending.onResult(data.report);
       } else if (data.type === "PDF_RESULT") {
         pending.onResult(data.pdf);
@@ -193,6 +235,14 @@ class FeaClient {
         pending.onError(data.fault);
       } else if (data.type === "SPAN_FORCES_RESULT") {
         pending.onResult(data.forces);
+      } else if (data.type === "MODEL_ISSUES_FAULT") {
+        pending.onError(data.fault);
+      } else if (data.type === "MODEL_ISSUES_RESULT") {
+        pending.onResult(data.issues);
+      } else if (data.type === "PARAMETRIC_FAULT") {
+        pending.onError(data.fault);
+      } else if (data.type === "PARAMETRIC_RESULT") {
+        pending.onResult(data.json);
       } else if (data.type === "CATALOG_PROPS_FAULT") {
         pending.onError(data.fault);
       } else if (data.type === "CATALOG_PROPS_RESULT") {
@@ -372,6 +422,32 @@ class FeaClient {
     autoSolveRunner ??= createAutoSolve(() => this.solveModel(getProject()));
     return autoSolveRunner.trigger();
   }
+
+  /**
+   * v1.6.0: structured pre-solve diagnostics (`rdm_model::validate_model`)
+   * surfaced as live badges on Steps 1–3.
+   */
+  validateModelIssues(project: unknown): Promise<ModelIssue[]> {
+    return new Promise<ModelIssue[]>((resolve, reject) => {
+      this.enqueue(
+        { type: "MODEL_ISSUES", project },
+        { onResult: (data) => resolve(data as ModelIssue[]), onError: reject },
+      );
+    });
+  }
+
+  /**
+   * v1.6.0: parametric structure generator — returns the fresh `.rdm`
+   * project JSON string produced by `rdm-cad::parametric`.
+   */
+  generateParametricStructure(params: ParametricParamsInput, name: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.enqueue(
+        { type: "GENERATE_PARAMETRIC", params, name },
+        { onResult: (data) => resolve(data as string), onError: reject },
+      );
+    });
+  }
 }
 
 export const feaClient = new FeaClient();
@@ -381,4 +457,27 @@ let lastModalReport: ModalReport | null = null;
 
 export function getLastModalReport(): ModalReport | null {
   return lastModalReport;
+}
+
+/**
+ * v1.6.0: last-report pub/sub for the 3D metrology overlays — the
+ * ViewportLabels reaction / deflection callouts re-render on every
+ * auto-solve without polling the module variable.
+ */
+type ReportListener = (report: SolveReport | null) => void;
+const reportListeners = new Set<ReportListener>();
+
+export function subscribeLastReport(listener: ReportListener): () => void {
+  reportListeners.add(listener);
+  listener(lastReport);
+  return () => {
+    reportListeners.delete(listener);
+  };
+}
+
+/** React hook form of {@link subscribeLastReport}. */
+export function useLastReport(): SolveReport | null {
+  const [report, setReport] = useState<SolveReport | null>(lastReport);
+  useEffect(() => subscribeLastReport(setReport), []);
+  return report;
 }

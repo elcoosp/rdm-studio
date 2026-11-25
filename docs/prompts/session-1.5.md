@@ -1,0 +1,58 @@
+Task: github.com/elcoosp/rdm-studio. Ship v1.5.0 — complete, uncompromising `impeccable` v4.0.4 `Operate`-mode UI/UX overhaul across all 5 workstation screens (`geometry`, `supports`, `loads`, `results`, `report`) + split-screen/tablet/mobile responsiveness, AND close all 10 code/layout regressions uncovered in the `dd86689` audit and live split-screen browser video following `AGENTS.md`, `ARCHITECTURE.md`, and `DESIGN.md` (§1–§8).
+
+EXECUTION CONTRACT (NON-NEGOTIABLE — 100% AUTONOMOUS, ZERO SHORTCUTS):
+
+- **ZERO QUESTIONS / FULL AUTONOMY:** Never pause to ask the user for confirmation, routing choices, or whether to run `init`. Operate autonomously end-to-end from bootstrap to final `.zip` archive. If `context.mjs` reports `CONTEXT_STALE` or missing `PRODUCT.md`, proceed directly in `Operate` mode on the incumbent `DESIGN.md` without prompting.
+- **FIX THE SPLIT-SCREEN / DESKTOP BREAKPOINT DISASTER FIRST:** Currently `BottomSheet.tsx` triggers below `1024px` (`(max-width: 1023px)`), which forces a broken mobile drawer and hides the desktop layout on half-screen desktop windows (`800–1023px`). Change the mobile drawer threshold to **`(max-width: 767px)`** (`md`) everywhere (`BottomSheet.tsx` AND `__root.tsx`), and on `md+` (`≥ 768px`) render a locked `100dvh` side-by-side workstation (`320px` left inspector + full-height 3D viewport on the right) with ZERO bottom sheets and ZERO mobile bottom tab bars!
+- **MANDATORY `impeccable` v4.0.4 FULL PROTOCOL:**
+  1. Run `node .agents/skills/impeccable/scripts/context.mjs --target apps/web/src/routes/geometry.tsx` once at repo root.
+  2. Read `.agents/skills/impeccable/SKILL.md` AND ALL relevant playbooks:
+     - `.agents/skills/impeccable/reference/operate.md`
+     - `.agents/skills/impeccable/reference/layout.md`
+     - `.agents/skills/impeccable/reference/adapt.md`
+     - `.agents/skills/impeccable/reference/polish.md`
+     - `.agents/skills/impeccable/reference/audit.md`
+     - `.agents/skills/impeccable/reference/craft-floor.md` (read right before editing UI files, and enable `node .agents/skills/impeccable/scripts/hooks.mjs on || true`).
+  3. **Visual Proof Pass (Bounded 2 Rounds):** Render the built app in Playwright across **`860×900` (split-screen desktop)**, **`1440×900` (full desktop)**, and **`390×844` (mobile)** on all 5 routes (`/geometry`, `/supports`, `/loads`, `/results`, `/report`), inspect bounding boxes and screenshots, fix every single alignment/overlap/clipping flaw, and re-verify.
+- Keep strict SI units (`m`, `N`, `Pa`, `rad`, `kg/m³`) and zero `.unwrap()` / `.expect()` / `panic!()` in `crates/` and `bindings/rdm-wasm`.
+- Write complete, clean files (never blind regex/tab patches) to avoid `oxfmt` whitespace no-ops.
+
+1. **Bootstrap, Sync & Run `impeccable` Setup (< 3 tool calls):**
+   - `cd rdm-studio && git fetch origin && git reset --hard origin/main` (or clone `https://github.com/elcoosp/rdm-studio.git` if missing).
+   - Ensure `rustc`/`cargo`, `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com/elcoosp/ship`) are installed.
+   - Install `impeccable` if missing (`pnpm dlx skills add https://github.com/pbakaus/impeccable --skill impeccable -y || true`), run `node .agents/skills/impeccable/scripts/context.mjs --target apps/web/src/routes/geometry.tsx`, and read `operate.md`, `layout.md`, `adapt.md`, `polish.md`, `audit.md`, and `craft-floor.md`.
+
+2. **Close All 10 `dd86689` Code & Logic Regressions:**
+   1. **Fix 1-Based Reaction Indexing Bug (`apps/web/src/routes/report.tsx`):** Index `permanent.reactions` and `variable.reactions` by the node's 0-based array index (`nodeIndex * 6`, matching `Structure::dof_offset`) instead of `n.id * 6` so every support row (`N1`, `N2`, …) and the `Σ` total row report exact equilibrium forces.
+   2. **Fix Distributed Load Tie-Bar Orientation (`apps/web/src/viewport3d/ForceVectors3D.tsx`):** Orient the distributed-load top tie bar along the member vector using `THREE.Quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir)` so diagonal and vertical members render aligned load bars instead of sticking out along global X.
+   3. **Fix True Profile Extrusion on Selected Beams (`apps/web/src/viewport3d/BeamMeshes.tsx`):** Pass `profiles` (from `beamProfileLookup([beam], sectionDims)`) to `selectedGeometry` so selecting an `IPE 300` highlights its actual I-section rather than a `0.12 m` square box.
+   4. **Share Unified `.rdm / .dxf / .step / .igs` Importer Across Gallery, DnD & `launchQueue` (`apps/web/src/hooks/useFileOpening.ts`, `apps/web/src/routes/__root.tsx`):** Export `openProjectOrCadFile(file)` from `useFileOpening.ts` and wire it into `ProjectGalleryModal`'s `onImportFile` prop in `__root.tsx` so importing `.dxf`/`.step`/`.igs` from the gallery modal works identically to drag-and-drop.
+   5. **Make `CommandPalette.tsx` (`⌘K`) Context-Aware:** Surface active selection commands (_Relâcher les moments N1/N2 (`⌥R`)_, _Inverser la sélection (`⇧⌘I`)_) when beams are selected, plus _Lancer le calcul 3D & Eurocode 3 (`⌘Entrée`)_ and _Note de calcul A4 / PDF (`⌘P`)_.
+   6. **Clean Up `csvExport.ts` & Diacritics (`csvExport.ts`, `LayerToolbar.tsx`, `results.tsx`):** Remove unused `beamById` in `csvExport.ts`, fix `"Nœuds"` / `"Déformée"` in `LayerToolbar.tsx`, and fix `"exclusives à l'UI"` in `results.tsx`.
+
+3. **Execute Complete `Operate`-Mode UI/UX Overhaul Across All 5 Screens (`DESIGN.md` §1–§8 & `./mockups/`):**
+   - **A. Unified Breakpoint (`768px`) & Locked `100dvh` Workstation Shell (`BottomSheet.tsx`, `__root.tsx`):**
+     - Change `useIsMobile()` in `BottomSheet.tsx` to `useMediaQuery("(max-width: 767px)")` so `BottomSheet` ONLY triggers on true phones (`< 768px`). On `md+` (`≥ 768px`, including `860px` split-screen desktop), `BottomSheet` renders an inline left-docked `320px` `<aside>` (`w-80 shrink-0 h-full overflow-y-auto border-r border-hairline bg-panel p-3 space-y-3`) with zero drawer chrome or "Fermer" button.
+     - Keep the top header (`h-11`, `44px`, `border-b border-hairline bg-panel`) visible on `md+` (`≥ 768px`) with 3 balanced zones (`justify-between`): Left (`/logo-rdm-studio.svg` `24×24` + `RDM Studio` + project switcher `DropdownMenu`), Center (5 step tabs with `2px` `#1D4ED8` `layoutId` underline), Right (Undo/Redo buttons, node/beam counter, `⌘K`, `OfflinePill`, `?` 8-step tour button, active `FR | EN` pill).
+     - Lock `<main>` on `md+` to `flex-1 min-h-0 overflow-hidden` so the 3D viewport fills the screen without vertical page scrollbars.
+   - **B. Consistent Left-Docked `320px` Inspector via `<DesktopSplit>` (`Steps 1, 2, 3`):**
+     - Render `<DesktopSplit>` (`lg:flex-row` — **Left `320px` Inspector** first, **Right 3D Viewport** second; remove `lg:flex-row-reverse` from `geometry.tsx` and `supports.tsx`) across Steps 1, 2, and 3.
+     - Strip nested card borders inside the `320px` inspector: separate sections with clean `border-t border-hairline pt-3` hairlines and `12px` (`text-xs font-medium text-ink-secondary`) section headers (`craft-floor.md`).
+     - Align property controls into a crisp **2-column key-value grid** (`grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2`): Label on left, Base UI `Combobox` / `Select` / `NumberField` (`h-8`, `4px` radius) on right.
+   - **C. Step 1 (`/geometry`) Collapsible Bottom Data Dock with Base UI `NumberField` (`DataTable`):**
+     - Place `Nœuds` / `Poutres` (`@tanstack/react-table` `DataTable`) inside a clean **collapsible bottom dock** (`h-44` when expanded, `h-9` tab bar `Nœuds (N) | Poutres (M)` when collapsed, using Base UI `NumberField` for inline coordinate editing) so the 3D viewport commands **75%+ of the screen area**!
+     - Render a compact bottom-left **profile legend** (showing active sections + member counts) and subtle 3D navigation hint (`Clic G Sélection · Clic D Orbite · Maj+Glisser Pan · Suppr Effacer`), keeping all 4 viewport HUD corners non-overlapping (`LayerToolbar` top-left, camera presets top-right, legend bottom-left, `GizmoHelper` bottom-right).
+   - **D. Step 4 (`/results`) Precision Metrology Layout, Fiber Stresses & `uPlot` `±M_Rd` Capacity Lines:**
+     - **Top Strip:** Compact 4-KPI bar (`grid-cols-2 lg:grid-cols-4 gap-2`, `p-2.5` per card, `NumberFlowValue` `tabular-nums`, inline EC3 status badge + 1-click upgrade button + expandable 4-clause EC3 breakdown with `Kz = 0,5` lateral-bracing mitigation).
+     - **Center (`flex-1 min-h-[260px]`):** Full-bleed deformed 3D viewport with a single consolidated top-right control bar (Combination/Eigenmode `1..6` selector + Harmonic Play + Thermal Scale selector + Amplification slider) and bottom-center horizontal thermal legend bar (`η = 0` → `1.25`).
+     - **Bottom Dock (`h-[220px] shrink-0`):** Clean 2-column split (`grid-cols-[280px_1fr] gap-3`) with the 2D `σvM` cross-section heatmap + **top fiber, neutral axis, and bottom fiber stress readouts (`MPa`)** on the left, and the `uPlot` internal-force chart (`My,Ed`, `Vz,Ed`, `N,Ed`) with exact `plot.over`-aligned cursor + **dashed crimson `±M_Rd` capacity limit lines** (`beam.m_rd / 1000`) + live cursor force readouts on the right.
+   - **E. Step 5 (`/report`) Centered A4 Engineering Sheet (`max-w-[794px]`):**
+     - Crisp white A4 sheet (`p-8`, `border border-hairline`, `space-y-5`) with `/logo-rdm-studio.svg` header, 2-column metadata grid, aligned monospace engineering tables (`tabular-nums`, right-aligned numeric columns, `Copier TSV` buttons), QR code + SHA-256 model fingerprint footer, and sticky `320px` right export rail (`PDF Takumi`, `CSV Excel`, `HTML 3D`, `Imprimer`).
+   - **F. Mobile (`< 768px`) Polish:**
+     - Full-bleed `100dvh - 100px` 3D viewport + non-modal `Vaul` drawer (`bottom-14`, snap points `0.35 / 0.78`) + `56px` (`h-14`) 5-tab bottom navigation bar with zero overlap, plus a 1-tap `Rapport PDF` button on mobile Step 4.
+
+4. **Add Playwright Layout & Visual Geometry Regression Tests (`apps/web/e2e/layout-craft.spec.ts`):**
+
+- Assert via `boundingBox()` across `1440×900`, `860×900` (split-screen desktop), and `390×844` (mobile) that:On `1440×900` AND `860×900`, `[data-testid="inspector-sheet"]` is docked on the left (`box.x < 40`, `box.width` between `260` and `380`), `sheet-drag-handle` is NOT rendered, and `[data-testid="viewport-canvas"]` occupies at least `55%` of viewport width and `55%` of viewport height on Steps 1, 2, and 3.On `1440×900`, top-left `LayerToolbar` and top-right camera preset bar never intersect (`leftBox.x + leftBox.width < rightBox.x`).On `390×844`, the mobile `Vaul` drawer and `h-14` bottom navigation bar never clip or overlap interactive buttons, and `document.body.scrollHeight <= window.innerHeight + 1`.
+- Verify All Gates (`G0 → G6`, `AGENTS.md` §4) 100% Green:`cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings``RUSTFLAGS="-D warnings" cargo test --workspace --all-features``wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg``pnpm --filter web exec oxfmt --check && pnpm --filter web exec oxlint --deny-warnings && pnpm --filter web exec tsr generate && pnpm --filter web i18n:extract && pnpm --filter web i18n:compile && pnpm --filter web exec tsc --noEmit && pnpm --filter web test:unit && pnpm --filter web test:e2e`
+- Handoff & Archive (Leave Tree Dirty — No Commits):Update `STATUS.md` (`v1.5.0` complete), write `.github/pr-body.md` and `ship.toml` (1 dirty file per `[[commit]]`, ordered by dependency), run `ship validate` until exit `0`, and zip the full clean tree (`rdm-studio-v1.5.0-<SHA>.zip`, excluding only `.git/`, `target/`, `node_modules/`, caches) into the downloads folder with zip contents proof.

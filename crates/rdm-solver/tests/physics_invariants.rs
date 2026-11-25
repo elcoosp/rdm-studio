@@ -67,11 +67,15 @@ fn ss_beam(n_interior: usize, span: f64) -> Structure {
         node_id: 1,
         locked_dofs: [true, true, true, true, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s.supports.push(Support {
         node_id: n as u32,
         locked_dofs: [false, true, true, false, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s
 }

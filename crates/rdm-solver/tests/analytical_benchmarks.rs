@@ -64,11 +64,15 @@ fn simply_supported_point_load_midspan() {
         node_id: 1,
         locked_dofs: [true, true, true, true, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s.supports.push(Support {
         node_id: 2,
         locked_dofs: [false, true, true, false, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s.loads.push(Load {
         case: LoadCase::Variable,
@@ -78,7 +82,11 @@ fn simply_supported_point_load_midspan() {
             forces: GlobalForces::vertical(p),
         },
     });
-    let solved = rdm_solver::solve_model(&s).unwrap();
+    // Euler-Bernoulli reference: disable the Timoshenko shear
+    // flexibility (v1.7.0 default-on) so the closed form matches.
+    let mut eb = s.clone();
+    eb.settings.shear_deformation = false;
+    let solved = rdm_solver::solve_model(&eb).unwrap();
     let delta = midspan_deflection_metric(&s, &solved, 0, &[(LoadCase::Variable, 1.0)]).unwrap();
     let expected = p.abs() * l.powi(3) / (48.0 * 210e9 * 1.943e-5);
     assert_relative_eq!(delta, expected, epsilon = 1e-12);
@@ -95,11 +103,15 @@ fn simply_supported_uniform_load_midspan() {
         node_id: 1,
         locked_dofs: [true, true, true, true, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s.supports.push(Support {
         node_id: 2,
         locked_dofs: [false, true, true, false, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s.loads.push(Load {
         case: LoadCase::Variable,
@@ -108,9 +120,16 @@ fn simply_supported_uniform_load_midspan() {
             q_start: q,
             q_end: q,
             direction: Direction::gravity(),
+            a_start: None,
+            a_end: None,
+            local_axes: None,
         },
     });
-    let solved = rdm_solver::solve_model(&s).unwrap();
+    // Euler-Bernoulli reference: disable the Timoshenko shear
+    // flexibility (v1.7.0 default-on) so the closed form matches.
+    let mut eb = s.clone();
+    eb.settings.shear_deformation = false;
+    let solved = rdm_solver::solve_model(&eb).unwrap();
     let delta = midspan_deflection_metric(&s, &solved, 0, &[(LoadCase::Variable, 1.0)]).unwrap();
     let expected = q.abs() * l.powi(4) / (384.0 * 210e9 * 1.943e-5) * 5.0;
     assert_relative_eq!(delta, expected, epsilon = 1e-12);
@@ -131,7 +150,11 @@ fn cantilever_tip_point_load() {
             forces: GlobalForces::vertical(p),
         },
     });
-    let solved = rdm_solver::solve_model(&s).unwrap();
+    // Euler-Bernoulli reference: disable the Timoshenko shear
+    // flexibility (v1.7.0 default-on) so the closed form matches.
+    let mut eb = s.clone();
+    eb.settings.shear_deformation = false;
+    let solved = rdm_solver::solve_model(&eb).unwrap();
     let (_, sol) = solved
         .cases
         .iter()
@@ -158,9 +181,16 @@ fn cantilever_uniform_load() {
             q_start: q,
             q_end: q,
             direction: Direction::gravity(),
+            a_start: None,
+            a_end: None,
+            local_axes: None,
         },
     });
-    let solved = rdm_solver::solve_model(&s).unwrap();
+    // Euler-Bernoulli reference: disable the Timoshenko shear
+    // flexibility (v1.7.0 default-on) so the closed form matches.
+    let mut eb = s.clone();
+    eb.settings.shear_deformation = false;
+    let solved = rdm_solver::solve_model(&eb).unwrap();
     let (_, sol) = solved
         .cases
         .iter()
@@ -183,6 +213,8 @@ fn axial_bar_elongation() {
         node_id: 2,
         locked_dofs: [false, true, true, true, true, true],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     });
     s.loads.push(Load {
         case: LoadCase::Variable,
@@ -194,7 +226,11 @@ fn axial_bar_elongation() {
             },
         },
     });
-    let solved = rdm_solver::solve_model(&s).unwrap();
+    // Euler-Bernoulli reference: disable the Timoshenko shear
+    // flexibility (v1.7.0 default-on) so the closed form matches.
+    let mut eb = s.clone();
+    eb.settings.shear_deformation = false;
+    let solved = rdm_solver::solve_model(&eb).unwrap();
     let (_, sol) = solved
         .cases
         .iter()

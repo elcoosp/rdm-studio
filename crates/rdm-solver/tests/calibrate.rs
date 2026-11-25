@@ -49,6 +49,9 @@ fn clamped_udl_reactions_and_deflection() {
             q_start: 1000.0,
             q_end: 1000.0,
             direction: rdm_model::Direction::gravity(),
+            a_start: None,
+            a_end: None,
+            local_axes: None,
         },
     });
     s.supports.push(Support::fixed(1));

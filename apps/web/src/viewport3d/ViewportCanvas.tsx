@@ -1,10 +1,12 @@
 import { Canvas, useThree } from "@react-three/fiber";
-import { GizmoViewport, Grid, OrbitControls } from "@react-three/drei";
+import { GizmoHelper, GizmoViewport, Grid, OrbitControls } from "@react-three/drei";
 import { Component, useEffect, useMemo, type ReactNode } from "react";
 import { Trans } from "@lingui/react/macro";
 import * as THREE from "three";
 import { useViewportStore, type CameraPreset } from "@/state/viewportStore";
 import { LayerToolbar } from "./LayerToolbar";
+import { modelBounds } from "./ProfileShapes";
+import type { NodeData } from "@/state/projectStore";
 
 /**
  * Three.js / R3F scene chrome (ARCHITECTURE.md section 5, `ViewportCanvas.tsx`):
@@ -32,6 +34,33 @@ function CameraRig({ preset }: { preset: CameraPreset }) {
 }
 
 /**
+ * Auto-frames the camera to the model bounding box on mount and whenever
+ * the model identity changes (bug 2: no more staring at an empty corner).
+ */
+function FitCamera({ nodes }: { nodes: NodeData[] }) {
+  const camera = useThree((s) => s.camera);
+  const invalidate = useThree((s) => s.invalidate);
+  const signature = `${nodes.length}:${nodes[0]?.id ?? 0}:${nodes[nodes.length - 1]?.id ?? 0}`;
+  useEffect(() => {
+    if (nodes.length === 0) {
+      return;
+    }
+    const { center, radius } = modelBounds(nodes);
+    const distance = Math.max(radius * 2.6, 1);
+    camera.position.set(
+      center[0] + distance * 0.62,
+      center[1] - distance * 0.62,
+      center[2] + distance * 0.48,
+    );
+    camera.up.set(0, 0, 1);
+    camera.lookAt(center[0], center[1], center[2]);
+    camera.updateProjectionMatrix();
+    invalidate();
+  }, [camera, invalidate, signature, nodes]);
+  return null;
+}
+
+/**
  * WebGL fallback (M8 robustness): headless browsers, old GPUs and context
  * loss must degrade to a static notice — never take the app shell down.
  */
@@ -55,14 +84,14 @@ function ViewportFallback() {
       data-testid="viewport-fallback"
     >
       <svg viewBox="0 0 160 90" className="h-24 w-40" aria-hidden>
-        <line x1="20" y1="70" x2="80" y2="70" stroke="#6B7280" strokeWidth="3" />
-        <line x1="140" y1="70" x2="80" y2="70" stroke="#6B7280" strokeWidth="3" />
-        <line x1="20" y1="70" x2="20" y2="25" stroke="#6B7280" strokeWidth="3" />
-        <line x1="140" y1="70" x2="140" y2="25" stroke="#6B7280" strokeWidth="3" />
-        <line x1="20" y1="25" x2="80" y2="12" stroke="#2563EB" strokeWidth="3" />
-        <line x1="140" y1="25" x2="80" y2="12" stroke="#2563EB" strokeWidth="3" />
-        <circle cx="20" cy="70" r="3" fill="#111827" />
-        <circle cx="140" cy="70" r="3" fill="#111827" />
+        <line x1="20" y1="70" x2="80" y2="70" stroke="#94A3B8" strokeWidth="3" />
+        <line x1="140" y1="70" x2="80" y2="70" stroke="#94A3B8" strokeWidth="3" />
+        <line x1="20" y1="70" x2="20" y2="25" stroke="#94A3B8" strokeWidth="3" />
+        <line x1="140" y1="70" x2="140" y2="25" stroke="#94A3B8" strokeWidth="3" />
+        <line x1="20" y1="25" x2="80" y2="12" stroke="#1D4ED8" strokeWidth="3" />
+        <line x1="140" y1="25" x2="80" y2="12" stroke="#1D4ED8" strokeWidth="3" />
+        <circle cx="20" cy="70" r="3" fill="#0F172A" />
+        <circle cx="140" cy="70" r="3" fill="#0F172A" />
       </svg>
       <p className="text-[12px] text-ink-muted">
         <Trans>Vue 3D indisponible (WebGL) — edition et calculs actifs.</Trans>
@@ -83,11 +112,14 @@ export function ViewportCanvas({
   showLayerToolbar = true,
   pickLatency,
   testId = "viewport-canvas",
+  nodes,
 }: {
   children: ReactNode;
   showLayerToolbar?: boolean;
   pickLatency?: number;
   testId?: string;
+  /** Model nodes for the auto-framed camera (bug 2). */
+  nodes?: NodeData[];
 }) {
   const cameraPreset = useViewportStore((s) => s.cameraPreset);
   const setCameraPreset = useViewportStore((s) => s.setCameraPreset);
@@ -145,10 +177,11 @@ export function ViewportCanvas({
             gl.toneMapping = THREE.NoToneMapping;
           }}
         >
-          <color attach="background" args={["#F9FAFB"]} />
+          <color attach="background" args={["#F8FAFC"]} />
           <ambientLight intensity={0.9} />
           <directionalLight position={[5, -5, 8]} intensity={1.2} />
           <CameraRig preset={cameraPreset} />
+          {nodes !== undefined && nodes.length > 0 ? <FitCamera nodes={nodes} /> : null}
           <Grid
             rotation={[Math.PI / 2, 0, 0]}
             cellSize={0.5}
@@ -163,7 +196,9 @@ export function ViewportCanvas({
           />
           {children}
           <OrbitControls makeDefault enableDamping />
-          <GizmoViewport axisColors={["#EF4444", "#10B981", "#2563EB"]} labelColor="#111827" />
+          <GizmoHelper alignment="top-right" margin={[72, 72]}>
+            <GizmoViewport axisColors={["#DC2626", "#10b981", "#1D4ED8"]} labelColor="#0F172A" />
+          </GizmoHelper>
         </Canvas>
       </ViewportErrorBoundary>
     </div>

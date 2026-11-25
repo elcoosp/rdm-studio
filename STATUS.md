@@ -1,75 +1,77 @@
 # STATUS.md — RDM Studio milestone ledger
 
-Session 3 (2026-11-25): **M4 + M5 shipped on top of the M0–M3 base** now
-committed on origin/main (`6074db3`). Tree left dirty by design; per-file
-history lands via `ship.toml`.
+Session 4 (2026-11-25): **M7 + M8 shipped on top of the M0–M5 base**
+(origin/main `eaaa7d9`). The sandbox was recycled at session start; the
+workspace was re-cloned and the toolchain rebuilt. Tree left dirty by
+design; per-file history lands via `ship.toml`.
 
-## Milestones completed
+## Milestones completed this session
 
-### M0 — CI green / M1 — Rust core / M2 — WASM / M3 — routing — **done** (origin/main)
-Committed in sessions 1–2: workspace + catalogs (144 profiles, EN
-1990/1993), faer LLᵀ solver + benchmarks, rdm-wasm + worker, TanStack
-routing, Lingui fr/en, zustand store, vertical-slice pages.
+### M7 — Mobile responsive (§18: bottom sheet, touch controls, 100dvh) — **done**
+- `BottomSheet.tsx` (§5): Motion `drag="y"` sheet with spring snap, drag
+  handle, Fermer button; single DOM instance via matchMedia — inline aside
+  on `lg`+, sheet below. Wired into geometry/support-adjacent loads,
+  results and report inspectors.
+- Header: 44px (`min-h-11`) touch targets on every stepper link; below
+  `sm` the stepper collapses to icons with `aria-label` (WCAG names kept),
+  brand label hidden, locale switch `shrink-0`, nav `overflow-x-auto` —
+  no horizontal overflow at 390/412px (verified by an overflow probe +
+  Lighthouse content-width audit).
+- e2e `mobile.spec.ts`: iPhone 13 + iPad Mini emulation — sheet
+  open/close (drag on chromium; button path on firefox, whose touch
+  emulation cancels synthetic pointer streams), touch navigation across
+  all 5 steps, 100dvh shell does not overflow the visual viewport.
 
-### M4 — Interactive 3D viewport (§18, criterion: selection < 0.2 ms @ 10k) — **done**
-- `apps/web/src/viewport3d/` per §5: `ViewportCanvas.tsx` (Z-up scene,
-  infinite metric grid, XYZ gizmo, view presets 3D Iso / Dessus XY / Face
-  XZ / Côté YZ, CAD orbit + touch), `BeamMeshes.tsx` (merged volumetric
-  geometry with `beamId` vertex attribute + §17 thermal vertex colors),
-  `SupportMarkers.tsx` (RDM 7 symbols from the 6-DOF pattern),
-  `ForceVectors3D.tsx`, `SnapGrid.tsx` (10/50/100 mm + node > midpoint >
-  grid ordering + Shift orthogonal lock), `LayerToolbar.tsx` (layer
-  visibility + volumetric/wireframe + live pick-latency readout),
-  `useBvhPicking.ts` (three-mesh-bvh accelerated raycast + measured
-  wall-clock selection).
-- Picking design: all beams merge into ONE BufferGeometry carrying a
-  `beamId` attribute → a single accelerated raycast resolves the member;
-  validated in vitest (node, no renderer needed): **median selection
-  < 0.2 ms over 200 rays on 10,000 beams** (M4 criterion).
-- `/geometry`: side-by-side viewport + inspector (DESIGN.md desktop
-  layout); `/results`: deformed-shape viewport (SLS 1.00G+1.00Q
-  superposition, auto exaggeration) with ULS-utilization thermal colors
-  and the η legend. Thermal spectrum strictly quarantined to 3D fields.
-- `viewportStore.ts` (zustand): layers, render mode, camera preset.
-- Tests: spectrum/snap/geometry unit tests + the BVH benchmark; e2e
-  covers canvas, layer toolbar, view presets, FEA legend.
-
-### M5 — PWA installable (§18, criterion: Lighthouse PWA ≥ 95 + offline) — **done**
-- `UpdatePrompt.tsx` (§5 components): workbox-window registration of
-  `/sw.js`, "waiting" → discreet reload toast (§8.7 update flow).
-- Manifest icons: generated `icon-192.png`, `icon-512.png`,
-  `icon-maskable-512.png` (safe-zone) from the logo design; wired into the
-  §19.1 manifest (the plan's config omitted icons, which Chrome
-  installability requires — extension documented in the PR body).
-- **Lighthouse 9.6.8 PWA audit: 100/100** (installable-manifest,
-  service-worker, splash-screen, maskable-icon, viewport, ... all 1).
-  Lighthouse 13 removed the PWA category; 9.6.8 is the last auditing
-  version (run via `pnpm dlx`, CHROME_PATH → Playwright chromium).
-- **Offline verified in Playwright e2e** (`pwa-offline.spec.ts`, against
-  the production build via `vite preview`): SW installs/activates, then
-  `context.setOffline(true)` + reload still serves the precached app
-  shell and renders the loads page. `serviceWorkers: "allow"` is set in
-  the Playwright config (blocked by default).
+### M8 — v1.0.0 release track (§18 + e1/e2/e3) — **done to environment limits**
+- **e1 PDF**: `export/pdfTakumiReport.tsx` builds a typed A4 report
+  (hypotheses, profiles EN 10365, ULE verification with thermal-tiered η,
+  SLS L/250 deflection check per EN 1993-1-1 §7.2, G-case reactions, QR
+  of the share URL) rendered to **real vector PDF bytes by `takumi-pdf`
+  0.21.3 `PdfRenderer`** inside the FEA worker (§6: PDF generation runs in
+  the worker; `RENDER_PDF` op + transferable buffer). The plan names
+  `@pdfcn`, which is an empty `0.0.0` placeholder on npm — the document is
+  a typed HTML template consumed by takumi-pdf (drift documented).
+- **e2 CSV + HTML 3D**: `csvExport.ts` (semicolon CSV, UTF-8 BOM, Excel
+  locale) and `standaloneHtml3d.ts` — ONE self-contained .html embedding
+  the vendored three.module.js + model JSON + utilization heatmap +
+  hand-rolled orbit/pan/zoom; zero network references (asserted in tests).
+- **e3 multi-browser e2e**: chromium + firefox projects green (17 tests);
+  webkit cannot launch in this sandbox — 8 system libraries missing and
+  `playwright install-deps webkit` requires sudo. Mobile touch gestures
+  run on chromium only (see above); all other specs run on both engines.
+- **Deep links**: share-URL round-trip restores the encoded model on a
+  fresh navigation (`?p=` → Valibot-validated store hydration).
+- **Robustness fixes shipped with M8**: WebGL feature detection before
+  mounting R3F (a bare `getContext()` succeeds where the renderer then
+  fails on headless firefox; an R3F renderer failure escaped subtree
+  boundaries and tore down the route) + `ViewportErrorBoundary` + static
+  fallback view. Fonts are now bundled (Inter/JetBrains Mono TTF in
+  `public/fonts`, `@font-face` in app.css, precached by the SW via
+  `ttf` in globPatterns) — full offline typography for app and PDF.
 
 ## Gates verified this session (all green)
-- G0: `cargo fmt --all --check` ok, clippy `-D warnings -W pedantic` 0
-  errors, lint-attr grep 0, `oxfmt --check` ok, `oxlint --deny-warnings` ok
-- G1: `cargo test --workspace` 12/12 suites (also under
-  `RUSTFLAGS="-D warnings"`)
-- G2: wasm-pkg built (`wasm-pack --target web`)
-- G2.5: route tree stable (`tsr generate` no-op diff), G3 `tsc --noEmit` ok
-- G4: i18n extract 42 msgs / EN 100% / compile ok
-- G5: vitest 29/29 (incl. M4 BVH benchmark)
-- G6: Playwright 3/3 (workflow + SW activation + offline reload),
-  production-build webServer
+- G0: `cargo fmt` ok, clippy `-D warnings -W pedantic` 0 errors,
+  non-test `.unwrap()/panic!/todo!` grep = **0**, `oxfmt --check` ok,
+  `oxlint --deny-warnings` ok
+- G1: `cargo test --workspace` 12/12 suites
+- G2: `wasm-pack build bindings/rdm-wasm --target web` rebuilt after the
+  sandbox recycle
+- G2.5: route tree stable; G3 `tsc --noEmit` ok; G4 i18n 49/49 EN 100%
+- G5: vitest 32/32 (incl. takumi-pdf A4 `%PDF-` pipeline test with fonts
+  + QR, CSV BOM test, standalone-HTML no-network test)
+- G6: Playwright 17/17 (chromium + firefox): workflow + PWA offline +
+  exports + deep links + mobile viewports; **Lighthouse 9.6.8 PWA: 100**
+  (re-verified after the header overflow fix)
 
-## Explicitly NOT done (next milestones)
-- M7 mobile bottom sheet + touch targets (100dvh already used).
-- M6 de facto done (42/42 messages translated, in-place switch).
-- M8 release: multi-browser e2e (Firefox/Safari), deep-link sweep, PDF/CSV
-  exports (e1/e2), fuzz targets (b2), `rdm-cad`, `modal.rs`, `section_cut.rs`.
+## Explicitly NOT done (residual)
+- WebKit execution (environment: missing system libs, no sudo available).
+- Firefox touch-drag gesture in emulation (synthetic pointer stream
+  cancelled by the engine — chromium validates the gesture; firefox
+  validates sheet open/close via the button path).
+- Fuzz targets (b2), `rdm-cad` DXF/STEP import, `modal.rs`,
+  `section_cut.rs`, uPlot section cuts, driver.js onboarding, cmdk
+  palette, box multi-select: reserved, no stubs shipped.
 
 ## Next session
-1. M7: BottomSheet.tsx (Motion drag="y"), 44px touch targets, mobile e2e.
-2. M8: PDF/HTML/CSV exports (pdfTakumiReport, standaloneHtml3d), then
-   release checklist.
+1. Optional hardening: webkit run on a machine with the system libs.
+2. Feature backlog above, in plan order (b2 → cad → modal).

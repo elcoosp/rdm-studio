@@ -26,6 +26,19 @@ pub enum Classification {
 }
 
 impl Classification {
+    /// Ordinal index 1..=4 for UI badges (`Classe 2`, v1.4.0).
+    #[must_use]
+    pub fn as_u8(self) -> u8 {
+        match self {
+            Classification::Class1 => 1,
+            Classification::Class2 => 2,
+            Classification::Class3 => 3,
+            Classification::Class4 => 4,
+        }
+    }
+}
+
+impl Classification {
     /// Numeric class index (1..4).
     pub fn index(self) -> u8 {
         match self {

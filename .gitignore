@@ -25,3 +25,4 @@ apps/web/src/i18n/locales/*.compiled.*
 # Session-local handoff artifacts (never committed)
 ship.toml
 .github/pr-body.md
+docs/launch

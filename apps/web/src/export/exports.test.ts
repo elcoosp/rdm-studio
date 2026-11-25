@@ -96,15 +96,11 @@ const report: SolveReport = {
         {
           beam_id: 1,
           utilization: 0.312,
-          governing_check: "Mb,Rd",
-          max_sigma_vm: 73400000,
           midspan_deflection: 0.0008,
         },
         {
           beam_id: 2,
           utilization: 1.02,
-          governing_check: "Nb,Rd,z",
-          max_sigma_vm: 239700000,
           midspan_deflection: 0.0041,
         },
       ],
@@ -116,15 +112,11 @@ const report: SolveReport = {
         {
           beam_id: 1,
           utilization: 0.23,
-          governing_check: "Mb,Rd",
-          max_sigma_vm: 54060000,
           midspan_deflection: 0.0006,
         },
         {
           beam_id: 2,
           utilization: 0.71,
-          governing_check: "Von Mises",
-          max_sigma_vm: 166900000,
           midspan_deflection: 0.0029,
         },
       ],

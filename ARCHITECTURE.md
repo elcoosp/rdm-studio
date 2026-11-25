@@ -1366,7 +1366,7 @@ jobs:
           cache: pnpm
 
       - name: Install pnpm
-        run: npm install -g pnpm@12.18.0
+        run: corepack enable && corepack prepare pnpm@12.18.0 --activate
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

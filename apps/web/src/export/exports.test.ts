@@ -158,7 +158,7 @@ describe("csv export (M8/e2)", () => {
   it("emits UTF-8 BOM and tabular results", () => {
     const csv = buildResultsCsv(project, report);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
-    expect(csv).toContain("eta ULE;fleche mid SLS (mm)");
+    expect(csv).toContain("eta ELU;fleche mid SLS (mm)");
     expect(csv).toContain("IPE 300;S235JR;1.020;2.9");
   });
 });

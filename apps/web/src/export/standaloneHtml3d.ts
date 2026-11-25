@@ -10,6 +10,20 @@ import type { SolveReport } from "@/wasmBridge/workerClient";
  * model JSON and the ELU thermal colors into ONE .html file that opens in
  * any browser — fully offline, no server, no CDN.
  */
+/**
+ * HTML-escapes a project name for safe interpolation into the standalone
+ * report `<title>` / `<h1>` (v1.6.0 security audit A: a stored
+ * `<script>`-bearing project name used to execute in the exported file).
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 export function buildStandaloneHtml3d(project: ProjectData, report: SolveReport | null): string {
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
@@ -27,14 +41,19 @@ export function buildStandaloneHtml3d(project: ProjectData, report: SolveReport 
       (sls?.beams ?? []).map((b) => [b.beam_id, b.midspan_deflection * 1000]),
     ),
   };
-  const data = JSON.stringify(model);
+  // v1.6.0 security audit A: `</script>` (or any `<`) inside the JSON —
+  // e.g. a beam named from a hostile .rdm import — used to break out of the
+  // inline `<script type="module">`. Unicode-escape the angle brackets so
+  // the embedded JSON can never close the script element.
+  const data = JSON.stringify(model).replaceAll("<", "\\u003c").replaceAll(">", "\\u003e");
+  const safeName = escapeHtml(project.name);
 
   return `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RDM Studio — ${project.name} — rapport 3D</title>
+<title>RDM Studio — ${safeName} — rapport 3D</title>
 <style>
   :root { color-scheme: light; }
   body { margin: 0; font-family: Inter, system-ui, sans-serif; color: #0F172A; background: #F8FAFC; }
@@ -48,7 +67,7 @@ export function buildStandaloneHtml3d(project: ProjectData, report: SolveReport 
 </style>
 </head>
 <body>
-<header><h1>RDM Studio — ${project.name}</h1><span>Rapport 3D autonome — ELU η = exploitation (EN 1990 / EN 1993-1-1)</span></header>
+<header><h1>RDM Studio — ${safeName}</h1><span>Rapport 3D autonome — ELU η = exploitation (EN 1990 / EN 1993-1-1)</span></header>
 <div id="scene"></div>
 <div id="legend">η (ELU)<div id="bar"></div><span>0.00</span> — <span>1.25</span></div>
 <div id="hint">Glisser: orbite · Molette: zoom · Clic droit: pan</div>

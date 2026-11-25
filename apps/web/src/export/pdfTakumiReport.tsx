@@ -48,6 +48,7 @@ export function buildReportHtml(
   report: SolveReport | null,
   meta: ReportMeta,
   qrPng?: { src: string; data: Uint8Array },
+  stagePng?: { src: string; data: Uint8Array },
 ): { html: string; images?: { src: string; data: Uint8Array }[] } {
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
@@ -124,7 +125,14 @@ export function buildReportHtml(
 	</div>`;
 
   const qrImage = qrPng ? `<img src="${qrPng.src}" style="width: 88px; height: 88px;" />` : "";
-  const images = qrPng ? [qrPng] : undefined;
+  // v1.6.0: live 3D snapshot of the persistent stage embedded in the PDF.
+  const stageImage = stagePng
+    ? `<div style="display: flex; flex-direction: column; gap: 4px;">
+		<span style="font-size: 13px; font-weight: 600;">Vue 3D du modèle (capture temps réel)</span>
+		<img src="${stagePng.src}" style="width: 100%; max-height: 380px; object-fit: contain; border: 1px solid #E2E8F0; border-radius: 6px;" />
+	  </div>`
+    : "";
+  const images = [...(qrPng ? [qrPng] : []), ...(stagePng ? [stagePng] : [])];
 
   const html = `
 	<div style="display: flex; flex-direction: column; gap: 14px; font-family: Inter; color: #0F172A;">
@@ -139,6 +147,7 @@ export function buildReportHtml(
 		</div>
 	  </div>
 	  ${hypothesis}
+	  ${stageImage}
 	  <div style="display: flex; flex-direction: column; gap: 4px;">
 		<span style="font-size: 13px; font-weight: 600;">Profils (EN 10365 / 10210 / 10056)</span>
 		${profiles || '<span style="font-size: 10px; color: #94A3B8; padding-left: 12px;">Aucune poutre.</span>'}
@@ -166,7 +175,7 @@ export function buildReportHtml(
 	  </div>
 	</div>`;
 
-  return { html, images };
+  return { html, images: images.length > 0 ? images : undefined };
 }
 
 function row(label: string, value: string): string {

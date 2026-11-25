@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
+import * as v from "valibot";
 import { feaClient } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
+import { ProjectFileSchema } from "@/schemas/project.schema";
 
 /**
  * File-opening surface (v1.4.0): drag-and-drop of `.rdm` models and CAD
@@ -12,16 +14,36 @@ import { useProjectStore } from "@/state/projectStore";
  * v1.5.0: `openProjectOrCadFile` is exported so the gallery modal, the
  * shell drop target and the PWA `launchQueue` share ONE importer — the
  * gallery used to parse only `.rdm` JSON and silently fail on CAD files.
+ *
+ * v1.6.0 security audit B: every `.rdm` payload is validated through
+ * `v.safeParse(ProjectFileSchema, ...)` BEFORE it reaches
+ * `loadProject` — a hand-crafted file (negative spring stiffness, NaN
+ * coordinates, unknown load kinds) used to crash the solver or persist
+ * poisoned state into IndexedDB.
  */
 export async function openProjectOrCadFile(file: File): Promise<boolean> {
   const lower = file.name.toLowerCase();
   try {
     if (lower.endsWith(".rdm")) {
       const text = await file.text();
-      const project = JSON.parse(text) as Parameters<
-        ReturnType<typeof useProjectStore.getState>["loadProject"]
-      >[0];
-      useProjectStore.getState().loadProject(project);
+      let raw: unknown;
+      try {
+        raw = JSON.parse(text);
+      } catch {
+        toast.error(`Fichier .rdm illisible (JSON invalide) : ${file.name}`);
+        return false;
+      }
+      const parsed = v.safeParse(ProjectFileSchema, raw);
+      if (!parsed.success) {
+        const first = parsed.issues[0];
+        toast.error(
+          `Projet .rdm invalide : ${file.name}${
+            first === undefined ? "" : ` — ${String(first.message)}`
+          }`,
+        );
+        return false;
+      }
+      useProjectStore.getState().loadProject(parsed.output);
       toast(`Projet chargé : ${file.name}`);
       return true;
     }

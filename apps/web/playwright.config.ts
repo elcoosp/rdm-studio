@@ -20,7 +20,14 @@ export default defineConfig({
   // - WebKit cannot launch in this sandbox: 8 system libraries missing and
   //   `playwright install-deps` needs sudo. Same specs otherwise.
   projects: [
-    { name: "chromium", use: { browserName: "chromium" } },
+    {
+      name: "chromium",
+      // v1.6.0 sandbox: the chrome-headless-shell build cannot download or
+      // create a WebGL context here, while the full chromium build renders
+      // SwiftShader WebGL in new-headless mode — keep the M4/3D contracts
+      // exercised (AGENTS.md §2 GPU-fallback guardrail).
+      use: { browserName: "chromium", channel: "chromium" },
+    },
     {
       name: "firefox",
       use: { browserName: "firefox" },

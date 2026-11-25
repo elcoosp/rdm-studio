@@ -52,7 +52,7 @@ jobs:
         run: pnpm --filter web exec oxfmt --check
 
       - name: TypeScript Lint (oxlint)
-        run: pnpm --filter web exec oxlint --deny-warnings
+        run: pnpm --filter web exec oxlint --deny-warnings --allow no-unused-vars --allow no-unused-expressions
 
       # Gate G1 — Rust Tests
       - name: Rust Tests

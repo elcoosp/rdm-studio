@@ -20,7 +20,10 @@ async function dragSheetClosed(page: import("@playwright/test").Page): Promise<v
 /** Closes the sheet. Chromium honors the synthetic pointer stream, so the
  * Motion drag gesture is exercised there; Firefox's touch emulation cancels
  * it and leaves the pointer state broken, so the button path is used. */
-async function closeSheet(page: import("@playwright/test").Page, browserName: string): Promise<void> {
+async function closeSheet(
+  page: import("@playwright/test").Page,
+  browserName: string,
+): Promise<void> {
   if (browserName === "firefox") {
     await page.getByRole("button", { name: "Fermer" }).click();
   } else {
@@ -63,10 +66,7 @@ test.describe("iPhone 13 viewport", () => {
 test.describe("iPad Mini viewport", () => {
   test.use({ viewport: { width: 768, height: 1024 }, hasTouch: true, isMobile: true });
 
-  test("bottom sheet opens, drag closes, stepper navigates", async ({
-    page,
-    browserName,
-  }) => {
+  test("bottom sheet opens, drag closes, stepper navigates", async ({ page, browserName }) => {
     await page.goto("/geometry");
     await expect(page.getByTestId("inspector-sheet")).toBeVisible();
     await closeSheet(page, browserName);

@@ -24,7 +24,6 @@ export function buildResultsCsv(project: ProjectData, report: SolveReport | null
   );
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
-  const beamById = new Map(project.structure.beams.map((b) => [b.id, b]));
   for (const beam of project.structure.beams) {
     const eta = uls?.beams.find((b) => b.beam_id === beam.id)?.utilization;
     const delta = sls?.beams.find((b) => b.beam_id === beam.id)?.midspan_deflection;

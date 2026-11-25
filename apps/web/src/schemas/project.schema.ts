@@ -66,6 +66,15 @@ const LoadSchema = v.variant("kind", [
     q_end: v.number(),
     direction: v.object({ x: v.number(), y: v.number(), z: v.number() }),
   }),
+  v.object({
+    case: LoadCase,
+    // v1.3.0: global acceleration field in dimensionless g multiples;
+    // the solver integrates q = ρ·A·g·(ax, ay, az) exactly.
+    kind: v.literal("AccelerationField"),
+    ax_g: v.number(),
+    ay_g: v.number(),
+    az_g: v.number(),
+  }),
 ]);
 
 export const StructureSchema = v.object({

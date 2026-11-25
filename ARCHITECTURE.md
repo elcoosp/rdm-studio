@@ -103,11 +103,9 @@
 | **`vite`**                                  | `8.3.8`       | Ultra-fast bundler (Rolldown) with native ESM Worker support.                                                                |
 | **`@vitejs/plugin-react-swc`**              | `4.3.3`       | SWC-based React plugin for Vite 8 (Fast Refresh, Lingui macro compilation).                                                  |
 | **`vite-plugin-wasm`**                      | `3.6.0`       | Transparent loading and initialization of `.wasm` modules.                                                                   |
-| **`vite-plugin-top-level-await`**           | `1.6.0`       | Top-level await support for WASM initialization in workers.                                                                  |
-| **`vite-tsconfig-paths`**                   | `6.1.1`       | Resolves TypeScript `compilerOptions.paths` aliases in Vite (e.g., `@/components`).                                          |
 | **`@tanstack/react-router`**                | `1.170.46`    | **Type-safe routing** for the 5-step workflow, with search-param validation and deep-linking.                                |
 | **`@tanstack/router-devtools`**             | `1.167.2`     | Visual route tree, search-param, and loader inspection during development.                                                   |
-| **`@tanstack/router-plugin`**               | `1.170.46`    | Vite plugin for automatic route-tree generation and type safety.                                                             |
+| **`@tanstack/router-plugin`**               | `1.99.9`    | Vite plugin for automatic route-tree generation and type safety.                                                             |
 | **`@tanstack/react-query`**                 | `5.108.3`     | Async state management for optional future remote data (e.g., shared template library). _Not required for local-first core._ |
 | **`react-hook-form`**                       | `7.87.0`      | Performant form state management for inspector panels with multi-field validation.                                           |
 | **`@hookform/resolvers`**                   | `7.0.7`       | Valibot resolver bridge for `react-hook-form` (keeps validation schemas unified).                                            |
@@ -139,6 +137,7 @@
 | **`@lingui/swc-plugin`**                    | `6.7.1`       | SWC plugin for compile-time macro extraction (zero runtime overhead).                                                        |
 | **`@lingui/vite-plugin`**                   | `6.12.0`      | Vite plugin for on-the-fly catalog compilation (`.po` files).                                                                |
 | **`@lingui/cli`**                           | `6.11.0`      | CLI for extracting and compiling message catalogs.                                                                           |
+| **`@lingui/format-po`** | `6.11.0` | PO catalog formatter required by Lingui 6 CLI/Vite plugin. |
 | **`vite-plugin-pwa`**                       | `2.0.0`       | Zero-config PWA generation (service worker, manifest, update prompt).                                                        |
 | **`workbox-window`**                        | `7.4.1`       | Service worker communication and update notification.                                                                        |
 | **`oxlint`**                                | `1.95.0`      | **Rust-native linter** for TypeScript/React (0 config, < 50 ms on full project).                                             |
@@ -177,7 +176,6 @@ The following versions were verified against the npm registry and GitHub release
 | **`date-fns`**                              | _(not listed)_ | **`4.4.0`**         | **New** (GitHub, May 2026)           |
 | **`clsx`**                                  | _(not listed)_ | **`2.1.1`**         | **New** (stable)                     |
 | **`tailwind-merge`**                        | _(not listed)_ | **`3.7.0`**         | **New** (Nov 2026)                   |
-| **`vite-tsconfig-paths`**                   | _(not listed)_ | **`6.1.1`**         | **New** (stable; 7.0.0 is alpha)     |
 
 > **Note on Lingui version skew:** `@lingui/vite-plugin` is at `6.12.0` while the other Lingui packages are at `6.11.0`. This is intentional: the Vite plugin received a patch release ahead of the core packages. Mixing `6.11.0` and `6.12.0` is fully compatible within the Lingui 6 line.
 
@@ -493,7 +491,7 @@ authors = ["RDM Studio"]
 
 [workspace.dependencies]
 # --- Math engine ---
-faer = "0.24.4"
+faer = { version = "0.24.4", default-features = false }
 nalgebra = "0.35.0"
 glam = "0.34.3"
 approx = "0.6.0-rc2"
@@ -849,6 +847,9 @@ import react from "@vitejs/plugin-react-swc";
 import { lingui } from "@lingui/vite-plugin";
 
 export default defineConfig({
+	resolve: {
+		tsconfigPaths: true,
+	},
 	plugins: [
 		react({
 			plugins: [["@lingui/swc-plugin", {}]],
@@ -1190,10 +1191,8 @@ import react from "@vitejs/plugin-react-swc";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import wasm from "vite-plugin-wasm";
-import topLevelAwait from "vite-plugin-top-level-await";
 import { lingui } from "@lingui/vite-plugin";
 import { VitePWA } from "vite-plugin-pwa";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
 	plugins: [
@@ -1218,8 +1217,8 @@ export default defineConfig({
 				name: "RDM Studio",
 				short_name: "RDM",
 				description: "3D Structural Engineering Workstation",
-				theme_color: "#0891B2",
-				background_color: "#F9FAFB",
+				theme_color: "#1D4ED8",
+				background_color: "#F8FAFC",
 				display: "standalone",
 				file_handlers: [
 					{
@@ -1246,7 +1245,7 @@ export default defineConfig({
 	],
 	worker: {
 		format: "es",
-		plugins: () => [wasm(), topLevelAwait()],
+		plugins: () => [wasm()],
 	},
 	optimizeDeps: {
 		exclude: ["rdm-wasm", "occt-import-js", "@takumi-rs/wasm"],
@@ -1260,6 +1259,7 @@ This file is required for `pnpm i18n:extract` and `pnpm i18n:compile` to work. T
 
 ```ts
 import { defineConfig } from "@lingui/cli";
+import { formatter } from "@lingui/format-po";
 
 export default defineConfig({
 	sourceLocale: "fr",
@@ -1270,7 +1270,7 @@ export default defineConfig({
 			include: ["src"],
 		},
 	],
-	format: "po",
+	format: formatter({ lineNumbers: false }),
 });
 ```
 

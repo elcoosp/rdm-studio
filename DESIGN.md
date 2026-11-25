@@ -120,3 +120,41 @@ sheet-top: 16px
   - **Pass ($\eta \le 1.00$):** `#ECFDF5` fill, `1px solid #A7F3D0` border, `#065F46` text (e.g., `η = 0,74 Conforme EC3`).
   - **Fail ($\eta > 1.00$):** `#FEF2F2` fill, `1px solid #FECACA` border, `#991B1B` text (e.g., `η = 1,25 Dépassement χz`) paired with a 1-click corrective action button.
 - **Utilization Progress Track:** `4px` height, `#F1F5F9` track, dynamic fill (`#10B981` for $\eta \le 0.80$, `#F59E0B` for $0.80 < \eta \le 1.00$, `#DC2626` for $\eta > 1.00$).
+
+---
+
+## 7. Precision Ergonomics & Field-Grade UX Refinements (v1.1)
+
+1. **Exact SVG Icon Source (`mockups/icons-sheet.html` → `EngineeringIcons.tsx`):**
+   - Implement all 32 custom engineering icons (`ProfileIpe` through `ModalVibration`) using the exact `viewBox="0 0 24 24"`, `strokeWidth="1.5"`, `#0F172A` + `#1D4ED8` paths defined in `mockups/icons-sheet.html`.
+2. **3D Snap Cursor Glyphs & Haptics (`SnapGrid`):**
+   - Render a dynamic 3D snap reticle at the cursor: **Cobalt square (`#1D4ED8`)** on existing nodes, **Cyan triangle (`#06B6D4`)** at beam midpoints, and **Slate crosshair (`#64748B`)** on metric grid intersections, paired with a subtle `navigator.vibrate(10)` pulse on touch devices.
+3. **Hold-`Alt` Keycap Hints (`KeycapHints`):**
+   - Holding `Alt` / `Option` reveals crisp `JetBrains Mono` shortcut badges (`[X]`, `[Y]`, `[Z]` axis locks, `[F]` zoom extents, `[I]` isometric view, `[Space]` modal play/pause, `[⌘K]` palette) over toolbar buttons.
+4. **What-If Optimization Diff & 5-Second Undo Toast:**
+   - Applying a 1-click Eurocode 3 corrective action (e.g., replacing an overloaded beam with `IPE 240`) displays a compact delta summary (`Masse : +8,3 kg · Taux EC3 : 124,8 % → 68,4 %`) inside a Sonner toast with an immediate `Annuler (⌘Z)` button.
+5. **1-Click Excel / LibreOffice TSV Table Copy (`Copier pour Excel`):**
+   - Each of the 4 tables in Step 5 (`Rapport`) includes a top-right copy button exporting tab-separated values (`TSV`) formatted with French decimal commas ready for direct `Ctrl+V` paste into spreadsheets.
+6. **Native Print Stylesheet (`@media print`):**
+   - Pressing `⌘P` / `Ctrl+P` in Step 5 hides all navigation bars and canvas backgrounds, expands the A4 calculation sheet to full width without borders, and applies `break-inside: avoid` on tables and cross-section figures.
+7. **Transparent Local / Offline Status Pill (`PWA Status`):**
+   - Header displays a subtle status indicator (`Enregistré en local`) that switches cleanly to an amber badge (`Mode hors-ligne actif`) whenever `navigator.onLine === false`.
+
+---
+
+## 7. Precision Ergonomics & Field-Grade UX Refinements (v1.1)
+
+1. **Exact SVG Icon Source (`mockups/icons-sheet.html` → `EngineeringIcons.tsx`):**
+   - Implement all 32 custom engineering icons (`ProfileIpe` through `ModalVibration`) using the exact `viewBox="0 0 24 24"`, `strokeWidth="1.5"`, `#0F172A` + `#1D4ED8` paths defined in `mockups/icons-sheet.html`.
+2. **3D Snap Cursor Glyphs & Haptics (`SnapGrid`):**
+   - Render a dynamic 3D snap reticle at the cursor: **Cobalt square (`#1D4ED8`)** on existing nodes, **Cyan triangle (`#06B6D4`)** at beam midpoints, and **Slate crosshair (`#64748B`)** on metric grid intersections, paired with a subtle `navigator.vibrate(10)` pulse on touch devices.
+3. **Hold-`Alt` Keycap Hints (`KeycapHints`):**
+   - Holding `Alt` / `Option` reveals crisp `JetBrains Mono` shortcut badges (`[X]`, `[Y]`, `[Z]` axis locks, `[F]` zoom extents, `[I]` isometric view, `[Space]` modal play/pause, `[⌘K]` palette) over toolbar buttons.
+4. **What-If Optimization Diff & 5-Second Undo Toast:**
+   - Applying a 1-click Eurocode 3 corrective action (e.g., replacing an overloaded beam with `IPE 240`) displays a compact delta summary (`Masse : +8,3 kg · Taux EC3 : 124,8 % → 68,4 %`) inside a Sonner toast with an immediate `Annuler (⌘Z)` button.
+5. **1-Click Excel / LibreOffice TSV Table Copy (`Copier pour Excel`):**
+   - Each of the 4 tables in Step 5 (`Rapport`) includes a top-right copy button exporting tab-separated values (`TSV`) formatted with French decimal commas ready for direct `Ctrl+V` paste into spreadsheets.
+6. **Native Print Stylesheet (`@media print`):**
+   - Pressing `⌘P` / `Ctrl+P` in Step 5 hides all navigation bars and canvas backgrounds, expands the A4 calculation sheet to full width without borders, and applies `break-inside: avoid` on tables and cross-section figures.
+7. **Transparent Local / Offline Status Pill (`PWA Status`):**
+   - Header displays a subtle status indicator (`Enregistré en local`) that switches cleanly to an amber badge (`Mode hors-ligne actif`) whenever `navigator.onLine === false`.

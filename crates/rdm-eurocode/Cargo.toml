@@ -1,0 +1,19 @@
+[package]
+name = "rdm-eurocode"
+description = "Data-driven EN 1990 / EN 1993-1-1 normative engine for RDM Studio"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+rdm-model = { path = "../rdm-model" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }
+insta = { workspace = true }
+
+[lints]
+workspace = true

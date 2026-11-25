@@ -249,31 +249,6 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
         m_reduced[fi * n_free + fj] += v;
     }
 
-    if std::env::var("RDM_MODAL_DEBUG").is_ok() {
-        let ktrace: f64 = (0..n_free).map(|r| k_reduced[r * n_free + r]).sum();
-        let mtrace: f64 = (0..n_free).map(|r| m_reduced[r * n_free + r]).sum();
-        eprintln!("DEBUG n_free={n_free} trace_K={ktrace} trace_M={mtrace}");
-        for r in 0..n_free {
-            let row: Vec<String> = (0..n_free)
-                .map(|c| format!("{:.3}", m_reduced[r * n_free + c]))
-                .collect();
-            eprintln!("DEBUG M[{}]: {}", r, row.join(" "));
-        }
-        for r in 0..n_free {
-            eprintln!("DEBUG K[{r},{r}]={}", k_reduced[r * n_free + r]);
-        }
-    }
-    if std::env::var("RDM_MODAL_DEBUG").is_ok() {
-        let ktrace: f64 = (0..n_free).map(|r| k_reduced[r * n_free + r]).sum();
-        let mtrace: f64 = (0..n_free).map(|r| m_reduced[r * n_free + r]).sum();
-        eprintln!("DEBUG n_free={n_free} trace_K={ktrace} trace_M={mtrace}");
-        for r in 0..n_free {
-            let row: Vec<String> = (0..n_free)
-                .map(|c| format!("{:.3}", m_reduced[r * n_free + c]))
-                .collect();
-            eprintln!("DEBUG M[{}]: {}", r, row.join(" "));
-        }
-    }
     let cholesky = DenseCholesky::factor(&k_reduced, n_free).ok_or_else(|| {
         ModalError::Factorization(
             "the reduced stiffness matrix is not positive definite".to_owned(),

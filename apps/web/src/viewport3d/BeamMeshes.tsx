@@ -2,6 +2,12 @@ import * as THREE from "three";
 import { useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { BeamData, NodeData } from "@/state/projectStore";
+import {
+  beamProfileLookup,
+  profileOutline,
+  squareOutline,
+  type ProfileDims,
+} from "./ProfileShapes";
 
 /**
  * Extruded volumetric beam rendering with the FEA thermal vertex-color
@@ -15,11 +21,11 @@ import type { BeamData, NodeData } from "@/state/projectStore";
  */
 
 export const SPECTRUM_STOPS: [number, [number, number, number]][] = [
-  [0.0, hexToRgb("#2563EB")],
+  [0.0, hexToRgb("#1D4ED8")],
   [0.25, hexToRgb("#06B6D4")],
-  [0.5, hexToRgb("#10B981")],
+  [0.5, hexToRgb("#10b981")],
   [0.75, hexToRgb("#F59E0B")],
-  [1.0, hexToRgb("#EF4444")],
+  [1.0, hexToRgb("#DC2626")],
 ];
 
 const LAST_STOP = SPECTRUM_STOPS[SPECTRUM_STOPS.length - 1] ?? [1, [1, 0, 0]];
@@ -38,6 +44,14 @@ export function spectrumColor(ratio: number): [number, number, number] {
     if (upper !== undefined && lower !== undefined && t <= upper[0]) {
       const [t1, c1] = upper;
       const [t0, c0] = lower;
+      // Exact stop endpoints return the stop color bit-for-bit (a k = 1
+      // lerp can drift by one ulp on the round trip).
+      if (t === t1) {
+        return c1;
+      }
+      if (t === t0) {
+        return c0;
+      }
       const k = (t - t0) / (t1 - t0);
       return [
         c0[0] + (c1[0] - c0[0]) * k,
@@ -58,6 +72,13 @@ export interface BeamGeometryOptions {
   deformScale?: number;
   /** Square profile width (m) of the extruded volumetric rendering. */
   width?: number;
+  /**
+   * True catalog dimensions per beam (bug 2): when provided, members
+   * extrude their real I/U/CHS/RHS/L outline instead of the square box.
+   */
+  profiles?: Map<number, ProfileDims>;
+  /** Per-beam section designation lookup used with `profileDims`. */
+  beams_sections?: undefined;
 }
 
 interface UnitBox {
@@ -175,21 +196,93 @@ export function buildBeamGeometry(
     const [r, g, b] = spectrumColor(ratio);
     const base = positions.length / 3;
 
-    for (let vi = 0; vi < UNIT_BOX.vertices.length; vi += 3) {
-      const vx = UNIT_BOX.vertices[vi] ?? 0;
-      const vy = UNIT_BOX.vertices[vi + 1] ?? 0;
-      const vz = UNIT_BOX.vertices[vi + 2] ?? 0;
-      positions.push(
-        ax + exx * vx * length + yx * vy * hw + znX * vz * hw,
-        ay + exy * vx * length + yy * vy * hw + znY * vz * hw,
-        az + exz * vx * length + yz * vy * hw + znZ * vz * hw,
-      );
-      colors.push(r, g, b);
-      beamIds.push(beam.id);
+    const dims = options.profiles?.get(beam.id);
+    if (dims === undefined) {
+      // Square-box path (benchmark + fallback rendering).
+      for (let vi = 0; vi < UNIT_BOX.vertices.length; vi += 3) {
+        const vx = UNIT_BOX.vertices[vi] ?? 0;
+        const vy = UNIT_BOX.vertices[vi + 1] ?? 0;
+        const vz = UNIT_BOX.vertices[vi + 2] ?? 0;
+        positions.push(
+          ax + exx * vx * length + yx * vy * hw + znX * vz * hw,
+          ay + exy * vx * length + yy * vy * hw + znY * vz * hw,
+          az + exz * vx * length + yz * vy * hw + znZ * vz * hw,
+        );
+        colors.push(r, g, b);
+        beamIds.push(beam.id);
+      }
+      for (const index of UNIT_BOX.indices) {
+        indices.push(base + index);
+      }
+      continue;
     }
-    for (const index of UNIT_BOX.indices) {
-      indices.push(base + index);
+
+    // True profile extrusion (bug 2): end rings at x = 0 / x = 1 in the
+    // member frame, side quads between consecutive outline points, caps
+    // triangulated with ShapeUtils (handles holes).
+    const outline = profileOutline(dims);
+    const contour = outline.contour;
+    const nContour = contour.length;
+    const holeRings = outline.holes;
+    const ringSize = nContour + holeRings.reduce((acc, hole) => acc + hole.length, 0);
+    const ringCoords: [number, number][] = [...contour, ...holeRings.flat()];
+    const pushRing = (endX: number): number => {
+      const ringBase = positions.length / 3;
+      for (const [py, pz] of ringCoords) {
+        positions.push(
+          ax + exx * endX * length + yx * py + znX * pz,
+          ay + exy * endX * length + yy * py + znY * pz,
+          az + exz * endX * length + yz * py + znZ * pz,
+        );
+        colors.push(r, g, b);
+        beamIds.push(beam.id);
+      }
+      return ringBase;
+    };
+    const baseA = pushRing(0);
+    const baseB = pushRing(1);
+
+    // Caps: triangulate the 2D outline (contour + holes).
+    const flat = new Float32Array(ringSize * 2);
+    for (const [i, [py, pz]] of ringCoords.entries()) {
+      flat[i * 2] = py;
+      flat[i * 2 + 1] = pz;
     }
+    const triangles = THREE.ShapeUtils.triangulateShape(
+      contour.map(([y, z]) => new THREE.Vector2(y, z)),
+      holeRings.map((hole) => hole.map(([y, z]) => new THREE.Vector2(y, z))),
+    );
+    for (const tri of triangles) {
+      for (const k of tri) {
+        indices.push(baseA + k);
+      }
+    }
+    const baseBCap = baseA + ringSize;
+    for (const tri of triangles) {
+      for (const k of tri) {
+        indices.push(baseBCap + k);
+      }
+    }
+
+    // Side walls: one quad per outline edge (contour closes on itself;
+    // hole rings are separate closed loops).
+    const edges: [number, number][] = [];
+    for (let i = 0; i < nContour; i++) {
+      edges.push([i, (i + 1) % nContour]);
+    }
+    let holeStart = nContour;
+    for (const hole of holeRings) {
+      for (let i = 0; i < hole.length; i++) {
+        edges.push([holeStart + i, holeStart + ((i + 1) % hole.length)]);
+      }
+      holeStart += hole.length;
+    }
+    for (const [i, j] of edges) {
+      indices.push(baseA + i, baseA + j, baseB + j);
+      indices.push(baseA + i, baseB + j, baseB + i);
+    }
+    void ringSize;
+    void base;
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -221,6 +314,8 @@ interface BeamMeshesProps {
   wireframe: boolean;
   selectedBeamId: number | null;
   onPick: (beamId: number | null) => void;
+  /** Catalog dims by section designation (bug 2 true extrusion). */
+  sectionDims?: Map<string, ProfileDims>;
 }
 
 export function BeamMeshes({
@@ -232,9 +327,16 @@ export function BeamMeshes({
   wireframe,
   selectedBeamId,
   onPick,
+  sectionDims,
 }: BeamMeshesProps) {
   const geometry = useMemo(
-    () => buildBeamGeometry(nodes, beams, { colorRatios, displacements, deformScale }),
+    () =>
+      buildBeamGeometry(nodes, beams, {
+        colorRatios,
+        displacements,
+        deformScale,
+        profiles: sectionDims === undefined ? undefined : beamProfileLookup(beams, sectionDims),
+      }),
     [nodes, beams, colorRatios, displacements, deformScale],
   );
   const selectedGeometry = useMemo(() => {
@@ -264,7 +366,7 @@ export function BeamMeshes({
       {wireframe ? (
         <lineSegments>
           <edgesGeometry args={[geometry, 25]} />
-          <lineBasicMaterial color="#6B7280" />
+          <lineBasicMaterial color="#94A3B8" />
         </lineSegments>
       ) : (
         <mesh geometry={geometry} onClick={handleClick}>
@@ -274,7 +376,7 @@ export function BeamMeshes({
       {selectedGeometry !== null ? (
         <lineSegments>
           <edgesGeometry args={[selectedGeometry, 25]} />
-          <lineBasicMaterial color="#0891B2" />
+          <lineBasicMaterial color="#1D4ED8" />
         </lineSegments>
       ) : null}
     </>

@@ -2,6 +2,7 @@ import { createRootRoute, Link, Outlet, useLocation } from "@tanstack/react-rout
 import { motion } from "motion/react";
 import { Trans } from "@lingui/react/macro";
 import { IconFrame, IconLoad, IconReport, IconResults, IconSupport } from "@/components/icons";
+import { UpdatePrompt } from "@/components/UpdatePrompt";
 
 const STEPS = [
   { to: "/geometry", icon: IconFrame },

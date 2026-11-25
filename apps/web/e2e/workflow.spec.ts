@@ -9,7 +9,7 @@ test("5-step workflow runs a real FE calculation", async ({ page }) => {
   await expect(page.getByRole("link", { name: /RDM Studio/ })).toBeVisible();
 
   // The demo project ships 3 nodes / 2 beams.
-  await expect(page.getByText("Noeuds")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Noeuds" })).toBeVisible();
 
   // Step navigation via <Link> (compile-time checked routes).
   await page.getByRole("link", { name: /Étape 4/ }).click();

@@ -77,15 +77,15 @@ const report: SolveReport = {
   cases: [
     {
       code: "G",
-      displacements: Array.from({ length: 24 }).fill(0.001),
+      displacements: Array.from<number>({ length: 24 }).fill(0.001),
       reactions: [12, -3, 4, 0, 0, 8],
-      beam_end_forces: Array.from({ length: 24 }).fill(0),
+      beam_end_forces: Array.from<number>({ length: 24 }).fill(0),
     },
     {
       code: "Q",
-      displacements: Array.from({ length: 24 }).fill(0.0004),
+      displacements: Array.from<number>({ length: 24 }).fill(0.0004),
       reactions: [5, -1, 2, 0, 0, 3],
-      beam_end_forces: Array.from({ length: 24 }).fill(0),
+      beam_end_forces: Array.from<number>({ length: 24 }).fill(0),
     },
   ],
   combinations: [

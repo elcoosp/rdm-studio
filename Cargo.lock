@@ -1230,6 +1230,7 @@ dependencies = [
  "dxf",
  "rdm-model",
  "serde",
+ "serde_json",
  "thiserror 2.0.21",
  "uuid",
 ]
@@ -1270,6 +1271,7 @@ dependencies = [
  "proptest",
  "rdm-eurocode",
  "rdm-model",
+ "serde",
  "serde_json",
  "thiserror 2.0.21",
 ]

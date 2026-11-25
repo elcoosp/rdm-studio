@@ -25,10 +25,15 @@ pub use en1993::{
 use std::sync::OnceLock;
 
 /// Returns the embedded EN 10365 / EN 10210 / EN 10056 profile catalogs.
+///
+/// # Panics
+///
+/// Panics only if the compile-time embedded JSON were malformed, which the
+/// committed snapshot tests make impossible.
 pub fn profile_catalog() -> &'static ProfileCatalog {
     static CATALOG: OnceLock<ProfileCatalog> = OnceLock::new();
     CATALOG.get_or_init(|| {
-        ProfileCatalog::from_strs(
+        ProfileCatalog::parse_catalog_strs(
             include_str!("../data/en10365_profiles.json"),
             include_str!("../data/en10210_hollow.json"),
             include_str!("../data/en10056_angles.json"),
@@ -38,10 +43,15 @@ pub fn profile_catalog() -> &'static ProfileCatalog {
 }
 
 /// Returns the embedded EN 10025 / EN 10088 / EN AW material catalog.
+///
+/// # Panics
+///
+/// Panics only if the compile-time embedded JSON were malformed, which the
+/// committed snapshot tests make impossible.
 pub fn material_catalog() -> &'static MaterialCatalog {
     static CATALOG: OnceLock<MaterialCatalog> = OnceLock::new();
     CATALOG.get_or_init(|| {
-        MaterialCatalog::from_str(include_str!("../data/en10025_materials.json"))
+        MaterialCatalog::parse_str(include_str!("../data/en10025_materials.json"))
             .expect("embedded material catalog must parse")
     })
 }

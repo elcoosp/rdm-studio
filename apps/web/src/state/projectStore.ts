@@ -26,12 +26,22 @@ export interface BeamData {
   releases_end: boolean[];
   k_buckling_y: number;
   k_buckling_z: number;
+  /** v1.7.0: linear depth taper (scale at n2). */
+  taper_end_scale?: number;
+  /** v1.7.0: rigid end offsets along the axis (m). */
+  end_offsets?: [number, number];
+  /** v1.7.0: Standard | TensionOnly | CompressionOnly. */
+  behavior?: "Standard" | "TensionOnly" | "CompressionOnly";
 }
 
 export interface SupportData {
   node_id: number;
   locked_dofs: boolean[];
   spring_stiffness: number[];
+  /** v1.7.0: inclined support direction (global unit vector). */
+  incline?: { x: number; y: number; z: number };
+  /** v1.7.0: prescribed support settlement (m / rad). */
+  settlement?: number[];
 }
 
 export interface GlobalForcesData {
@@ -70,6 +80,15 @@ export type LoadData =
 
 export type LoadCaseId = "Permanent" | "Variable" | "Wind" | "Snow" | "Acceleration";
 
+/** v1.7.0 schema-v2 solver / standard settings. */
+export interface ModelSettingsData {
+  national_annex: "FR" | "BE" | "DE" | "UK" | "EN";
+  combination_method: "Eq610" | "Eq610ab";
+  shear_deformation: boolean;
+  plane_frame_2d: boolean;
+  p_delta?: boolean;
+}
+
 export interface ProjectData {
   version: number;
   name: string;
@@ -81,6 +100,19 @@ export interface ProjectData {
     sections: Record<string, unknown>;
     materials: Record<string, unknown>;
     self_weight_enabled: boolean;
+    /** v1.7.0 schema v2: settings / load cases / groups / levels. */
+    settings?: ModelSettingsData;
+    load_cases?: {
+      id: number;
+      code: string;
+      category: string;
+      psi0: number;
+      psi1: number;
+      psi2: number;
+      include_self_weight: boolean;
+    }[];
+    groups?: { id: number; name: string; beam_ids: number[] }[];
+    levels?: { id: number; elevation: number; name?: string }[];
   };
 }
 
@@ -96,6 +128,8 @@ interface ProjectState {
   project: ProjectData;
   selection: Selection;
   setName: (name: string) => void;
+  /** v1.7.0: updates the solver/standard settings (schema v2). */
+  updateSettings: (patch: Partial<ModelSettingsData>) => void;
   addNode: (x: number, y: number, z: number) => number;
   moveNode: (id: number, x: number, y: number, z: number) => void;
   removeNode: (id: number) => void;
@@ -416,6 +450,23 @@ export const useProjectStore = create<ProjectState>()(
       project: demoProject(),
       selection: { nodeId: null, beamId: null, sectionId: null, selectedBeamIds: [] },
       setName: (name) => set((st) => ({ project: { ...st.project, name } })),
+      updateSettings: (patch) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            structure: {
+              ...st.project.structure,
+              settings: {
+                national_annex: "FR",
+                combination_method: "Eq610",
+                shear_deformation: true,
+                plane_frame_2d: false,
+                ...st.project.structure.settings,
+                ...patch,
+              } as ModelSettingsData,
+            },
+          },
+        })),
       addNode: (x, y, z) => {
         const id = get().project.structure.nodes.reduce((m, n) => Math.max(m, n.id), 0) + 1;
         set((st) => ({

@@ -1,15 +1,26 @@
 import init, {
+  ModelSession,
   beam_span_forces,
+  buckling_analysis_json,
+  build_combinations_v2_json,
   catalog_materials,
   catalog_section_properties,
   catalog_section_shapes,
   catalog_sections,
+  compute_envelopes_json,
+  custom_section_preview,
+  export_bim,
+  generate_env_loads_json,
   generate_parametric_structure,
   import_cad,
   import_dxf,
+  member_calc_trace,
   modal_analysis,
+  optimize_sections_json,
   project_fingerprint,
+  run_validation_suite,
   section_stress_grid,
+  seismic_spectrum_json,
   solve,
   validate_model_issues,
 } from "../wasm-pkg/rdm_wasm.js";
@@ -87,6 +98,46 @@ export interface ModelIssuesRequest {
 }
 
 /** v1.6.0: parametric structure generation request. */
+/** v1.8.0: live drag-solve lane request (latest-wins coalescing). */
+export interface LiveSolveRequest {
+  type: "LIVE_SOLVE";
+  token: number;
+  project: unknown;
+}
+
+/** v1.8.0: case superposition from the cached factorization (< 2 ms). */
+export interface SolveCaseRhsRequest {
+  type: "SOLVE_CASE_RHS";
+  token: number;
+  weights: { case: string; weight: number }[];
+}
+
+/** v1.8.0: cancels any pending live solve. */
+export interface CancelSolveRequest {
+  type: "CANCEL_SOLVE";
+}
+
+/** v1.8.0: validation suite request (41 closed-form benchmarks). */
+export interface ValidationRequest {
+  type: "VALIDATION_SUITE";
+}
+
+/** v1.8.0: generic named-call lane for the v1.8/v1.9 surface. */
+export interface EngineCallRequest {
+  type: "ENGINE_CALL";
+  fn:
+    | "build_combinations_v2_json"
+    | "member_calc_trace"
+    | "compute_envelopes_json"
+    | "custom_section_preview"
+    | "generate_env_loads_json"
+    | "optimize_sections_json"
+    | "buckling_analysis_json"
+    | "seismic_spectrum_json"
+    | "export_bim";
+  args: unknown[];
+}
+
 export interface GenerateParametricRequest {
   type: "GENERATE_PARAMETRIC";
   params: {
@@ -105,6 +156,11 @@ export type WorkerRequest =
   | SolveRequest
   | CatalogRequest
   | RenderPdfRequest
+  | LiveSolveRequest
+  | SolveCaseRhsRequest
+  | CancelSolveRequest
+  | ValidationRequest
+  | EngineCallRequest
   | ModalRequest
   | SectionStressRequest
   | ImportDxfRequest
@@ -154,9 +210,141 @@ async function ensureReady(): Promise<void> {
   await ready;
 }
 
+/** v1.8.0: stateful session (cached factorization) + latest-wins token. */
+let session: ModelSession | null = null;
+let liveToken = 0;
+
+function ensureSession(): ModelSession {
+  session ??= new ModelSession();
+  return session;
+}
+
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   const request = event.data;
   await ensureReady();
+  if (request.type === "CANCEL_SOLVE") {
+    liveToken = 0;
+    ensureSession().cancel();
+    return;
+  }
+  if (request.type === "LIVE_SOLVE") {
+    liveToken = request.token;
+    const session = ensureSession();
+    const applied: void | { kind?: string } = session.apply_delta(
+      JSON.stringify(request.project),
+    ) as unknown as void | { kind?: string };
+    if (applied !== undefined && applied.kind === "Fault") {
+      self.postMessage({ type: "LIVE_FAULT", token: request.token, fault: applied });
+      return;
+    }
+    const ok: boolean | { kind?: string } = session.solve_session() as unknown as boolean;
+    // Latest-wins: a newer request superseded this pass.
+    if (liveToken !== request.token) {
+      return;
+    }
+    if (ok !== true) {
+      self.postMessage({
+        type: "LIVE_FAULT",
+        token: request.token,
+        fault: ok as unknown as Record<string, string>,
+      });
+      return;
+    }
+    self.postMessage({ type: "LIVE_RESULT", token: request.token });
+    return;
+  }
+  if (request.type === "SOLVE_CASE_RHS") {
+    const session = ensureSession();
+    if (!session.has_cached_solve()) {
+      self.postMessage({
+        type: "CASE_FAULT",
+        token: request.token,
+        fault: { kind: "Fault", message: "no cached solve" },
+      });
+      return;
+    }
+    const weights = request.weights.map((w) => `["${w.case}", ${w.weight}]`).join(",");
+    // Case codes map onto the LoadCase enum spellings.
+    const result = session.solve_case_rhs(
+      `[${weights}]`
+        .replaceAll('"G"', '"Permanent"')
+        .replaceAll('"Q"', '"Variable"')
+        .replaceAll('"W"', '"Wind"')
+        .replaceAll('"S"', '"Snow"')
+        .replaceAll('"Acc"', '"Acceleration"'),
+    );
+    if ((result as { kind?: string }).kind === "Fault") {
+      self.postMessage({ type: "CASE_FAULT", token: request.token, fault: result });
+      return;
+    }
+    if (liveToken !== 0 && request.token !== liveToken) {
+      return;
+    }
+    self.postMessage({ type: "CASE_RESULT", token: request.token, response: result });
+    return;
+  }
+  if (request.type === "VALIDATION_SUITE") {
+    const results = run_validation_suite();
+    self.postMessage({ type: "VALIDATION_RESULT", results });
+    return;
+  }
+  if (request.type === "ENGINE_CALL") {
+    const args = request.args as unknown[];
+    let result: unknown;
+    try {
+      switch (request.fn) {
+        case "build_combinations_v2_json":
+          result = build_combinations_v2_json(JSON.stringify(args[0]));
+          break;
+        case "member_calc_trace":
+          result = member_calc_trace(JSON.stringify(args[0]), (args[1] as number) ?? 0);
+          break;
+        case "compute_envelopes_json":
+          result = compute_envelopes_json(JSON.stringify(args[0]));
+          break;
+        case "custom_section_preview":
+          result = custom_section_preview(
+            args[0] as string,
+            args[1] as number,
+            args[2] as number,
+            args[3] as number,
+            args[4] as number,
+          );
+          break;
+        case "generate_env_loads_json":
+          result = generate_env_loads_json(
+            args[0] as string,
+            args[1] as number,
+            args[2] as number,
+            args[3] as number,
+          );
+          break;
+        case "optimize_sections_json":
+          result = optimize_sections_json(JSON.stringify(args[0]), JSON.stringify(args[1]));
+          break;
+        case "buckling_analysis_json":
+          result = buckling_analysis_json(JSON.stringify(args[0]), (args[1] as number) ?? 4);
+          break;
+        case "seismic_spectrum_json":
+          result = seismic_spectrum_json(
+            args[0] as number,
+            args[1] as string,
+            args[2] as string,
+            JSON.stringify(args[3]),
+          );
+          break;
+        case "export_bim":
+          result = export_bim(JSON.stringify(args[0]), args[1] as string);
+          break;
+        default:
+          result = { kind: "Fault", message: "unrouted engine call" };
+      }
+    } catch (error) {
+      result = { kind: "Fault", message: String(error) };
+    }
+    self.postMessage({ type: "ENGINE_RESULT", fn: request.fn, result });
+    return;
+  }
   if (request.type === "FETCH_CATALOG") {
     const sections = catalog_sections();
     const materials = catalog_materials();

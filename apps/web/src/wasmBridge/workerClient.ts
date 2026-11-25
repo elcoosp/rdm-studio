@@ -128,6 +128,97 @@ export interface StressGrid {
   points: StressPoint[];
 }
 
+// ---------------------------------------------------------------------------
+// v1.8.0 / v1.9.0 — priority lanes (latest-wins live solve + engine calls).
+// ---------------------------------------------------------------------------
+
+/** One closed-form benchmark result of the Validation modal. */
+export interface BenchResultDto {
+  id: string;
+  title: string;
+  expected: number;
+  computed: number;
+  rel_error: number;
+  unit: string;
+  passed: boolean;
+}
+
+/** One node of the KaTeX CalcTrace tree. */
+export interface CalcTraceNodeDto {
+  clause: string;
+  title: string;
+  formula_latex: string;
+  substituted: string;
+  value: number;
+  limit: number;
+  unit: string;
+  passed: boolean;
+  children: CalcTraceNodeDto[];
+}
+
+/** Per-member min/max envelope of the internal forces. */
+export interface BeamEnvelopeDto {
+  beam_id: number;
+  n: [number, number];
+  my: [number, number];
+  mz: [number, number];
+  vz: [number, number];
+  t: [number, number];
+}
+
+/** EC3 optimizer output for one member group. */
+export interface GroupOptimizationDto {
+  chosen: string | null;
+  passes: number;
+  pareto: [string, number, number][];
+}
+
+/** Linear buckling mode (λcr + normalized shape). */
+export interface BucklingModeDto {
+  mode_index: number;
+  lambda_cr: number;
+  shape: number[];
+}
+
+export interface BucklingReportDto {
+  modes: BucklingModeDto[];
+}
+
+export type EngineFn =
+  | "build_combinations_v2_json"
+  | "member_calc_trace"
+  | "compute_envelopes_json"
+  | "custom_section_preview"
+  | "generate_env_loads_json"
+  | "optimize_sections_json"
+  | "buckling_analysis_json"
+  | "seismic_spectrum_json"
+  | "export_bim";
+
+interface LanePending {
+  resolve: (value: unknown) => void;
+  reject: (fault: SolveFault) => void;
+}
+
+const lanePending = new Map<number, LanePending>();
+const enginePending = new Map<string, LanePending>();
+let liveTokenCounter = 0;
+let liveListeners = new Set<(token: number) => void>();
+
+declare global {
+  interface Window {
+    __rdmLiveSolveListeners?: Set<(token: number) => void>;
+  }
+}
+
+/** Notification hook used by the drag-solve loop (re-solve coalescing). */
+export function onLiveSolve(listener: (token: number) => void): () => void {
+  liveListeners.add(listener);
+  return () => {
+    liveListeners.delete(listener);
+  };
+}
+
 interface Pending {
   onResult: (data: unknown) => void;
   onError: (fault: SolveFault) => void;
@@ -200,7 +291,49 @@ class FeaClient {
         | { type: "MODEL_ISSUES_RESULT"; issues: ModelIssue[] }
         | { type: "MODEL_ISSUES_FAULT"; fault: SolveFault }
         | { type: "PARAMETRIC_RESULT"; json: string }
-        | { type: "PARAMETRIC_FAULT"; fault: SolveFault };
+        | { type: "PARAMETRIC_FAULT"; fault: SolveFault }
+        | { type: "LIVE_RESULT"; token: number }
+        | { type: "LIVE_FAULT"; token: number; fault: SolveFault }
+        | { type: "CASE_RESULT"; token: number; response: unknown }
+        | { type: "CASE_FAULT"; token: number; fault: SolveFault }
+        | { type: "VALIDATION_RESULT"; results: BenchResultDto[] }
+        | { type: "ENGINE_RESULT"; fn: string; result: unknown };
+      // v1.8.0: lane messages bypass the ordered queue (priority lanes).
+      if (
+        data.type === "LIVE_RESULT" ||
+        data.type === "LIVE_FAULT" ||
+        data.type === "CASE_RESULT" ||
+        data.type === "CASE_FAULT" ||
+        data.type === "VALIDATION_RESULT" ||
+        data.type === "ENGINE_RESULT"
+      ) {
+        if (data.type === "LIVE_RESULT") {
+          lanePending.get(data.token)?.resolve(undefined);
+          lanePending.delete(data.token);
+        } else if (data.type === "LIVE_FAULT") {
+          lanePending.get(data.token)?.reject(data.fault);
+          lanePending.delete(data.token);
+        } else if (data.type === "CASE_RESULT") {
+          lanePending.get(data.token)?.resolve(data.response);
+          lanePending.delete(data.token);
+        } else if (data.type === "CASE_FAULT") {
+          lanePending.get(data.token)?.reject(data.fault);
+          lanePending.delete(data.token);
+        } else if (data.type === "VALIDATION_RESULT") {
+          const pending = enginePending.get("VALIDATION_SUITE");
+          if (pending !== undefined) {
+            pending.resolve(data.results);
+            enginePending.delete("VALIDATION_SUITE");
+          }
+        } else {
+          const pending = enginePending.get(data.fn);
+          if (pending !== undefined) {
+            pending.resolve(data.result);
+            enginePending.delete(data.fn);
+          }
+        }
+        return;
+      }
       const pending = this.queue.shift()?.pending;
       if (pending === undefined) {
         return;
@@ -268,6 +401,81 @@ class FeaClient {
   private enqueue(request: WorkerRequest, pending: Pending): void {
     this.queue.push({ request, pending });
     this.drain();
+  }
+
+  /**
+   * v1.8.0 live drag-solve lane (priority, latest-wins coalescing): every
+   * call cancels the previous token so only the newest model state is
+   * solved, keeping the UI inside the < 20 ms interactive budget.
+   */
+  liveSolve(project: unknown): Promise<void> {
+    const token = ++liveTokenCounter;
+    for (const [pendingToken, pending] of lanePending) {
+      if (pendingToken < token) {
+        pending.reject({ kind: "Fault", message: "superseded" });
+        lanePending.delete(pendingToken);
+      }
+    }
+    for (const listener of liveListeners) {
+      listener(token);
+    }
+    this.worker.postMessage({ type: "CANCEL_SOLVE" } satisfies WorkerRequest);
+    return new Promise<void>((resolve, reject) => {
+      lanePending.set(token, {
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+      this.worker.postMessage({ type: "LIVE_SOLVE", token, project } satisfies WorkerRequest);
+    });
+  }
+
+  /** v1.8.0: cancels the live lane (drag-end). */
+  cancelLiveSolve(): void {
+    this.worker.postMessage({ type: "CANCEL_SOLVE" } satisfies WorkerRequest);
+    liveTokenCounter += 1;
+  }
+
+  /** v1.8.0: < 2 ms case superposition from the cached factorization. */
+  solveCaseRhs(weights: { case: string; weight: number }[]): Promise<unknown> {
+    const token = ++liveTokenCounter + 1_000_000;
+    return new Promise<unknown>((resolve, reject) => {
+      lanePending.set(token, {
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+      this.worker.postMessage({ type: "SOLVE_CASE_RHS", token, weights } satisfies WorkerRequest);
+    });
+  }
+
+  /** v1.8.0: the 41 closed-form benchmarks for the Validation modal. */
+  fetchValidationSuite(): Promise<BenchResultDto[]> {
+    return new Promise<BenchResultDto[]>((resolve, reject) => {
+      if (enginePending.has("VALIDATION_SUITE")) {
+        reject({ kind: "Fault", message: "validation in flight" });
+        return;
+      }
+      enginePending.set("VALIDATION_SUITE", {
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+      this.worker.postMessage({ type: "VALIDATION_SUITE" } satisfies WorkerRequest);
+    });
+  }
+
+  /** v1.8.0/v1.9.0: named engine call over the generic lane. */
+  engineCall(fn: EngineFn, ...args: unknown[]): Promise<unknown> {
+    return new Promise<unknown>((resolve, reject) => {
+      const key = `${fn}:${(liveTokenCounter += 1)}`;
+      enginePending.set(key, {
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+      this.worker.postMessage({ type: "ENGINE_CALL", fn, args } satisfies WorkerRequest);
+      // Route the reply by fn-name (single in-flight per fn is the UI norm).
+      const original = enginePending.get(key);
+      enginePending.delete(key);
+      enginePending.set(fn, original ?? { resolve, reject });
+    });
   }
 
   solveModel(project: unknown): Promise<SolveReport> {

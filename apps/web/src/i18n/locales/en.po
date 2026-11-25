@@ -13,6 +13,11 @@ msgstr ""
 msgid "{0} nœuds · {1} poutres (moteur Rust rdm-cad)."
 msgstr "{0} nodes · {1} beams (Rust engine rdm-cad)."
 
+#. placeholder {0}: results?.length ?? 0
+#: src/components/ValidationModal.tsx
+msgid "{passed}/{0} benchmarks passent (tolérance 3 %)."
+msgstr "{passed}/{0} benchmarks pass (3% tolerance)."
+
 #: src/routes/geometry.tsx
 #~ msgid "+ Nœud"
 #~ msgstr "+ Node"
@@ -29,6 +34,10 @@ msgstr "+ Place a first node"
 msgid "Ajouter la charge"
 msgstr "Add load"
 
+#: src/components/OptimizerModal.tsx
+msgid "Ajouter un lien antidéversant (kLT → 1)"
+msgstr "Add a lateral restraint (kLT → 1)"
+
 #: src/routes/geometry.tsx
 #~ msgid "Ajouter un nœud"
 #~ msgstr "Add node"
@@ -40,6 +49,14 @@ msgstr "Add nodes, connect them with N1 → N2 members, import a DXF drawing or 
 #: src/routes/results.tsx
 #~ msgid "Amplification"
 #~ msgstr "Amplification"
+
+#: src/viewport3d/ForceDiagrams3D.tsx
+msgid "Amplitude"
+msgstr "Amplitude"
+
+#: src/components/SettingsPopover.tsx
+msgid "Annexe nationale"
+msgstr "National Annex"
 
 #: src/components/CadImportDialog.tsx
 msgid "Annuler"
@@ -62,6 +79,10 @@ msgstr "Active supports"
 msgid "Appuis élastiques (kx..krz)"
 msgstr "Elastic supports (kx..krz)"
 
+#: src/components/ValidationModal.tsx
+msgid "Attendu"
+msgstr "Expected"
+
 #: src/routes/supports.tsx
 msgid "Aucun appui — sélectionnez un nœud puis choisissez un preset."
 msgstr "No supports — select a node then pick a preset."
@@ -81,6 +102,14 @@ msgstr "No loads yet — pick an acceleration scenario or add a load."
 #: src/routes/geometry.tsx
 msgid "Barre de treillis (articuler N1/N2)"
 msgstr "Truss member (pin-joint N1/N2)"
+
+#: src/components/ValidationModal.tsx
+msgid "Benchmark"
+msgstr "Benchmark"
+
+#: src/components/ValidationModal.tsx
+msgid "Calculé"
+msgstr "Computed"
 
 #: src/routes/results.tsx
 msgid "Calculer"
@@ -102,9 +131,17 @@ msgstr "Case"
 #~ msgid "Catalogue"
 #~ msgstr "Catalog"
 
+#: src/components/OptimizerModal.tsx
+msgid "Changer de profil (+2 tailles)"
+msgstr "Change the profile (+2 sizes)"
+
 #: src/routes/loads.tsx
 #~ msgid "Charge ponctuelle"
 #~ msgstr "Point load"
+
+#: src/components/CalcTraceTree.tsx
+msgid "Chargement de KaTeX…"
+msgstr "Loading KaTeX…"
 
 #: src/routes/geometry.tsx
 msgid "Charger un modèle type"
@@ -114,6 +151,10 @@ msgstr "Load a template"
 msgid "Charges et combinaisons EN 1990"
 msgstr "Loads and EN 1990 combinations"
 
+#: src/components/OptimizerModal.tsx
+msgid "Choisi"
+msgstr "Chosen"
+
 #: src/components/CadImportDialog.tsx
 msgid "Choisir un fichier…"
 msgstr "Choose a file…"
@@ -121,6 +162,10 @@ msgstr "Choose a file…"
 #: src/routes/loads.tsx
 msgid "Cible"
 msgstr "Target"
+
+#: src/components/SettingsPopover.tsx
+msgid "Cisaillement Timoshenko"
+msgstr "Timoshenko shear"
 
 #: src/routes/geometry.tsx
 msgid "cliquez deux nœuds pour relier (N départ cyan)"
@@ -137,6 +182,14 @@ msgstr "Click a node in the 3D view to select it, then apply a support."
 #: src/routes/supports.tsx
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
 msgstr "Tick the DOFs locked by each support. Free rotations let bending pass (pin)."
+
+#: src/components/SettingsPopover.tsx
+msgid "Combinaisons EN 1990"
+msgstr "EN 1990 combinations"
+
+#: src/viewport3d/ForceDiagrams3D.tsx
+msgid "Composante"
+msgstr "Component"
 
 #: src/routes/geometry.tsx
 #~ msgid "Connecter au nœud sélectionné"
@@ -178,6 +231,10 @@ msgstr "CSV Excel"
 msgid "Déjà reliés"
 msgstr "Already linked"
 
+#: src/components/CalcTraceTree.tsx
+msgid "DÉPASSÉ"
+msgstr "EXCEEDED"
+
 #: src/routes/results.tsx
 msgid "Déplacements nodaux"
 msgstr "Nodal displacements"
@@ -195,6 +252,18 @@ msgstr "Nodal displacements"
 #: src/routes/results.tsx
 msgid "Diagnostic EN 1993-1-1 — P{0} ({1})"
 msgstr "EN 1993-1-1 diagnosis — P{0} ({1})"
+
+#: src/viewport3d/ForceDiagrams3D.tsx
+msgid "Diagrammes d'efforts 3D"
+msgstr "3D force diagrams"
+
+#: src/viewport3d/ForceDiagrams3D.tsx
+msgid "Diagrammes N/V/T/M (envelopes)"
+msgstr "N/V/T/M diagrams (envelopes)"
+
+#: src/components/OptimizerModal.tsx
+msgid "Diminue My ~ (L/2)² — le levier le plus fort sur la flexion"
+msgstr "Diminue My ~ (L/2)² — le levier le plus fort sur la flexion"
 
 #: src/routes/results.tsx
 msgid "Efforts internes (5 courbes)"
@@ -217,6 +286,10 @@ msgstr "Save the current project"
 msgid "Étape {0}"
 msgstr "Step {0}"
 
+#: src/components/ValidationModal.tsx
+msgid "Exécution en cours…"
+msgstr "Running…"
+
 #: src/routes/results.tsx
 #~ msgid "Exploitation EC3"
 #~ msgstr "EC3 utilization"
@@ -230,9 +303,14 @@ msgstr "Export (.rdm)"
 msgid "Exports (étape 5)"
 msgstr "Exports (step 5)"
 
-#: src/components/BottomSheet.tsx
-#~ msgid "Fermer"
-#~ msgstr "Close"
+#: src/components/FamilyPills.tsx
+msgid "Familles de sections"
+msgstr "Section families"
+
+#: src/components/OptimizerModal.tsx
+#: src/components/ValidationModal.tsx
+msgid "Fermer"
+msgstr "Close"
 
 #: src/routes/report.tsx
 msgid "Fichier canonique réimportable à l'identique (round-trip Valibot)."
@@ -312,6 +390,10 @@ msgstr "Run the 3D & Eurocode 3 calculation →"
 msgid "Lancer un calcul pour afficher les résultats."
 msgstr "Run a calculation to display results."
 
+#: src/components/CalcTraceTree.tsx
+msgid "Lancer une vérification pour afficher la trace."
+msgstr "Run a check to display the trace."
+
 #: src/routes/report.tsx
 #~ msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 #~ msgstr "The .rdm model is compressed (lz-string) into the URL and validated by Valibot on read."
@@ -336,6 +418,13 @@ msgstr "Buckling lengths"
 msgid "Maintien latéral mi-travée (kz = 0,5)"
 msgstr "Mid-span lateral restraint (kz = 0.5)"
 
+#. placeholder {0}: totals.mass_kg.toFixed(1)
+#. placeholder {1}: totals.carbon_kg.toFixed(0)
+#. placeholder {2}: totals.cost_eur.toFixed(0)
+#: src/components/OptimizerModal.tsx
+msgid "Masse {0} kg · Carbone {1} kg CO₂e · Coût {2} € ({COST_EUR_PER_KG} €/kg)"
+msgstr "Mass {0} kg · Carbon {1} kg CO₂e · Cost {2} € ({COST_EUR_PER_KG} €/kg)"
+
 #: src/routes/geometry.tsx
 msgid "Matériau"
 msgstr "Material"
@@ -343,6 +432,10 @@ msgstr "Material"
 #: src/routes/supports.tsx
 msgid "Matrice 6 DDL des appuis"
 msgstr "6-DOF support matrix"
+
+#: src/components/OptimizerModal.tsx
+msgid "Membre"
+msgstr "Member"
 
 #: src/components/ProjectGalleryModal.tsx
 #: src/routes/report.tsx
@@ -379,6 +472,10 @@ msgstr "Nodes / Beams / Supports / Loads"
 msgid "Nom du projet"
 msgstr "Project name"
 
+#: src/components/SettingsPopover.tsx
+msgid "Normative settings"
+msgstr "Normative settings"
+
 #: src/routes/report.tsx
 msgid "Normes"
 msgstr "Standards"
@@ -387,22 +484,54 @@ msgstr "Standards"
 msgid "Note de calcul A4 / PDF"
 msgstr "A4 / PDF calculation note"
 
+#: src/components/CalcTraceTree.tsx
+msgid "OK"
+msgstr "OK"
+
+#: src/components/OptimizerModal.tsx
+msgid "Optimiseur de sections"
+msgstr "Section optimizer"
+
+#: src/components/OptimizerModal.tsx
+msgid "Optimiseur EC3 — profil le plus léger"
+msgstr "EC3 optimizer — lightest profile"
+
 #. placeholder {0}: beam.id
 #: src/routes/geometry.tsx
 msgid "P{0} subdivisée en {segments} tronçons"
 msgstr "P{0} subdivided into {segments} segments"
 
+#: src/viewport3d/ForceDiagrams3D.tsx
+msgid "Palette"
+msgstr "Palette"
+
+#: src/components/OptimizerModal.tsx
+msgid "Pareto (masse, taux)"
+msgstr "Pareto (mass, ratio)"
+
 #: src/routes/report.tsx
 #~ msgid "Partage par URL"
 #~ msgstr "URL sharing"
+
+#: src/components/OptimizerModal.tsx
+msgid "Passes"
+msgstr "Passes"
 
 #: src/routes/report.tsx
 msgid "PDF Takumi"
 msgstr "Takumi PDF"
 
+#: src/components/FamilyPills.tsx
+msgid "Perso"
+msgstr "Custom"
+
 #: src/routes/supports.tsx
 msgid "Personnalisée : composez la matrice 2×3 ci-dessous."
 msgstr "Custom: compose the 2×3 matrix below."
+
+#: src/components/SettingsPopover.tsx
+msgid "Plan 2D (Uy/Rx/Rz bloqués)"
+msgstr "2D plane (Uy/Rx/Rz locked)"
 
 #: src/routes/report.tsx
 msgid "Poids propre automatique"
@@ -419,6 +548,10 @@ msgstr "Self-weight (1g −Z)"
 #: src/components/ProjectGalleryModal.tsx
 msgid "Portée L (m)"
 msgstr "Span L (m)"
+
+#: src/components/OptimizerModal.tsx
+msgid "Pourquoi ça échoue ? — 3 remèdes 1-clic"
+msgstr "Why does it fail? — 3 one-click fixes"
 
 #: src/routes/loads.tsx
 msgid "Poutre"
@@ -484,6 +617,14 @@ msgstr "Reactions"
 msgid "Recharger"
 msgstr "Reload"
 
+#: src/components/OptimizerModal.tsx
+msgid "Réduire la portée ou ajouter un appui"
+msgstr "Shorten the span or add a support"
+
+#: src/components/SettingsPopover.tsx
+msgid "Réglages normatifs"
+msgstr "Normative settings"
+
 #: src/routes/geometry.tsx
 msgid "Relâchements N1 / N2"
 msgstr "End releases N1 / N2"
@@ -503,6 +644,10 @@ msgstr "Upgrade the profile (1 click)"
 #: src/viewport3d/LayerToolbar.tsx
 msgid "Repères N/P"
 msgstr "N/P labels"
+
+#: src/viewport3d/ForceDiagrams3D.tsx
+msgid "Résoudre le modèle pour afficher les enveloppes."
+msgstr "Solve the model to display the envelopes."
 
 #: src/routes/report.tsx
 #~ msgid "Resultats CSV (Excel)"
@@ -528,6 +673,10 @@ msgstr "Select a node in the 3D view to edit its springs."
 msgid "Sélectionnez une poutre pour éditer ses caractéristiques."
 msgstr "Select a member to edit its properties."
 
+#: src/components/ValidationModal.tsx
+msgid "Statut"
+msgstr "Status"
+
 #: src/components/ProjectGalleryModal.tsx
 msgid "Structure paramétrique générée"
 msgstr "Parametric structure generated"
@@ -548,6 +697,14 @@ msgstr "Next: define the loads →"
 msgid "Suivant : Définir les liaisons →"
 msgstr "Next: define the connections →"
 
+#: src/components/OptimizerModal.tsx
+msgid "Supprime le déversement si MB,Rd gouverne"
+msgstr "Supprime le déversement si MB,Rd gouverne"
+
+#: src/components/FamilyPills.tsx
+msgid "Tous"
+msgstr "All"
+
 #: src/routes/supports.tsx
 msgid "Tout supprimer"
 msgstr "Delete all"
@@ -555,6 +712,10 @@ msgstr "Delete all"
 #: src/routes/results.tsx
 msgid "Toutes les vérifications EC3 sont vérifiées (η ≤ 1,00)."
 msgstr "All EC3 checks pass (η ≤ 1.00)."
+
+#: src/components/OptimizerModal.tsx
+msgid "Trace de vérification (KaTeX)"
+msgstr "Check trace (KaTeX)"
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Travées / panneaux"
@@ -575,6 +736,14 @@ msgstr "A load-case factor is an order of magnitude: SI-to-display conversions a
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
 msgstr "A new version is available."
+
+#: src/components/ValidationModal.tsx
+msgid "Validation — 41 benchmarks analytiques"
+msgstr "Validation — 41 analytical benchmarks"
+
+#: src/components/ValidationModal.tsx
+msgid "Validation suite"
+msgstr "Validation suite"
 
 #. placeholder {0}: uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id
 #. placeholder {1}: (maxUls * 100).toFixed(1).replace(".", ",")

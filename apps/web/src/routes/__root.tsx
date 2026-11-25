@@ -5,6 +5,8 @@ import { Trans } from "@lingui/react/macro";
 import { Toaster } from "sonner";
 import { useAppHotkeys } from "@/hooks/useAppHotkeys";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { SettingsPopover } from "../components/SettingsPopover";
+import { ValidationModal } from "../components/ValidationModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { openProjectOrCadFile, useFileOpening } from "@/hooks/useFileOpening";
 import { redoModel, undoModel } from "@/state/projectStore";
@@ -105,6 +107,7 @@ function RootLayout() {
   useAppHotkeys(() => setPaletteOpen((open) => !open));
   // v1.4.0: drag-and-drop + PWA launchQueue file opening.
   useFileOpening();
+  const [validationOpen, setValidationOpen] = useState(false);
 
   return (
     <div className="flex h-[100dvh] flex-col">
@@ -209,7 +212,20 @@ function RootLayout() {
           </button>
           <LocaleSwitch />
         </div>
+        {/* v1.8.0: normative settings + validation modal. */}
+        <div className="flex shrink-0 items-center gap-1">
+          <SettingsPopover />
+          <button
+            type="button"
+            onClick={() => setValidationOpen(true)}
+            className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
+            title="Validation — 41 benchmarks analytiques"
+          >
+            ✓ Validation
+          </button>
+        </div>
       </header>
+      {validationOpen ? <ValidationModal onClose={() => setValidationOpen(false)} /> : null}
       {/* v1.5.0: locked workstation shell — on md+ the main region NEVER
           page-scrolls (each route manages its own panes); on phones the
           stacked routes may scroll under the fixed tab bar. */}

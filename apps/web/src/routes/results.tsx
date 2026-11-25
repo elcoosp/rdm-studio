@@ -23,6 +23,8 @@ import {
   type SolveReport,
 } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
+import { ForceDiagrams3D } from "@/viewport3d/ForceDiagrams3D";
+import { OptimizerModal, whyDoesThisFail } from "@/components/OptimizerModal";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useViewportStore } from "@/state/viewportStore";
 import { spectrumColor } from "@/viewport3d/BeamMeshes";
@@ -403,6 +405,8 @@ function ResultsPage() {
       {/* Zone 2 — viewport row: persistent stage slot + 340px EC3 rail. */}
       <div className="flex min-h-0 flex-1 gap-2">
         <section className="relative min-w-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
+          <ForceDiagrams3D />
+
           <div ref={slotRef} className="h-full w-full" data-testid="results-stage-slot" />
           <StageContent
             k="results"
@@ -758,6 +762,7 @@ function DockedInspector({
   mRd: number | null;
 }) {
   const [stress, setStress] = useState<StressGrid | null>(null);
+  const [inspectorOptimizerOpen, setInspectorOptimizerOpen] = useState(false);
   const [forces, setForces] = useState<SpanForceSample[] | null>(null);
   const plotRef = useRef<HTMLDivElement>(null);
   const uplotRef = useRef<uPlot | null>(null);
@@ -998,6 +1003,19 @@ function DockedInspector({
           />
         </div>
       </div>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setInspectorOptimizerOpen(true)}
+          className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+        >
+          ⚙ Optimiseur EC3
+        </button>
+        <span className="text-xs text-slate-500">Pourquoi ça échoue ? — 3 remèdes 1-clic</span>
+      </div>
+      {inspectorOptimizerOpen ? (
+        <OptimizerModal onClose={() => setInspectorOptimizerOpen(false)} />
+      ) : null}
     </section>
   );
 }

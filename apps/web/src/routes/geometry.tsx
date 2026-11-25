@@ -1,18 +1,32 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { Trans } from "@lingui/react/macro";
 import { IconPlus, IconTrash } from "@/components/icons";
 import { BottomSheet } from "@/components/BottomSheet";
+import { Button } from "@/components/ui/button";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
+import { ProfileIpe } from "@/components/icons/EngineeringIcons";
 import { useViewportStore } from "@/state/viewportStore";
+import { quickStartProject } from "@/state/projectStore";
 import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
 import { BeamMeshes, buildBeamGeometry, nodePositions } from "@/viewport3d/BeamMeshes";
 import { SupportMarkers } from "@/viewport3d/SupportMarkers";
+import { NodeMarkers } from "@/viewport3d/NodeMarkers";
 import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
 import { useBeamBoundsTree, pickBeamAtRay } from "@/viewport3d/useBvhPicking";
+import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
+import { CadImportDialog } from "@/components/CadImportDialog";
+import {
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxRoot,
+} from "@/components/ui/combobox";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/geometry")({
   component: GeometryPage,
@@ -33,14 +47,28 @@ function GeometryPage() {
   const addBeam = useProjectStore((s) => s.addBeam);
   const selectBeam = useProjectStore((s) => s.selectBeam);
   const loadProject = useProjectStore((s) => s.loadProject);
+  const updateBeam = useProjectStore((s) => s.updateBeam);
   const [sections, setSections] = useState<SectionSummary[]>([]);
   const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
   const [pickMs, setPickMs] = useState<number | undefined>(undefined);
   const [newSection, setNewSection] = useState("IPE 200");
   const [beamN1, setBeamN1] = useState<number | null>(null);
   const [beamN2, setBeamN2] = useState<number | null>(null);
+  // Explicit user picks stay sticky: the auto-default must never override
+  // a person examining (or re-linking) a specific pair.
+  const userN1 = useRef(false);
+  const userN2 = useRef(false);
+  const [material, setMaterial] = useState("S235JR");
   const [cadError, setCadError] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [cadOpen, setCadOpen] = useState(false);
+  const [cadBusy, setCadBusy] = useState(false);
+  // v1.3.0 Step 1: segmented tool modes with keyboard shortcuts.
+  // v1.4.0: tool mode lives in the viewport store, shared with hotkeys.
+  const toolMode = useViewportStore((s) => s.toolMode);
+  const setToolMode = useViewportStore((s) => s.setToolMode);
+  const [hoverBeamId, setHoverBeamId] = useState<number | null>(null);
+  const [hoverNodeId, setHoverNodeId] = useState<number | null>(null);
 
   useEffect(() => {
     void feaClient.fetchCatalog().then((c) => {
@@ -49,34 +77,101 @@ function GeometryPage() {
     });
   }, []);
 
+  // v1.4.0: V / N / B shortcuts live in the centralized useAppHotkeys layer.
+
+  const navigate = useNavigate();
   const ipeSections = sections;
-  const material = project.structure.beams[0]?.material_id ?? "S235JR";
   const selectedBeam = project.structure.beams.find((b) => b.id === selection.beamId) ?? null;
   const nodeIds = project.structure.nodes.map((n) => n.id);
 
-  // Keep the connector defaults sensible as nodes come and go.
+  // Keep the connector defaults sensible as nodes come and go (v1.3.0
+  // defect 2: default to the LAST two nodes that are not yet linked).
   useEffect(() => {
-    if ((beamN1 === null || !nodeIds.includes(beamN1)) && nodeIds.length > 0) {
-      setBeamN1(nodeIds[0] ?? null);
+    if (nodeIds.length === 0) {
+      return;
     }
-    if ((beamN2 === null || !nodeIds.includes(beamN2)) && nodeIds.length > 1) {
-      setBeamN2(nodeIds[1] ?? null);
+    const linked = new Set(
+      project.structure.beams.map((b) => {
+        const lo = Math.min(b.n1, b.n2);
+        const hi = Math.max(b.n1, b.n2);
+        return `${lo}-${hi}`;
+      }),
+    );
+    const isLinked = (a: number, b: number) => linked.has(`${Math.min(a, b)}-${Math.max(a, b)}`);
+    const last = nodeIds[nodeIds.length - 1] ?? null;
+    const prev = nodeIds[nodeIds.length - 2] ?? null;
+    if (!userN1.current && (beamN1 === null || !nodeIds.includes(beamN1))) {
+      setBeamN1(last);
     }
-  }, [nodeIds, beamN1, beamN2]);
+    if (
+      !userN2.current &&
+      (beamN2 === null ||
+        !nodeIds.includes(beamN2) ||
+        (beamN1 !== null && beamN1 === beamN2) ||
+        isLinked(beamN1 ?? -1, beamN2))
+    ) {
+      const candidate =
+        prev !== null && prev !== beamN1 && !isLinked(beamN1 ?? -1, prev)
+          ? prev
+          : (nodeIds.find((id) => id !== beamN1 && !isLinked(beamN1 ?? -1, id)) ?? null);
+      setBeamN2(candidate);
+    }
+  }, [nodeIds, beamN1, beamN2, project.structure.beams]);
 
-  const onImportDxf = async (file: File) => {
+  // v1.3.0 defect 2: an (N1, N2) pair that already exists disables the
+  // connector ("Déjà reliés").
+  const pairAlreadyLinked = (() => {
+    if (beamN1 === null || beamN2 === null || beamN1 === beamN2) {
+      return false;
+    }
+    const key = `${Math.min(beamN1, beamN2)}-${Math.max(beamN1, beamN2)}`;
+    return project.structure.beams.some(
+      (b) => `${Math.min(b.n1, b.n2)}-${Math.max(b.n1, b.n2)}` === key,
+    );
+  })();
+
+  /** v1.3.0 defect 2: default placement walks +2 m past the max X. */
+  const nextDefaultPosition = (): [number, number, number] => {
+    if (project.structure.nodes.length === 0) {
+      return [0, 0, 0];
+    }
+    const maxX = Math.max(...project.structure.nodes.map((n) => n.x));
+    return [maxX + 2.0, 0, 0];
+  };
+
+  const onImportCad = async (file: File, encastreLeft: boolean) => {
     setCadError(null);
+    setCadBusy(true);
+    const before = structuredClone(useProjectStore.getState().project);
     try {
       const bytes = await file.arrayBuffer();
-      const json = await feaClient.importDxf(bytes, file.name.replace(/\.dxf$/i, ""));
-      loadProject(JSON.parse(json));
+      const name = file.name.replace(/\.(dxf|step|stp|igs|iges)$/i, "");
+      const json = await feaClient.importCad(bytes, file.name, name);
+      const imported = JSON.parse(json) as Parameters<typeof loadProject>[0];
+      loadProject(imported);
+      // Optional convenience restraint: fix the leftmost node.
+      if (encastreLeft && imported.structure.nodes.length > 0) {
+        const leftmost = imported.structure.nodes.reduce((m, n) => (n.x < m.x ? n : m));
+        useProjectStore.getState().setSupport(leftmost.id, [true, true, true, true, true, true]);
+      }
+      setCadOpen(false);
+      toast("Import réussi", {
+        description: `${imported.structure.beams.length} poutre(s) importée(s) depuis ${file.name}.`,
+        action: {
+          label: "Annuler",
+          onClick: () => loadProject(before),
+        },
+        duration: 5_000,
+      });
     } catch (error) {
       setCadError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCadBusy(false);
     }
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 lg:flex-row">
+    <div className="flex h-full min-h-0 flex-col gap-3 p-3 lg:flex-row-reverse">
       <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-panel border border-hairline bg-panel p-3">
         <div className="relative min-h-[320px] flex-1 overflow-hidden rounded border border-hairline">
           {project.structure.nodes.length === 0 ? (
@@ -87,6 +182,46 @@ function GeometryPage() {
               <p className="text-[14px] font-medium text-ink-secondary">
                 <Trans>Modèle vide — commencez par poser un nœud.</Trans>
               </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  size="lg"
+                  data-testid="empty-place-node"
+                  onClick={() => addNode(...nextDefaultPosition())}
+                >
+                  <Trans>+ Placer un premier nœud</Trans>
+                </Button>
+                <Button variant="outline" size="lg" onClick={() => setGalleryOpen(true)}>
+                  <Trans>Charger un modèle type</Trans>
+                </Button>
+                <button
+                  type="button"
+                  className="rounded border border-hairline px-3 py-1.5 text-[13px] text-ink-secondary"
+                  onClick={() => setCadOpen(true)}
+                >
+                  <Trans>Importer CAO</Trans>
+                </button>
+              </div>
+              {/* v1.4.0: 1-click quick-start pills (mockups tape_1). */}
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {(
+                  [
+                    ["warren", "Treillis Warren 24 m"],
+                    ["portique", "Portique 18 m"],
+                    ["potence", "Potence HEA 200"],
+                    ["travees", "Poutre 3 travées"],
+                  ] as const
+                ).map(([kind, label]) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    data-testid={`quick-${kind}`}
+                    className="rounded-full border border-hairline px-2.5 py-1 text-[12px] text-ink-secondary hover:border-accent hover:text-accent"
+                    onClick={() => loadProject(quickStartProject(kind))}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <p className="max-w-xs text-[12px] text-ink-muted">
                 <Trans>
                   Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou
@@ -95,7 +230,11 @@ function GeometryPage() {
               </p>
             </div>
           ) : (
-            <ViewportCanvas pickLatency={pickMs} nodes={project.structure.nodes}>
+            <ViewportCanvas
+              pickLatency={pickMs}
+              nodes={project.structure.nodes}
+              beams={project.structure.beams}
+            >
               {layers.beams ? (
                 <BeamMeshes
                   nodes={project.structure.nodes}
@@ -103,12 +242,8 @@ function GeometryPage() {
                   wireframe={renderMode === "wireframe"}
                   selectedBeamId={selection.beamId}
                   onPick={(id) => selectBeam(id)}
-                  sectionDims={
-                    sectionDims as unknown as Map<
-                      string,
-                      { shape: string; h?: number; b?: number; tw?: number; tf?: number }
-                    >
-                  }
+                  sectionDims={sectionDims}
+                  hoveredBeamId={hoverBeamId}
                 />
               ) : null}
               {layers.supports ? (
@@ -118,10 +253,17 @@ function GeometryPage() {
                 />
               ) : null}
               {layers.loads ? (
-                <ForceVectors3D nodes={project.structure.nodes} loads={project.structure.loads} />
+                <ForceVectors3D
+                  nodes={project.structure.nodes}
+                  beams={project.structure.beams}
+                  loads={project.structure.loads}
+                />
               ) : null}
               {layers.nodes ? (
-                <NodeMarkers positions={nodePositions(project.structure.nodes)} />
+                <NodeMarkers
+                  positions={nodePositions(project.structure.nodes)}
+                  highlightNodeId={hoverNodeId}
+                />
               ) : null}
               <BvhPickLayer
                 nodes={project.structure.nodes}
@@ -134,67 +276,145 @@ function GeometryPage() {
             </ViewportCanvas>
           )}
         </div>
+        {/* v1.3.0 Step 1: segmented 3D tool modes ([V]/[N]/[B]). */}
+        <div
+          className="flex items-center gap-1 rounded border border-hairline p-0.5"
+          data-testid="tool-modes"
+        >
+          {(
+            [
+              ["select", "Sélection", "V"],
+              ["node", "+ Nœud", "N"],
+              ["beam", "Relier", "B"],
+            ] as const
+          ).map(([mode, label, hint]) => (
+            <button
+              key={mode}
+              type="button"
+              data-testid={`tool-${mode}`}
+              className={`flex min-h-8 flex-1 items-center justify-center gap-1 rounded px-2 text-[12px] ${
+                toolMode === mode
+                  ? "bg-accent-tint text-accent"
+                  : "text-ink-secondary hover:text-ink-primary"
+              }`}
+              onClick={() => setToolMode(mode)}
+            >
+              {label}
+              <span className="font-data text-[10px] text-ink-muted">[{hint}]</span>
+            </button>
+          ))}
+          {toolMode === "node" ? (
+            <span className="px-2 text-[11px] text-ink-muted">
+              le bouton + Nœud place au-delà du dernier point (magnétique)
+            </span>
+          ) : null}
+        </div>
         <div className="grid gap-3 md:grid-cols-2">
           <div className="max-h-56 overflow-auto">
             <h3 className="mb-1 text-[13px] font-semibold text-ink-secondary">
               <Trans>Nœuds</Trans>
             </h3>
-            <NodeTable />
+            <NodeTable onHoverNode={setHoverNodeId} />
           </div>
           <div className="max-h-56 overflow-auto">
             <h3 className="mb-1 text-[13px] font-semibold text-ink-secondary">
               <Trans>Poutres</Trans>
             </h3>
-            <BeamTable />
+            <BeamTable onHoverBeam={setHoverBeamId} />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             className="flex items-center gap-1 rounded bg-accent px-2.5 py-1.5 text-[13px] text-white"
-            onClick={() => addNode(0, 0, 0)}
+            data-testid="add-node"
+            onClick={() => {
+              const [x, y, z] = nextDefaultPosition();
+              addNode(x, y, z);
+            }}
           >
             <IconPlus size={12} />
-            <Trans>+ Nœud</Trans>
+            <Trans>Nœud</Trans>
           </button>
           <button
             type="button"
             className="rounded border border-hairline px-2.5 py-1.5 text-[13px] text-ink-secondary"
-            onClick={() => fileRef.current?.click()}
+            data-testid="open-cad-import"
+            onClick={() => setCadOpen(true)}
           >
-            <Trans>Importer DXF</Trans>
+            <Trans>Importer CAO</Trans>
           </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".dxf"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.currentTarget.files?.[0];
-              if (file !== undefined) void onImportDxf(file);
-              e.currentTarget.value = "";
-            }}
-          />
           {cadError !== null ? (
             <span className="self-center text-[12px] text-fea-max">{cadError}</span>
           ) : null}
+          {/* v1.3.0 Step 1: next-step hand-off (RDM 7 flow). */}
+          <button
+            type="button"
+            className="ml-auto rounded border border-hairline px-2.5 py-1.5 text-[13px] text-accent hover:bg-accent-tint disabled:opacity-40"
+            data-testid="next-supports"
+            disabled={project.structure.beams.length === 0}
+            onClick={() => void navigate({ to: "/supports" })}
+          >
+            <Trans>Suivant : Définir les liaisons →</Trans>
+          </button>
         </div>
       </section>
       <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
         <label className="block text-[12px] text-ink-secondary">
-          <Trans>Profil (EN 10365)</Trans>
+          <Trans>Matériau</Trans>
         </label>
         <select
-          className="font-data mt-1 w-full rounded border border-hairline px-2 py-1.5 text-[13px]"
-          value={newSection}
-          onChange={(e) => setNewSection(e.currentTarget.value)}
+          className="mt-1 w-full rounded-[4px] border border-hairline px-2 py-1.5 text-[13px]"
+          value={material}
+          onChange={(e) => {
+            const next = e.currentTarget.value;
+            setMaterial(next);
+            if (selectedBeam !== null) {
+              updateBeam(selectedBeam.id, { material_id: next });
+            }
+          }}
         >
-          {ipeSections.map((s) => (
-            <option key={s.designation} value={s.designation}>
-              {s.designation}
+          {["S235JR", "S355J2", "304L", "6061-T6"].map((m) => (
+            <option key={m} value={m}>
+              {m === "S235JR"
+                ? "Acier S235JR"
+                : m === "S355J2"
+                  ? "Acier S355J2"
+                  : m === "304L"
+                    ? "Inox 304L"
+                    : "Alu 6061-T6"}
             </option>
           ))}
         </select>
+        <label className="mt-3 flex items-center gap-1.5 text-[12px] text-ink-secondary">
+          <ProfileIpe size={14} />
+          <Trans>Profil (EN 10365)</Trans>
+        </label>
+        {/* v1.4.0: searchable Base UI Combobox with cross-section icons —
+            applies immediately to the selected member. */}
+        <ComboboxRoot
+          items={ipeSections.map((s) => s.designation)}
+          value={selectedBeam?.section_id ?? newSection}
+          onValueChange={(next: string | null) => {
+            if (next === null) return;
+            setNewSection(next);
+            if (selectedBeam !== null) {
+              updateBeam(selectedBeam.id, { section_id: next });
+            }
+          }}
+        >
+          <ComboboxInput />
+          <ComboboxContent
+            renderItem={(designation: string) => (
+              <ComboboxItem key={designation} value={designation}>
+                <ProfileIpe size={14} />
+                <span className="font-data flex-1">{designation}</span>
+              </ComboboxItem>
+            )}
+          >
+            <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
+          </ComboboxContent>
+        </ComboboxRoot>
         <SectionCatalogRow designation={selectedBeam?.section_id ?? newSection} />
 
         {/* Bug 5: explicit N1 → N2 selection replaces the hardcoded demo pair. */}
@@ -206,7 +426,10 @@ function GeometryPage() {
             aria-label="N1"
             className="font-data w-full rounded border border-hairline px-2 py-1.5 text-[13px]"
             value={beamN1 ?? ""}
-            onChange={(e) => setBeamN1(Number(e.currentTarget.value))}
+            onChange={(e) => {
+              userN1.current = true;
+              setBeamN1(Number(e.currentTarget.value));
+            }}
           >
             {nodeIds.map((id) => (
               <option key={id} value={id}>
@@ -219,7 +442,10 @@ function GeometryPage() {
             aria-label="N2"
             className="font-data w-full rounded border border-hairline px-2 py-1.5 text-[13px]"
             value={beamN2 ?? ""}
-            onChange={(e) => setBeamN2(Number(e.currentTarget.value))}
+            onChange={(e) => {
+              userN2.current = true;
+              setBeamN2(Number(e.currentTarget.value));
+            }}
           >
             {nodeIds.map((id) => (
               <option key={id} value={id}>
@@ -231,13 +457,15 @@ function GeometryPage() {
         <button
           type="button"
           className="mt-2 w-full rounded bg-accent px-2 py-1.5 text-[13px] text-white disabled:opacity-40"
-          disabled={beamN1 === null || beamN2 === null || beamN1 === beamN2}
+          disabled={beamN1 === null || beamN2 === null || beamN1 === beamN2 || pairAlreadyLinked}
+          data-testid="connect-beam"
           onClick={() => {
-            if (beamN1 === null || beamN2 === null || beamN1 === beamN2) return;
+            if (beamN1 === null || beamN2 === null || beamN1 === beamN2 || pairAlreadyLinked)
+              return;
             addBeam(beamN1, beamN2, newSection, material);
           }}
         >
-          <Trans>Relier N1 → N2</Trans>
+          {pairAlreadyLinked ? <Trans>Déjà reliés</Trans> : <Trans>Relier N1 → N2</Trans>}
         </button>
 
         {selectedBeam !== null ? (
@@ -248,6 +476,14 @@ function GeometryPage() {
           </p>
         )}
 
+        <ProjectGalleryModal open={galleryOpen} onClose={() => setGalleryOpen(false)} />
+        <CadImportDialog
+          open={cadOpen}
+          onClose={() => setCadOpen(false)}
+          onImport={(file, encastre) => void onImportCad(file, encastre)}
+          busy={cadBusy}
+          error={cadError}
+        />
         <dl className="font-data mt-4 space-y-1 text-[12px] text-ink-secondary">
           <dt className="mt-2 text-[11px] font-medium text-ink-muted">
             <Trans>Catalogue</Trans>
@@ -390,18 +626,6 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
 }
 
 /** Instanced node pins (Points layer). */
-function NodeMarkers({ positions }: { positions: Float32Array }) {
-  const geometry = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return g;
-  }, [positions]);
-  return (
-    <points geometry={geometry}>
-      <pointsMaterial size={0.08} color="#0F172A" sizeAttenuation />
-    </points>
-  );
-}
 
 /**
  * Canvas-level pointer picking through the accelerated BVH path; measures
@@ -447,7 +671,11 @@ function BvhPickLayer({
   return null;
 }
 
-function NodeTable() {
+function NodeTable({
+  onHoverNode,
+}: {
+  onHoverNode?: (id: number | null) => void;
+} = {}) {
   const nodes = useProjectStore((s) => s.project.structure.nodes);
   const selectNode = useProjectStore((s) => s.selectNode);
   const removeNode = useProjectStore((s) => s.removeNode);
@@ -468,7 +696,9 @@ function NodeTable() {
         {nodes.map((n) => (
           <tr
             key={n.id}
-            className={`cursor-pointer border-t border-hairline ${selection.nodeId === n.id ? "bg-accent-tint" : ""}`}
+            className={`cursor-pointer border-t border-hairline transition-colors ${selection.nodeId === n.id ? "bg-accent-tint" : "hover:bg-canvas"}`}
+            onMouseEnter={() => onHoverNode?.(n.id)}
+            onMouseLeave={() => onHoverNode?.(null)}
             onClick={() => selectNode(n.id)}
           >
             <td className="py-1">{n.id}</td>
@@ -507,48 +737,131 @@ function NodeTable() {
   );
 }
 
-function BeamTable() {
+function BeamTable({
+  onHoverBeam,
+}: {
+  onHoverBeam?: (id: number | null) => void;
+} = {}) {
   const beams = useProjectStore((s) => s.project.structure.beams);
+  const storeNodes = useProjectStore((s) => s.project.structure.nodes);
   const selectBeam = useProjectStore((s) => s.selectBeam);
   const removeBeam = useProjectStore((s) => s.removeBeam);
   const selection = useProjectStore((s) => s.selection);
+  const batchUpdateBeams = useProjectStore((s) => s.batchUpdateBeams);
+  const [batchIds, setBatchIds] = useState<number[]>([]);
   return (
-    <table className="w-full text-[13px]">
-      <thead className="text-left text-[11px] text-ink-muted">
-        <tr>
-          <th className="py-1">ID</th>
-          <th>N1</th>
-          <th>N2</th>
-          <th>
-            <Trans>Profil</Trans>
-          </th>
-          <th />
-        </tr>
-      </thead>
-      <tbody className="font-data">
-        {beams.map((b) => (
-          <tr
-            key={b.id}
-            className={`cursor-pointer border-t border-hairline ${selection.beamId === b.id ? "bg-accent-tint" : ""}`}
-            onClick={() => selectBeam(b.id)}
-          >
-            <td className="py-1">{b.id}</td>
-            <td>{b.n1}</td>
-            <td>{b.n2}</td>
-            <td>{b.section_id}</td>
-            <td className="text-right">
-              <button
-                type="button"
-                aria-label="remove beam"
-                className="text-ink-muted hover:text-fea-max"
-                onClick={() => removeBeam(b.id)}
-              >
-                <IconTrash size={13} />
-              </button>
-            </td>
+    <>
+      <table className="w-full text-[13px]">
+        <thead className="text-left text-[11px] text-ink-muted">
+          <tr>
+            <th className="py-1">ID</th>
+            <th>N1</th>
+            <th>N2</th>
+            <th>
+              <Trans>Profil</Trans>
+            </th>
+            <th />
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="font-data">
+          {beams.map((b) => (
+            <tr
+              key={b.id}
+              className={`cursor-pointer border-t border-hairline transition-colors ${selection.beamId === b.id || batchIds.includes(b.id) ? "bg-accent-tint" : "hover:bg-canvas"}`}
+              onMouseEnter={() => onHoverBeam?.(b.id)}
+              onMouseLeave={() => onHoverBeam?.(null)}
+              onClick={(e) => {
+                if (e.shiftKey) {
+                  setBatchIds((ids) =>
+                    ids.includes(b.id) ? ids.filter((x) => x !== b.id) : [...ids, b.id],
+                  );
+                  return;
+                }
+                selectBeam(b.id);
+              }}
+            >
+              <td className="py-1">{b.id}</td>
+              <td>{b.n1}</td>
+              <td>{b.n2}</td>
+              <td>{b.section_id}</td>
+              <td className="text-right">
+                <button
+                  type="button"
+                  aria-label="remove beam"
+                  className="text-ink-muted hover:text-fea-max"
+                  onClick={() => removeBeam(b.id)}
+                >
+                  <IconTrash size={13} />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {batchIds.length > 0 ? (
+        <div
+          className="mt-2 rounded border border-accent-ring bg-accent-tint p-2"
+          data-testid="batch-editor"
+        >
+          <p className="font-data text-[12px] text-accent">
+            {batchIds.length} poutre(s) sélectionnée(s)
+          </p>
+          {/* v1.4.0: cumulative ΣL / Σm for the multi-selection. */}
+          {(() => {
+            let totalLength = 0;
+            for (const id of batchIds) {
+              const beam = beams.find((b) => b.id === id);
+              if (beam === undefined) continue;
+              const n1 = storeNodes.find((n) => n.id === beam.n1);
+              const n2 = storeNodes.find((n) => n.id === beam.n2);
+              if (n1 === undefined || n2 === undefined) continue;
+              totalLength += Math.hypot(n2.x - n1.x, n2.y - n1.y, n2.z - n1.z);
+            }
+            const unitMassKgM: Record<string, number> = {
+              "IPE 140": 16.4,
+              "IPE 200": 22.4,
+              "IPE 240": 30.7,
+              "IPE 300": 42.2,
+              "HEA 200": 42.3,
+              "HEA 180": 35.2,
+            };
+            const designation = beams.find((b) => batchIds.includes(b.id))?.section_id ?? "IPE 200";
+            const mass = totalLength * (unitMassKgM[designation] ?? 22.4);
+            return (
+              <p className="font-data text-[11px] text-ink-muted">
+                ΣL = {totalLength.toFixed(2)} m · Σm ≈ {mass.toFixed(1)} kg
+              </p>
+            );
+          })()}
+          <div className="mt-1 flex gap-2">
+            <select
+              aria-label="batch section"
+              className="font-data w-full rounded-[4px] border border-hairline px-1 py-1 text-[12px]"
+              onChange={(e) => {
+                batchUpdateBeams(batchIds, { section_id: e.currentTarget.value });
+                setBatchIds([]);
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Profil…
+              </option>
+              {Array.from(new Set(beams.map((b) => b.section_id))).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="rounded border border-hairline px-2 text-[12px] text-ink-secondary"
+              onClick={() => setBatchIds([])}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

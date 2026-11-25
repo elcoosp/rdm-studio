@@ -26,5 +26,10 @@ export function parseProject(
   if (result.success) {
     return { ok: true, project: result.output };
   }
-  return { ok: false, error: result.issues.map((i) => `${i.path?.map((p) => p.key).join(".")} :: ${i.message}`).join("; ") };
+  return {
+    ok: false,
+    error: result.issues
+      .map((i) => `${i.path?.map((p) => p.key).join(".")} :: ${i.message}`)
+      .join("; "),
+  };
 }

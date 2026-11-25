@@ -76,6 +76,32 @@ pub fn span_loads_local(
                     q_end * ez.dot(dir),
                 ));
             }
+            LoadKind::AccelerationField { ax_g, ay_g, az_g } => {
+                // v1.3.0: the EC3 station superposition sees the same
+                // inertial body force the stiffness solve integrated.
+                let ey = local_axis(data, 1);
+                let ez = local_axis(data, 2);
+                if let Some((section, material)) = structure
+                    .beams
+                    .iter()
+                    .find(|b| b.id == data.beam_id)
+                    .and_then(|beam| {
+                        structure
+                            .sections
+                            .get(&beam.section_id)
+                            .zip(structure.materials.get(&beam.material_id))
+                    })
+                {
+                    let q = material.rho * section.a * crate::stiffness::STANDARD_GRAVITY;
+                    let dir = glam::DVec3::new(ax_g, ay_g, az_g);
+                    out.trapezoids.push((
+                        q * ey.dot(dir),
+                        q * ey.dot(dir),
+                        q * ez.dot(dir),
+                        q * ez.dot(dir),
+                    ));
+                }
+            }
             _ => {}
         }
     }
@@ -361,6 +387,46 @@ mod tests {
             },
         );
         s
+    }
+
+    /// v1.3.0: a `1g -Z` acceleration field must be in exact equilibrium —
+    /// the summed vertical reactions equal the total inertial weight
+    /// `ρ·A·g·L` (the analytic `q = ρ·A·g·(ax, ay, az)` integration).
+    #[test]
+    fn acceleration_field_reactions_equal_inertial_weight() {
+        let mut s = sample_structure();
+        // Isolate the field: no superposed gravity self-weight.
+        s.self_weight_enabled = false;
+        s.loads.push(rdm_model::Load {
+            case: LoadCase::Permanent,
+            kind: rdm_model::LoadKind::AccelerationField {
+                ax_g: 0.0,
+                ay_g: 0.0,
+                az_g: -1.0,
+            },
+        });
+        s.supports.push(rdm_model::Support {
+            node_id: 1,
+            locked_dofs: [true, true, true, true, false, false],
+            spring_stiffness: [0.0; 6],
+        });
+        s.supports.push(rdm_model::Support {
+            node_id: 2,
+            locked_dofs: [false, true, true, false, false, false],
+            spring_stiffness: [0.0; 6],
+        });
+        let solved = crate::solve_model(&s).expect("solve");
+        let (_, case) = solved
+            .cases
+            .iter()
+            .find(|(case, _)| case == &LoadCase::Permanent)
+            .expect("permanent case");
+        let rho = 7850.0;
+        let a = 2.848e-3;
+        let g = 9.80665;
+        let expected = rho * a * g * 4.0;
+        let sum_fz: f64 = case.reactions.iter().skip(2).step_by(6).sum();
+        assert_relative_eq!(sum_fz, expected, epsilon = 1e-3);
     }
 
     #[test]

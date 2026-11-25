@@ -1,0 +1,24 @@
+import { i18n } from "@lingui/core";
+
+/**
+ * Lingui runtime (section 5, `i18n/`): FR is the source locale, EN is the
+ * second catalog; switching is in-place (no reload, section 11).
+ */
+export type Locale = "fr" | "en";
+
+const catalogs: Record<Locale, () => Promise<{ messages: Record<string, unknown> }>> = {
+  fr: () => import("./locales/fr.mjs"),
+  en: () => import("./locales/en.mjs"),
+};
+
+export async function activateLocale(locale: Locale): Promise<void> {
+  const { messages } = await catalogs[locale]();
+  i18n.load(locale, messages as never);
+  i18n.activate(locale);
+  localStorage.setItem("rdm-locale", locale);
+  document.documentElement.lang = locale;
+}
+
+export function initialLocale(): Locale {
+  return (localStorage.getItem("rdm-locale") as Locale | null) ?? "fr";
+}

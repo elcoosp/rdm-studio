@@ -1,4 +1,4 @@
-Task: github.com/elcoosp/rdm-studio. Ship v1.4.0 — upgrade the UI foundation to Base UI (`@base-ui/react`) + a complete 24-component `shadcn/ui` workstation suite (`Combobox`, `NumberField`, `ResizablePanel`, non-modal `Vaul` Drawer, `TanStack Table`, `Accordion`, `Alert`, `Popover`, `DropdownMenu`, `ToggleGroup`, `Progress`, `Kbd`), build a flagship 8-step cross-route `driver.js` interactive onboarding tour (`OnboardingTour.tsx`), close all 12 code-audit & live-video regressions, AND surface every remaining feature across all 16 `./mockups/` screens following `AGENTS.md`, `ARCHITECTURE.md`, and `DESIGN.md` (§1–§8).
+Task: github.com/elcoosp/rdm-studio. Ship v1.4.0 — upgrade the UI foundation to Base UI (`@base-ui/react`) + a complete 24-component `shadcn/ui` workstation suite (`Combobox`, `NumberField`, `ResizablePanel`, non-modal `Vaul` Drawer, `TanStack Table`, `Accordion`, `Alert`, `Popover`, `DropdownMenu`, `ToggleGroup`, `Progress`, `Kbd`) + declarative keyboard shortcuts via `react-hotkeys-hook`, build a flagship 8-step cross-route `driver.js` interactive onboarding tour (`OnboardingTour.tsx`), wire drag-and-drop & PWA `launchQueue` file opening + `vercel.json` SPA/WASM config, close all 12 code-audit & live-video regressions found in `0b22674`, AND surface every remaining feature across all 16 `./mockups/` screens following `AGENTS.md`, `ARCHITECTURE.md`, and `DESIGN.md` (§1–§8).
 
 EXECUTION CONTRACT (NON-NEGOTIABLE):
 
@@ -6,11 +6,11 @@ EXECUTION CONTRACT (NON-NEGOTIABLE):
 - Keep strict SI units (`m`, `N`, `Pa`, `rad`, `kg/m³`) and zero `.unwrap()` / `.expect()` / `panic!()` in `crates/` and `bindings/rdm-wasm`.
 - Write complete, clean files (never blind regex/tab patches) to avoid `oxfmt` whitespace no-ops.
 
-1. **Bootstrap, Install Base UI + Shadcn Ecosystem Libs & Sync (< 3 tool calls):**
+1. **Bootstrap, Install Base UI + Shadcn & Hotkey Libs, Sync (< 3 tool calls):**
    - If `rdm-studio` is not cloned locally, `git clone https://github.com/elcoosp/rdm-studio.git && cd rdm-studio`; otherwise `cd rdm-studio && git fetch origin && git reset --hard origin/main`.
    - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com/elcoosp/ship`) are installed.
-   - Install Base UI & shadcn workstation libraries (and remove unused `@radix-ui/*` packages once migrated):
-     `pnpm --filter web add @base-ui/react react-resizable-panels vaul @tanstack/react-table`
+   - Install Base UI, shadcn workstation libraries, and `react-hotkeys-hook`:
+     `pnpm --filter web add @base-ui/react react-resizable-panels vaul @tanstack/react-table react-hotkeys-hook`
    - Read `STATUS.md`, `DESIGN.md` (§1–§8), and `.agents/skills/impeccable/SKILL.md`.
 
 2. **Build the Complete 24-Component Base UI `shadcn/ui` Design System (`apps/web/src/components/ui/`):**
@@ -21,7 +21,17 @@ EXECUTION CONTRACT (NON-NEGOTIABLE):
    - **Non-Blocking Mobile `Vaul` CAD Drawer (`drawer.tsx` & `BottomSheet.tsx`):**
      Configure `<Drawer.Root modal={false} snapPoints={[0.35, 0.78]} fadeFromIndex={1}>`, `<Drawer.Overlay className="pointer-events-none bg-ink-primary/15" />`, and `<Drawer.Content className="fixed inset-x-0 bottom-14 z-40 ...">` so mobile users get native Vaul spring physics, snap points, and drag handle while still being able to orbit/zoom the 3D viewport and tap the `h-14` bottom navigation bar. Wrap desktop Steps 1–4 in `<ResizablePanelGroup>` so users can drag-resize the left inspector and bottom results dock.
 
-3. **Build a Flagship 8-Step Multi-Screen `driver.js` Onboarding Tour (`apps/web/src/components/OnboardingTour.tsx` & `app.css`):**
+3. **Centralize All Keyboard Shortcuts with `react-hotkeys-hook` (`apps/web/src/hooks/useAppHotkeys.ts`):**
+   - Replace ad-hoc `window.addEventListener("keydown", ...)` listeners across `CommandPalette.tsx`, `ViewportCanvas.tsx`, and routes with declarative `useHotkeys` bindings from **`react-hotkeys-hook`** (`enableOnFormTags: false`, cross-platform `mod` key):
+     - `mod+k` (`preventDefault: true`): toggle Command Palette (`cmdk`).
+     - `mod+z` / `mod+shift+z` (`preventDefault: true`): `undoModel()` / `redoModel()` (with header Undo/Redo buttons).
+     - `mod+enter` (`preventDefault: true`): trigger calculation and navigate to `/results`.
+     - `mod+p` (`preventDefault: true`): navigate to `/report` for print/PDF export.
+     - `v` / `n` / `b` / `escape` (on `/geometry`): switch 3D tool mode (`Sélection` / `+ Nœud` / `Relier`) or clear active selection.
+     - `f` / `i` (when 3D viewport mounted): Zoom Extents (`fitToModel`) / Isometric view.
+     - `shift+mod+i` / `alt+r` / `delete, backspace` (on `/geometry`): invert beam selection, toggle end moment releases on selected beams, or delete selected node/beam.
+
+4. **Build a Flagship 8-Step Multi-Screen `driver.js` Onboarding Tour (`apps/web/src/components/OnboardingTour.tsx` & `app.css`):**
    - Replace the 3-step header-only tour in `__root.tsx` with a dedicated, custom-styled **`OnboardingTour.tsx`** (styled in `app.css` with `#FFFFFF` popover surface, `1px #E2E8F0` border, `#1D4ED8` Cobalt primary button, `JetBrains Mono` `1 / 8` step counter, smooth `350 ms` stage highlight, and `"Passer"` / `"Précédent"` / `"Suivant"` / `"Commencer"` controls).
    - The 8 steps MUST automatically navigate across all 5 routes via `router.navigate` (waiting `150 ms` for DOM mount on `onNextClick` / `onPrevClick`):
      1. `/geometry` (`#rdm-logo`): **Projets & Modèles paramétriques** (galerie, modèles types, import CAO `.dxf`/`.step`/`.igs`).
@@ -34,36 +44,55 @@ EXECUTION CONTRACT (NON-NEGOTIABLE):
      8. `/geometry` (`#rdm-cmdk`): **Productivité clavier `⌘K`** (palette de commandes contextuelle et raccourcis `Alt`).
    - Auto-launch once on first visit (persisted via `localStorage.getItem("rdm-tour-done")`, skipped when `?p=` deep-link or `navigator.webdriver` is active so E2E tests are unaffected) and re-launchable anytime via the `?` help button.
 
-4. **Expose Full EC3 Coefficients & Canonical SHA-256 Fingerprint in WASM (`bindings/rdm-wasm/src/lib.rs`, `workerClient.ts`):**
+5. **Expose Full EC3 Coefficients & Canonical SHA-256 Fingerprint in WASM (`bindings/rdm-wasm/src/lib.rs`, `workerClient.ts`):**
    - Extend `BeamCombinationResult` with:
      - `checks: Vec<(String, f64)>` (all individual `member_check` ratios: `NEd/Npl,Rd`, `Nb,Rd,y`, `Nb,Rd,z`, `Mb,Rd`, `Vpl,Rd`, `Von Mises`),
      - `class_index: Option<u8>`, `chi_y: Option<f64>`, `chi_z: Option<f64>`, `chi_lt: Option<f64>`,
      - `m_rd: f64` (governing bending moment resistance in `N·m` for the `uPlot` capacity line).
    - Add `project_fingerprint(project_json: &str) -> Result<JsValue, JsValue>` calling `ProjectFile::fingerprint()` so Step 5's A4 sheet and Takumi PDF render the true deterministic SHA-256 hash of the `.rdm` model.
 
-5. **Close All 12 Code-Audit & Live-Video Regressions (`apps/web/`):**
-   1. **Fix `ForceVectors3D.tsx` Rules-of-Hooks Violation:** Ensure no `useMemo` is called after conditional early `return` statements in `SpanLoadArrows` (extract `<DistributedLoadArrows />` as a dedicated child component).
-   2. **Fix `uPlot` Synchronized Cursor Alignment (`results.tsx`):** Position `[data-testid="uplot-cursor"]` relative to `plot.over` (using `plot.valToPos(station, "x") + plot.bbox.left / devicePixelRatio`) instead of `left: ${station * 100}%` on the outer wrapper, and support clicking/dragging on the chart to scrub `station`.
-   3. **Fix `SnapOverlay.tsx` Listener Attachment & Resize Sync:** Trigger `SnapOverlay`'s pointer-listener `useEffect` via a reactive `runtimeVersion` counter instead of `[runtimeRef]`, and re-project using current `dom.getBoundingClientRect()` dimensions.
-   4. **Fix `BeamMeshes.tsx` Selection Outline `sectionDims` Dependency & 3D Highlight:** Include `sectionDims` in `selectedGeometry`'s `useMemo` dependency array, and tint the selected 3D beam in `#2563EB` Cobalt alongside its `#1D4ED8` edge wireframe so 3D beam selection is unmistakable.
-   5. **Fix `ProjectFile` Canonical Serialization & Diacritics (`projectStore.ts`, `LayerToolbar.tsx`):** Remove undeclared `updatedAt` property injections from `projectStore.ts` and ensure `"Déformée"` carries proper French accents in `LayerToolbar.tsx`.
-   6. **Consistent Left-Docked `320px` Inspector on Step 1 (`geometry.tsx`):** Render the inspector first (left) and 3D viewport second (right) in `geometry.tsx` so Steps 1, 2, and 3 share the exact same left-inspector / right-viewport layout (`DESIGN.md` §4).
-   7. **Verify Official Brand Logo & PWA PNG Icons (`docs/logo-idea.svg`, `apps/web/public/`):** Ensure `docs/logo-idea.svg` and `apps/web/public/logo-rdm-studio.svg` carry `xmlns="http://www.w3.org/2000/svg"` and verify `icon-192.png`, `icon-512.png`, and `icon-maskable-512.png` render crisp PNGs derived from the official vector emblem.
-   8. **Fix Violent Camera Auto-Reframe on Node/Beam Edits (`ViewportCanvas.tsx`):** Trigger `fitToModel` ONLY on initial mount, explicit `F` shortcut, or full project load (`project.name` / template reset) — NEVER on every `nodes.length` increment when adding/editing individual nodes or beams.
-   9. **Render Crisp 3D Node Spheres, Immediate Profile Selection & Clean `+ Nœud` Button (`geometry.tsx`):** Replace tiny `<points>` with 3D spheres (`r = 0.055 m`, `#0F172A` default, `#1D4ED8` selected) visible outside `IPE` flanges, apply profile `Combobox` changes immediately to `selectedBeam` via `updateBeam` when a beam is selected, and fix the duplicate `+ + Nœud` label (`<IconPlus />` + `Nœud`).
+6. **Close All 12 Code-Audit & Live-Video Regressions Found in `0b22674` + Production Readiness:**
+   1. **Fix Dead Empty-State Import Button (`geometry.tsx`):** Wire the empty-state `"Importer CAO"` button directly to `setCadOpen(true)` (removing the dead `fileRef.current?.click()` reference).
+   2. **Render Distributed & Point-on-Span Loads in 3D (`ForceVectors3D.tsx`):** Render crimson (`#DC2626`) 3D arrows for `Nodal`, `PointOnSpan`, and `Trapezoid` distributed loads (arrow array along the member + top bar), keeping all hooks unconditional above any early return.
+   3. **Fix `uPlot` Synchronized Cursor Alignment (`results.tsx`):** Position `[data-testid="uplot-cursor"]` relative to `plot.over` (using `plot.valToPos(station, "x") + plot.bbox.left / devicePixelRatio`) instead of `left: ${station * 100}%` on the outer wrapper, and support clicking/dragging on the chart to scrub `station`.
+   4. **Fix `SnapOverlay.tsx` Listener Attachment & Resize Sync:** Trigger `SnapOverlay`'s pointer-listener `useEffect` via the reactive `runtimeReady` state counter instead of `[runtimeRef]`, and re-project using current `dom.getBoundingClientRect()` dimensions.
+   5. **Fix `BeamMeshes.tsx` `sectionDims` Deps & 3D Selection Highlight:** Include `sectionDims` in both `geometry` and `selectedGeometry` `useMemo` dependency arrays, extrude the selected beam's true profile, and tint the selected 3D beam in `#2563EB` Cobalt alongside its `#1D4ED8` edge wireframe.
+   6. **Fix `ProjectFile` Canonical Serialization, Manifest Colors & Diacritics (`projectStore.ts`, `LayerToolbar.tsx`, `vite.config.ts`, `playwright.config.ts`):**
+      - Remove undeclared `updatedAt` property injections from `projectStore.ts`.
+      - Fix `"Nœuds"` and `"Déformée"` in `LayerToolbar.tsx`.
+        Utilisez le code avec précaution.
 
-6. **Surface All Remaining Mockup Features Across Steps 1–5 (`./mockups/` Parity):**
-   - **Step 1 (`geometry.tsx`, `CommandPalette.tsx`, `ProjectGalleryModal.tsx`, `projectStore.ts`):**
+- Set manifest.theme_color: "#1D4ED8", manifest.background_color: "#F8FAFC" in vite.config.ts, and reuseExistingServer: !process.env.CI in playwright.config.ts.
 
-- Use Base UI `Combobox` for searchable profile selection (`IPE 200`, `HEA 180`, `CHS 101.6×5`, etc.) with live SVG cross-section icons, and `NumberField` for `X / Y / Z (mm)`, `θx (°)`, and `ky / kz`.
-- Store `selectedBeamIds: number[]` in `projectStore` (with `selectAllBeams`, `invertBeamSelection` `⇧⌘I`, `clearSelection` `Esc`). When `selectedBeamIds.length > 1`, render the Batch Inspector (`ΣL` cumulative length, `Σm` cumulative mass, batch section/material, batch `N1/N2` releases, batch `ky/kz`).
-- Make `CommandPalette.tsx` (`⌘K`) context-aware: when beams are selected, surface Relâcher les moments N1/N2 (`⌥R`), Inverser la sélection (`⇧⌘I`), plus global shortcuts `⌘Enter` (Lancer le calcul 3D & Eurocode 3) and `⌘P` (Imprimer / Exporter PDF).
-- Upgrade `ProjectGalleryModal` with rich metadata cards (node/beam counts, span/height, standard tags) for the 4 parametric templates, a `+ Nouveau projet vierge` button (resets to an empty 0-node model), and a `Importer (.dxf, .step, .igs, .rdm)` file picker.
-- On Step 1's Empty State (`nodes === 0`), add the 4 one-click Quick-Start pills (Treillis Warren 24 m, Portique 18 m, Potence HEA 200, Poutre 3 travées) below the 3 primary cards, plus a bottom-left profile legend and mouse/keyboard hint bar on the 3D viewport.
-- Step 2 (`supports.tsx`): Display the selected node's `(X, Y, Z)` coordinates, free vs locked DOF count, and `"Suivant : Définir les charges →"`.
-- Step 3 (`loads.tsx`): Show estimated self-weight mass (`kg` / `t`) beside the `1g -Z` toggle, `"Réinitialiser charges"` button (undoable via `⌘Z`), and a bottom viewport equilibrium status pill (`Système équilibré` / `Appuis incomplets`).
-- Step 4 (`results.tsx`):Render the 4-clause Eurocode 3 breakdown card (`checks` with `<Progress>` bars) and `Classe · χy · χz · χLT` badges for the inspected beam, plus a secondary mitigation button `Maintien latéral mi-travée (kz = 0,5)` (`updateBeam(id, { k_buckling_z: 0.5 })`) alongside the 1-click profile upgrade.Under the 2D `σvM` cross-section heatmap, display top fiber, neutral axis, and bottom fiber stress readouts (MPa); in `uPlot`, draw dashed crimson `±M_Rd` capacity limit lines and show live `My,Ed · Vz,Ed · N,Ed` values at the scrubbed cursor position `x`.
-- Step 5 (`report.tsx` & `pdfTakumiReport.tsx`):Include 5 complete engineering tables with TSV copy: (1) Fréquences propres (`Hz` + Période `T (s)`), (2) Réactions d'appuis ELU (`Rx, Ry, Rz` + ligne `Total Σ`), (3) Vérification Eurocode 3 (`σ_vM (MPa)`, `χy`, `χz`, `χLT`, `Ratio η`, `Statut`), (4) Déplacements extrêmes ELS (`Ux, Uy, Uz, |U|`), and (5) Nœuds & Profils, plus the SHA-256 model fingerprint footer in both the A4 web sheet and Takumi PDF.
-- Tablet `768–1023px` & Mobile Polish: Dock the inspector cleanly on tablet viewports without covering the 3D canvas, and add a 1-tap `Rapport PDF` button on mobile Step 4.
-- Add Regression Tests & Verify All Gates (`G0 → G6`, `AGENTS.md` §4):Add Rust & Playwright E2E tests verifying: (a) `BeamCombinationResult` exposes individual EC3 `checks`, `chi_y`/`chi_z`/`chi_lt`, and `project_fingerprint` returns a 64-char hex SHA-256, (b) clicking `?` launches the 8-step `driver.js` onboarding tour and stepping through advances across routes (`/geometry` → `/supports` → `/loads` → `/results` → `/report`), (c) `Combobox` searches and selects profiles on `/geometry` and updates the selected beam, (d) `ProjectGalleryModal` `+ Nouveau projet vierge` resets to empty state and empty-state quick pills load a template in 1 click, and (e) Step 5 renders the Support Reactions `Σ` table and SHA-256 fingerprint.Run all gates to 100% green:`cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings``RUSTFLAGS="-D warnings" cargo test --workspace --all-features``wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg``pnpm --filter web exec oxfmt --check && pnpm --filter web exec oxlint --deny-warnings && pnpm --filter web exec tsr generate && pnpm --filter web i18n:extract && pnpm --filter web i18n:compile && pnpm --filter web exec tsc --noEmit && pnpm --filter web test:unit && pnpm --filter web test:e2e`
-- Handoff & Archive (Leave Tree Dirty — No Commits):Update `STATUS.md` (`v1.4.0` complete), write `.github/pr-body.md` and `ship.toml` (1 dirty file per `[[commit]]`, ordered by dependency), run `ship validate` until exit `0`, and zip the full clean tree (`rdm-studio-v1.4.0-<SHA>.zip`, excluding only `.git/`, `target/`, `node_modules/`, caches) into the downloads folder with zip contents proof.
+7. Consistent Left-Docked 320px Inspector on Step 1 (geometry.tsx): Render <BottomSheet> (inspector) first and <section> (3D viewport) second in geometry.tsx so Steps 1, 2, and 3 share the exact same left-inspector / right-viewport layout (DESIGN.md §4).
+8. Fix Violent Camera Auto-Reframe on Node/Beam Edits (ViewportCanvas.tsx): Trigger fitToModel ONLY on initial mount, explicit F shortcut, or project name/template change — NEVER on every nodes.length increment when adding/editing individual nodes or beams.
+9. Render Crisp 3D Node Spheres, Immediate Profile Selection & Clean + Nœud Button (NodeMarkers.tsx, geometry.tsx): Replace tiny <points> with 3D spheres (r = 0.055 m, #0F172A default, #1D4ED8 selected, mapped by nodeIds rather than id - 1) visible outside IPE flanges, apply profile Combobox changes immediately to selectedBeam via updateBeam when a beam is selected, and fix the duplicate + + Nœud label (<IconPlus /> + Nœud).
+10. Drag-and-Drop, PWA File Handler & vercel.json:
+
+- Support drag-and-drop of .rdm, .dxf, .step/.stp, and .igs/.iges files onto the app shell + PWA window.launchQueue consumer.
+- Add root vercel.json with SPA rewrite ("/(.*)" -> "/index.html"), Content-Type: application/wasm on *.wasm, and Cache-Control: no-cache on /sw.js.
+
+7. Surface All Remaining Mockup Features Across Steps 1–5 (./mockups/ Parity):
+   • Step 1 (geometry.tsx, CommandPalette.tsx, ProjectGalleryModal.tsx, projectStore.ts):
+   • Use Base UI Combobox for searchable profile selection (IPE 200, HEA 180, CHS 101.6×5, etc.) with live SVG cross-section icons, and NumberField for X / Y / Z (mm), θx (°), and ky / kz.
+   • Store selectedBeamIds: number[] in projectStore (with selectAllBeams, invertBeamSelection ⇧⌘I, clearSelection Esc). When selectedBeamIds.length > 1, render the Batch Inspector (ΣL cumulative length, Σm cumulative mass, batch section/material, batch N1/N2 releases, batch ky/kz).
+   • Make CommandPalette.tsx (⌘K) context-aware: when beams are selected, surface Relâcher les moments N1/N2 (⌥R), Inverser la sélection (⇧⌘I), plus global shortcuts ⌘Enter (Lancer le calcul 3D & Eurocode 3) and ⌘P (Imprimer / Exporter PDF).
+   • Upgrade ProjectGalleryModal with rich metadata cards (node/beam counts, span/height, standard tags) for the 4 parametric templates, a + Nouveau projet vierge button (resets to an empty 0-node model), and a Importer (.dxf, .step, .igs, .rdm) file picker.
+   • On Step 1's Empty State (nodes === 0), add the 4 one-click Quick-Start pills (Treillis Warren 24 m, Portique 18 m, Potence HEA 200, Poutre 3 travées) below the 3 primary cards, plus a bottom-left profile legend and mouse/keyboard hint bar on the 3D viewport.
+   • Step 2 (supports.tsx): Display the selected node's (X, Y, Z) coordinates, free vs locked DOF count, and "Suivant : Définir les charges →".
+   • Step 3 (loads.tsx): Show estimated self-weight mass (kg / t) beside the 1g -Z toggle, "Réinitialiser charges" button (undoable via ⌘Z), and a bottom viewport equilibrium status pill (Système équilibré / Appuis incomplets).
+   • Step 4 (results.tsx):
+   • Render the 4-clause Eurocode 3 breakdown card (checks with <Progress> bars) and Classe · χy · χz · χLT badges for the inspected beam, plus a secondary mitigation button Maintien latéral mi-travée (kz = 0,5) (updateBeam(id, { k_buckling_z: 0.5 })) alongside the 1-click profile upgrade.
+   • Under the 2D σvM cross-section heatmap, display top fiber, neutral axis, and bottom fiber stress readouts (MPa); in uPlot, draw dashed crimson ±M_Rd capacity limit lines and show live My,Ed · Vz,Ed · N,Ed values at the scrubbed cursor position x.
+   • Step 5 (report.tsx & pdfTakumiReport.tsx):
+   • Include 5 complete engineering tables with TSV copy: (1) Fréquences propres (Hz + Période T (s)), (2) Réactions d'appuis ELU (Rx, Ry, Rz + ligne Total Σ), (3) Vérification Eurocode 3 (σ_vM (MPa), χy, χz, χLT, Ratio η, Statut), (4) Déplacements extrêmes ELS (Ux, Uy, Uz, |U|), and (5) Nœuds & Profils, plus the SHA-256 model fingerprint footer in both the A4 web sheet and Takumi PDF.
+   • Tablet 768–1023px & Mobile Polish: Dock the inspector cleanly on tablet viewports without covering the 3D canvas, and add a 1-tap Rapport PDF button on mobile Step 4.
+8. Add Regression Tests & Verify All Gates (G0 → G6, AGENTS.md §4):
+   • Add Rust & Playwright E2E tests verifying: (a) BeamCombinationResult exposes individual EC3 checks, chi_y/chi_z/chi_lt, and project_fingerprint returns a 64-char hex SHA-256, (b) clicking ? launches the 8-step driver.js onboarding tour and stepping through advances across routes (/geometry → /supports → /loads → /results → /report), (c) Combobox searches and selects profiles on /geometry and updates the selected beam, (d) ProjectGalleryModal + Nouveau projet vierge resets to empty state and empty-state quick pills load a template in 1 click, and (e) Step 5 renders the Support Reactions Σ table and SHA-256 fingerprint.
+   • Run all gates to 100% green:
+   • cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings
+   • RUSTFLAGS="-D warnings" cargo test --workspace --all-features
+   • wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg
+   • pnpm --filter web exec oxfmt --check && pnpm --filter web exec oxlint --deny-warnings && pnpm --filter web exec tsr generate && pnpm --filter web i18n:extract && pnpm --filter web i18n:compile && pnpm --filter web exec tsc --noEmit && pnpm --filter web test:unit && pnpm --filter web test:e2e
+9. Handoff & Archive (Leave Tree Dirty — No Commits):
+   • Update STATUS.md (v1.4.0 complete), write .github/pr-body.md and ship.toml (1 dirty file per [[commit]], ordered by dependency), run ship validate until exit 0, and zip the full clean tree (rdm-studio-v1.4.0-<SHA>.zip, excluding only .git/, target/, node_modules/, caches) into the downloads folder with zip contents proof.

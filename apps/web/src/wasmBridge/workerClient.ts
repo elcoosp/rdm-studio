@@ -82,9 +82,15 @@ interface Pending {
 
 /** Last successful solve, shared across routes (report/export step). */
 let lastReport: SolveReport | null = null;
+let lastModalReport: ModalReport | null = null;
 
 export function getLastReport(): SolveReport | null {
   return lastReport;
+}
+
+/** Last modal report cached by the client (Step 5 modes table). */
+export function getLastModal(): ModalReport | null {
+  return lastModalReport;
 }
 
 /**
@@ -162,6 +168,7 @@ class FeaClient {
       ) {
         pending.onError(data.fault);
       } else if (data.type === "MODAL_RESULT") {
+        lastModalReport = data.report;
         pending.onResult(data.report);
       } else if (data.type === "STRESS_RESULT") {
         pending.onResult(data.grid);

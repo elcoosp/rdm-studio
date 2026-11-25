@@ -16,6 +16,8 @@ pub mod en1990;
 pub mod en1991;
 pub mod en1993;
 pub mod interaction;
+pub mod multi_material;
+pub mod optimizer;
 
 pub use annex::annex_factors;
 pub use catalog::{Ec3Error, MaterialCatalog, ProfileCatalog, ProfileEntry, ProfileFamily};
@@ -38,6 +40,16 @@ pub use en1993::{
 pub use interaction::{
     CalcTraceNode, InteractionAnnex, InteractionInput, annex_a_factors, annex_b_factors,
     c1_from_moment_ratio, class4_reduction, interaction_6_61_6_62, torsional_buckling_ncr,
+};
+pub use multi_material::{
+    AluminiumAlloy, ConcreteClass, LoadDuration, TimberProduct, aluminium_properties, concrete_fcd,
+    concrete_fck, ec2_flexure_as, ec2_shear, ec3_fillet_weld, ec3_fire_check,
+    ec3_fire_critical_temperature, ec3_joint_bolt_shear, ec5_timber_bending, ec9_aluminium_check,
+    timber_kmod, timber_properties,
+};
+pub use optimizer::{
+    CARBON_KG_PER_KG_STEEL, COST_EUR_PER_KG_STEEL, CandidateCheck, GroupDemand, GroupOptimization,
+    OptimizationTotals, ProfileCandidate, check_candidate, optimize_group, totals,
 };
 
 use std::sync::OnceLock;

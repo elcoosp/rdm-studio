@@ -7,13 +7,29 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/routes/geometry.tsx
+msgid "+ Nœud"
+msgstr "+ Node"
+
 #: src/routes/loads.tsx
 msgid "Ajouter la charge"
 msgstr "Add load"
 
 #: src/routes/geometry.tsx
-msgid "Ajouter un noeud"
-msgstr "Add node"
+#~ msgid "Ajouter un nœud"
+#~ msgstr "Add node"
+
+#: src/routes/geometry.tsx
+msgid "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou choisissez un modèle type dans la galerie de projets."
+msgstr "Add nodes, connect them with N1 → N2 members, import a DXF drawing or pick a template from the project gallery."
+
+#: src/routes/results.tsx
+msgid "Amplification"
+msgstr "Amplification"
+
+#: src/components/CommandPalette.tsx
+msgid "Aucun résultat."
+msgstr "No results."
 
 #: src/routes/loads.tsx
 msgid "Aucune charge définie."
@@ -52,8 +68,8 @@ msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexi
 msgstr "Tick the DOFs locked by each support. Free rotations let bending pass (pin)."
 
 #: src/routes/geometry.tsx
-msgid "Connecter au noeud sélectionné"
-msgstr "Connect to selected node"
+#~ msgid "Connecter au nœud sélectionné"
+#~ msgstr "Connect to selected node"
 
 #: src/routes/report.tsx
 msgid "Copie !"
@@ -63,13 +79,21 @@ msgstr "Copied!"
 msgid "Copier l'URL de partage"
 msgstr "Copy share URL"
 
+#: src/routes/geometry.tsx
+msgid "Créer une poutre"
+msgstr "Create a member"
+
 #: src/routes/results.tsx
-msgid "Deformee & exploitation (ULE)"
+msgid "Déformée & exploitation (ELU)"
 msgstr "Deformed shape & ULS utilization"
 
 #: src/routes/results.tsx
-msgid "Deplacements nodaux (G)"
-msgstr "Nodal displacements (G)"
+#~ msgid "Déplacements nodaux (G)"
+#~ msgstr "Nodal displacements (G)"
+
+#: src/routes/results.tsx
+msgid "Déplacements nodaux (Q)"
+msgstr "Nodal displacements (Q)"
 
 #. placeholder {0}: index + 1
 #: src/routes/__root.tsx
@@ -81,7 +105,7 @@ msgid "Exploitation EC3"
 msgstr "EC3 utilization"
 
 #: src/routes/report.tsx
-msgid "Exports (etape 5)"
+msgid "Exports (étape 5)"
 msgstr "Exports (step 5)"
 
 #: src/components/BottomSheet.tsx
@@ -93,36 +117,44 @@ msgid "Fz (kN, négatif vers le bas)"
 msgstr "Fz (kN, negative downward)"
 
 #: src/routes/report.tsx
-msgid "Generation…"
+msgid "Génération…"
 msgstr "Rendering…"
+
+#: src/routes/geometry.tsx
+msgid "Importer DXF"
+msgstr "Import DXF"
 
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
 msgstr "Section inspector"
 
 #: src/routes/results.tsx
-msgid "Lancer un calcul pour afficher les resultats."
+msgid "Lancer un calcul pour afficher les résultats."
 msgstr "Run a calculation to display results."
 
 #: src/routes/report.tsx
-msgid "Le modele .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 msgstr "The .rdm model is compressed (lz-string) into the URL and validated by Valibot on read."
 
 #: src/routes/supports.tsx
 msgid "Matrice 6 DDL des appuis"
 msgstr "6-DOF support matrix"
 
+#: src/routes/geometry.tsx
+msgid "Modèle vide — commencez par poser un nœud."
+msgstr "Empty model — start by placing a node."
+
 #: src/routes/loads.tsx
 #: src/routes/supports.tsx
-msgid "Noeud"
+msgid "Nœud"
 msgstr "Node"
 
 #: src/routes/geometry.tsx
-msgid "Noeuds"
+msgid "Nœuds"
 msgstr "Nodes"
 
 #: src/routes/report.tsx
-msgid "Noeuds / Poutres / Appuis / Charges"
+msgid "Nœuds / Poutres / Appuis / Charges"
 msgstr "Nodes / Beams / Supports / Loads"
 
 #: src/routes/report.tsx
@@ -162,7 +194,7 @@ msgid "Profil (EN 10365)"
 msgstr "Profile (EN 10365)"
 
 #: src/routes/report.tsx
-msgid "Profils utilises"
+msgid "Profils utilisés"
 msgstr "Profiles used"
 
 #: src/routes/report.tsx
@@ -170,8 +202,8 @@ msgid "Rapport 3D autonome (HTML)"
 msgstr "Standalone 3D report (HTML)"
 
 #: src/routes/report.tsx
-msgid "Rapport de model"
-msgstr "Model report"
+#~ msgid "Rapport de model"
+#~ msgstr "Model report"
 
 #: src/routes/report.tsx
 msgid "Rapport PDF (takumi)"
@@ -181,6 +213,14 @@ msgstr "PDF report (takumi)"
 msgid "Recharger"
 msgstr "Reload"
 
+#: src/routes/geometry.tsx
+msgid "Relâchements N1 / N2"
+msgstr "End releases N1 / N2"
+
+#: src/routes/geometry.tsx
+msgid "Relier N1 → N2"
+msgstr "Connect N1 → N2"
+
 #: src/routes/report.tsx
 msgid "Resultats CSV (Excel)"
 msgstr "Results CSV (Excel)"
@@ -188,6 +228,14 @@ msgstr "Results CSV (Excel)"
 #: src/routes/results.tsx
 msgid "Resultats de calcul"
 msgstr "Calculation results"
+
+#: src/routes/geometry.tsx
+msgid "Roulis θx (°)"
+msgstr "Roll angle θx (°)"
+
+#: src/routes/geometry.tsx
+msgid "Sélectionnez une poutre pour éditer ses caractéristiques."
+msgstr "Select a member to edit its properties."
 
 #: src/routes/loads.tsx
 msgid "Type"

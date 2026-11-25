@@ -1,0 +1,16 @@
+[package]
+name = "rdm-cad"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dxf = "0.6.2"
+thiserror = "2"
+
+[lints]
+workspace = true
+
+# dxf pulls uuid without a wasm randomness source; unify on the js feature
+# so wasm32-unknown-unknown builds (feature unification applies tree-wide).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { version = "1.3.3", features = ["js"] }

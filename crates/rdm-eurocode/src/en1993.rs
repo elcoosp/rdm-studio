@@ -607,6 +607,25 @@ pub fn von_mises_utilisation(
     props: &SectionProperties,
     material: &MaterialProperties,
 ) -> Result<f64, Ec3Error> {
+    let sigma_vm = von_mises_stress(n_ed, my_ed, mz_ed, vz_ed, t_ed, props)?;
+    Ok(sigma_vm * GAMMA_M0 / material.fy)
+}
+
+/// Absolute von Mises stress (Pa) for the exact section forces, evaluated
+/// from the elastic interaction `√(σ² + 3τ²)` (v1.3.0 `max_sigma_vm`).
+///
+/// # Errors
+///
+/// Returns [`Ec3Error`] when the section lacks the shear/torsion
+/// dimensions the shear stress model needs.
+pub fn von_mises_stress(
+    n_ed: f64,
+    my_ed: f64,
+    mz_ed: f64,
+    vz_ed: f64,
+    t_ed: f64,
+    props: &SectionProperties,
+) -> Result<f64, Ec3Error> {
     let sigma_n = n_ed / props.a;
     let sigma_my = my_ed / props.wel_y;
     let sigma_mz = mz_ed / props.wel_z;
@@ -642,7 +661,7 @@ pub fn von_mises_utilisation(
 
     let tau = (tau_v * tau_v + tau_t * tau_t).sqrt();
     let sigma_vm = (sigma * sigma + 3.0 * tau * tau).sqrt();
-    Ok(sigma_vm * GAMMA_M0 / material.fy)
+    Ok(sigma_vm)
 }
 
 /// Reduces a bi-axial bending + shear combination per EN 1993-1-1 §6.2.8(3):

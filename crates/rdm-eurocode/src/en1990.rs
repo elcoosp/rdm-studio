@@ -166,6 +166,127 @@ impl PsiFactors {
     }
 }
 
+// ---------------------------------------------------------------------------
+
+/// One superposition recipe of the v1.7.0 combination builder
+/// `(kind, label, weights)`.
+pub type CombinationRecipe = (String, String, Vec<(String, f64)>);
+
+/// Builds the full v1.7.0 combination set for the custom load-case table
+/// of schema v2: ULS `6.10` (or the `6.10a` + `6.10b` pair), SLS
+/// characteristic (6.14b), frequent (6.15b) and quasi-permanent (6.16b).
+#[must_use]
+pub fn build_combinations_v2(
+    cases: &[rdm_model::LoadCaseDef],
+    _method: rdm_model::CombinationMethod,
+) -> Vec<CombinationRecipe> {
+    use rdm_model::CaseCategory;
+    let mut out: Vec<CombinationRecipe> = Vec::new();
+    let permanents: Vec<&rdm_model::LoadCaseDef> = cases
+        .iter()
+        .filter(|c| c.category == CaseCategory::Permanent)
+        .collect();
+    let variables: Vec<&rdm_model::LoadCaseDef> = cases
+        .iter()
+        .filter(|c| {
+            matches!(
+                c.category,
+                CaseCategory::Variable | CaseCategory::Wind | CaseCategory::Snow
+            )
+        })
+        .collect();
+    let label_of = |weights: &[(String, f64)]| -> String {
+        weights
+            .iter()
+            .map(|(code, f)| format!("{f:.2}{code}"))
+            .collect::<Vec<_>>()
+            .join(" + ")
+    };
+    // Expression 6.10: every variable case takes one turn as leading.
+    if variables.is_empty() {
+        let w: Vec<(String, f64)> = permanents.iter().map(|c| (c.code.clone(), 1.35)).collect();
+        out.push(("ULS".to_owned(), label_of(&w), w));
+    }
+    for lead in &variables {
+        let mut w: Vec<(String, f64)> = permanents.iter().map(|c| (c.code.clone(), 1.35)).collect();
+        w.push((lead.code.clone(), 1.5));
+        for other in &variables {
+            if other.id != lead.id {
+                w.push((other.code.clone(), other.psi0));
+            }
+        }
+        out.push(("ULS".to_owned(), label_of(&w), w));
+    }
+    // 6.10a + 6.10b alternatives.
+    for lead in &variables {
+        let mut wa: Vec<(String, f64)> =
+            permanents.iter().map(|c| (c.code.clone(), 1.35)).collect();
+        wa.push((lead.code.clone(), 1.5 * lead.psi0.max(1.0)));
+        for other in &variables {
+            if other.id != lead.id {
+                wa.push((other.code.clone(), other.psi0));
+            }
+        }
+        out.push(("ULS".to_owned(), format!("6.10a: {}", label_of(&wa)), wa));
+        let mut wb: Vec<(String, f64)> =
+            permanents.iter().map(|c| (c.code.clone(), 1.15)).collect();
+        wb.push((lead.code.clone(), 1.5));
+        for other in &variables {
+            if other.id != lead.id {
+                wb.push((other.code.clone(), 0.0));
+            }
+        }
+        out.push(("ULS".to_owned(), format!("6.10b: {}", label_of(&wb)), wb));
+    }
+    // SLS characteristic / frequent / quasi-permanent (one family).
+    if let Some(lead) = variables.first() {
+        let mut wc: Vec<(String, f64)> = permanents.iter().map(|c| (c.code.clone(), 1.0)).collect();
+        wc.push((lead.code.clone(), 1.0));
+        for other in &variables {
+            if other.id != lead.id {
+                wc.push((other.code.clone(), other.psi0));
+            }
+        }
+        out.push(("SLS".to_owned(), label_of(&wc), wc));
+        let mut wf: Vec<(String, f64)> = permanents.iter().map(|c| (c.code.clone(), 1.0)).collect();
+        wf.push((lead.code.clone(), lead.psi1));
+        for other in &variables {
+            if other.id != lead.id {
+                wf.push((other.code.clone(), other.psi2));
+            }
+        }
+        out.push(("SLS".to_owned(), format!("frequent {}", label_of(&wf)), wf));
+        let mut wq: Vec<(String, f64)> = permanents.iter().map(|c| (c.code.clone(), 1.0)).collect();
+        for c in &variables {
+            wq.push((c.code.clone(), c.psi2));
+        }
+        out.push((
+            "SLS".to_owned(),
+            format!("quasi-perm {}", label_of(&wq)),
+            wq,
+        ));
+    }
+    out
+}
+
+/// Continuous-beam pattern live-load placement (v1.7.0): all-loaded
+/// baseline plus the two alternating checkerboards.
+#[must_use]
+pub fn pattern_live_loads(n_spans: usize) -> Vec<Vec<f64>> {
+    let mut patterns = Vec::new();
+    if n_spans == 0 {
+        return patterns;
+    }
+    patterns.push(vec![1.0; n_spans]);
+    for offset in 0..2 {
+        let alternating: Vec<f64> = (0..n_spans)
+            .map(|i| if (i + offset) % 2 == 0 { 1.0 } else { 0.0 })
+            .collect();
+        patterns.push(alternating);
+    }
+    patterns
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -246,3 +367,7 @@ mod tests {
         assert_eq!(combos[1].label(), "1.00G");
     }
 }
+
+// ---------------------------------------------------------------------------
+// v1.7.0 - expression 6.10a/b, SLS frequent & quasi-permanent combinations
+// and continuous-beam pattern live loads.

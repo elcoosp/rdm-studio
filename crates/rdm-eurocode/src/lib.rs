@@ -9,18 +9,35 @@
 //! generic [`rdm_model::SectionProperties`] consumed by the solver, so the
 //! solver never touches normative data.
 
+pub mod annex;
 pub mod catalog;
+pub mod custom_section;
 pub mod en1990;
+pub mod en1991;
 pub mod en1993;
+pub mod interaction;
 
+pub use annex::annex_factors;
 pub use catalog::{Ec3Error, MaterialCatalog, ProfileCatalog, ProfileEntry, ProfileFamily};
-pub use en1990::{Combination, CombinationKind, Factors, PsiFactors, build_combinations};
+pub use custom_section::{circular_hollow, rectangular_hollow, solid_rect, solid_round, welded_i};
+pub use en1990::{
+    Combination, CombinationKind, Factors, PsiFactors, build_combinations, build_combinations_v2,
+    pattern_live_loads,
+};
+pub use en1991::{
+    ImposedCategory, WindParameters, imposed_load, imposed_qk, peak_velocity_pressure, snow_load,
+    wind_load,
+};
 pub use en1993::{
     BucklingCurve, Classification, DeflectionLimit, GAMMA_M0, LtbResult, MemberCheck,
     MemberCheckInput, buckling_curve_rolled, classify_section, deflection_limit,
     euler_critical_force, flexural_buckling_chi, lambda_bar, lateral_torsional_buckling,
     member_check, reduce_to_bending_shear, shear_area_major, shear_area_minor, von_mises_stress,
     von_mises_utilisation,
+};
+pub use interaction::{
+    CalcTraceNode, InteractionAnnex, InteractionInput, annex_a_factors, annex_b_factors,
+    c1_from_moment_ratio, class4_reduction, interaction_6_61_6_62, torsional_buckling_ncr,
 };
 
 use std::sync::OnceLock;

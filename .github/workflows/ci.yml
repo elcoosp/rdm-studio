@@ -15,7 +15,7 @@ jobs:
     name: Polyglot Quality Gates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -23,7 +23,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.2.0
         with:
           node-version: 24
 
@@ -34,7 +34,7 @@ jobs:
         run: pnpm approve-builds @swc/core esbuild --yes
 
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.1
         with:
           path: ~/.local/share/pnpm/store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}

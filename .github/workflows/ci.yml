@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  quality:
+    name: Polyglot Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install pnpm
+        run: npm install -g pnpm@12.18.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Gate G0 — Format & Lint
+      - name: Rust Format Check
+        run: cargo fmt --all --check
+
+      - name: Rust Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: TypeScript Format Check (oxfmt)
+        run: pnpm --filter web exec oxfmt --check
+
+      - name: TypeScript Lint (oxlint)
+        run: pnpm --filter web exec oxlint --deny-warnings
+
+      # Gate G1 — Rust Tests
+      - name: Rust Tests
+        run: RUSTFLAGS="-D warnings" cargo test --workspace
+
+      # Gate G2 — WASM Build
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: WASM Build
+        run: wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg
+
+      # Gate G2.5 — Route Tree Generation
+      - name: Generate Route Tree
+        run: pnpm --filter web exec tsr generate
+
+      # Gate G3 — TypeScript Typecheck
+      - name: TypeScript Typecheck
+        run: pnpm --filter web exec tsc --noEmit
+
+      # Gate G4 — i18n
+      - name: i18n Extract & Compile
+        run: pnpm --filter web i18n:extract && pnpm --filter web i18n:compile
+
+      # Gate G5 — Unit Tests
+      - name: Unit Tests
+        run: pnpm --filter web test:unit
+
+      # Gate G6 — E2E Tests
+      - name: Install Playwright Browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: E2E Tests
+        run: pnpm --filter web test:e2e

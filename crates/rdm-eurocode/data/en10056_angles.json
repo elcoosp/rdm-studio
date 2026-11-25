@@ -1,0 +1,86 @@
+{
+ "meta": {
+  "units": "SI (m, m2, m4, m6, m3, kg/m)",
+  "generated": "2026-11-24"
+ },
+ "profiles": [
+  {
+   "designation": "L 40x40x4",
+   "family": "L",
+   "a_leg": 0.04,
+   "t": 0.004,
+   "a": 0.000308,
+   "iy": 4.47e-08,
+   "iz": 4.47e-08,
+   "it": 1.64e-09,
+   "wel_y": 1.55e-06,
+   "wel_z": 1.55e-06,
+   "source": "project prototype (SI, cross-checked)"
+  },
+  {
+   "designation": "L 50x50x5",
+   "family": "L",
+   "a_leg": 0.05,
+   "t": 0.005,
+   "a": 0.00048,
+   "iy": 1.1e-07,
+   "iz": 1.1e-07,
+   "it": 4e-09,
+   "wel_y": 3.05e-06,
+   "wel_z": 3.05e-06,
+   "source": "project prototype (SI, cross-checked)"
+  },
+  {
+   "designation": "L 60x60x6",
+   "family": "L",
+   "a_leg": 0.06,
+   "t": 0.006,
+   "a": 0.000691,
+   "iy": 2.28e-07,
+   "iz": 2.28e-07,
+   "it": 8.29e-09,
+   "wel_y": 5.29e-06,
+   "wel_z": 5.29e-06,
+   "source": "project prototype (SI, cross-checked)"
+  },
+  {
+   "designation": "L 80x80x8",
+   "family": "L",
+   "a_leg": 0.08,
+   "t": 0.008,
+   "a": 0.00123,
+   "iy": 7.22e-07,
+   "iz": 7.22e-07,
+   "it": 2.62e-08,
+   "wel_y": 1.26e-05,
+   "wel_z": 1.26e-05,
+   "source": "project prototype (SI, cross-checked)"
+  },
+  {
+   "designation": "L 100x100x10",
+   "family": "L",
+   "a_leg": 0.1,
+   "t": 0.01,
+   "a": 0.00192,
+   "iy": 1.77e-06,
+   "iz": 1.77e-06,
+   "it": 6.4e-08,
+   "wel_y": 2.47e-05,
+   "wel_z": 2.47e-05,
+   "source": "project prototype (SI, cross-checked)"
+  },
+  {
+   "designation": "L 150x150x15",
+   "family": "L",
+   "a_leg": 0.15,
+   "t": 0.015,
+   "a": 0.0043,
+   "iy": 8.98e-06,
+   "iz": 8.98e-06,
+   "it": 3.23e-07,
+   "wel_y": 8.35e-05,
+   "wel_z": 8.35e-05,
+   "source": "project prototype (SI, cross-checked)"
+  }
+ ]
+}

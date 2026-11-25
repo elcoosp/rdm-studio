@@ -18,10 +18,13 @@ test("5-step workflow runs a real FE calculation", async ({ page }) => {
 
   // Run the calculation in the worker and wait for ULS/SLS results.
   await page.getByRole("button", { name: /Calculer/ }).click();
-  await expect(page.getByRole("heading", { name: "1.35G + 1.50Q" })).toBeVisible({
-    timeout: 15_000,
-  });
-  await expect(page.getByRole("heading", { name: "1.00G + 1.00Q" })).toBeVisible();
+  // v1.6.0: combinations render in the cockpit selector (rail carries the
+  // EC3 diagnosis heading).
+  const combo = page.getByTestId("combination-selector");
+  await expect(combo).toBeVisible({ timeout: 15_000 });
+  await expect(combo).toContainText("1.35G + 1.50Q");
+  await expect(combo).toContainText("1.00G + 1.00Q");
+  await expect(page.getByTestId("ec3-rail")).toBeVisible();
 
   // Step 5: the report shows the model summary and a share URL.
   await page.getByRole("link", { name: /Étape 5/ }).click();

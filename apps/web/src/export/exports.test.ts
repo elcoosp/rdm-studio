@@ -92,6 +92,11 @@ const report: SolveReport = {
     {
       kind: "ULS",
       label: "1.35G + 1.50Q",
+      // v1.6.0: exact EN 1990 multipliers carried by the report.
+      multipliers: [
+        ["G", 1.35],
+        ["Q", 1.5],
+      ],
       beams: [
         {
           beam_id: 1,
@@ -108,6 +113,11 @@ const report: SolveReport = {
           m_rd: 68500,
           max_sigma_vm: 73400000,
           midspan_deflection: 0.0008,
+          n_pl_rd: 549900,
+          v_pl_rd: 209100,
+          m_cr: 128400,
+          lambda_lt: 0.73,
+          length: 3.2,
         },
         {
           beam_id: 2,
@@ -124,12 +134,21 @@ const report: SolveReport = {
           m_rd: 51200,
           max_sigma_vm: 239700000,
           midspan_deflection: 0.0041,
+          n_pl_rd: 906400,
+          v_pl_rd: 286200,
+          m_cr: null,
+          lambda_lt: null,
+          length: 6,
         },
       ],
     },
     {
       kind: "SLS",
       label: "1.00G + 1.00Q",
+      multipliers: [
+        ["G", 1],
+        ["Q", 1],
+      ],
       beams: [
         {
           beam_id: 1,
@@ -146,6 +165,11 @@ const report: SolveReport = {
           m_rd: 64000,
           max_sigma_vm: 54060000,
           midspan_deflection: 0.0006,
+          n_pl_rd: 549900,
+          v_pl_rd: 209100,
+          m_cr: 128400,
+          lambda_lt: 0.73,
+          length: 3.2,
         },
         {
           beam_id: 2,
@@ -162,6 +186,11 @@ const report: SolveReport = {
           m_rd: 45300,
           max_sigma_vm: 166900000,
           midspan_deflection: 0.0029,
+          n_pl_rd: 906400,
+          v_pl_rd: 286200,
+          m_cr: null,
+          lambda_lt: null,
+          length: 6,
         },
       ],
     },
@@ -232,5 +261,40 @@ describe("standalone html 3d (M8/e2)", () => {
     // No external fetches: no http(s):// resource references in tags.
     expect(html).not.toMatch(/src="https?:\/\//);
     expect(html.length).toBeGreaterThan(400_000); // three.js embedded
+  });
+
+  it("escapes stored XSS in the project name (v1.6.0 audit A)", () => {
+    const hostile: ProjectData = {
+      ...project,
+      name: `Étude </script><script>alert(1)</script><img src=x onerror=alert(2)>`,
+    };
+    const html = buildStandaloneHtml3d(hostile, report);
+    // The <title> / <h1> carry the escaped entity form…
+    expect(html).toContain("&lt;/script&gt;");
+    // …and NO raw closing-script / event-handler injection survives.
+    expect(html).not.toContain("</script><script>alert(1)");
+    expect(html).not.toContain("<img src=x");
+    // The embedded JSON cannot break out of the module script either.
+    const modelStart = html.indexOf("const MODEL =");
+    const modelEnd = html.indexOf(";\n", modelStart);
+    const embedded = html.slice(modelStart, modelEnd);
+    expect(embedded).not.toContain("</script>");
+  });
+});
+
+describe("catalog-area mass math (v1.6.0 audit C)", () => {
+  it("uses exact catalog areas when provided (zero worker roundtrips)", async () => {
+    const { computeModelMassKg } = await import("@/lib/resultsMath");
+    const areas = new Map<string, number>([
+      ["IPE 200", 2.848e-3],
+      ["IPE 300", 5.381e-3],
+    ]);
+    const nodes = new Map(project.structure.beams.map((b) => [b.id, b.section_id]));
+    const length1 = 3.2;
+    const length2 = 6;
+    const expected =
+      7850 * (areas.get(nodes.get(1) ?? "") ?? 0) * length1 +
+      7850 * (areas.get(nodes.get(2) ?? "") ?? 0) * length2;
+    expect(computeModelMassKg(project, areas)).toBeCloseTo(expected, 6);
   });
 });

@@ -108,7 +108,7 @@ test.describe("split-screen desktop 860×900", () => {
     await page.goto("/results");
     const kpi = page.getByTestId("kpi-strip");
     await expect(kpi).toBeVisible();
-    await expect(page.getByTestId("ec3-breakdown")).toBeVisible();
+    await expect(page.getByTestId("ec3-rail")).toBeVisible();
     await expect(page.getByTestId("docked-inspector")).toBeVisible();
     const dockBox = await page.getByTestId("docked-inspector").boundingBox();
     expect(dockBox).not.toBeNull();

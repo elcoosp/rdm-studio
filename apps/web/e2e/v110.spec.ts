@@ -57,10 +57,20 @@ test("results renders the 4 KPI cards, mode selector and docked inspector", asyn
   await expect(page.getByTestId("kpi-deflection")).toBeVisible();
   await expect(page.getByTestId("kpi-utilization")).toBeVisible();
   await expect(page.getByTestId("kpi-modal")).toBeVisible();
-  // Combination / eigenmode selector with the modal play toggle.
-  await expect(page.getByTestId("view-selector")).toBeVisible();
-  await page.getByText("Mode 1 (", { exact: false }).click();
-  await expect(page.getByTestId("modal-play")).toBeVisible();
+  // v1.6.0: selector across every computed combination + Modes propres.
+  const combo = page.getByTestId("combination-selector");
+  await expect(combo).toBeVisible();
+  await combo.selectOption({ index: 0 });
+  const modeValue = await combo
+    .locator("option")
+    .evaluateAll(
+      (options) =>
+        options.map((o) => (o as HTMLOptionElement).value).find((v) => v.startsWith("MODE:")) ?? "",
+    );
+  if (modeValue !== "") {
+    await combo.selectOption(modeValue);
+    await expect(page.getByTestId("modal-play")).toBeVisible();
+  }
   // Docked inspector: heatmap, synchronized cursor and forces plot.
   await expect(page.getByTestId("docked-inspector")).toBeVisible();
   await expect(page.getByTestId("forces-plot")).toBeVisible();

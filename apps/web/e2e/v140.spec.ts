@@ -11,11 +11,7 @@ test("combobox searches and applies profiles to the selected beam", async ({ pag
   // v1.5.0 data dock: open the Poutres tab, then select the first member.
   await page.getByTestId("dock-tab-beams").click();
   await page.locator("table").last().locator("tbody tr").first().click();
-  const input = page
-    .locator(
-      '[data-testid="inspector-sheet"] input[type="text"], [data-testid="inspector-sheet"] input',
-    )
-    .first();
+  const input = page.locator("#section-search");
   await input.click();
   await input.fill("IPE 300");
   const option = page.getByRole("option", { name: /IPE 300/ }).first();
@@ -80,9 +76,12 @@ test("step 5 renders reactions Σ and the sha-256 fingerprint", async ({ page })
     .toMatch(/^[0-9a-f]{64}$/);
 });
 
-test("the EC3 breakdown lists individual checks with progress bars", async ({ page }) => {
+test("the EC3 diagnostic rail lists individual checks with progress bars", async ({ page }) => {
   await page.goto("/results");
-  const card = page.getByTestId("ec3-breakdown");
+  const card = page.getByTestId("ec3-rail");
   await expect(card).toBeVisible();
   await expect(card).toContainText("NEd/Npl,Rd");
+  // v1.6.0: the full resistance set rides the rail.
+  await expect(card).toContainText("Npl,Rd");
+  await expect(card).toContainText("Vpl,Rd");
 });

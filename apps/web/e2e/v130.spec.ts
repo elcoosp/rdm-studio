@@ -49,8 +49,9 @@ test("step 2 exposes the grouped RDM 7 library and clear-all", async ({ page }) 
   for (const key of ["encastrement", "rotule", "appui-simple-z", "glissiere"]) {
     await expect(page.getByTestId(`preset-${key}`)).toBeVisible();
   }
-  // The grouped library opens with its 12 presets + custom note.
-  await page.locator("details").first().locator("summary").click();
+  // The grouped library opens with its 12 presets + custom note
+  // (scoped: the Appuis élastiques details now precedes it).
+  await page.locator('[data-testid="rdm7-library"] summary').click();
   for (const key of [
     "simple-xy",
     "simple-xz",
@@ -97,13 +98,16 @@ test("step 3 quick scenarios write acceleration fields and clear undoably", asyn
 
 test("step 4 offers six eigenmodes and the three thermal scales", async ({ page }) => {
   await page.goto("/results");
-  await expect(page.getByTestId("view-selector")).toBeVisible();
-  for (const mode of [1, 2, 3, 4, 5, 6]) {
-    const label = page.getByText(`Mode ${mode} (`, { exact: false });
-    if (await label.count()) {
-      await expect(label.first()).toBeVisible();
-    }
-  }
+  const combo = page.getByTestId("combination-selector");
+  await expect(combo).toBeVisible();
+  const modeCount = await combo
+    .locator("option")
+    .evaluateAll(
+      (options) =>
+        options.map((o) => (o as HTMLOptionElement).value).filter((v) => v.startsWith("MODE:"))
+          .length,
+    );
+  expect(modeCount).toBeGreaterThanOrEqual(1);
   for (const scale of ["ec3", "svm", "auto"]) {
     await expect(page.getByTestId(`scale-${scale}`)).toBeVisible();
   }

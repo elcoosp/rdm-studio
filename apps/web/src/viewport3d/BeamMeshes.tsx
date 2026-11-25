@@ -316,8 +316,6 @@ interface BeamMeshesProps {
   onPick: (beamId: number | null) => void;
   /** Catalog dims by section designation (bug 2 true extrusion). */
   sectionDims?: Map<string, ProfileDims>;
-  /** Table-hover highlight (v1.3.0 Step 1, `#93C5FD`). */
-  hoveredBeamId?: number | null;
 }
 
 export function BeamMeshes({
@@ -330,7 +328,6 @@ export function BeamMeshes({
   selectedBeamId,
   onPick,
   sectionDims,
-  hoveredBeamId = null,
 }: BeamMeshesProps) {
   const geometry = useMemo(
     () =>
@@ -352,21 +349,6 @@ export function BeamMeshes({
     }
     return buildBeamGeometry(nodes, [beam], { displacements, deformScale, width: 0.12 });
   }, [nodes, beams, selectedBeamId, displacements, deformScale]);
-
-  // Table -> viewport hover highlight (v1.3.0, `#93C5FD` edge tint).
-  const hoveredGeometry = useMemo(() => {
-    if (hoveredBeamId === null || hoveredBeamId === selectedBeamId) {
-      return null;
-    }
-    const beam = beams.find((b) => b.id === hoveredBeamId);
-    if (beam === undefined) {
-      return null;
-    }
-    const dims = sectionDims?.get(beam.section_id);
-    const profiles =
-      dims === undefined ? undefined : new Map<number, ProfileDims>([[beam.id, dims]]);
-    return buildBeamGeometry(nodes, [beam], { displacements, deformScale, profiles });
-  }, [nodes, beams, hoveredBeamId, selectedBeamId, displacements, deformScale, sectionDims]);
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -395,12 +377,6 @@ export function BeamMeshes({
         <lineSegments>
           <edgesGeometry args={[selectedGeometry, 25]} />
           <lineBasicMaterial color="#1D4ED8" />
-        </lineSegments>
-      ) : null}
-      {hoveredGeometry !== null ? (
-        <lineSegments>
-          <edgesGeometry args={[hoveredGeometry, 25]} />
-          <lineBasicMaterial color="#93C5FD" />
         </lineSegments>
       ) : null}
     </>

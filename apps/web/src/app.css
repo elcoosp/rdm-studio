@@ -160,3 +160,21 @@ textarea {
     break-inside: avoid;
   }
 }
+
+/* v1.4.0: shell drag-and-drop affordance. */
+body.rdm-dragging::after {
+  content: "Déposez le fichier .rdm / .dxf / .step / .igs";
+  position: fixed;
+  inset: 12px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #1d4ed8;
+  border-radius: 8px;
+  background: rgba(239, 246, 255, 0.85);
+  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+}

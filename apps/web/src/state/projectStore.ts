@@ -92,6 +92,8 @@ interface ProjectState {
   removeNode: (id: number) => void;
   addBeam: (n1: number, n2: number, sectionId: string, materialId: string) => number;
   removeBeam: (id: number) => void;
+  /** Patches one member (section, releases, roll angle, buckling lengths). */
+  updateBeam: (id: number, patch: Partial<BeamData>) => void;
   selectBeam: (id: number | null) => void;
   selectNode: (id: number | null) => void;
   setSupport: (nodeId: number, lockedDofs: boolean[]) => void;
@@ -242,6 +244,17 @@ export const useProjectStore = create<ProjectState>()(
         }));
         return id;
       },
+      updateBeam: (id, patch) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            updatedAt: new Date().toISOString(),
+            structure: {
+              ...st.project.structure,
+              beams: st.project.structure.beams.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+            },
+          },
+        })),
       removeBeam: (id) =>
         set((st) => ({
           project: {

@@ -6,12 +6,7 @@ import { encodeProject } from "@/lib/urlShare";
 import { useProjectStore } from "@/state/projectStore";
 import QRCode from "qrcode";
 import { toast } from "sonner";
-import {
-  FlexuralBuckling,
-  LateralTorsionalBuckling,
-  ModalVibration,
-} from "@/components/icons/EngineeringIcons";
-import { feaClient, getLastModal, getLastReport } from "@/wasmBridge/workerClient";
+import { feaClient, getLastReport } from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
 import { exportResultsCsv } from "@/export/csvExport";
 import { exportStandaloneHtml3d } from "@/export/standaloneHtml3d";
@@ -69,10 +64,7 @@ function ReportPage() {
     <div className="grid gap-4 p-4 lg:grid-cols-[1fr_320px]">
       <section className="print-sheet mx-auto w-full max-w-[720px] rounded-panel border border-hairline bg-panel p-6">
         <div className="flex items-center justify-between border-b-2 border-accent pb-2">
-          <div className="flex items-center gap-2">
-            <img src="/logo-rdm-studio.svg" alt="RDM Studio" className="h-6 w-6 shrink-0" />
-            <h2 className="text-[17px] font-semibold">RDM Studio — Rapport de calcul</h2>
-          </div>
+          <h2 className="text-[17px] font-semibold">RDM Studio — Rapport de calcul</h2>
           <span className="font-data text-[11px] text-ink-muted">
             {new Date().toISOString().slice(0, 10)}
           </span>
@@ -211,10 +203,6 @@ function ReportTables() {
     `P${b.beam_id}`,
     fr(b.midspan_deflection * 1000, 1),
   ]);
-  const modalRows = (getLastModal()?.modes ?? []).map((m) => [
-    String(m.mode_index),
-    fr(m.frequency_hz, 2),
-  ]);
   return (
     <div className="mt-4 space-y-4">
       {[
@@ -226,20 +214,10 @@ function ReportTables() {
         },
         { title: "Vérification ELU", headers: ["Poutre", "Profil", "η", "Statut"], rows: ulsRows },
         { title: "Flèches ELS (mm)", headers: ["Poutre", "δ mid"], rows: slsRows },
-        { title: "Modes propres", headers: ["Mode", "f (Hz)"], rows: modalRows },
       ].map((table) => (
         <div key={table.title}>
           <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink-secondary">
-              {table.title === "Vérification ELU" ? (
-                <>
-                  <FlexuralBuckling size={14} />
-                  <LateralTorsionalBuckling size={14} />
-                </>
-              ) : null}
-              {table.title === "Modes propres" ? <ModalVibration size={14} /> : null}
-              {table.title}
-            </h3>
+            <h3 className="text-[13px] font-semibold text-ink-secondary">{table.title}</h3>
             <button
               type="button"
               className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-accent"

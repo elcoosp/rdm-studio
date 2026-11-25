@@ -68,8 +68,8 @@ msgstr "Cas"
 #~ msgstr "Cas de charge"
 
 #: src/routes/geometry.tsx
-msgid "Catalogue"
-msgstr "Catalogue"
+#~ msgid "Catalogue"
+#~ msgstr "Catalogue"
 
 #: src/routes/loads.tsx
 #~ msgid "Charge ponctuelle"
@@ -115,9 +115,13 @@ msgstr "Copier l'URL de partage"
 msgid "Créer une poutre"
 msgstr "Créer une poutre"
 
+#: src/routes/report.tsx
+msgid "CSV Excel"
+msgstr "CSV Excel"
+
 #: src/routes/results.tsx
-msgid "Déformée & exploitation (ELU)"
-msgstr "Déformée & exploitation (ELU)"
+#~ msgid "Déformée & exploitation (ELU)"
+#~ msgstr "Déformée & exploitation (ELU)"
 
 #: src/routes/geometry.tsx
 msgid "Déjà reliés"
@@ -141,8 +145,8 @@ msgid "Étape {0}"
 msgstr "Étape {0}"
 
 #: src/routes/results.tsx
-msgid "Exploitation EC3"
-msgstr "Exploitation EC3"
+#~ msgid "Exploitation EC3"
+#~ msgstr "Exploitation EC3"
 
 #: src/routes/report.tsx
 msgid "Exports (étape 5)"
@@ -164,6 +168,10 @@ msgstr "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES 
 msgid "Génération…"
 msgstr "Génération…"
 
+#: src/routes/report.tsx
+msgid "HTML 3D"
+msgstr "HTML 3D"
+
 #: src/routes/geometry.tsx
 msgid "Importer CAO"
 msgstr "Importer CAO"
@@ -176,13 +184,21 @@ msgstr "Importer CAO"
 msgid "Importer un modèle CAO"
 msgstr "Importer un modèle CAO"
 
+#: src/routes/report.tsx
+msgid "Imprimer"
+msgstr "Imprimer"
+
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
 msgstr "Inspecteur de section"
 
-#: src/routes/loads.tsx
-#~ msgid "Lancer le calcul 3D & Eurocode 3"
-#~ msgstr "Lancer le calcul 3D & Eurocode 3"
+#: src/components/CommandPalette.tsx
+msgid "Inverser la sélection"
+msgstr "Inverser la sélection"
+
+#: src/components/CommandPalette.tsx
+msgid "Lancer le calcul 3D & Eurocode 3"
+msgstr "Lancer le calcul 3D & Eurocode 3"
 
 #: src/routes/loads.tsx
 msgid "Lancer le calcul 3D & Eurocode 3 →"
@@ -193,8 +209,12 @@ msgid "Lancer un calcul pour afficher les résultats."
 msgstr "Lancer un calcul pour afficher les résultats."
 
 #: src/routes/report.tsx
-msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
-msgstr "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+#~ msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+#~ msgstr "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+
+#: src/routes/report.tsx
+msgid "Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la relecture."
+msgstr "Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la relecture."
 
 #: src/routes/supports.tsx
 msgid "Liaisons (RDM 7)"
@@ -203,6 +223,10 @@ msgstr "Liaisons (RDM 7)"
 #: src/routes/supports.tsx
 #~ msgid "Libre"
 #~ msgstr "Libre"
+
+#: src/routes/geometry.tsx
+msgid "Longueurs de flambement"
+msgstr "Longueurs de flambement"
 
 #: src/routes/geometry.tsx
 msgid "Matériau"
@@ -235,8 +259,20 @@ msgid "Nom du projet"
 msgstr "Nom du projet"
 
 #: src/routes/report.tsx
-msgid "Partage par URL"
-msgstr "Partage par URL"
+msgid "Normes"
+msgstr "Normes"
+
+#: src/components/CommandPalette.tsx
+msgid "Note de calcul A4 / PDF"
+msgstr "Note de calcul A4 / PDF"
+
+#: src/routes/report.tsx
+#~ msgid "Partage par URL"
+#~ msgstr "Partage par URL"
+
+#: src/routes/report.tsx
+msgid "PDF Takumi"
+msgstr "PDF Takumi"
 
 #: src/routes/supports.tsx
 msgid "Personnalisée : composez la matrice 2×3 ci-dessous."
@@ -255,7 +291,6 @@ msgstr "Poids propre automatique (1g −Z)"
 #~ msgstr "Poids propre automatique (cas G)"
 
 #: src/routes/loads.tsx
-#: src/routes/results.tsx
 msgid "Poutre"
 msgstr "Poutre"
 
@@ -272,8 +307,8 @@ msgid "Presets d'appui"
 msgstr "Presets d'appui"
 
 #: src/routes/geometry.tsx
-msgid "Profil"
-msgstr "Profil"
+#~ msgid "Profil"
+#~ msgstr "Profil"
 
 #: src/routes/geometry.tsx
 msgid "Profil (EN 10365)"
@@ -284,16 +319,20 @@ msgid "Profils utilisés"
 msgstr "Profils utilisés"
 
 #: src/routes/report.tsx
-msgid "Rapport 3D autonome (HTML)"
-msgstr "Rapport 3D autonome (HTML)"
+#~ msgid "Rapport 3D autonome (HTML)"
+#~ msgstr "Rapport 3D autonome (HTML)"
 
 #: src/routes/report.tsx
 #~ msgid "Rapport de model"
 #~ msgstr "Rapport de model"
 
+#: src/routes/results.tsx
+msgid "Rapport PDF"
+msgstr "Rapport PDF"
+
 #: src/routes/report.tsx
-msgid "Rapport PDF (takumi)"
-msgstr "Rapport PDF (takumi)"
+#~ msgid "Rapport PDF (takumi)"
+#~ msgstr "Rapport PDF (takumi)"
 
 #: src/components/UpdatePrompt.tsx
 msgid "Recharger"
@@ -303,13 +342,17 @@ msgstr "Recharger"
 msgid "Relâchements N1 / N2"
 msgstr "Relâchements N1 / N2"
 
+#: src/components/CommandPalette.tsx
+msgid "Relâcher les moments N1/N2"
+msgstr "Relâcher les moments N1/N2"
+
 #: src/routes/geometry.tsx
 msgid "Relier N1 → N2"
 msgstr "Relier N1 → N2"
 
 #: src/routes/report.tsx
-msgid "Resultats CSV (Excel)"
-msgstr "Resultats CSV (Excel)"
+#~ msgid "Resultats CSV (Excel)"
+#~ msgstr "Resultats CSV (Excel)"
 
 #: src/routes/results.tsx
 #~ msgid "Resultats de calcul"
@@ -344,8 +387,12 @@ msgid "Type"
 msgstr "Type"
 
 #: src/routes/results.tsx
-msgid "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
-msgstr "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
+msgid "Un facteur de cas sert d'ordre de grandeur : conversions SI vers affichage exclusives à l'UI."
+msgstr "Un facteur de cas sert d'ordre de grandeur : conversions SI vers affichage exclusives à l'UI."
+
+#: src/routes/results.tsx
+#~ msgid "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
+#~ msgstr "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
 
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."

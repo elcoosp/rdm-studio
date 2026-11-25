@@ -7,3 +7,6 @@ minimumReleaseAgeExclude:
 
 overrides:
   "@tanstack/router-generator": 1.99.9
+
+patchedDependencies:
+  vaul@1.1.2: patches/vaul@1.1.2.patch

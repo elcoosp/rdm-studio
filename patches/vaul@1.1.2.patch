@@ -1,0 +1,16 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 0dbbce5526681925a81804ced237a045a53c0355..3fb8461c0c8c315a4eb0f855c07f575e34cf5803 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1340,6 +1340,11 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
+     ]);
+     return /*#__PURE__*/ React__default.createElement(DialogPrimitive.Root, {
+         defaultOpen: defaultOpen,
++        // PATCH (v1.5.0): forward the drawer's `modal` prop to the radix
++        // dialog so `modal={false}` drawers stay truly non-modal — the
++        // radix side then skips hideOthers()/focus-trap and the app shell
++        // (viewport, tab bar) stays interactive and accessible.
++        modal: modal,
+         onOpenChange: (open)=>{
+             if (!dismissible && !open) return;
+             if (open) {

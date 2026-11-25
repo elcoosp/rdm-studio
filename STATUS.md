@@ -1,74 +1,88 @@
 # STATUS.md — RDM Studio milestone ledger
 
-Session 11 (2026-11-25): **v1.7.0 — `.rdm` schema v2, Timoshenko solver,
-tension-only iteration, EN 1990 6.10a/b + ψ-families, EC3 6.61/6.62 +
-C1 + torsional buckling + Class 4, EN 1991 generators, custom sections,
-41-benchmark closed-form validation suite + parser fuzzing** on top of
-origin/main `2ceffa6` (v1.6.0).
+Session 13 (2026-11-25): **v1.9.0 — advanced analysis (linear buckling
+λcr, P-Δ scaffold, EC8 response spectrum CQC/SRSS, EN 1991-2 LM1
+influence lines), multi-material Eurocode engines (EC2 / EC5 /
+EC3-1-8 / EC3-1-2 / EC9 — all CalcTraceNode-emitting), pure-Rust BIM
+interop (IFC4 / SAF / OpenSees TCL / solver JSON / glTF), stateful wasm
+`ModelSession` with latest-wins live-solve lanes, EC3 section optimizer
++ "Pourquoi ça échoue ?" and the v1.8 UI surfaces (settings popover,
+Validation modal, KaTeX CalcTrace, force diagrams, family pills)** on
+top of origin/main `f4f4582` (v1.7.0).
 
 ## Shipped (implemented + tested)
 
-1. **`.rdm` schema v2** (`crates/rdm-model`): `version: 2` with
-   `ModelSettings` (national annex, combination method, Timoshenko
-   on/off, 2D plane-frame), custom `LoadCaseDef` (`category`,
-   `ψ0/ψ1/ψ2`, per-case self-weight), `MemberGroup`s, `Level`s;
-   automatic v1→v2 migration on load (`ProjectFile::load_json`,
-   idempotent, group-by-section default) — unit-tested with a real v1
-   payload; serde `#[serde(default)]` makes every v1 field tolerant.
-2. **Solver (v1.7.0)**: Timoshenko shear flexibility `Φ = 12EI/(G·As·L²)`
-   per bending plane (exact SS/cantilever closed forms in the suite),
-   tapered/haunched members (exact mean of the cubic depth law), rigid
-   end offsets field + inclined supports (penalty projection along a
-   user axis), prescribed support settlements (known-DOF RHS move +
-   reaction shift), uniform + gradient thermal loads (axial pair +
-   `EI·κ` fixed-end moments), partial-span trapezoids (4-point
-   Gauss-Legendre consistent loads — replaces the closed-form full-span
-   routine exactly), local-axis loads, iterative tension-only /
-   compression-only convergence with residual stiffness (no numerical
-   mechanisms), 2D plane-frame mode, mechanism diagnosis naming the
-   offending nodes/DOFs, and `compute_envelopes` (per-member min/max of
-   N/My/Mz/Vz/T across all combinations).
-3. **Eurocode (v1.7.0)**: `annex.rs` (NationalAnnex γM0/γM1/γM2 table),
-   `build_combinations_v2` (EN 1990 6.10 + 6.10a/b + characteristic /
-   frequent / quasi-permanent SLS families from the ψ table),
-   `pattern_live_loads` (checkerboard placements), `interaction.rs`
-   (Eqs. 6.61 & 6.62 with Annex A/B factors, `CalcTraceNode` tree,
-   torsional buckling `Ncr,T`, exact-moment `C1` interpolation,
-   Class 4 effective-section ρ fallback), `en1991.rs` (imposed
-   categories A..E, snow μ1 branches, wind `qp(z)` + force generator),
-   `custom_section.rs` (WeldedI PRS, RHS, CHS, SolidRect, SolidRound).
-4. **Validation & fuzzing**: `rdm-solver::run_validation_suite` —
-   41 closed-form benchmarks (reactions, deflections, torsion, thermal,
-   settlements, partial-span statics, tension-only, 2D mode, tapered
-   bounds, EC3 resistances, C1 anchors, Ncr,T, ψ values) executed live
-   through the real solver; `tests/validation_40.rs` asserts ≥ 40 and
-   all-pass. Parser fuzzing: `.rdm` mutation loop (2000 rounds) and
-   DXF/STEP random-byte + truncation loops — one REAL panic found and
-   fixed (STEP header char-boundary slice).
+1. **Rust gates 100 % green**: the 8 v1.7.0 pedantic clippy findings
+   cleared (`cargo clippy --workspace --all-targets --all-features
+   -- -D warnings` → 0), **153 workspace tests / 0 failures**.
+2. **Advanced analysis (`crates/rdm-solver`)**: `buckling.rs` — linear
+   buckling `[Ke + λKg]φ = 0` with deflated inverse iteration, top-N
+   λcr + shapes, validated against the exact one-element non-sway
+   column closed form `12EI/L²` (and bounded below by π²EI/L²);
+   `seismic.rs` — EN 1998-1 elastic Type 1/2 spectra per ground A..E,
+   modal response + CQC (Der Kiureghian correlation) / SRSS and
+   cumulative mass ratio; `moving_loads.rs` — influence lines (unit
+   load scan) + LM1 deck loads (300 kN tandem + 9 kN/m² lane UDL) +
+   tandem crossing envelope; `p_delta.rs` — second-order iteration
+   scaffold wired to the solve path (first pass = the linear solve).
+3. **Multi-material Eurocodes (`crates/rdm-eurocode
+   /src/multi_material.rs`)**: EC2 rectangular flexure (`μ` + `As,req`)
+   and shear (`VRd,c`/`VRd,s`) for C25..C50 + B500B; EC5 bending with
+   `kmod` (Table 3.1) and `kdef`; EC3-1-8 bolt shear + fillet weld;
+   EC3-1-2 critical temperature `θa,cr` (Annex E) + R-rating check;
+   EC9 6061/6082-T6 buckling — **every check emits `CalcTraceNode`**;
+   51 crate tests green.
+4. **Section optimizer (`optimizer.rs`)**: iterative lightest-profile
+   search (≤ 10 passes) per member group + Pareto mass-vs-utilization
+   frontier + mass/carbon (1.9 kg CO₂e/kg)/cost (1.85 €/kg) totals.
+5. **BIM interop (`crates/rdm-cad/src/bim_interop.rs`)**: IFC4
+   structural STEP export + re-import, SAF JSON round-trip, OpenSees
+   TCL script, lossless solver-JSON export, minimal glTF 2.0 — pure
+   Rust, fuzz-safe formatting, 21 crate tests green.
+6. **Wasm bridge (v1.8.0/v1.9.0)**: `run_validation_suite`,
+   `build_combinations_v2_json`, `member_calc_trace`,
+   `compute_envelopes_json`, `custom_section_preview`,
+   `generate_env_loads_json`, `optimize_sections_json`,
+   `buckling_analysis_json`, `seismic_spectrum_json`, `export_bim`
+   and the stateful `ModelSession` (`open_model`, `apply_delta`,
+   `solve_session`, `solve_case_rhs` — cached-factorization case
+   superposition, `cancel`). `wasm-pack build` rebuilt and verified.
+7. **Web (v1.8.0 surfaces)**: worker priority lanes (`LIVE_SOLVE`
+   latest-wins coalescing + cancellation + `< 2 ms` case RHS) with
+   full DTO typings; Header `SettingsPopover` (National Annex
+   FR/BE/DE/UK/EN, 6.10 / 6.10a-b, Timoshenko, 2D plane);
+   `ValidationModal` (live 41-benchmark table); lazy-loaded KaTeX
+   `CalcTraceTree`; `OptimizerModal` (Pareto table, mass/carbon/cost
+   totals, "Pourquoi ça échoue ?" 3-mitigation card, KaTeX trace);
+   Step 1 `FamilyPills` (Tous|IPE|HEA|UPN|CHS|RHS|L|Perso);
+   `ForceDiagrams3D` (signed min/max envelopes, amplitude slider,
+   viridis/cividis palettes); schema-v2 settings in the project store;
+   the CAD command registry (`modeling/cadTools.ts`: polyline,
+   extrude, move, rotate, mirror, linear array, merge duplicates,
+   copy/paste, select-similar, isolate, snapping incl. polar 15°,
+   unit-aware parser `4m / 4000mm / 12kN`). `tsc --noEmit`, `oxlint`
+   and `oxfmt` all clean; **vitest 40/40**; en.po 100 % translated
+   (i18n test green).
 
 ## Honest gate status at cut-off
 
-- `cargo test --workspace --all-features`: **only E06 failing** —
-  expected/actual mismatch (6 vs 9 recipes; the builder emits both the
-  6.10 baselines AND the 6.10a/b pair for 3 variable cases). One-line
-  fix pending (`E06 expected 9.0` — edit landed in validation.rs after
-  the last test run captured this output; re-run to confirm).
-- `cargo clippy -D warnings`: 8 remaining pedantic findings
-  (`identical match arms` in results.rs thermal arm, `type_complexity`
-  ×2, `collapsible_if`, `unnecessary_wraps`, `let_and_return` in
-  static_sparse.rs, `redundant_length` alias, `items_after_test_module`
-  in stiffness.rs) — mechanical fixes, not logic risks.
-- WASM/web: the committed `wasm-pkg` remains the v1.6.0 build (the JS
-  contract is unchanged and the web gates therefore stay green); the
-  v1.7.0 wasm surface (`run_validation_suite`, `build_combinations_v2`,
-  envelopes) is wired in Rust and needs one `wasm-pack build` +
-  `workerClient.ts` typing pass next session.
-- Web UI (KaTeX CalcTraceTree, ValidationModal, family pills,
-  SectionBuilderModal, EN 1991 tabs): designed, not landed this session.
+- Rust: `cargo fmt` ✓, `clippy -D warnings` → **0**, workspace tests
+  **153 passed / 0 failed**, wasm-pack rebuilt ✓.
+- Web: `tsc --noEmit` ✓, `oxlint` ✓, `oxfmt` ✓, `vitest` 40/40 ✓,
+  `i18n:extract`/`compile` ✓, **Playwright `--project=chromium
+  --project=firefox --reporter=list` → exit 0 (7 passed, 6 skipped,
+  42 min)** — G6 green.
+- Deferred to session 14 (documented, ordered): ScenarioCompareModal +
+  IndexedDB snapshots UI, the 12-template gallery expansion, the
+  Report Builder PDF/docx chapters, ES/DE/PT-BR scaffolding, the
+  Playwright Rust-to-UI surface matrix at 3 viewports, and the P-Δ
+  tangent-stiffness feedback loop (the scaffold exposes the iteration
+  contract; the K_g feedback re-solve lands next session).
 
 ## Next session (ordered)
 
-1. Confirm E06 (expect 9.0) → cargo test 100 % green.
-2. Clear the 8 clippy findings.
-3. `wasm-pack build` + workerClient/CalcTrace/ValidationModal UI wave.
-4. Playwright re-run + archive with full gate evidence.
+1. Scenario Comparator + IndexedDB snapshots (store slices already
+   carry the schema-v2 fields needed).
+2. Report Builder chapters + `.docx` export.
+3. P-Δ full feedback loop (K_g re-solve) + EC8 modal runner UI.
+4. Playwright 10-workflow matrix + WCAG AA audit.

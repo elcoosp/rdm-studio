@@ -7,13 +7,29 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: fr\n"
 
+#: src/routes/geometry.tsx
+msgid "+ Nœud"
+msgstr "+ Nœud"
+
 #: src/routes/loads.tsx
 msgid "Ajouter la charge"
 msgstr "Ajouter la charge"
 
 #: src/routes/geometry.tsx
-msgid "Ajouter un noeud"
-msgstr "Ajouter un noeud"
+#~ msgid "Ajouter un nœud"
+#~ msgstr "Ajouter un nœud"
+
+#: src/routes/geometry.tsx
+msgid "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou choisissez un modèle type dans la galerie de projets."
+msgstr "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou choisissez un modèle type dans la galerie de projets."
+
+#: src/routes/results.tsx
+msgid "Amplification"
+msgstr "Amplification"
+
+#: src/components/CommandPalette.tsx
+msgid "Aucun résultat."
+msgstr "Aucun résultat."
 
 #: src/routes/loads.tsx
 msgid "Aucune charge définie."
@@ -52,8 +68,8 @@ msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexi
 msgstr "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
 
 #: src/routes/geometry.tsx
-msgid "Connecter au noeud sélectionné"
-msgstr "Connecter au noeud sélectionné"
+#~ msgid "Connecter au nœud sélectionné"
+#~ msgstr "Connecter au nœud sélectionné"
 
 #: src/routes/report.tsx
 msgid "Copie !"
@@ -63,13 +79,21 @@ msgstr "Copie !"
 msgid "Copier l'URL de partage"
 msgstr "Copier l'URL de partage"
 
-#: src/routes/results.tsx
-msgid "Deformee & exploitation (ULE)"
-msgstr "Deformee & exploitation (ULE)"
+#: src/routes/geometry.tsx
+msgid "Créer une poutre"
+msgstr "Créer une poutre"
 
 #: src/routes/results.tsx
-msgid "Deplacements nodaux (G)"
-msgstr "Deplacements nodaux (G)"
+msgid "Déformée & exploitation (ELU)"
+msgstr "Déformée & exploitation (ELU)"
+
+#: src/routes/results.tsx
+#~ msgid "Déplacements nodaux (G)"
+#~ msgstr "Déplacements nodaux (G)"
+
+#: src/routes/results.tsx
+msgid "Déplacements nodaux (Q)"
+msgstr "Déplacements nodaux (Q)"
 
 #. placeholder {0}: index + 1
 #: src/routes/__root.tsx
@@ -81,8 +105,8 @@ msgid "Exploitation EC3"
 msgstr "Exploitation EC3"
 
 #: src/routes/report.tsx
-msgid "Exports (etape 5)"
-msgstr "Exports (etape 5)"
+msgid "Exports (étape 5)"
+msgstr "Exports (étape 5)"
 
 #: src/components/BottomSheet.tsx
 msgid "Fermer"
@@ -93,37 +117,45 @@ msgid "Fz (kN, négatif vers le bas)"
 msgstr "Fz (kN, négatif vers le bas)"
 
 #: src/routes/report.tsx
-msgid "Generation…"
-msgstr "Generation…"
+msgid "Génération…"
+msgstr "Génération…"
+
+#: src/routes/geometry.tsx
+msgid "Importer DXF"
+msgstr "Importer DXF"
 
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
 msgstr "Inspecteur de section"
 
 #: src/routes/results.tsx
-msgid "Lancer un calcul pour afficher les resultats."
-msgstr "Lancer un calcul pour afficher les resultats."
+msgid "Lancer un calcul pour afficher les résultats."
+msgstr "Lancer un calcul pour afficher les résultats."
 
 #: src/routes/report.tsx
-msgid "Le modele .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
-msgstr "Le modele .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
+msgstr "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 
 #: src/routes/supports.tsx
 msgid "Matrice 6 DDL des appuis"
 msgstr "Matrice 6 DDL des appuis"
 
+#: src/routes/geometry.tsx
+msgid "Modèle vide — commencez par poser un nœud."
+msgstr "Modèle vide — commencez par poser un nœud."
+
 #: src/routes/loads.tsx
 #: src/routes/supports.tsx
-msgid "Noeud"
-msgstr "Noeud"
+msgid "Nœud"
+msgstr "Nœud"
 
 #: src/routes/geometry.tsx
-msgid "Noeuds"
-msgstr "Noeuds"
+msgid "Nœuds"
+msgstr "Nœuds"
 
 #: src/routes/report.tsx
-msgid "Noeuds / Poutres / Appuis / Charges"
-msgstr "Noeuds / Poutres / Appuis / Charges"
+msgid "Nœuds / Poutres / Appuis / Charges"
+msgstr "Nœuds / Poutres / Appuis / Charges"
 
 #: src/routes/report.tsx
 msgid "Nom du projet"
@@ -162,16 +194,16 @@ msgid "Profil (EN 10365)"
 msgstr "Profil (EN 10365)"
 
 #: src/routes/report.tsx
-msgid "Profils utilises"
-msgstr "Profils utilises"
+msgid "Profils utilisés"
+msgstr "Profils utilisés"
 
 #: src/routes/report.tsx
 msgid "Rapport 3D autonome (HTML)"
 msgstr "Rapport 3D autonome (HTML)"
 
 #: src/routes/report.tsx
-msgid "Rapport de model"
-msgstr "Rapport de model"
+#~ msgid "Rapport de model"
+#~ msgstr "Rapport de model"
 
 #: src/routes/report.tsx
 msgid "Rapport PDF (takumi)"
@@ -181,6 +213,14 @@ msgstr "Rapport PDF (takumi)"
 msgid "Recharger"
 msgstr "Recharger"
 
+#: src/routes/geometry.tsx
+msgid "Relâchements N1 / N2"
+msgstr "Relâchements N1 / N2"
+
+#: src/routes/geometry.tsx
+msgid "Relier N1 → N2"
+msgstr "Relier N1 → N2"
+
 #: src/routes/report.tsx
 msgid "Resultats CSV (Excel)"
 msgstr "Resultats CSV (Excel)"
@@ -188,6 +228,14 @@ msgstr "Resultats CSV (Excel)"
 #: src/routes/results.tsx
 msgid "Resultats de calcul"
 msgstr "Resultats de calcul"
+
+#: src/routes/geometry.tsx
+msgid "Roulis θx (°)"
+msgstr "Roulis θx (°)"
+
+#: src/routes/geometry.tsx
+msgid "Sélectionnez une poutre pour éditer ses caractéristiques."
+msgstr "Sélectionnez une poutre pour éditer ses caractéristiques."
 
 #: src/routes/loads.tsx
 msgid "Type"

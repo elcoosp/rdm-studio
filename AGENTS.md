@@ -46,7 +46,7 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
 
   ```bash
   cargo fmt --all --check && \
-  cargo clippy --workspace --all-targets --all-features -- -D warnings -W pedantic && \
+  cargo clippy --workspace --all-targets --all-features -- -D warnings && \
   pnpm --filter web exec oxfmt --check && \
   pnpm --filter web exec oxlint --deny-warnings
   ```

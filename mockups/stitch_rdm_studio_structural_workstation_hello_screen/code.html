@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RDM Studio — Nouveau projet (Empty State)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'Consolas', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#1d4ed8',
+              700: '#1e40af'
+            },
+            slate: {
+              850: '#0f172a',
+              900: '#090d16'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    .font-mono-tabular {
+      font-family: 'JetBrains Mono', monospace;
+      font-feature-settings: "tnum" on, "zero" on;
+    }
+    /* Subtle 3D Perspective Grid Background */
+    .grid-3d-canvas {
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(29, 78, 216, 0.04) 0%, rgba(248, 250, 252, 0) 70%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.8) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      background-position: center center, center center, center center;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col bg-[#F8FAFC] select-none text-[#0F172A]">
+
+  <!-- ========================================================================= -->
+  <!-- 1. TOP HEADER BAR (44px height, #FFFFFF, 1px bottom border #E2E8F0)       -->
+  <!-- ========================================================================= -->
+  <header class="h-[44px] shrink-0 bg-white border-b border-[#E2E8F0] px-4 flex items-center justify-between z-30 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+    
+    <!-- Left: Brand + Project dropdown + Status -->
+    <div class="flex items-center gap-3">
+      <!-- 3D isometric thermal IPE beam logo -->
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded flex items-center justify-center overflow-hidden border border-[#E2E8F0] bg-[#0F172A] shadow-sm">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3ktHbVjr9iizRhix2qmsTnpB8nMHmk1eMAhNPvMPZn7-danSjO_KA6oCWVVPXqzswu2BJ-pLJZI_9uVQ4ZOvlNUimaP6w41OBusmM_ejCIa2c8jP-liCSy99X__RCjco0r-66Nx9E-GNnhFnNBdldEwmTSYBPJhgkFJdoXVMylCbcUJ67kLBjS5msRF05LlT5_zOV6BVM7caFWF12FeoWLPJNjtVcVaSGfHufJh7VXtvTHNvyHZwXrQ" alt="RDM Studio Logo" class="w-full h-full object-cover"/>
+        </div>
+        <div class="flex items-center gap-1.5 cursor-pointer group">
+          <span class="text-[13px] font-semibold text-[#0F172A] tracking-tight">RDM Studio</span>
+          <span class="text-[#94A3B8] text-[13px]">/</span>
+          <span class="text-[13px] font-medium text-[#475569] group-hover:text-[#0F172A] transition-colors">Nouveau projet</span>
+          <svg class="w-3.5 h-3.5 text-[#94A3B8] group-hover:text-[#0F172A] transition-transform group-hover:translate-y-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Offline Ready Pill -->
+      <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#F0FDF4] border border-[#DCFCE7] text-[11px] font-medium text-[#166534]">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse"></span>
+        <span>Hors-ligne prêt</span>
+      </div>
+    </div>
+
+    <!-- Center: 5-step horizontal workflow tabs -->
+    <nav class="flex items-center h-full">
+      <div class="flex items-center h-full space-x-1">
+        <!-- Tab 1: Active -->
+        <button class="relative h-full px-3.5 flex items-center text-[12.5px] font-semibold text-[#0F172A] transition-colors">
+          <span>Géométrie & Profilés</span>
+          <span class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#1D4ED8] rounded-t-sm"></span>
+        </button>
+        <!-- Tab 2 -->
+        <button class="h-full px-3.5 flex items-center text-[12.5px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors">
+          <span>Liaisons</span>
+        </button>
+        <!-- Tab 3 -->
+        <button class="h-full px-3.5 flex items-center text-[12.5px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors">
+          <span>Charges</span>
+        </button>
+        <!-- Tab 4 -->
+        <button class="h-full px-3.5 flex items-center text-[12.5px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors">
+          <span>Calcul 3D & Eurocode 3</span>
+        </button>
+        <!-- Tab 5 -->
+        <button class="h-full px-3.5 flex items-center text-[12.5px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors">
+          <span>Rapport</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Right: Telemetry + ⌘K + Locale + Tour -->
+    <div class="flex items-center gap-2.5">
+      <!-- Node & Beam Counter -->
+      <div class="font-mono-tabular text-[11.5px] text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded border border-[#E2E8F0]">
+        <span>0 nœud</span> · <span>0 poutre</span>
+      </div>
+
+      <!-- ⌘K Search Pill -->
+      <button class="flex items-center gap-1.5 px-2 py-1 rounded bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#475569] hover:text-[#0F172A] transition-all text-[11.5px] shadow-sm">
+        <svg class="w-3.5 h-3.5 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <span class="font-mono-tabular font-medium text-[11px] px-1 py-0.2 bg-[#F1F5F9] border border-[#E2E8F0] rounded text-[#475569]">⌘K</span>
+      </button>
+
+      <!-- FR | EN Toggle Pill -->
+      <div class="flex items-center rounded border border-[#CBD5E1] p-0.5 bg-white text-[11px] font-medium">
+        <span class="px-1.5 py-0.5 rounded bg-[#1D4ED8] text-white">FR</span>
+        <span class="px-1.5 py-0.5 text-[#64748B] hover:text-[#0F172A] cursor-pointer">EN</span>
+      </div>
+
+      <!-- Guided Tour Help -->
+      <button class="w-6 h-6 rounded flex items-center justify-center text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-[#E2E8F0] transition-colors text-[12px] font-semibold" title="Visite guidée et raccourcis">
+        ?
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 2. FULL-BLEED 3D ARCHITECTURAL VIEWPORT (#F8FAFC)                         -->
+  <!-- ========================================================================= -->
+  <main class="relative flex-1 w-full overflow-hidden grid-3d-canvas flex items-center justify-center">
+
+    <!-- FLOATING HUD: Top-Left View Switcher -->
+    <div class="absolute top-4 left-4 z-20 flex items-center bg-white/95 backdrop-blur-sm border border-[#E2E8F0] rounded-lg p-0.5 shadow-sm">
+      <button class="px-2.5 py-1 rounded text-[11.5px] font-semibold bg-[#EFF6FF] text-[#1D4ED8] border border-[#DBEAFE] transition-colors">
+        3D Iso
+      </button>
+      <button class="px-2.5 py-1 rounded text-[11.5px] font-medium text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors">
+        Dessus XY
+      </button>
+      <button class="px-2.5 py-1 rounded text-[11.5px] font-medium text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors">
+        Face XZ
+      </button>
+      <button class="px-2.5 py-1 rounded text-[11.5px] font-medium text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] transition-colors">
+        Côté YZ
+      </button>
+    </div>
+
+    <!-- FLOATING HUD: Top-Right XYZ Orientation Triad Gizmo -->
+    <div class="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-sm border border-[#E2E8F0] rounded-lg p-2.5 shadow-sm flex flex-col items-center">
+      <div class="relative w-16 h-16 flex items-center justify-center">
+        <!-- SVG 3D Axis Gizmo -->
+        <svg class="w-16 h-16" viewBox="-32 -32 64 64">
+          <!-- Origin circle -->
+          <circle cx="0" cy="0" r="2.5" fill="#0F172A"/>
+          <!-- X Axis (Crimson - Right/Down) -->
+          <line x1="0" y1="0" x2="20" y2="10" stroke="#DC2626" stroke-width="2" stroke-linecap="round"/>
+          <text x="23" y="14" font-family="'JetBrains Mono'" font-size="8" font-weight="700" fill="#DC2626">X</text>
+          <!-- Y Axis (Emerald - Left/Down) -->
+          <line x1="0" y1="0" x2="-18" y2="12" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/>
+          <text x="-26" y="16" font-family="'JetBrains Mono'" font-size="8" font-weight="700" fill="#16A34A">Y</text>
+          <!-- Z Axis (Cobalt - Up) -->
+          <line x1="0" y1="0" x2="0" y2="-22" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round"/>
+          <text x="-3" y="-24" font-family="'JetBrains Mono'" font-size="8" font-weight="700" fill="#1D4ED8">Z</text>
+        </svg>
+      </div>
+      <div class="text-[9.5px] font-mono-tabular text-[#94A3B8] font-medium mt-0.5">
+        REPÈRE GLOBAL
+      </div>
+    </div>
+
+    <!-- 3D Perspective Isometric Ground Grid Representation (SVG Canvas Floor) -->
+    <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+      <svg class="w-full h-full opacity-60" viewBox="0 0 1440 856" preserveAspectRatio="none">
+        <defs>
+          <radialGradient id="originGlow" cx="50%" cy="58%" r="15%">
+            <stop offset="0%" stop-color="#1D4ED8" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#1D4ED8" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Ambient Origin radial glow -->
+        <rect x="0" y="0" width="1440" height="856" fill="url(#originGlow)"/>
+
+        <!-- Isometric Floor Grid Lines converging towards horizon -->
+        <g stroke="#E2E8F0" stroke-width="1">
+          <!-- Transverse grid lines (isometric X/Y) -->
+          <line x1="220" y1="620" x2="1220" y2="340"/>
+          <line x1="180" y1="680" x2="1260" y2="380"/>
+          <line x1="140" y1="740" x2="1300" y2="420"/>
+          <line x1="100" y1="800" x2="1340" y2="460"/>
+
+          <line x1="220" y1="340" x2="1220" y2="620"/>
+          <line x1="180" y1="380" x2="1260" y2="680"/>
+          <line x1="140" y1="420" x2="1300" y2="740"/>
+          <line x1="100" y1="460" x2="1340" y2="800"/>
+        </g>
+
+        <!-- Main Metric Axes at Origin (720, 520) -->
+        <g transform="translate(720, 510)">
+          <!-- X Axis line -->
+          <line x1="0" y1="0" x2="120" y2="34" stroke="#DC2626" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="124,35 114,30 116,38" fill="#DC2626"/>
+          <text x="130" y="39" font-family="'JetBrains Mono'" font-size="11" font-weight="600" fill="#DC2626">+X (m)</text>
+
+          <!-- Y Axis line -->
+          <line x1="0" y1="0" x2="-120" y2="34" stroke="#16A34A" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="-124,35 -116,38 -114,30" fill="#16A34A"/>
+          <text x="-165" y="39" font-family="'JetBrains Mono'" font-size="11" font-weight="600" fill="#16A34A">+Y (m)</text>
+
+          <!-- Z Axis vertical line -->
+          <line x1="0" y1="0" x2="0" y2="-90" stroke="#1D4ED8" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="0,-94 -4,-84 4,-84" fill="#1D4ED8"/>
+          <text x="8" y="-90" font-family="'JetBrains Mono'" font-size="11" font-weight="600" fill="#1D4ED8">+Z (m)</text>
+
+          <!-- Origin Glowing Point (0,0,0) -->
+          <circle cx="0" cy="0" r="8" fill="#1D4ED8" fill-opacity="0.2"/>
+          <circle cx="0" cy="0" r="4.5" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="2"/>
+          <text x="10" y="16" font-family="'JetBrains Mono'" font-size="10.5" font-weight="500" fill="#475569">Origine (0, 0, 0)</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. CENTERED FLOATING QUICK-START HUB CARD (Max-width 680px)               -->
+    <!-- ========================================================================= -->
+    <div class="relative z-10 w-full max-w-[680px] bg-white border border-[#E2E8F0] rounded-xl shadow-[0_12px_32px_rgba(15,23,42,0.06)] overflow-hidden transition-all">
+      
+      <!-- Card Header -->
+      <div class="pt-6 pb-4 px-6 text-center border-b border-[#F1F5F9]">
+        <!-- Centered Emblem -->
+        <div class="w-10 h-10 mx-auto rounded-lg bg-[#0F172A] border border-[#CBD5E1] p-1 flex items-center justify-center shadow-sm mb-3">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3ktHbVjr9iizRhix2qmsTnpB8nMHmk1eMAhNPvMPZn7-danSjO_KA6oCWVVPXqzswu2BJ-pLJZI_9uVQ4ZOvlNUimaP6w41OBusmM_ejCIa2c8jP-liCSy99X__RCjco0r-66Nx9E-GNnhFnNBdldEwmTSYBPJhgkFJdoXVMylCbcUJ67kLBjS5msRF05LlT5_zOV6BVM7caFWF12FeoWLPJNjtVcVaSGfHufJh7VXtvTHNvyHZwXrQ" alt="IPE Beam Logo" class="w-full h-full object-cover rounded"/>
+        </div>
+        <h1 class="text-[19px] font-semibold text-[#0F172A] tracking-tight">
+          Nouveau modèle de structure 3D
+        </h1>
+        <p class="text-[13px] text-[#475569] mt-1 max-w-[480px] mx-auto leading-normal">
+          Commencez par placer un nœud dans l'espace, importez un plan CAO ou ouvrez un modèle normé Eurocode 3.
+        </p>
+      </div>
+
+      <!-- 3 Primary Action Cards side-by-side -->
+      <div class="p-5 grid grid-cols-3 gap-3.5 bg-white">
+        
+        <!-- Card 1: Placer un premier nœud (Primary Highlight) -->
+        <div class="group relative rounded-lg border-2 border-[#1D4ED8] bg-[#F8FAFC] p-4 flex flex-col justify-between hover:shadow-md transition-all">
+          <div>
+            <!-- Header Icon & Badge -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-8 h-8 rounded-md bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center text-[#1D4ED8]">
+                <!-- Crosshair & Node Vector Icon -->
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3.5" fill="#1D4ED8"/>
+                  <line x1="12" y1="2" x2="12" y2="6"/>
+                  <line x1="12" y1="18" x2="12" y2="22"/>
+                  <line x1="2" y1="12" x2="6" y2="12"/>
+                  <line x1="18" y1="12" x2="22" y2="12"/>
+                </svg>
+              </div>
+              <span class="text-[10px] font-mono-tabular font-medium text-[#1D4ED8] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#DBEAFE]">
+                Direct
+              </span>
+            </div>
+
+            <h2 class="text-[13.5px] font-semibold text-[#0F172A] mb-1">
+              Placer un premier nœud
+            </h2>
+            <p class="text-[11.5px] text-[#475569] leading-relaxed">
+              Création directe sur la grille 3D ou par coordonnées métriques (X, Y, Z).
+            </p>
+          </div>
+
+          <div class="mt-4 pt-2">
+            <button class="w-full h-8 rounded-md bg-[#1D4ED8] hover:bg-[#1E40AF] active:scale-[0.98] text-white text-[12px] font-medium flex items-center justify-center gap-1.5 shadow-sm transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span>Créer un nœud</span>
+              <kbd class="font-mono text-[10px] bg-white/20 px-1 py-0.2 rounded text-white/90">N</kbd>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: Modèles types Eurocode 3 -->
+        <div class="group rounded-lg border border-[#E2E8F0] hover:border-[#CBD5E1] bg-white p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-8 h-8 rounded-md bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#0F172A]">
+                <!-- Isometric 3D Truss Icon -->
+                <svg class="w-4 h-4 text-[#1D4ED8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="2" y1="18" x2="22" y2="18"/>
+                  <line x1="2" y1="18" x2="8" y2="6"/>
+                  <line x1="8" y1="6" x2="16" y2="6"/>
+                  <line x1="16" y1="6" x2="22" y2="18"/>
+                  <line x1="8" y1="6" x2="12" y2="18"/>
+                  <line x1="16" y1="6" x2="12" y2="18"/>
+                  <circle cx="2" cy="18" r="1.5" fill="#0F172A"/>
+                  <circle cx="8" cy="6" r="1.5" fill="#0F172A"/>
+                  <circle cx="16" cy="6" r="1.5" fill="#0F172A"/>
+                  <circle cx="22" cy="18" r="1.5" fill="#0F172A"/>
+                  <circle cx="12" cy="18" r="1.5" fill="#0F172A"/>
+                </svg>
+              </div>
+              <span class="text-[10px] font-mono-tabular font-medium text-[#64748B] bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E2E8F0]">
+                4 pré-réglés
+              </span>
+            </div>
+
+            <h2 class="text-[13.5px] font-semibold text-[#0F172A] mb-1">
+              Modèles types Eurocode 3
+            </h2>
+            <p class="text-[11.5px] text-[#475569] leading-relaxed">
+              Treillis Warren, portique industriel, potence ou poutre continue.
+            </p>
+          </div>
+
+          <div class="mt-4 pt-2">
+            <button class="w-full h-8 rounded-md bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[12px] font-medium text-[#0F172A] flex items-center justify-center gap-1 transition-colors group-hover:border-[#94A3B8]">
+              <span>Parcourir les 4 modèles</span>
+              <span class="text-[#1D4ED8]">→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3: Importer un fichier CAO -->
+        <div class="group rounded-lg border border-[#E2E8F0] hover:border-[#CBD5E1] bg-white p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-8 h-8 rounded-md bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center text-[#0F172A]">
+                <!-- CAD file import vector icon -->
+                <svg class="w-4 h-4 text-[#1D4ED8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M12 18v-6"/>
+                  <path d="M9 15l3-3 3 3"/>
+                </svg>
+              </div>
+              <span class="text-[10px] font-mono-tabular font-medium text-[#64748B] bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E2E8F0]">
+                .dxf · .step
+              </span>
+            </div>
+
+            <h2 class="text-[13.5px] font-semibold text-[#0F172A] mb-1">
+              Importer un fichier CAO
+            </h2>
+            <p class="text-[11.5px] text-[#475569] leading-relaxed">
+              Extraction filaire automatique (.dxf, .step, .igs, .rdm).
+            </p>
+          </div>
+
+          <div class="mt-4 pt-2">
+            <button class="w-full h-8 rounded-md bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[12px] font-medium text-[#0F172A] flex items-center justify-center gap-1 transition-colors group-hover:border-[#94A3B8]">
+              <span>Sélectionner un fichier</span>
+              <span class="text-[#1D4ED8]">→</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Quick-Template Strip inside the card -->
+      <div class="px-5 py-3 bg-[#F8FAFC] border-t border-[#F1F5F9] flex items-center justify-between">
+        <span class="text-[11.5px] font-medium text-[#64748B] shrink-0">
+          Démarrage rapide :
+        </span>
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+          <!-- Template Pill 1 -->
+          <button class="px-2.5 py-1 rounded bg-white hover:bg-[#EFF6FF] border border-[#E2E8F0] hover:border-[#BFDBFE] text-[11px] font-medium text-[#334155] hover:text-[#1D4ED8] flex items-center gap-1.5 transition-colors shadow-2xs">
+            <svg class="w-3 h-3 text-[#1D4ED8]" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 12h12l-6-8-6 8z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>Treillis Warren 24 m</span>
+          </button>
+          <!-- Template Pill 2 -->
+          <button class="px-2.5 py-1 rounded bg-white hover:bg-[#EFF6FF] border border-[#E2E8F0] hover:border-[#BFDBFE] text-[11px] font-medium text-[#334155] hover:text-[#1D4ED8] flex items-center gap-1.5 transition-colors shadow-2xs">
+            <svg class="w-3 h-3 text-[#1D4ED8]" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M2 13V5l6-2 6 2v8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>Portique 18 m</span>
+          </button>
+          <!-- Template Pill 3 -->
+          <button class="px-2.5 py-1 rounded bg-white hover:bg-[#EFF6FF] border border-[#E2E8F0] hover:border-[#BFDBFE] text-[11px] font-medium text-[#334155] hover:text-[#1D4ED8] flex items-center gap-1.5 transition-colors shadow-2xs">
+            <svg class="w-3 h-3 text-[#1D4ED8]" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3 13V3h10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            <span>Potence HEA 200</span>
+          </button>
+          <!-- Template Pill 4 -->
+          <button class="px-2.5 py-1 rounded bg-white hover:bg-[#EFF6FF] border border-[#E2E8F0] hover:border-[#BFDBFE] text-[11px] font-medium text-[#334155] hover:text-[#1D4ED8] flex items-center gap-1.5 transition-colors shadow-2xs">
+            <svg class="w-3 h-3 text-[#1D4ED8]" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1 8h14" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="1" cy="8" r="1.2" fill="currentColor"/>
+              <circle cx="8" cy="8" r="1.2" fill="currentColor"/>
+              <circle cx="15" cy="8" r="1.2" fill="currentColor"/>
+            </svg>
+            <span>Poutre 3 travées</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Footer Micro-Hint -->
+      <div class="py-2.5 px-6 bg-white border-t border-[#E2E8F0] text-center">
+        <p class="text-[11.5px] text-[#94A3B8]">
+          Appuyez sur <kbd class="font-mono text-[10.5px] px-1 py-0.5 rounded bg-[#F1F5F9] border border-[#CBD5E1] text-[#475569]">⌘K</kbd> à tout moment pour rechercher un profilé IPE/HEA ou lancer le tour guidé (<span class="font-medium text-[#64748B]">?</span>).
+        </p>
+      </div>
+
+    </div>
+
+    <!-- FLOATING HUD: Bottom-Right Precision Coordinate Snapping Tracker -->
+    <div class="absolute bottom-4 right-4 z-20 bg-white/95 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-1.5 shadow-sm flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-[11px] font-medium text-[#64748B]">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#1D4ED8]"></span>
+        <span>Accrochage : Grille 0,20 m</span>
+      </div>
+      <div class="h-3 w-[1px] bg-[#E2E8F0]"></div>
+      <div class="font-mono-tabular text-[11px] text-[#0F172A] flex items-center gap-2">
+        <span>X: 0,000 m</span>
+        <span>Y: 0,000 m</span>
+        <span>Z: 0,000 m</span>
+      </div>
+    </div>
+
+    <!-- FLOATING HUD: Bottom-Left Unit System & Engine Ready -->
+    <div class="absolute bottom-4 left-4 z-20 bg-white/95 backdrop-blur-sm border border-[#E2E8F0] rounded-lg px-3 py-1.5 shadow-sm flex items-center gap-2 text-[11px]">
+      <span class="font-mono-tabular font-medium text-[#475569]">Système SI (m, kN, MPa)</span>
+      <span class="text-[#CBD5E1]">·</span>
+      <span class="text-[#16A34A] font-medium">Moteur EF 3D Prêt</span>
+    </div>
+
+  </main>
+
+</body>
+</html>

@@ -20,7 +20,7 @@ export function buildResultsCsv(project: ProjectData, report: SolveReport | null
   lines.push(`Poutres;${project.structure.beams.length}`);
   lines.push("");
   lines.push(
-    ["Poutre", "Section", "Materiau", "eta ULE", "fleche mid SLS (mm)"].map(csvEscape).join(";"),
+    ["Poutre", "Section", "Materiau", "eta ELU", "fleche mid SLS (mm)"].map(csvEscape).join(";"),
   );
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
@@ -70,10 +70,13 @@ export function downloadText(
 }
 
 /** Convenience: current project + last report from the client cache. */
+/** Accent-preserving file slug: `Poutre démo` -> `Poutre_demo`. */
+export function slugify(name: string): string {
+  const ascii = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return ascii.replace(/[^\w-]+/g, "_").replace(/^_+|_+$/g, "") || "projet";
+}
+
 export function exportResultsCsv(report: SolveReport | null): void {
   const project = useProjectStore.getState().project;
-  downloadText(
-    `${project.name.replace(/[^\w-]+/g, "_")}-resultats.csv`,
-    buildResultsCsv(project, report),
-  );
+  downloadText(`${slugify(project.name)}-résultats.csv`, buildResultsCsv(project, report));
 }

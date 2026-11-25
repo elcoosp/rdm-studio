@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 
 /**
@@ -20,48 +19,39 @@ export function NodeMarkers({
   nodeIds?: number[];
   onPickNode?: (nodeId: number | null) => void;
 }) {
-  const geometry = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return g;
-  }, [positions]);
-  const highlight = useMemo(() => {
-    if (highlightNodeId === null || positions.length < 3) {
-      return null;
-    }
-    const index = highlightNodeId - 1;
-    if (index < 0 || (index + 1) * 3 > positions.length) {
-      return null;
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute(
-      "position",
-      new THREE.BufferAttribute(positions.slice(index * 3, index * 3 + 3), 3),
-    );
-    return g;
-  }, [positions, highlightNodeId]);
-
-  const handleClick = (event: ThreeEvent<MouseEvent>) => {
-    // r3f points events carry the picked point `index`.
-    if (event.index === undefined) {
-      onPickNode?.(null);
-      return;
-    }
-    event.stopPropagation();
-    const id = nodeIds?.[event.index] ?? event.index + 1;
-    onPickNode?.(id);
-  };
-
+  // v1.4.0: crisp 3D spheres (r = 0.055 m) instead of 2D point sprites —
+  // visible outside IPE flanges and pickable per node id.
+  // Explicit id list wins; otherwise fall back to dense 1-based ids.
+  const ids: number[] =
+    nodeIds !== undefined && nodeIds.length > 0
+      ? nodeIds
+      : Array.from({ length: Math.floor(positions.length / 3) }, (_, i) => i + 1);
   return (
     <>
-      <points geometry={geometry} onClick={handleClick}>
-        <pointsMaterial size={0.08} color="#0F172A" sizeAttenuation />
-      </points>
-      {highlight !== null ? (
-        <points geometry={highlight}>
-          <pointsMaterial size={0.18} color="#1D4ED8" sizeAttenuation />
-        </points>
-      ) : null}
+      {ids.length > 0
+        ? ids.map((id, i) => {
+            const x = positions[i * 3];
+            const y = positions[i * 3 + 1];
+            const z = positions[i * 3 + 2];
+            if (x === undefined || y === undefined || z === undefined) {
+              return null;
+            }
+            const selected = id === highlightNodeId;
+            return (
+              <mesh
+                key={id}
+                position={[x, y, z]}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onPickNode?.(id);
+                }}
+              >
+                <sphereGeometry args={[selected ? 0.085 : 0.055, 16, 12]} />
+                <meshStandardMaterial color={selected ? "#1D4ED8" : "#0F172A"} />
+              </mesh>
+            );
+          })
+        : null}
     </>
   );
 }

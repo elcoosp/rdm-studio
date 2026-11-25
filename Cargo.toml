@@ -4,6 +4,7 @@ members = [
     "crates/rdm-model",
     "crates/rdm-eurocode",
     "crates/rdm-solver",
+    "crates/rdm-cad",
     "bindings/rdm-wasm",
 ]
 

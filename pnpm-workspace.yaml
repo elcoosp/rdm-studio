@@ -3,6 +3,7 @@ packages:
 
 minimumReleaseAgeExclude:
   - "@types/react@19.3.1"
+  - three-mesh-bvh@0.10.0
 
 overrides:
   "@tanstack/router-generator": 1.99.9

@@ -1,0 +1,18 @@
+{
+	"name": "rdm-studio",
+	"private": true,
+	"version": "0.1.0",
+	"packageManager": "pnpm@12.18.0",
+	"scripts": {
+		"dev": "pnpm --filter web dev",
+		"build": "pnpm --filter web build",
+		"build:wasm": "wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg",
+		"test:unit": "pnpm --filter web test:unit",
+		"test:e2e": "pnpm --filter web test:e2e",
+		"test:all": "cargo test --workspace && pnpm --filter web test:unit && pnpm --filter web test:e2e",
+		"lint": "cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings -W pedantic && pnpm --filter web exec oxfmt --check && pnpm --filter web exec oxlint --deny-warnings",
+		"fmt": "cargo fmt --all && pnpm --filter web exec oxfmt",
+		"i18n:extract": "pnpm --filter web i18n:extract",
+		"i18n:compile": "pnpm --filter web i18n:compile"
+	}
+}

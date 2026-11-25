@@ -119,7 +119,7 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
         *map.entry((i, j)).or_insert(0.0) += v;
     };
 
-    for data in elements.iter() {
+    for data in &elements {
         // Uncondensed element for assembly: releases produce a condensed
         // retained block, assembled at the retained global DOFs.
         let element = build_case_element(data, &zero_load())
@@ -145,7 +145,7 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
     }
 
     let mut reduced: Vec<Triplet<usize, usize, f64>> = Vec::new();
-    for (&(i, j), &v) in stiffness.iter() {
+    for (&(i, j), &v) in &stiffness {
         // The map holds both (i, j) and (j, i); keep the upper-triangle form
         // once so off-diagonals are not counted twice.
         if i > j || locked[i] || locked[j] {
@@ -194,10 +194,12 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
             displacements[dof] = reduced_rhs[(slot, 0)];
         }
 
-        // Reactions on constrained DOFs: R = K u - F.
+        // Reactions on constrained DOFs: R = K u - F. The map holds both
+        // (i, j) and (j, i); walk the upper triangle once so each row term
+        // is accumulated exactly once (diagonal drops: U_locked = 0).
         let mut reactions = vec![0.0f64; ndof];
-        for (&(i, j), &v) in stiffness.iter() {
-            if i == j {
+        for (&(i, j), &v) in &stiffness {
+            if i >= j {
                 continue;
             }
             if locked[i] {
@@ -248,6 +250,9 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
     })
 }
 
+/// Superposed response vectors: `(displacements, reactions, end_forces)`.
+pub type SuperposedResponse = (Vec<f64>, Vec<f64>, Vec<f64>);
+
 /// Linear superposition of elementary cases: `result = sum f_i * case_i`.
 ///
 /// Returns `(displacements, reactions, beam_end_forces)` in the same flat
@@ -260,7 +265,7 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
 pub fn superimpose(
     solved: &SolvedModel,
     weights: &[(LoadCase, f64)],
-) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>), SolveError> {
+) -> Result<SuperposedResponse, SolveError> {
     let ndof = 6 * solved.n_nodes;
     let mut u = vec![0.0f64; ndof];
     let mut r = vec![0.0f64; ndof];

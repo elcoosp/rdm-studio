@@ -6,11 +6,16 @@
 //! become member segments; `LWPOLYLINE` / `POLYLINE` vertices become
 //! consecutive segments.
 
+pub mod bim_interop;
 pub mod dxf_importer;
 pub mod parametric;
 pub mod step_importer;
 pub mod topology_cleaner;
 
+pub use bim_interop::{
+    export_gltf, export_ifc4_structural, export_opensees_tcl, export_saf_json, export_solver_json,
+    import_ifc4_structural, import_saf_json,
+};
 pub use dxf_importer::{import_dxf, RawSegment};
 pub use parametric::{generate_structure, ParametricError, ParametricParams, ParametricTemplate};
 pub use step_importer::import_step_or_iges;

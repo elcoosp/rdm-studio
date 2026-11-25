@@ -44,6 +44,25 @@ pub struct BeamCombinationResult {
     pub beam_id: u32,
     /// Maximum EN 1993-1-1 utilization of the member (0.0 when no check applies).
     pub utilization: f64,
+    /// Resistance name of the governing check at the max utilization
+    /// (v1.3.0), e.g. `Mb,Rd`, `Nb,Rd,z`, `Von Mises`.
+    pub governing_check: String,
+    /// Every individual check ratio at the governing station (v1.4.0):
+    /// `NEd/Npl,Rd`, `Nb,Rd,y`, `Nb,Rd,z`, `Mb,Rd`, `Vpl,Rd`, `Von Mises`.
+    pub checks: Vec<(String, f64)>,
+    /// Governing cross-section class 1..=4 (v1.4.0, `None` = n/a).
+    pub class_index: Option<u8>,
+    /// Flexural buckling factor y (v1.4.0, `None` = tension/no check).
+    pub chi_y: Option<f64>,
+    /// Flexural buckling factor z (v1.4.0).
+    pub chi_z: Option<f64>,
+    /// LTB factor χLT (v1.4.0, `None` = laterally restrained).
+    pub chi_lt: Option<f64>,
+    /// Governing bending resistance (v1.4.0, N·m) — `Mb,Rd` under LTB,
+    /// otherwise the elastic `Mel,Rd`, for the uPlot capacity line.
+    pub m_rd: f64,
+    /// Maximum von Mises stress over the span stations (v1.3.0, Pa).
+    pub max_sigma_vm: f64,
     /// Midspan elastic deflection proxy: local transverse deflection at the
     /// span middle, in metres (unsigned).
     pub midspan_deflection: f64,
@@ -179,7 +198,18 @@ fn build_combination_reports(
         for (index, beam) in structure.beams.iter().enumerate() {
             let section = structure.sections.get(&beam.section_id);
             let material = structure.materials.get(&beam.material_id);
-            let (utilization, deflection) = match (section, material) {
+            let (
+                utilization,
+                deflection,
+                governing_check,
+                max_sigma_vm,
+                checks,
+                class_index,
+                chi_y,
+                chi_z,
+                chi_lt,
+                m_rd,
+            ) = match (section, material) {
                 (Some(section), Some(material)) => {
                     let length = beam_length(structure, beam).unwrap_or(0.0);
                     // v1.0.0 bug 3: evaluate the EN 1993-1-1 check at span
@@ -208,8 +238,22 @@ fn build_combination_reports(
                     let end = 12 * index;
                     let block = &f[end..end + 12];
                     let mut utilization = 0.0f64;
+                    let mut governing_check = String::from("-");
+                    let mut governing_detail: Option<rdm_eurocode::MemberCheck> = None;
+                    let mut max_sigma_vm = 0.0f64;
                     for ratio in rdm_solver::STATIONS {
                         let forces = station_forces(block, &spans, length, ratio);
+                        // v1.3.0: von Mises stress (Pa) at every station.
+                        if let Ok(sigma_vm) = rdm_eurocode::von_mises_stress(
+                            forces.n_axial,
+                            forces.my,
+                            forces.mz,
+                            forces.vz,
+                            forces.t,
+                            section,
+                        ) {
+                            max_sigma_vm = max_sigma_vm.max(sigma_vm.abs());
+                        }
                         let check = member_check(rdm_eurocode::MemberCheckInput {
                             beam_id: beam.id,
                             length,
@@ -219,29 +263,76 @@ fn build_combination_reports(
                             forces: (forces.n_axial, forces.my, forces.mz, forces.vz, forces.t),
                             combination: combo.label(),
                         });
-                        if let Ok(check) = check {
-                            utilization = utilization.max(
-                                check
-                                    .utilizations
-                                    .iter()
-                                    .map(|(_, v)| *v)
-                                    .fold(0.0f64, f64::max),
-                            );
+                        if let Ok(check) = check
+                            && let Some((name, value)) =
+                                check.utilizations.iter().max_by(|a, b| a.1.total_cmp(&b.1))
+                            && *value > utilization
+                        {
+                            utilization = *value;
+                            name.clone_into(&mut governing_check);
+                            // v1.4.0: keep the whole check for the UI.
+                            governing_detail = Some(check);
                         }
                     }
+                    // v1.4.0: full EC3 detail from the governing station.
+                    let (checks, class_index, chi_y, chi_z, chi_lt, m_rd) = match governing_detail {
+                        Some(detail) => {
+                            let m_rd_elastic = section.wel_y * material.fy / rdm_eurocode::GAMMA_M0;
+                            let m_rd = detail.ltb.as_ref().map_or(m_rd_elastic, |ltb| ltb.m_b_rd);
+                            (
+                                detail.utilizations,
+                                detail.class.map(rdm_eurocode::Classification::as_u8),
+                                detail.chi.map(|chi| chi.0),
+                                detail.chi.map(|chi| chi.1),
+                                detail.ltb.as_ref().map(|ltb| ltb.chi_lt),
+                                m_rd,
+                            )
+                        }
+                        None => (Vec::new(), None, None, None, None, 0.0),
+                    };
                     let deflection = rdm_solver::midspan_deflection_metric(
                         structure,
                         solved,
                         index,
                         &combo.multipliers,
                     )?;
-                    (utilization, deflection)
+                    (
+                        utilization,
+                        deflection,
+                        governing_check,
+                        max_sigma_vm,
+                        checks,
+                        class_index,
+                        chi_y,
+                        chi_z,
+                        chi_lt,
+                        m_rd,
+                    )
                 }
-                _ => (0.0, 0.0),
+                _ => (
+                    0.0,
+                    0.0,
+                    String::from("-"),
+                    0.0,
+                    Vec::new(),
+                    None,
+                    None,
+                    None,
+                    None,
+                    0.0,
+                ),
             };
             beams.push(BeamCombinationResult {
                 beam_id: beam.id,
                 utilization,
+                governing_check,
+                checks,
+                class_index,
+                chi_y,
+                chi_z,
+                chi_lt,
+                m_rd,
+                max_sigma_vm,
                 midspan_deflection: deflection,
             });
         }
@@ -594,6 +685,39 @@ mod tests {
         assert!(beam.utilization > 0.0);
     }
 
+    /// v1.4.0: the combination result exposes every individual EC3
+    /// ratio, the buckling factors and the governing bending resistance.
+    #[test]
+    fn combination_result_exposes_full_ec3_detail() {
+        let report = build_solve_report(&demo_project()).unwrap();
+        let uls = report
+            .combinations
+            .iter()
+            .find(|c| c.kind == "ULS")
+            .expect("ULS combination present");
+        let beam = &uls.beams[0];
+        assert!(!beam.checks.is_empty(), "checks must list every ratio");
+        assert!(
+            beam.checks.iter().any(|(name, _)| name == "NEd/Npl,Rd"),
+            "axial ratio present, got {:?}",
+            beam.checks
+        );
+        assert!(beam.utilization > 0.0);
+        assert_ne!(beam.governing_check, "-");
+        assert!(beam.m_rd > 0.0, "governing bending resistance > 0");
+    }
+
+    /// v1.4.0: the canonical SHA-256 fingerprint is a 64-char hex string.
+    #[test]
+    fn project_fingerprint_returns_64_char_hex() {
+        let text = project_fingerprint_structure(&demo_project()).expect("fingerprint");
+        assert_eq!(text.len(), 64, "sha-256 hex length, got {text}");
+        assert!(
+            text.chars().all(|c| c.is_ascii_hexdigit()),
+            "hex alphabet only: {text}"
+        );
+    }
+
     #[test]
     fn midspan_deflection_matches_analytical_value() {
         let report = build_solve_report(&demo_project()).unwrap();
@@ -645,10 +769,12 @@ pub fn modal_analysis(project_json: &str, n_modes: usize) -> Result<JsValue, JsV
         let mut structure = project.structure;
         resolve_properties(&mut structure);
         let _solved = validate_and_solve(&structure)?;
-        let report =
-            rdm_solver::modal_analysis(&structure, n_modes).map_err(|e| SolveError::Sparse {
+        // v1.3.0: clean exposure of up to 6 eigenmodes (clamp the request).
+        let report = rdm_solver::modal_analysis(&structure, n_modes.clamp(1, 6)).map_err(|e| {
+            SolveError::Sparse {
                 message: e.to_string(),
-            })?;
+            }
+        })?;
         Ok(ModalReportDto {
             n_modes: report.n_modes,
             modes: report
@@ -748,35 +874,7 @@ pub fn section_stress_grid(
 /// Returns a `SolveFault`-shaped `JsValue` on parse or topology failure.
 #[wasm_bindgen]
 pub fn import_dxf(bytes: &[u8], project_name: &str) -> Result<JsValue, JsValue> {
-    let outcome = (|| -> Result<String, String> {
-        let segments = rdm_cad::import_dxf(bytes).map_err(|e| e.to_string())?;
-        let topology = rdm_cad::clean_topology(&segments, 1e-3).map_err(|e| e.to_string())?;
-        let nodes: Vec<rdm_model::Node> = topology
-            .nodes
-            .iter()
-            .map(|n| rdm_model::Node::new(n.id, n.position[0], n.position[1], n.position[2]))
-            .collect();
-        let beams: Vec<rdm_model::Beam> = topology
-            .beams
-            .iter()
-            .map(|b| rdm_model::Beam::frame(b.n1.max(b.n2), b.n1, b.n2, "IPE 200", "S235JR"))
-            .collect();
-        let structure = rdm_model::Structure {
-            nodes,
-            beams,
-            supports: Vec::new(),
-            loads: Vec::new(),
-            sections: BTreeMap::new(),
-            materials: BTreeMap::new(),
-            self_weight_enabled: true,
-        };
-        let project = rdm_model::ProjectFile {
-            version: 1,
-            name: project_name.to_owned(),
-            structure,
-        };
-        serde_json::to_string(&project).map_err(|e| e.to_string())
-    })();
+    let outcome = import_cad_structure(bytes, "import.dxf", project_name);
     match outcome {
         Ok(json) => serde_wasm_bindgen::to_value(&json).map_err(Into::into),
         Err(message) => serde_wasm_bindgen::to_value(&SolveFault {
@@ -784,5 +882,123 @@ pub fn import_dxf(bytes: &[u8], project_name: &str) -> Result<JsValue, JsValue> 
             message,
         })
         .map_err(Into::into),
+    }
+}
+
+/// Imports a `.dxf`, `.step`/`.stp` or `.igs`/`.iges` wireframe as a
+/// `.rdm` project JSON (v1.3.0): extension-dispatched CAD import with
+/// dense sequential 1-based member ids.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on unsupported extensions,
+/// parse failures or empty topologies.
+#[wasm_bindgen]
+pub fn import_cad(bytes: &[u8], filename: &str, project_name: &str) -> Result<JsValue, JsValue> {
+    let outcome = import_cad_structure(bytes, filename, project_name);
+    match outcome {
+        Ok(json) => serde_wasm_bindgen::to_value(&json).map_err(Into::into),
+        Err(message) => serde_wasm_bindgen::to_value(&SolveFault {
+            kind: "Cad".to_owned(),
+            message,
+        })
+        .map_err(Into::into),
+    }
+}
+
+/// Pure fingerprint helper behind [`project_fingerprint`] (native-testable).
+///
+/// # Errors
+///
+/// Returns a message string on malformed payloads or canonicalization
+/// failures.
+fn project_fingerprint_structure(project_json: &str) -> Result<String, String> {
+    let project: rdm_model::ProjectFile =
+        serde_json::from_str(project_json).map_err(|e| format!("malformed .rdm payload: {e}"))?;
+    project.fingerprint().map_err(|e| e.to_string())
+}
+
+/// Deterministic SHA-256 fingerprint of the canonical `.rdm`
+/// serialization (v1.4.0): surfaces on the Step 5 A4 sheet and the
+/// Takumi PDF so every printed note carries a verifiable model hash.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn project_fingerprint(project_json: &str) -> Result<JsValue, JsValue> {
+    let outcome = project_fingerprint_structure(project_json);
+    match outcome {
+        Ok(hash) => serde_wasm_bindgen::to_value(&hash).map_err(Into::into),
+        Err(message) => serde_wasm_bindgen::to_value(&SolveFault {
+            kind: "InvalidModel".to_owned(),
+            message,
+        })
+        .map_err(Into::into),
+    }
+}
+
+/// Pure CAD -> `.rdm` import used by [`import_cad`] / [`import_dxf`]
+/// (testable off-wasm). Dispatches on the filename extension.
+///
+/// # Errors
+///
+/// Returns a message string on parse or topology failure.
+fn import_cad_structure(
+    bytes: &[u8],
+    filename: &str,
+    project_name: &str,
+) -> Result<String, String> {
+    let segments = rdm_cad::import_cad(bytes, filename).map_err(|e| e.to_string())?;
+    let topology = rdm_cad::clean_topology(&segments, 1e-3).map_err(|e| e.to_string())?;
+    let nodes: Vec<rdm_model::Node> = topology
+        .nodes
+        .iter()
+        .map(|n| rdm_model::Node::new(n.id, n.position[0], n.position[1], n.position[2]))
+        .collect();
+    // v1.1.0 bug 1: dense sequential 1-based member ids (the previous
+    // `n1.max(n2)` colliding id scheme silently dropped members).
+    let beams: Vec<rdm_model::Beam> = topology
+        .beams
+        .iter()
+        .enumerate()
+        .map(|(idx, b)| rdm_model::Beam::frame((idx + 1) as u32, b.n1, b.n2, "IPE 200", "S235JR"))
+        .collect();
+    let structure = rdm_model::Structure {
+        nodes,
+        beams,
+        supports: Vec::new(),
+        loads: Vec::new(),
+        sections: BTreeMap::new(),
+        materials: BTreeMap::new(),
+        self_weight_enabled: true,
+    };
+    let project = rdm_model::ProjectFile {
+        version: 1,
+        name: project_name.to_owned(),
+        structure,
+    };
+    serde_json::to_string(&project).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod dxf_import_tests {
+    use super::*;
+
+    const TWO_BEAM_DXF: &str = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nRDM\n10\n0.0\n11\n4.0\n20\n0.0\n21\n0.0\n30\n0.0\n31\n0.0\n0\nLINE\n8\nRDM\n10\n4.0\n11\n4.0\n20\n0.0\n21\n0.0\n30\n0.0\n31\n3.0\n0\nENDSEC\n0\nEOF\n";
+
+    #[test]
+    fn import_dxf_assigns_sequential_distinct_beam_ids() {
+        let json =
+            import_cad_structure(TWO_BEAM_DXF.as_bytes(), "plan.dxf", "plan").expect("import");
+        let project: rdm_model::ProjectFile = serde_json::from_str(&json).expect("parse");
+        let ids: Vec<u32> = project.structure.beams.iter().map(|b| b.id).collect();
+        assert_eq!(project.structure.beams.len(), 2);
+        assert_eq!(ids, vec![1, 2], "ids must be dense 1..n, got {ids:?}");
+    }
+
+    #[test]
+    fn import_dxf_rejects_garbage() {
+        assert!(import_cad_structure(b"junk", "junk.dxf", "x").is_err());
     }
 }

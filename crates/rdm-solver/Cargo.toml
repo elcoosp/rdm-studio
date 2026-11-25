@@ -1,0 +1,22 @@
+[package]
+name = "rdm-solver"
+description = "3D finite-element static solver (sparse Cholesky via faer) for RDM Studio"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+rdm-model = { path = "../rdm-model" }
+faer = { workspace = true }
+nalgebra = { workspace = true }
+glam = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }
+proptest = { workspace = true }
+insta = { workspace = true }
+rdm-eurocode = { path = "../rdm-eurocode" }
+
+[lints]
+workspace = true

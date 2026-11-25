@@ -1,0 +1,78 @@
+{
+ "meta": {
+  "units": "SI (m, m2, m4, m6, m3, kg/m)",
+  "generated": "2026-11-24"
+ },
+ "materials": [
+  {
+   "designation": "S235JR",
+   "standard": "EN 10025-2",
+   "fy": 235000000.0,
+   "fu": 360000000.0,
+   "e": 210000000000.0,
+   "nu": 0.3,
+   "rho": 7850.0,
+   "thickness_note": "nominal values for t <= 16 mm (EN 1993-1-1 Table 3.1)"
+  },
+  {
+   "designation": "S275JR",
+   "standard": "EN 10025-2",
+   "fy": 275000000.0,
+   "fu": 430000000.0,
+   "e": 210000000000.0,
+   "nu": 0.3,
+   "rho": 7850.0,
+   "thickness_note": "nominal values for t <= 16 mm (EN 1993-1-1 Table 3.1)"
+  },
+  {
+   "designation": "S355J2",
+   "standard": "EN 10025-2",
+   "fy": 355000000.0,
+   "fu": 490000000.0,
+   "e": 210000000000.0,
+   "nu": 0.3,
+   "rho": 7850.0,
+   "thickness_note": "nominal values for t <= 16 mm (EN 1993-1-1 Table 3.1)"
+  },
+  {
+   "designation": "S460N",
+   "standard": "EN 10025-3",
+   "fy": 460000000.0,
+   "fu": 540000000.0,
+   "e": 210000000000.0,
+   "nu": 0.3,
+   "rho": 7850.0,
+   "thickness_note": "nominal values for t <= 16 mm (EN 1993-1-1 Table 3.1)"
+  },
+  {
+   "designation": "304L",
+   "standard": "EN 10088 (1.4307)",
+   "fy": 200000000.0,
+   "fu": 520000000.0,
+   "e": 200000000000.0,
+   "nu": 0.3,
+   "rho": 7900.0,
+   "thickness_note": "hot rolled strip t <= 12 mm (EN 1993-1-4 Table 2.1)"
+  },
+  {
+   "designation": "316L",
+   "standard": "EN 10088 (1.4404)",
+   "fy": 220000000.0,
+   "fu": 530000000.0,
+   "e": 200000000000.0,
+   "nu": 0.3,
+   "rho": 8000.0,
+   "thickness_note": "hot rolled strip t <= 12 mm (EN 1993-1-4 Table 2.1)"
+  },
+  {
+   "designation": "6061-T6",
+   "standard": "EN AW-6061",
+   "fy": 240000000.0,
+   "fu": 290000000.0,
+   "e": 70000000000.0,
+   "nu": 0.33,
+   "rho": 2700.0,
+   "thickness_note": "extrusions t <= 12.5 mm (EN 1999-1-1 Table 3.2a)"
+  }
+ ]
+}

@@ -267,6 +267,10 @@ fn check_loads(structure: &Structure, issues: &mut Vec<ModelIssue>) {
                     ));
                 }
             }
+            LoadKind::AccelerationField { .. } => {
+                // A global field targets no entity; the finite-component
+                // contract is enforced by the serialization schema.
+            }
         }
     }
 }

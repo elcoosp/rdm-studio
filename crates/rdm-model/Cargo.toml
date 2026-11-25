@@ -1,0 +1,19 @@
+[package]
+name = "rdm-model"
+description = "Canonical 3D structural model (SI units) for RDM Studio"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }
+proptest = { workspace = true }
+
+[lints]
+workspace = true

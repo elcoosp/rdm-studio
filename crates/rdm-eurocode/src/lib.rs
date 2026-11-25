@@ -16,10 +16,10 @@ pub mod en1993;
 pub use catalog::{Ec3Error, MaterialCatalog, ProfileCatalog, ProfileEntry, ProfileFamily};
 pub use en1990::{Combination, CombinationKind, Factors, PsiFactors, build_combinations};
 pub use en1993::{
-    BucklingCurve, Classification, DeflectionLimit, LtbResult, MemberCheck, MemberCheckInput,
-    buckling_curve_rolled, classify_section, deflection_limit, euler_critical_force,
-    flexural_buckling_chi, lambda_bar, lateral_torsional_buckling, member_check,
-    reduce_to_bending_shear, shear_area_major, shear_area_minor, von_mises_stress,
+    BucklingCurve, Classification, DeflectionLimit, GAMMA_M0, LtbResult, MemberCheck,
+    MemberCheckInput, buckling_curve_rolled, classify_section, deflection_limit,
+    euler_critical_force, flexural_buckling_chi, lambda_bar, lateral_torsional_buckling,
+    member_check, reduce_to_bending_shear, shear_area_major, shear_area_minor, von_mises_stress,
     von_mises_utilisation,
 };
 

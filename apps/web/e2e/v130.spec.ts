@@ -51,7 +51,20 @@ test("step 2 exposes the grouped RDM 7 library and clear-all", async ({ page }) 
   }
   // The grouped library opens with its 12 presets + custom note.
   await page.locator("details").first().locator("summary").click();
-  for (const key of ["simple-xy", "simple-xz", "simple-yz", "glissant-x", "glissant-y", "glissant-z", "glissiere-x", "glissiere-y", "glissiere-z", "pivot-x", "pivot-y", "pivot-z"]) {
+  for (const key of [
+    "simple-xy",
+    "simple-xz",
+    "simple-yz",
+    "glissant-x",
+    "glissant-y",
+    "glissant-z",
+    "glissiere-x",
+    "glissiere-y",
+    "glissiere-z",
+    "pivot-x",
+    "pivot-y",
+    "pivot-z",
+  ]) {
     await expect(page.getByTestId(`preset-${key}`)).toBeVisible();
   }
   // The demo project starts isostatic; clearing leaves a mechanism.
@@ -76,7 +89,11 @@ test("step 3 quick scenarios write acceleration fields and clear undoably", asyn
   // Vider les charges + undo restores the field.
   await page.getByTestId("clear-loads").click();
   await expect(page.locator("table tbody")).not.toContainText("×g");
-  await page.getByRole("button", { name: "Annuler" }).click();
+  // Undo inside the toast (scoped: the header undo button shares no label).
+  await page
+    .locator("[data-sonner-toast]")
+    .getByRole("button", { name: "Annuler" })
+    .click();
   await expect(page.locator("table tbody")).toContainText("×g");
 });
 

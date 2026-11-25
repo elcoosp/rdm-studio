@@ -11,13 +11,13 @@ export interface ProfileDims {
   /** Shape family name from the catalog (`DoubleSymmetricI`, ...). */
   shape: string;
   /** Overall depth (m). */
-  h?: number;
+  h?: number | null;
   /** Flange width (m). */
-  b?: number;
+  b?: number | null;
   /** Web thickness (m). */
-  tw?: number;
+  tw?: number | null;
   /** Flange thickness (m). */
-  tf?: number;
+  tf?: number | null;
 }
 
 export interface ProfileContour {

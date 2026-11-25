@@ -94,27 +94,6 @@ interface ProjectState {
   removeBeam: (id: number) => void;
   /** Patches one member (section, releases, roll angle, buckling lengths). */
   updateBeam: (id: number, patch: Partial<BeamData>) => void;
-  /**
-   * Batch member patch (v1.1.0 bug 9: multi-select editor) — every id in
-   * `ids` receives the same partial patch.
-   */
-  batchUpdateBeams: (ids: number[], patch: Partial<BeamData>) => void;
-  /**
-   * Distributed / span load on one member (v1.1.0 bug 9). `Trapezoid`
-   * covers uniform (`qStart === qEnd`) and linearly varying loads in N/m
-   * along `direction`; `PointOnSpan` places a concentrated load
-   * (`GlobalForcesData`) at `positionRatio` in [0, 1].
-   */
-  addBeamSpanLoad: (input: {
-    beamId: number;
-    loadCase: LoadCaseId;
-    kind: "Trapezoid" | "PointOnSpan";
-    qStart?: number;
-    qEnd?: number;
-    direction?: { x: number; y: number; z: number };
-    forces?: GlobalForcesData;
-    positionRatio?: number;
-  }) => void;
   selectBeam: (id: number | null) => void;
   selectNode: (id: number | null) => void;
   setSupport: (nodeId: number, lockedDofs: boolean[]) => void;
@@ -276,52 +255,6 @@ export const useProjectStore = create<ProjectState>()(
             },
           },
         })),
-      batchUpdateBeams: (ids, patch) =>
-        set((st) => {
-          const selected = new Set(ids);
-          return {
-            project: {
-              ...st.project,
-              updatedAt: new Date().toISOString(),
-              structure: {
-                ...st.project.structure,
-                beams: st.project.structure.beams.map((b) =>
-                  selected.has(b.id) ? { ...b, ...patch } : b,
-                ),
-              },
-            },
-          };
-        }),
-      addBeamSpanLoad: (input) =>
-        set((st) => {
-          const load: LoadData =
-            input.kind === "Trapezoid"
-              ? {
-                  case: input.loadCase,
-                  kind: "Trapezoid",
-                  beam_id: input.beamId,
-                  q_start: input.qStart ?? 0,
-                  q_end: input.qEnd ?? input.qStart ?? 0,
-                  direction: input.direction ?? { x: 0, y: 0, z: -1 },
-                }
-              : {
-                  case: input.loadCase,
-                  kind: "PointOnSpan",
-                  beam_id: input.beamId,
-                  position_ratio: input.positionRatio ?? 0.5,
-                  forces: input.forces ?? { fx: 0, fy: 0, fz: 0, mx: 0, my: 0, mz: 0 },
-                };
-          return {
-            project: {
-              ...st.project,
-              updatedAt: new Date().toISOString(),
-              structure: {
-                ...st.project.structure,
-                loads: [...st.project.structure.loads, load],
-              },
-            },
-          };
-        }),
       removeBeam: (id) =>
         set((st) => ({
           project: {

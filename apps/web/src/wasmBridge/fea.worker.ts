@@ -14,7 +14,45 @@ export interface CatalogRequest {
   type: "FETCH_CATALOG";
 }
 
-export type WorkerRequest = SolveRequest | CatalogRequest;
+export interface RenderPdfRequest {
+  type: "RENDER_PDF";
+  html: string;
+  images?: { src: string; data: Uint8Array }[];
+}
+
+export type WorkerRequest = SolveRequest | CatalogRequest | RenderPdfRequest;
+
+/**
+ * takumi-pdf state (ARCHITECTURE.md section 6: PDF generation runs in the
+ * worker). Lazily initialized on the first report render; fonts come from
+ * the self-hosted /fonts directory (service-worker precached, offline ok).
+ */
+let takumiReady: Promise<unknown> | null = null;
+const fontCache = new Map<string, { name: string; weight: number; data: Uint8Array }>();
+
+async function ensureTakumi(): Promise<void> {
+  takumiReady ??= (async () => {
+    const [{ default: initTakumi, PdfRenderer }, { default: takumiWasmUrl }] = await Promise.all([
+      import("takumi-pdf"),
+      import("takumi-pdf/wasm-url"),
+    ]);
+    await initTakumi({ module_or_path: takumiWasmUrl });
+    return PdfRenderer;
+  })();
+  await takumiReady;
+}
+
+async function loadFont(name: string, weight: number, file: string) {
+  const cached = fontCache.get(file);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const response = await fetch(`/fonts/${file}`);
+  const data = new Uint8Array(await response.arrayBuffer());
+  const font = { name, weight, data };
+  fontCache.set(file, font);
+  return font;
+}
 
 let ready: Promise<unknown> | null = null;
 
@@ -30,6 +68,27 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     const sections = catalog_sections();
     const materials = catalog_materials();
     self.postMessage({ type: "CATALOG", sections, materials });
+    return;
+  }
+  if (request.type === "RENDER_PDF") {
+    await ensureTakumi();
+    const { PdfRenderer } = await import("takumi-pdf");
+    const fonts = await Promise.all([
+      loadFont("Inter", 400, "inter-latin-400-normal.ttf"),
+      loadFont("Inter", 600, "inter-latin-600-normal.ttf"),
+      loadFont("Inter", 700, "inter-latin-700-normal.ttf"),
+      loadFont("JetBrains Mono", 400, "jetbrains-mono-latin-400-normal.ttf"),
+      loadFont("JetBrains Mono", 600, "jetbrains-mono-latin-600-normal.ttf"),
+    ]);
+    const renderer = new PdfRenderer();
+    const pdf = await renderer.render(request.html, {
+      size: "a4",
+      margin: 60,
+      images: request.images,
+      fonts,
+    });
+    console.info("[fea.worker] report rendered:", pdf.byteLength, "bytes");
+    self.postMessage({ type: "PDF_RESULT", pdf }, [pdf.buffer]);
     return;
   }
   // M2 criterion: the first FE calculation is displayed in the Worker

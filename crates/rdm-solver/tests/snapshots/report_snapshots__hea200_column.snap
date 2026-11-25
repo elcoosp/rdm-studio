@@ -1,0 +1,56 @@
+---
+source: crates/rdm-solver/tests/report_snapshots.rs
+expression: rounded
+---
+{
+  "beam_id": 7.0,
+  "chi": [
+    0.870533,
+    0.695564
+  ],
+  "class": "Class1",
+  "combination": "ULS 1.35G",
+  "ltb": {
+    "chi_lt": 0.890853,
+    "lambda_lt": 0.59773,
+    "m_b_rd": 90020.706077,
+    "m_cr": 282830.22059
+  },
+  "my_ed": 0.0,
+  "mz_ed": 0.0,
+  "n_ed": -500000.0,
+  "n_pl_rd": 1264300.0,
+  "t_ed": 0.0,
+  "utilizations": [
+    [
+      "NEd/Npl,Rd",
+      0.395476
+    ],
+    [
+      "Nb,Rd,y",
+      0.454292
+    ],
+    [
+      "Nb,Rd,z",
+      0.568568
+    ],
+    [
+      "Mb,Rd",
+      0.0
+    ],
+    [
+      "Mpl,Rd,y",
+      0.0
+    ],
+    [
+      "Vpl,Rd",
+      0.0
+    ],
+    [
+      "Von Mises",
+      0.395476
+    ]
+  ],
+  "v_pl_rd": 244897.550434,
+  "vz_ed": 0.0
+}

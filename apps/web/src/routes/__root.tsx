@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import { useAppHotkeys } from "@/hooks/useAppHotkeys";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { OnboardingTour } from "@/components/OnboardingTour";
-import { useFileOpening } from "@/hooks/useFileOpening";
+import { openProjectOrCadFile, useFileOpening } from "@/hooks/useFileOpening";
 import { redoModel, undoModel } from "@/state/projectStore";
 import { IconFrame, IconLoad, IconReport, IconResults, IconSupport } from "@/components/icons";
 import { UpdatePrompt } from "@/components/UpdatePrompt";
@@ -24,8 +24,6 @@ const STEPS = [
 ] as const;
 
 const MOBILE_LABELS = ["Géométrie", "Liaisons", "Charges", "Résultats", "Rapport"];
-
-// v1.4.0: the reactive media-query hook moved to hooks/useMediaQuery.ts.
 
 function LocaleSwitch() {
   const current = useProjectLocale();
@@ -99,8 +97,9 @@ function RootLayout() {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const nodeCount = project.structure.nodes.length;
   const beamCount = project.structure.beams.length;
-  // Defect 3: reactive navigation — `hidden md:flex` keeps the top bar in
-  // 768–1023px split windows, `<768px` swaps to the bottom tab bar live.
+  // v1.5.0 unified breakpoint: the mobile tab bar (and every drawer)
+  // exists ONLY below 768 px — 860 px split-screen windows get the full
+  // locked desktop workstation.
   const isMobile = useMediaQuery("(max-width: 767px)");
   useAppHotkeys(() => setPaletteOpen((open) => !open));
   // v1.4.0: drag-and-drop + PWA launchQueue file opening.
@@ -108,8 +107,8 @@ function RootLayout() {
 
   return (
     <div className="flex h-[100dvh] flex-col">
-      <header className="flex h-11 shrink-0 items-center gap-2 overflow-hidden border-b border-hairline bg-panel px-3 sm:gap-3 sm:px-4">
-        {/* Left zone: brand + project. */}
+      <header className="flex h-11 shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-hairline bg-panel px-3 sm:gap-3 sm:px-4">
+        {/* Left zone: brand + project switcher. */}
         <div className="flex min-w-0 shrink-0 items-center gap-1.5">
           <Link
             to="/geometry"
@@ -132,7 +131,7 @@ function RootLayout() {
             / {project.name}
           </span>
         </div>
-        {/* Center zone: the 5-step flow. */}
+        {/* Center zone: the 5-step flow with the shared gliding underline. */}
         <nav
           id="rdm-steps"
           className="mx-auto hidden min-w-0 items-center gap-1 overflow-x-auto md:flex"
@@ -161,8 +160,8 @@ function RootLayout() {
             );
           })}
         </nav>
-        {/* Right zone: telemetry + tools (ml-auto keeps it flush right when
-            the center zone is hidden). */}
+        {/* Right zone: undo/redo, telemetry, ⌘K, offline pill, tour, locale
+            (ml-auto keeps it flush right when the center zone is hidden). */}
         <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
           <span className="font-data hidden text-[11px] text-ink-muted lg:inline">
             {nodeCount} nœuds · {beamCount} poutres
@@ -206,12 +205,14 @@ function RootLayout() {
           <LocaleSwitch />
         </div>
       </header>
-      <main className="min-h-0 flex-1 overflow-auto pb-14 md:pb-0">
+      {/* v1.5.0: locked workstation shell — on md+ the main region NEVER
+          page-scrolls (each route manages its own panes); on phones the
+          stacked routes may scroll under the fixed tab bar. */}
+      <main className="min-h-0 flex-1 overflow-auto pb-14 md:overflow-hidden md:pb-0">
         <Outlet />
         <UpdatePrompt />
       </main>
-      {/* Thumb-friendly bottom tab bar, narrow viewports only (defect 3:
-          the `matchMedia` hook swaps it live on window resize). */}
+      {/* Thumb-friendly bottom tab bar, phones only (< 768 px). */}
       {isMobile ? (
         <nav
           className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch border-t border-hairline bg-panel"
@@ -240,13 +241,11 @@ function RootLayout() {
       <ProjectGalleryModal
         open={galleryOpen}
         onClose={() => setGalleryOpen(false)}
+        // v1.5.0 defect: the gallery importer shares the ONE unified file
+        // path, so .dxf / .step / .igs imports behave exactly like
+        // drag-and-drop instead of JSON.parse-crashing on CAD files.
         onImportFile={(file) => {
-          void file
-            .text()
-            .then((text) => {
-              useProjectStore.getState().loadProject(JSON.parse(text));
-            })
-            .catch(() => undefined);
+          void openProjectOrCadFile(file);
         }}
       />
     </div>

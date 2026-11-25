@@ -74,7 +74,6 @@ export function profileOutline(dims: ProfileDims): ProfileContour {
     case "Channel": {
       const yF = b / 2;
       const zF = h / 2;
-      const zWeb = h / 2 - tf;
       return {
         contour: [
           [-yF, -zF],

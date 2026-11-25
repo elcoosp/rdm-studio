@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import * as THREE from "three";
 import type { BeamData, LoadData, NodeData } from "@/state/projectStore";
 
 /**
@@ -153,8 +154,20 @@ export function ForceVectors3D({
               </group>,
             );
           }
-          // Top tie bar linking the arrow tails.
+          // Top tie bar linking the arrow tails: oriented ALONG the member
+          // vector (v1.5.0 defect — diagonal and vertical members used to
+          // stick out along global X because the box ran on the local X axis
+          // with no orientation quaternion).
           const tieY = (downward ? shaft : -shaft) + (downward ? 0.05 : -0.05);
+          const dir = new THREE.Vector3(
+            span.b[0] - span.a[0],
+            span.b[1] - span.a[1],
+            span.b[2] - span.a[2],
+          ).normalize();
+          const tieQuaternion = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(1, 0, 0),
+            dir,
+          );
           arrows.push(
             <mesh
               key={`${index}-tie`}
@@ -163,6 +176,7 @@ export function ForceVectors3D({
                 (span.a[1] + span.b[1]) / 2,
                 (span.a[2] + span.b[2]) / 2 + tieY / 2,
               ]}
+              quaternion={[tieQuaternion.x, tieQuaternion.y, tieQuaternion.z, tieQuaternion.w]}
             >
               <boxGeometry args={[span.length, 0.012, 0.012]} />
               <meshStandardMaterial color="#DC2626" />

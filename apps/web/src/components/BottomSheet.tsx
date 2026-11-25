@@ -1,27 +1,21 @@
 import { useState, type ReactNode } from "react";
-import { useSyncExternalStore } from "react";
 import { Drawer } from "vaul";
 import { Trans } from "@lingui/react/macro";
-
-/** Live `(max-width: 1023px)` subscription (v1.4.0 defect-2 pattern). */
-function useIsMobile(): boolean {
-  return useSyncExternalStore(
-    (notify) => {
-      const query = globalThis.matchMedia("(max-width: 1023px)");
-      query.addEventListener("change", notify);
-      return () => query.removeEventListener("change", notify);
-    },
-    () => globalThis.matchMedia("(max-width: 1023px)").matches,
-    () => false,
-  );
-}
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 /**
- * Mobile inspector (v1.4.0): a **non-blocking Vaul drawer** — native
- * spring physics, two snap points (35% / 78%) and a drag handle, while
- * the 3D viewport stays orbitable and the h-14 tab bar stays tappable
- * (`modal={false}` + pointer-events-none overlay). On `lg`+ the children
- * render inline as the docked left inspector (one DOM instance).
+ * Unified responsive inspector shell (v1.5.0, DESIGN.md §4):
+ *
+ * - **`md+` (≥ 768 px, including 860 px split-screen desktop windows):**
+ *   the inspector renders as an inline LEFT-DOCKED `320px` `<aside>` —
+ *   full height, hairline right border, zero drawer chrome, zero
+ *   "Fermer" button. The mobile drawer no longer hijacks half-screen
+ *   desktop windows (the old `(max-width: 1023px)` threshold forced a
+ *   broken bottom sheet between 800–1023 px).
+ * - **`< 768 px` (true phones):** a non-blocking Vaul drawer — native
+ *   spring physics, two snap points (35% / 78%) and a drag handle, while
+ *   the 3D viewport stays orbitable and the h-14 tab bar stays tappable
+ *   (`modal={false}` + pointer-events-none overlay).
  */
 export function BottomSheet({
   title,
@@ -32,16 +26,16 @@ export function BottomSheet({
   children: ReactNode;
   testId?: string;
 }) {
-  const isMobile = useIsMobile();
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [open, setOpen] = useState(true);
 
   if (!isMobile) {
     return (
       <aside
         data-testid={testId}
-        className="w-full shrink-0 self-start rounded-panel border border-hairline bg-panel p-4 lg:w-[320px]"
+        className="h-full w-80 shrink-0 space-y-3 overflow-y-auto border-r border-hairline bg-panel p-3"
       >
-        <h2 className="mb-3 text-[15px] font-semibold">{title}</h2>
+        <h2 className="text-[15px] font-semibold">{title}</h2>
         {children}
       </aside>
     );
@@ -67,7 +61,11 @@ export function BottomSheet({
         <Drawer.Overlay className="pointer-events-none bg-ink-primary/15" />
         <Drawer.Content
           data-testid={testId}
-          className="fixed inset-x-0 bottom-14 z-40 max-h-[85dvh] touch-none overflow-auto rounded-t-panel border border-hairline border-b-0 bg-panel p-4 pb-8 shadow-[0_-8px_30px_rgba(17,24,39,0.12)] md:bottom-0"
+          // vaul's fractional snap points translate a container-height drawer
+          // by (1 - snap) × viewport, so the element itself is h-[100dvh]
+          // with internal scrolling — the visible slice then matches the
+          // snap exactly (0.35 → ~35dvh above the tab bar, 0.78 → expanded).
+          className="fixed inset-x-0 bottom-0 z-30 h-[100dvh] touch-none overflow-auto rounded-t-panel border border-b-0 border-hairline bg-panel p-4 pb-16 shadow-[0_-8px_30px_rgba(17,24,39,0.12)]"
         >
           <div
             className="mx-auto mb-3 h-1 w-10 rounded-full bg-hairline"

@@ -71,7 +71,7 @@ function RuntimeBridge({
     onReady();
   }, [camera, gl, size, runtimeRef, onReady]);
   // v1.4.0: overlay listeners re-bind on init/resize via this counter.
-  const [runtimeReady, setRuntimeReady] = useState(0);
+  const [, setRuntimeReady] = useState(0);
   useEffect(() => {
     setRuntimeReady((n) => n + 1);
   }, [camera, gl, size]);

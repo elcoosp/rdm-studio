@@ -4,6 +4,8 @@ import { Trans } from "@lingui/react/macro";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BottomSheet } from "@/components/BottomSheet";
+import { DesktopSplit } from "@/components/ui/resizable";
 import {
   SupportFixed,
   SupportPinned,
@@ -113,10 +115,12 @@ function kinematicStatus(reactionCount: number): {
 }
 
 /**
- * Step 2 (DESIGN.md §4, mockups tape_2, v1.3.0 RDM 7 parity): 320px left
- * inspector — 4 primary quick cards, the grouped RDM 7 library synced with
- * the 2×3 DOF matrix, active supports list, live kinematic badge and the
- * undoable clear — beside the 3D viewport with click-to-restrain nodes.
+ * Step 2 (DESIGN.md §4, mockups tape_2, v1.3.0 RDM 7 parity): locked `md+`
+ * workstation — 320px LEFT inspector (4 primary quick cards, the grouped
+ * RDM 7 library synced with the 2×3 DOF matrix, active supports list, live
+ * kinematic badge and the undoable clear) beside the full-height 3D
+ * viewport with click-to-restrain nodes. Phone: the inspector becomes the
+ * Vaul drawer.
  */
 function SupportsPage() {
   const nodes = useProjectStore((s) => s.project.structure.nodes);
@@ -170,209 +174,205 @@ function SupportsPage() {
     });
   };
 
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 lg:flex-row-reverse">
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-panel border border-hairline bg-panel p-3">
-        <div className="relative min-h-[320px] flex-1 overflow-hidden rounded border border-hairline">
-          <ViewportCanvas nodes={nodes} beams={beams} testId="viewport-canvas">
-            <SupportMarkers nodes={nodes} supports={supports} />
-            <NodeMarkers
-              positions={nodePositions(nodes)}
-              highlightNodeId={selectedNodeId}
-              nodeIds={nodes.map((n) => n.id)}
-              onPickNode={(id) => selectNode(id)}
-            />
-          </ViewportCanvas>
+  const inspector = (
+    <BottomSheet testId="inspector-sheet" title={<Trans>Liaisons (RDM 7)</Trans>}>
+      <div className="flex items-center justify-between gap-2">
+        <Badge variant={status.variant} data-testid="kinematic-status">
+          {status.label}
+        </Badge>
+        <label className="flex items-center gap-1.5 font-data text-[11px] text-ink-muted">
+          <SupportSpring size={14} />
+          {supports.length} appui(s) · {reactionCount} réactions
+        </label>
+      </div>
+      {/* v1.4.0: selected node coordinates + free/locked DOF count. */}
+      {selectedNodeId !== null
+        ? (() => {
+            const node = nodes.find((n) => n.id === selectedNodeId);
+            const locked = lockedFor(selectedNodeId);
+            const lockedCount = locked.filter(Boolean).length;
+            return (
+              <p className="font-data text-[11px] text-ink-muted" data-testid="node-coords">
+                N{selectedNodeId} · ({node ? node.x.toFixed(2) : "0.00"} ;{" "}
+                {node ? node.y.toFixed(2) : "0.00"} ; {node ? node.z.toFixed(2) : "0.00"}) m ·{" "}
+                {lockedCount} DDL bloqués / {6 - lockedCount} libres
+              </p>
+            );
+          })()
+        : null}
+      <section className="border-t border-hairline pt-3">
+        <h3 className="text-xs font-medium text-ink-secondary">
+          <Trans>Presets d'appui</Trans>
+        </h3>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {PRIMARY_PRESETS.map((preset) => (
+            <Button
+              key={preset.key}
+              variant="outline"
+              size="sm"
+              data-testid={`preset-${preset.key}`}
+              className={`justify-start ${activePreset === preset.key ? "border-accent text-accent" : ""}`}
+              disabled={selectedNodeId === null}
+              onClick={() => applyPreset(preset)}
+            >
+              <preset.icon size={16} />
+              {preset.label}
+            </Button>
+          ))}
         </div>
-        <p className="text-[12px] text-ink-muted">
+      </section>
+      {/* Grouped 12-preset RDM 7 library + custom entry. */}
+      <details className="border-t border-hairline pt-3" data-testid="rdm7-library">
+        <summary className="cursor-pointer text-xs font-medium text-ink-secondary">
+          Bibliothèque RDM 7 (12 appuis groupés)
+        </summary>
+        <div className="mt-2 space-y-2">
+          {GROUPED_PRESETS.map((group) => (
+            <div key={group.group}>
+              <p className="mb-1 text-[11px] text-ink-muted">{group.group}</p>
+              <div className="flex flex-wrap gap-1">
+                {group.presets.map((preset) => (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    data-testid={`preset-${preset.key}`}
+                    className={`rounded border border-hairline px-2 py-0.5 font-data text-[11px] ${
+                      activePreset === preset.key
+                        ? "border-accent bg-accent-tint text-accent"
+                        : "text-ink-secondary hover:text-ink-primary"
+                    }`}
+                    disabled={selectedNodeId === null}
+                    onClick={() => applyPreset(preset)}
+                  >
+                    {group.group === "Appuis simples"
+                      ? `Appui ${preset.label}`
+                      : `${group.group} ${preset.label}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+          <p className="text-[11px] text-ink-muted">
+            <Trans>Personnalisée : composez la matrice 2×3 ci-dessous.</Trans>
+          </p>
+        </div>
+      </details>
+      <section className="border-t border-hairline pt-3">
+        <h3 className="text-xs font-medium text-ink-secondary">
+          <Trans>Matrice 6 DDL des appuis</Trans>
+        </h3>
+        <p className="mb-2 text-[11px] text-ink-muted">
           <Trans>
-            Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui.
+            Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer
+            (rotule).
           </Trans>
         </p>
-      </section>
-      <aside className="flex w-full shrink-0 flex-col gap-3 overflow-auto rounded-panel border border-hairline bg-panel p-3 lg:w-80">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-[15px] font-semibold">
-            <Trans>Liaisons (RDM 7)</Trans>
-          </h2>
-          <Badge variant={status.variant} data-testid="kinematic-status">
-            {status.label}
-          </Badge>
-        </div>
-        {/* v1.4.0: selected node coordinates + free/locked DOF count. */}
-        {selectedNodeId !== null
-          ? (() => {
-              const node = nodes.find((n) => n.id === selectedNodeId);
-              const locked = lockedFor(selectedNodeId);
-              const lockedCount = locked.filter(Boolean).length;
-              return (
-                <p className="font-data text-[11px] text-ink-muted" data-testid="node-coords">
-                  N{selectedNodeId} · ({node ? node.x.toFixed(2) : "0.00"} ;{" "}
-                  {node ? node.y.toFixed(2) : "0.00"} ; {node ? node.z.toFixed(2) : "0.00"}) m ·{" "}
-                  {lockedCount} DDL bloqués / {6 - lockedCount} libres
-                </p>
-              );
-            })()
-          : null}
-        <div>
-          <p className="mb-1 text-[12px] text-ink-secondary">
-            <Trans>Presets d'appui</Trans>
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {PRIMARY_PRESETS.map((preset) => (
-              <Button
-                key={preset.key}
-                variant="outline"
-                size="sm"
-                data-testid={`preset-${preset.key}`}
-                className={`justify-start ${activePreset === preset.key ? "border-accent text-accent" : ""}`}
-                disabled={selectedNodeId === null}
-                onClick={() => applyPreset(preset)}
-              >
-                <preset.icon size={16} />
-                {preset.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-        {/* Grouped 12-preset RDM 7 library + custom entry. */}
-        <details className="rounded border border-hairline p-2" data-testid="rdm7-library">
-          <summary className="cursor-pointer text-[12px] font-medium text-ink-secondary">
-            Bibliothèque RDM 7 (12 appuis groupés)
-          </summary>
-          <div className="mt-2 space-y-2">
-            {GROUPED_PRESETS.map((group) => (
-              <div key={group.group}>
-                <p className="mb-1 text-[11px] text-ink-muted">{group.group}</p>
-                <div className="flex flex-wrap gap-1">
-                  {group.presets.map((preset) => (
-                    <button
-                      key={preset.key}
-                      type="button"
-                      data-testid={`preset-${preset.key}`}
-                      className={`rounded border border-hairline px-2 py-0.5 font-data text-[11px] ${
-                        activePreset === preset.key
-                          ? "border-accent bg-accent-tint text-accent"
-                          : "text-ink-secondary hover:text-ink-primary"
-                      }`}
-                      disabled={selectedNodeId === null}
-                      onClick={() => applyPreset(preset)}
-                    >
-                      {group.group === "Appuis simples"
-                        ? `Appui ${preset.label}`
-                        : `${group.group} ${preset.label}`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <p className="text-[11px] text-ink-muted">
-              <Trans>Personnalisée : composez la matrice 2×3 ci-dessous.</Trans>
-            </p>
-          </div>
-        </details>
-        <div>
-          <h3 className="mb-1 text-[13px] font-semibold text-ink-secondary">
-            <Trans>Matrice 6 DDL des appuis</Trans>
-          </h3>
-          <p className="mb-2 text-[12px] text-ink-muted">
-            <Trans>
-              Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer
-              (rotule).
-            </Trans>
-          </p>
-          <div className="max-h-56 overflow-auto">
-            <table className="w-full text-[13px]">
-              <thead className="text-left text-[11px] text-ink-muted">
-                <tr>
-                  <th className="py-1">
-                    <Trans>Nœud</Trans>
+        <div className="max-h-56 overflow-auto">
+          <table className="w-full text-[13px]">
+            <thead className="text-left text-[11px] text-ink-muted">
+              <tr>
+                <th className="py-1">
+                  <Trans>Nœud</Trans>
+                </th>
+                {DOF_LABELS.map((d) => (
+                  <th key={d} className="font-data">
+                    {d}
                   </th>
-                  {DOF_LABELS.map((d) => (
-                    <th key={d} className="font-data">
-                      {d}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="font-data">
-                {nodes.map((n) => {
-                  const locked = lockedFor(n.id);
-                  return (
-                    <tr
-                      key={n.id}
-                      className={`border-t border-hairline ${selectedNodeId === n.id ? "bg-accent-tint" : ""}`}
-                      onClick={() => selectNode(n.id)}
-                    >
-                      <td className="py-1.5">{n.id}</td>
-                      {DOF_LABELS.map((d, i) => (
-                        <td key={d}>
-                          <input
-                            type="checkbox"
-                            aria-label={`dof ${d} node ${n.id}`}
-                            checked={locked[i] ?? false}
-                            onChange={(e) => {
-                              const next = [...locked];
-                              next[i] = e.currentTarget.checked;
-                              setSupport(n.id, next);
-                              setActivePreset(null);
-                            }}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="font-data">
+              {nodes.map((n) => {
+                const locked = lockedFor(n.id);
+                return (
+                  <tr
+                    key={n.id}
+                    className={`border-t border-hairline ${selectedNodeId === n.id ? "bg-accent-tint" : ""}`}
+                    onClick={() => selectNode(n.id)}
+                  >
+                    <td className="py-1.5">{n.id}</td>
+                    {DOF_LABELS.map((d, i) => (
+                      <td key={d}>
+                        <input
+                          type="checkbox"
+                          aria-label={`dof ${d} node ${n.id}`}
+                          checked={locked[i] ?? false}
+                          onChange={(e) => {
+                            const next = [...locked];
+                            next[i] = e.currentTarget.checked;
+                            setSupport(n.id, next);
+                            setActivePreset(null);
+                          }}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <h3 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink-secondary">
-              <SupportReaction size={14} />
-              <Trans>Appuis actifs</Trans>
-            </h3>
-            <button
-              type="button"
-              className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-fea-max hover:text-fea-max disabled:opacity-40"
-              data-testid="clear-supports"
-              disabled={supports.length === 0}
-              onClick={clearAll}
-            >
-              <Trans>Tout supprimer</Trans>
-            </button>
-          </div>
-          {supports.length === 0 ? (
-            <p className="text-[12px] text-ink-muted">
-              <Trans>Aucun appui — sélectionnez un nœud puis choisissez un preset.</Trans>
-            </p>
-          ) : (
-            <ul className="font-data space-y-0.5 text-[12px] text-ink-secondary">
-              {supports.map((s) => (
-                <li key={s.node_id}>
-                  N{s.node_id} · {s.locked_dofs.filter(Boolean).length} DDL bloqués
-                </li>
-              ))}
-            </ul>
-          )}
+      </section>
+      <section className="border-t border-hairline pt-3">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
+            <SupportReaction size={14} />
+            <Trans>Appuis actifs</Trans>
+          </h3>
+          <button
+            type="button"
+            className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-fea-max hover:text-fea-max disabled:opacity-40"
+            data-testid="clear-supports"
+            disabled={supports.length === 0}
+            onClick={clearAll}
+          >
+            <Trans>Tout supprimer</Trans>
+          </button>
         </div>
-        <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
-          <SupportSpring size={14} />
-          <span className="font-data">
-            {supports.length} appui(s) · {reactionCount} réactions
-          </span>
-        </label>
-        {/* v1.3.0 Step 2: next-step hand-off. */}
-        <Button
-          className="w-full"
-          data-testid="next-loads"
-          disabled={reactionCount < 6}
-          onClick={() => void navigate({ to: "/loads" })}
-        >
-          <Trans>Suivant : Définir les charges →</Trans>
-        </Button>
-      </aside>
-    </div>
+        {supports.length === 0 ? (
+          <p className="text-[12px] text-ink-muted">
+            <Trans>Aucun appui — sélectionnez un nœud puis choisissez un preset.</Trans>
+          </p>
+        ) : (
+          <ul className="font-data space-y-0.5 text-[12px] text-ink-secondary">
+            {supports.map((s) => (
+              <li key={s.node_id}>
+                N{s.node_id} · {s.locked_dofs.filter(Boolean).length} DDL bloqués
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      {/* v1.3.0 Step 2: next-step hand-off. */}
+      <Button
+        className="w-full"
+        data-testid="next-loads"
+        disabled={reactionCount < 6}
+        onClick={() => void navigate({ to: "/loads" })}
+      >
+        <Trans>Suivant : Définir les charges →</Trans>
+      </Button>
+    </BottomSheet>
   );
+
+  const main = (
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
+        <ViewportCanvas nodes={nodes} beams={beams} testId="viewport-canvas">
+          <SupportMarkers nodes={nodes} supports={supports} />
+          <NodeMarkers
+            positions={nodePositions(nodes)}
+            highlightNodeId={selectedNodeId}
+            nodeIds={nodes.map((n) => n.id)}
+            onPickNode={(id) => selectNode(id)}
+          />
+        </ViewportCanvas>
+      </div>
+      <p className="shrink-0 text-[12px] text-ink-muted">
+        <Trans>Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui.</Trans>
+      </p>
+    </section>
+  );
+
+  return <DesktopSplit inspector={inspector} main={main} />;
 }

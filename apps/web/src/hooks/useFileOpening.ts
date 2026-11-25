@@ -8,8 +8,12 @@ import { useProjectStore } from "@/state/projectStore";
  * wireframes onto the app shell, plus the PWA `launchQueue` consumer
  * backing the manifest's `file_handlers`. CAD imports go through the
  * same extension-dispatched worker path as the Step 1 dialog.
+ *
+ * v1.5.0: `openProjectOrCadFile` is exported so the gallery modal, the
+ * shell drop target and the PWA `launchQueue` share ONE importer — the
+ * gallery used to parse only `.rdm` JSON and silently fail on CAD files.
  */
-async function openFile(file: File): Promise<void> {
+export async function openProjectOrCadFile(file: File): Promise<boolean> {
   const lower = file.name.toLowerCase();
   try {
     if (lower.endsWith(".rdm")) {
@@ -19,7 +23,7 @@ async function openFile(file: File): Promise<void> {
       >[0];
       useProjectStore.getState().loadProject(project);
       toast(`Projet chargé : ${file.name}`);
-      return;
+      return true;
     }
     if (/\.(dxf|step|stp|igs|iges)$/.test(lower)) {
       const bytes = await file.arrayBuffer();
@@ -27,11 +31,12 @@ async function openFile(file: File): Promise<void> {
       const json = await feaClient.importCad(bytes, file.name, name);
       useProjectStore.getState().loadProject(JSON.parse(json));
       toast(`CAO importée : ${file.name}`);
-      return;
+      return true;
     }
-    toast.error(`Format non pris en charge : ${file.name}`);
+    return false;
   } catch (error) {
     toast.error(error instanceof Error ? error.message : `Échec d'ouverture : ${file.name}`);
+    return false;
   }
 }
 
@@ -48,7 +53,7 @@ export function useFileOpening(): void {
       ).launchQueue;
       queue.setConsumer((params) => {
         for (const handle of params.files) {
-          void handle.getFile().then(openFile);
+          void handle.getFile().then(openProjectOrCadFile);
         }
       });
     }
@@ -74,7 +79,7 @@ export function useFileOpening(): void {
       event.preventDefault();
       document.body.classList.remove("rdm-dragging");
       for (const file of event.dataTransfer?.files ?? []) {
-        void openFile(file);
+        void openProjectOrCadFile(file);
       }
     };
     window.addEventListener("dragover", onDragOver);

@@ -1,70 +1,32 @@
-import type { ComponentProps, ReactNode } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import type { ReactNode } from "react";
 
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { cn } from "@/lib/cn";
 
 /**
- * Draggable inspector/viewport/dock split (react-resizable-panels).
- * Handles are 1px hairlines that widen to cobalt on hover/drag.
+ * Locked workstation split (v1.5.0, DESIGN.md §4 + AGENTS.md split-screen
+ * contract): at `md+` (≥ 768 px, INCLUDING 860 px split-screen desktop
+ * windows) the inspector docks LEFT as a fixed `w-80` (320 px) full-height
+ * aside and the viewport pane fills the remaining width — no percentage
+ * panels, no bottom sheet, no mobile tab bar. Below 768 px the children
+ * stack for the phone layout (drawer overlay + full-bleed viewport).
  */
-export function ResizableGroup(props: ComponentProps<typeof PanelGroup>) {
-  return <PanelGroup {...props} />;
-}
-
-export function ResizablePanel(props: ComponentProps<typeof Panel>) {
-  return <Panel {...props} />;
-}
-
-export function ResizableHandle({ className, ...props }: ComponentProps<typeof PanelResizeHandle>) {
-  return (
-    <PanelResizeHandle
-      className={cn(
-        "group relative w-px bg-hairline transition-colors hover:bg-accent data-[resize-handle-active]:bg-accent",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-/**
- * Steps 1–4 desktop shell (v1.4.0): the 320px left inspector and the 3D
- * pane become drag-resizable panels; below `lg` children stack naturally
- * in the route's flex column.
- */
-export function DesktopSplit({
-  inspector,
-  main,
-  inspectorDefault = 24,
-}: {
-  inspector: ReactNode;
-  main: ReactNode;
-  inspectorDefault?: number;
-}) {
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+export function DesktopSplit({ inspector, main }: { inspector: ReactNode; main: ReactNode }) {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   if (!isDesktop) {
+    // Phone: main viewport FIRST at full remaining height, the drawer
+    // trigger last (bottom-sheet ergonomics above the h-14 tab bar). The
+    // h-full flex column keeps the 3D pane full-bleed under the header.
     return (
-      <>
-        {inspector}
+      <div className="flex h-full min-h-0 flex-col">
         {main}
-      </>
+        {inspector}
+      </div>
     );
   }
   return (
-    <ResizableGroup direction="horizontal" className="min-h-0 flex-1">
-      <ResizablePanel
-        defaultSize={inspectorDefault}
-        minSize={14}
-        maxSize={40}
-        className="min-w-0 overflow-auto"
-      >
-        {inspector}
-      </ResizablePanel>
-      <ResizableHandle />
-      <ResizablePanel defaultSize={100 - inspectorDefault} className="min-w-0">
-        {main}
-      </ResizablePanel>
-    </ResizableGroup>
+    <div className="flex h-full min-h-0 w-full items-stretch">
+      {inspector}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{main}</div>
+    </div>
   );
 }

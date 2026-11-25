@@ -7,11 +7,11 @@ import { useViewportStore } from "@/state/viewportStore";
  * latency readout when provided.
  */
 const LAYERS = [
-  ["nodes", "Noeuds"],
+  ["nodes", "Nœuds"],
   ["beams", "Poutres"],
   ["loads", "Charges"],
   ["supports", "Appuis"],
-  ["deformed", "Deformee"],
+  ["deformed", "Déformée"],
 ] as const;
 
 export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) {

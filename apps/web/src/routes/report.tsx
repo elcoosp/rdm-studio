@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BottomSheet } from "@/components/BottomSheet";
 import { useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { encodeProject } from "@/lib/urlShare";
@@ -30,6 +29,14 @@ function downloadBytes(filename: string, bytes: Uint8Array): void {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Step 5 (DESIGN.md §4 + mockups tape_5, v1.5.0): centered A4 engineering
+ * sheet (`max-w-[794px]`, p-8) with the logo header, 2-column metadata
+ * grid, aligned monospace tables (tabular-nums, right-aligned numeric
+ * columns, 1-click TSV copy) and the QR + SHA-256 fingerprint footer,
+ * beside the sticky 320px export rail (PDF Takumi / CSV Excel / HTML 3D /
+ * Imprimer).
+ */
 function ReportPage() {
   const project = useProjectStore((s) => s.project);
   const [copied, setCopied] = useState(false);
@@ -61,122 +68,150 @@ function ReportPage() {
   };
 
   return (
-    <div className="grid gap-4 p-4 lg:grid-cols-[1fr_320px]">
-      <section className="print-sheet mx-auto w-full max-w-[720px] rounded-panel border border-hairline bg-panel p-6">
-        <div className="flex items-center justify-between border-b-2 border-accent pb-2">
-          <h2 className="text-[17px] font-semibold">RDM Studio — Rapport de calcul</h2>
-          <span className="font-data text-[11px] text-ink-muted">
-            {new Date().toISOString().slice(0, 10)}
-          </span>
-        </div>
-        <dl className="text-[13px]">
-          <dt className="text-ink-muted">
-            <Trans>Nom du projet</Trans>
-          </dt>
-          <dd className="font-data">{project.name}</dd>
-          <dt className="mt-2 text-ink-muted">
-            <Trans>Nœuds / Poutres / Appuis / Charges</Trans>
-          </dt>
-          <dd className="font-data">
-            {project.structure.nodes.length} / {project.structure.beams.length} /{" "}
-            {project.structure.supports.length} / {project.structure.loads.length}
-          </dd>
-          <dt className="mt-2 text-ink-muted">
-            <Trans>Poids propre automatique</Trans>
-          </dt>
-          <dd className="font-data">{project.structure.self_weight_enabled ? "oui" : "non"}</dd>
-        </dl>
-        <h3 className="mt-4 mb-2 text-[13px] font-semibold text-ink-secondary">
-          <Trans>Profils utilisés</Trans>
-        </h3>
-        <ul className="font-data list-disc pl-5 text-[13px]">
-          {[
-            ...new Set(project.structure.beams.map((b) => `${b.section_id} (${b.material_id})`)),
-          ].map((label) => (
-            <li key={label}>{label}</li>
-          ))}
-        </ul>
-        <ReportTables />
-        <FingerprintFooter />
-      </section>
-      <BottomSheet testId="inspector-sheet" title={<Trans>Partage par URL</Trans>}>
-        <p className="text-[12px] text-ink-secondary">
-          <Trans>
-            Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la
-            relecture.
-          </Trans>
-        </p>
-        <textarea
-          readOnly
-          className="font-data mt-2 h-24 w-full rounded border border-hairline p-2 text-[11px]"
-          value={shareUrl}
-        />
-        <button
-          type="button"
-          className="mt-2 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-          onClick={() => {
-            void navigator.clipboard.writeText(shareUrl).then(() => {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
-            });
-          }}
-        >
-          {copied ? <Trans>Copie !</Trans> : <Trans>Copier l'URL de partage</Trans>}
-        </button>
-        {qrDataUrl !== null ? (
-          <img
-            src={qrDataUrl}
-            alt="QR"
-            data-testid="share-qr"
-            className="mt-3 mx-auto block h-28 w-28"
-          />
-        ) : null}
-        <h3 className="mt-4 mb-2 text-[13px] font-semibold">
-          <Trans>Exports (étape 5)</Trans>
-        </h3>
-        <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            data-testid="export-pdf"
-            disabled={busy !== null}
-            className="min-h-11 w-full rounded bg-accent px-2 py-1.5 text-[13px] text-white disabled:opacity-50"
-            onClick={() => void exportPdf()}
-          >
-            {busy === "pdf" ? <Trans>Génération…</Trans> : <Trans>Rapport PDF (takumi)</Trans>}
-          </button>
-          <button
-            type="button"
-            data-testid="export-csv"
-            disabled={busy !== null}
-            className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-            onClick={() => exportResultsCsv(getLastReport())}
-          >
-            <Trans>Resultats CSV (Excel)</Trans>
-          </button>
-          <button
-            type="button"
-            data-testid="export-html3d"
-            disabled={busy !== null}
-            className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-            onClick={() =>
-              exportStandaloneHtml3d(project, getLastReport(), (name, text, mime) => {
-                import("@/export/csvExport").then((m) => m.downloadText(name, text, mime));
-              })
-            }
-          >
-            <Trans>Rapport 3D autonome (HTML)</Trans>
-          </button>
-        </div>
-      </BottomSheet>
+    <div className="h-full min-h-0 overflow-auto p-3 md:p-4">
+      <div className="mx-auto flex max-w-[1140px] flex-col gap-4 md:flex-row md:items-start">
+        <section className="print-sheet mx-auto w-full max-w-[794px] space-y-5 rounded-panel border border-hairline bg-panel p-8">
+          {/* A4 sheet header: logo + title + date. */}
+          <div className="flex items-center justify-between border-b-2 border-accent pb-2">
+            <div className="flex items-center gap-2">
+              <img src="/logo-rdm-studio.svg" alt="" className="h-7 w-7" />
+              <h2 className="text-[17px] font-semibold">RDM Studio — Rapport de calcul</h2>
+            </div>
+            <span className="font-data text-[11px] text-ink-muted">
+              {new Date().toISOString().slice(0, 10)}
+            </span>
+          </div>
+          {/* 2-column metadata grid. */}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-[13px]">
+            <dt className="text-ink-muted">
+              <Trans>Nom du projet</Trans>
+            </dt>
+            <dd className="font-data text-right">{project.name}</dd>
+            <dt className="text-ink-muted">
+              <Trans>Nœuds / Poutres / Appuis / Charges</Trans>
+            </dt>
+            <dd className="font-data text-right">
+              {project.structure.nodes.length} / {project.structure.beams.length} /{" "}
+              {project.structure.supports.length} / {project.structure.loads.length}
+            </dd>
+            <dt className="text-ink-muted">
+              <Trans>Poids propre automatique</Trans>
+            </dt>
+            <dd className="font-data text-right">
+              {project.structure.self_weight_enabled ? "oui" : "non"}
+            </dd>
+            <dt className="text-ink-muted">
+              <Trans>Normes</Trans>
+            </dt>
+            <dd className="font-data text-right">EN 1990 / EN 1993-1-1</dd>
+          </dl>
+          <div>
+            <h3 className="mb-1 text-[13px] font-semibold text-ink-secondary">
+              <Trans>Profils utilisés</Trans>
+            </h3>
+            <ul className="font-data list-disc pl-5 text-[13px]">
+              {[
+                ...new Set(
+                  project.structure.beams.map((b) => `${b.section_id} (${b.material_id})`),
+                ),
+              ].map((label) => (
+                <li key={label}>{label}</li>
+              ))}
+            </ul>
+          </div>
+          <ReportTables />
+          <FingerprintFooter qrDataUrl={qrDataUrl} />
+        </section>
+        {/* Sticky 320px export rail. */}
+        <aside className="w-full shrink-0 self-start md:sticky md:top-4 md:w-80">
+          <div className="space-y-3 rounded-panel border border-hairline bg-panel p-4">
+            <h3 className="text-[15px] font-semibold">
+              <Trans>Exports (étape 5)</Trans>
+            </h3>
+            <button
+              type="button"
+              data-testid="export-pdf"
+              disabled={busy !== null}
+              className="min-h-11 w-full rounded bg-accent px-2 py-1.5 text-[13px] text-white disabled:opacity-50"
+              onClick={() => void exportPdf()}
+            >
+              {busy === "pdf" ? <Trans>Génération…</Trans> : <Trans>PDF Takumi</Trans>}
+            </button>
+            <button
+              type="button"
+              data-testid="export-csv"
+              disabled={busy !== null}
+              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
+              onClick={() => exportResultsCsv(getLastReport())}
+            >
+              <Trans>CSV Excel</Trans>
+            </button>
+            <button
+              type="button"
+              data-testid="export-html3d"
+              disabled={busy !== null}
+              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
+              onClick={() =>
+                exportStandaloneHtml3d(project, getLastReport(), (name, text, mime) => {
+                  import("@/export/csvExport").then((m) => m.downloadText(name, text, mime));
+                })
+              }
+            >
+              <Trans>HTML 3D</Trans>
+            </button>
+            <button
+              type="button"
+              data-testid="print-report"
+              className="min-h-11 w-full rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary hover:border-accent hover:text-accent"
+              onClick={() => window.print()}
+            >
+              <Trans>Imprimer</Trans>
+            </button>
+            {/* Share-by-URL (lz-string compressed, Valibot-validated). */}
+            <div className="border-t border-hairline pt-3">
+              <p className="text-[12px] text-ink-secondary">
+                <Trans>
+                  Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la
+                  relecture.
+                </Trans>
+              </p>
+              <textarea
+                readOnly
+                className="font-data mt-2 h-24 w-full rounded border border-hairline p-2 text-[11px]"
+                value={shareUrl}
+              />
+              <button
+                type="button"
+                className="mt-2 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
+                onClick={() => {
+                  void navigator.clipboard.writeText(shareUrl).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  });
+                }}
+              >
+                {copied ? <Trans>Copie !</Trans> : <Trans>Copier l'URL de partage</Trans>}
+              </button>
+              {qrDataUrl !== null ? (
+                <img
+                  src={qrDataUrl}
+                  alt="QR"
+                  data-testid="share-qr"
+                  className="mx-auto mt-3 block h-28 w-28"
+                />
+              ) : null}
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
 
 const fr = (v: number, digits = 3): string => v.toFixed(digits).replace(".", ",");
 
-/** 4 calculation tables (mockups tape_5) with 1-click TSV copy. */
-/** v1.4.0: deterministic SHA-256 model fingerprint footer. */
-function FingerprintFooter() {
+/** v1.4.0: deterministic SHA-256 model fingerprint + QR footer. */
+function FingerprintFooter({ qrDataUrl }: { qrDataUrl: string | null }) {
   const project = useProjectStore((s) => s.project);
   const [hash, setHash] = useState<string | null>(null);
   useEffect(() => {
@@ -195,10 +230,17 @@ function FingerprintFooter() {
     };
   }, [project]);
   return (
-    <p className="font-data mt-4 border-t border-hairline pt-2 text-[11px] text-ink-muted">
-      Empreinte du modèle (SHA-256) :{" "}
-      <span data-testid="model-fingerprint">{hash ?? "calcul…"}</span>
-    </p>
+    <div className="flex items-end justify-between gap-4 border-t border-hairline pt-3">
+      <p className="font-data text-[11px] text-ink-muted">
+        Empreinte du modèle (SHA-256) :{" "}
+        <span data-testid="model-fingerprint" className="break-all">
+          {hash ?? "calcul…"}
+        </span>
+      </p>
+      {qrDataUrl !== null ? (
+        <img src={qrDataUrl} alt="" aria-hidden className="h-16 w-16 shrink-0" />
+      ) : null}
+    </div>
   );
 }
 
@@ -235,25 +277,31 @@ function ReportTables() {
   const ec3Rows = (uls?.beams ?? []).map((b) => [
     `P${b.beam_id}`,
     fr(b.max_sigma_vm / 1e6, 1),
-    b.chi_y === null ? "—" : fr(b.chi_y),
-    b.chi_z === null ? "—" : fr(b.chi_z),
-    b.chi_lt === null ? "—" : fr(b.chi_lt),
+    // serde-wasm-bindgen serializes Option::None as UNDEFINED (not null),
+    // so the guard must be nullish or non-governing members crash the sheet.
+    b.chi_y == null ? "—" : fr(b.chi_y),
+    b.chi_z == null ? "—" : fr(b.chi_z),
+    b.chi_lt == null ? "—" : fr(b.chi_lt),
     fr(b.utilization),
     b.utilization > 1 ? "NON VERIFIÉ" : "vérifié",
   ]);
-  // v1.4.0: ELU support reactions (Rx, Ry, Rz) + Σ footer.
+  // v1.5.0 defect fix: support reactions are indexed by the node's 0-based
+  // ARRAY position (nodeIndex * 6), matching `Structure::dof_offset` in the
+  // Rust solver — the old `n.id * 6` was 1-based and reported wrong rows
+  // whenever node ids are not contiguous (DXF import, deletions).
   const permanent = report?.cases.find((c) => c.code === "G");
   const variable = report?.cases.find((c) => c.code === "Q");
   const reactionRows = project.structure.nodes
     .filter((n) => project.structure.supports.some((sp) => sp.node_id === n.id))
     .map((n) => {
+      const nodeIndex = project.structure.nodes.findIndex((x) => x.id === n.id);
       const g = permanent?.reactions ?? [];
       const q = variable?.reactions ?? [];
-      const rx = (g[n.id * 6] ?? 0) + 1.5 * (q[n.id * 6] ?? 0) + 0.35 * (g[n.id * 6] ?? 0);
-      const ry =
-        (g[n.id * 6 + 1] ?? 0) + 1.5 * (q[n.id * 6 + 1] ?? 0) + 0.35 * (g[n.id * 6 + 1] ?? 0);
-      const rz =
-        (g[n.id * 6 + 2] ?? 0) + 1.5 * (q[n.id * 6 + 2] ?? 0) + 0.35 * (g[n.id * 6 + 2] ?? 0);
+      const i = nodeIndex * 6;
+      // ELU superposition 1.35G + 1.50Q per EN 1990 (6.10b additive form).
+      const rx = 1.35 * (g[i] ?? 0) + 1.5 * (q[i] ?? 0);
+      const ry = 1.35 * (g[i + 1] ?? 0) + 1.5 * (q[i + 1] ?? 0);
+      const rz = 1.35 * (g[i + 2] ?? 0) + 1.5 * (q[i + 2] ?? 0);
       return [`N${n.id}`, fr(rx / 1000, 2), fr(ry / 1000, 2), fr(rz / 1000, 2)];
     });
   const totalRx = reactionRows.reduce((m, r) => m + Number((r[1] ?? "0").replace(",", ".")), 0);
@@ -278,7 +326,7 @@ function ReportTables() {
     return fr(max * 1000, 2);
   })();
   return (
-    <div className="mt-4 space-y-4">
+    <div className="space-y-4">
       {[
         { title: "Fréquences propres (Hz)", headers: ["Mode", "f (Hz)", "T (s)"], rows: modalRows },
         {
@@ -313,24 +361,24 @@ function ReportTables() {
               className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-accent"
               onClick={() => copy(table.headers, table.rows)}
             >
-              Copier pour Excel
+              Copier TSV
             </button>
           </div>
           <table className="mt-1 w-full text-[12px]">
             <thead className="text-left text-[11px] text-ink-muted">
               <tr>
-                {table.headers.map((h) => (
-                  <th key={h} className="py-0.5">
+                {table.headers.map((h, j) => (
+                  <th key={h} className={`py-0.5 ${j === 0 ? "" : "text-right"}`}>
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="font-data">
+            <tbody className="font-data [font-variant-numeric:tabular-nums]">
               {table.rows.map((row, i) => (
                 <tr key={i} className="border-t border-hairline">
                   {row.map((cell, j) => (
-                    <td key={j} className="py-0.5 pr-2">
+                    <td key={j} className={`py-0.5 ${j === 0 ? "pr-2" : "text-right"}`}>
                       {cell}
                     </td>
                   ))}

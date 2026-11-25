@@ -1,6 +1,3 @@
-import { useMemo } from "react";
-import * as THREE from "three";
-
 /**
  * Instanced node pins (Points layer), v1.3.0: shared by Step 1 and
  * Step 2. `highlightNodeId` renders a larger cobalt marker (table-hover

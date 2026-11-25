@@ -1,4 +1,3 @@
-import type { JSX } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -19,6 +18,9 @@ export function DataTable<T>({
   rowSelection,
   onRowSelectionChange,
   enableRowSelection = false,
+  onRowClick,
+  onRowHover,
+  rowClassName,
   className,
 }: {
   columns: ColumnDef<T, unknown>[];
@@ -26,6 +28,12 @@ export function DataTable<T>({
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: (next: RowSelectionState) => void;
   enableRowSelection?: boolean;
+  /** Row click hook (v1.5.0 data dock: select the node/beam in the store). */
+  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  /** Row hover hook (v1.5.0 data dock: highlight in the 3D viewport). */
+  onRowHover?: (row: T | null) => void;
+  /** Per-row class hook (v1.5.0 data dock: store-selection highlight). */
+  rowClassName?: (row: T) => string | undefined;
   className?: string;
 }) {
   const table = useReactTable({
@@ -65,27 +73,31 @@ export function DataTable<T>({
           ))}
         </thead>
         <tbody className="font-data">
-          {table.getRowModel().rows.map((row, rowIndex) => (
+          {table.getRowModel().rows.map((row) => (
             <tr
               key={row.id}
               data-testid={`data-row-${row.id}`}
               className={cn(
                 "border-t border-hairline transition-colors",
                 row.getIsSelected() ? "bg-accent-tint" : "hover:bg-canvas",
+                rowClassName?.(row.original),
               )}
               onClick={(event) => {
+                onRowClick?.(row.original, event);
                 if (!enableRowSelection) {
                   return;
                 }
                 // Shift+Click extends the selection to the clicked row.
                 if (event.shiftKey) {
-                  const next = { ...(rowSelection ?? {}) };
+                  const next = { ...rowSelection };
                   next[row.id] = true;
                   onRowSelectionChange?.(next);
                 } else {
                   onRowSelectionChange?.({ [row.id]: !row.getIsSelected() });
                 }
               }}
+              onMouseEnter={() => onRowHover?.(row.original)}
+              onMouseLeave={() => onRowHover?.(null)}
             >
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="py-1 pr-2">

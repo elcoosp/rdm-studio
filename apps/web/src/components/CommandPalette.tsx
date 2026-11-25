@@ -1,11 +1,17 @@
 import { Command } from "cmdk";
-import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Trans } from "@lingui/react/macro";
+import { useProjectStore } from "@/state/projectStore";
 
 /**
  * Keyboard-first command palette (DESIGN.md §6, `cmdk` 1.1.1): instant
  * access to the 5 steps, profile presets and exports. Opens with ⌘K / Ctrl+K.
+ *
+ * v1.5.0: the palette is CONTEXT-AWARE — while members are selected it
+ * surfaces the active-selection commands (`⌥R` end-moment releases,
+ * `⇧⌘I` invert selection), plus the two workflow power actions
+ * (`⌘Entrée` solve, `⌘P` A4/PDF note) regardless of context.
  */
 export function CommandPalette({
   open,
@@ -15,6 +21,9 @@ export function CommandPalette({
   onOpenChange: (v: boolean) => void;
 }) {
   const navigate = useNavigate();
+  const selectedBeamIds = useProjectStore((s) => s.selection.selectedBeamIds);
+  const beamId = useProjectStore((s) => s.selection.beamId);
+  const hasSelection = selectedBeamIds.length > 0 || beamId !== null;
 
   if (!open) {
     return null;
@@ -22,6 +31,32 @@ export function CommandPalette({
   const go = (to: string) => {
     onOpenChange(false);
     void navigate({ to });
+  };
+  /** Toggles N1/N2 end-moment releases on the active selection (⌥R path). */
+  const releaseMoments = () => {
+    onOpenChange(false);
+    const { project, selection, updateBeam } = useProjectStore.getState();
+    const targets =
+      selection.selectedBeamIds.length > 0
+        ? selection.selectedBeamIds
+        : selection.beamId === null
+          ? []
+          : [selection.beamId];
+    for (const id of targets) {
+      const beam = project.structure.beams.find((b) => b.id === id);
+      if (beam === undefined) {
+        continue;
+      }
+      const released = beam.releases_start[1] ?? false;
+      const start = [...beam.releases_start];
+      const end = [...beam.releases_end];
+      start[1] = !released;
+      end[1] = !released;
+      updateBeam(id, { releases_start: start, releases_end: end });
+    }
+    if (targets.length > 0) {
+      toast(`Relâchements N1/N2 basculés sur ${targets.length} poutre(s)`);
+    }
   };
   return (
     <div
@@ -44,6 +79,47 @@ export function CommandPalette({
             <Command.Empty className="p-3 text-[12px] text-ink-muted">
               <Trans>Aucun résultat.</Trans>
             </Command.Empty>
+            {hasSelection ? (
+              <Command.Group heading="Sélection active" className="p-2 text-[13px]">
+                <Command.Item
+                  value="Relâcher les moments N1/N2"
+                  onSelect={releaseMoments}
+                  className="flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
+                >
+                  <Trans>Relâcher les moments N1/N2</Trans>
+                  <span className="font-data text-[10px] text-ink-muted">⌥R</span>
+                </Command.Item>
+                <Command.Item
+                  value="Inverser la sélection"
+                  onSelect={() => {
+                    onOpenChange(false);
+                    useProjectStore.getState().invertBeamSelection();
+                  }}
+                  className="flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
+                >
+                  <Trans>Inverser la sélection</Trans>
+                  <span className="font-data text-[10px] text-ink-muted">⇧⌘I</span>
+                </Command.Item>
+              </Command.Group>
+            ) : null}
+            <Command.Group heading="Calcul" className="p-2 text-[13px]">
+              <Command.Item
+                value="Lancer le calcul 3D & Eurocode 3"
+                onSelect={() => go("/results")}
+                className="flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
+              >
+                <Trans>Lancer le calcul 3D & Eurocode 3</Trans>
+                <span className="font-data text-[10px] text-ink-muted">⌘Entrée</span>
+              </Command.Item>
+              <Command.Item
+                value="Note de calcul A4 / PDF"
+                onSelect={() => go("/report")}
+                className="flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
+              >
+                <Trans>Note de calcul A4 / PDF</Trans>
+                <span className="font-data text-[10px] text-ink-muted">⌘P</span>
+              </Command.Item>
+            </Command.Group>
             <Command.Group heading="Étapes" className="p-2 text-[13px]">
               {[
                 { to: "/geometry", label: "Géométrie & Profilés" },
@@ -80,20 +156,14 @@ export function CommandPalette({
             <Command.Group heading="Exports" className="p-2 text-[13px]">
               <Command.Item
                 value="Rapport PDF"
-                onSelect={() => {
-                  onOpenChange(false);
-                  void navigate({ to: "/report" });
-                }}
+                onSelect={() => go("/report")}
                 className="cursor-pointer rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
               >
                 Rapport PDF
               </Command.Item>
               <Command.Item
                 value="Resultats CSV"
-                onSelect={() => {
-                  onOpenChange(false);
-                  void navigate({ to: "/report" });
-                }}
+                onSelect={() => go("/report")}
                 className="cursor-pointer rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
               >
                 Résultats CSV

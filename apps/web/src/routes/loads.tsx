@@ -5,6 +5,8 @@ import { Trans } from "@lingui/react/macro";
 import { toast } from "sonner";
 import { IconTrash } from "@/components/icons";
 import { NumberFlowValue } from "@/components/NumberFlowValue";
+import { BottomSheet } from "@/components/BottomSheet";
+import { DesktopSplit } from "@/components/ui/resizable";
 import {
   NodalPointLoad,
   UniformBeamLoad,
@@ -14,7 +16,7 @@ import {
 } from "@/components/icons/EngineeringIcons";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { DesktopSplit } from "@/components/ui/resizable";
+import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
 import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
 import {
@@ -45,8 +47,6 @@ const LOAD_TABS: { id: LoadTab; label: string; icon: typeof NodalPointLoad }[] =
   { id: "point", label: "Ponctuelle (a/L)", icon: SpanPointLoad },
 ];
 
-const parseFr = (value: string): number => Number(value.replace(",", "."));
-
 /** Member length in metres from its endpoint nodes. */
 function memberLength(nodes: NodeData[], beam: { n1: number; n2: number }): number {
   const n1 = nodes.find((n) => n.id === beam.n1);
@@ -58,11 +58,12 @@ function memberLength(nodes: NodeData[], beam: { n1: number; n2: number }): numb
 }
 
 /**
- * Step 3 (DESIGN.md §4, mockups tape_3, v1.3.0 RDM 7 parity): 320px left
- * inspector — EN 1990 case tabs, g-acceleration quick scenarios plus the
- * `(ax, ay, az)` form, 3-axis nodal and beam load forms, live force
- * resultants (rolling digits), undoable clear — beside the 3D viewport
- * with crimson load arrows.
+ * Step 3 (DESIGN.md §4, mockups tape_3, v1.3.0 RDM 7 parity): locked `md+`
+ * workstation — 320px LEFT inspector (EN 1990 case tabs, g-acceleration
+ * quick scenarios plus the `(ax, ay, az)` form, 3-axis nodal and beam load
+ * forms in the 2-column key-value grid, live force resultants, undoable
+ * clear) beside the 3D viewport with crimson load arrows. Phone: the
+ * inspector becomes the Vaul drawer.
  */
 function LoadsPage() {
   const loads = useProjectStore((s) => s.project.structure.loads);
@@ -83,17 +84,18 @@ function LoadsPage() {
   const [tab, setTab] = useState<LoadTab>("nodal");
   const [nodeId, setNodeId] = useState<number>(nodes[0]?.id ?? 1);
   const [beamId, setBeamId] = useState<number>(beams[0]?.id ?? 1);
-  const [fx, setFx] = useState("0");
-  const [fy, setFy] = useState("0");
-  const [fz, setFz] = useState("-10");
-  const [qx, setQx] = useState("0");
-  const [qy, setQy] = useState("0");
-  const [qz, setQz] = useState("-10");
-  const [q2z, setQ2z] = useState("-5");
-  const [ratio, setRatio] = useState("50");
-  const [axG, setAxG] = useState("0");
-  const [ayG, setAyG] = useState("0");
-  const [azG, setAzG] = useState("0");
+  // v1.5.0: numeric fields ride the Base UI NumberField (locale parsing).
+  const [fx, setFx] = useState(0);
+  const [fy, setFy] = useState(0);
+  const [fz, setFz] = useState(-10);
+  const [qx, setQx] = useState(0);
+  const [qy, setQy] = useState(0);
+  const [qz, setQz] = useState(-10);
+  const [q2z, setQ2z] = useState(-5);
+  const [ratio, setRatio] = useState(50);
+  const [axG, setAxG] = useState(0);
+  const [ayG, setAyG] = useState(0);
+  const [azG, setAzG] = useState(0);
 
   const field = loads.find((l) => l.kind === "AccelerationField");
   // v1.4.0: 6 locked DOFs make the system equilibrated (iso- or hyperstatic).
@@ -153,9 +155,9 @@ function LoadsPage() {
 
   const add = () => {
     if (tab === "nodal") {
-      const px = parseFr(fx) * 1000;
-      const py = parseFr(fy) * 1000;
-      const pz = parseFr(fz) * 1000;
+      const px = fx * 1000;
+      const py = fy * 1000;
+      const pz = fz * 1000;
       if (px !== 0 || py !== 0 || pz !== 0) {
         addNodalLoad(nodeId, pz, caseId, px, py);
       }
@@ -163,10 +165,7 @@ function LoadsPage() {
     }
     if (tab === "uniform") {
       // 3-axis uniform: magnitude + unit direction from (qx, qy, qz).
-      const gx = parseFr(qx);
-      const gy = parseFr(qy);
-      const gz = parseFr(qz);
-      const magnitude = Math.hypot(gx, gy, gz);
+      const magnitude = Math.hypot(qx, qy, qz);
       if (magnitude > 0) {
         addBeamSpanLoad({
           beamId,
@@ -174,14 +173,14 @@ function LoadsPage() {
           kind: "Trapezoid",
           qStart: magnitude * 1000,
           qEnd: magnitude * 1000,
-          direction: { x: gx / magnitude, y: gy / magnitude, z: gz / magnitude },
+          direction: { x: qx / magnitude, y: qy / magnitude, z: qz / magnitude },
         });
       }
       return;
     }
     if (tab === "trapezoid") {
-      const q1 = parseFr(qz) * 1000;
-      const q2 = parseFr(q2z) * 1000;
+      const q1 = qz * 1000;
+      const q2 = q2z * 1000;
       if (q1 !== 0 || q2 !== 0) {
         addBeamSpanLoad({
           beamId,
@@ -194,8 +193,8 @@ function LoadsPage() {
       }
       return;
     }
-    const value = parseFr(fz) * 1000;
-    const a = parseFr(ratio) / 100;
+    const value = fz * 1000;
+    const a = ratio / 100;
     if (value !== 0 && Number.isFinite(a)) {
       addBeamSpanLoad({
         beamId,
@@ -223,381 +222,467 @@ function LoadsPage() {
     });
   };
 
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3 lg:flex-row">
-      {/* v1.4.0: drag-resizable inspector/viewport split on desktop. */}
-      <DesktopSplit
-        inspector={
-          <aside className="flex h-full w-full shrink-0 flex-col gap-3 overflow-auto rounded-panel border border-hairline bg-panel p-3 lg:w-80">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[15px] font-semibold">
-                <Trans>Charges et combinaisons EN 1990</Trans>
-              </h2>
-              <button
-                type="button"
-                className="shrink-0 rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-fea-max hover:text-fea-max disabled:opacity-40"
-                data-testid="clear-loads"
-                disabled={loads.length === 0}
-                onClick={clearLoads}
-              >
-                <Trans>Vider les charges</Trans>
-              </button>
-            </div>
-            {/* G | Q | W | Acc tabs with the shared layoutId glider (§8.6). */}
-            <div
-              className="flex items-center gap-1 border-b border-hairline"
-              data-testid="case-tabs"
-            >
-              {CASES.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className="relative flex min-h-8 items-center rounded px-2.5 text-[13px] data-[active=true]:text-accent"
-                  data-active={caseId === c.id}
-                  onClick={() => setCaseId(c.id)}
-                >
-                  {c.label}
-                  {caseId === c.id ? (
-                    <motion.span
-                      layoutId="case-tab-underline"
-                      className="absolute inset-x-1 -bottom-px h-[2px] bg-accent"
-                      transition={{ type: "spring", stiffness: 520, damping: 40 }}
-                    />
-                  ) : null}
-                </button>
-              ))}
-            </div>
-
-            {/* g-acceleration quick scenarios (RDM 7 parity). */}
-            <section className="rounded-[4px] border border-hairline p-2" data-testid="accel-field">
-              <h3 className="text-[13px] font-semibold text-ink-secondary">
-                Champs d'accélération (g)
-              </h3>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  data-testid="scenario-selfweight"
-                  onClick={() => applyField(0, 0, -1)}
-                >
-                  Poids propre seul 1g −Z
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  data-testid="scenario-transport"
-                  onClick={() => applyField(0.8, 0, -1.5)}
-                >
-                  Transport 0,8g X / 1,5g −Z
-                </Button>
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-1.5">
-                {(
-                  [
-                    ["ax (×g)", axG, setAxG],
-                    ["ay (×g)", ayG, setAyG],
-                    ["az (×g)", azG, setAzG],
-                  ] as const
-                ).map(([label, value, setter]) => (
-                  <label key={label} className="text-[11px] text-ink-muted">
-                    {label}
-                    <input
-                      className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                      value={value}
-                      onChange={(e) => setter(e.currentTarget.value)}
-                    />
-                  </label>
-                ))}
-              </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="font-data text-[11px] text-ink-muted">
-                  {field === undefined
-                    ? "aucun champ actif"
-                    : `actif : (${field.ax_g} ; ${field.ay_g} ; ${field.az_g}) ×g`}
-                </span>
-                <Button
-                  size="sm"
-                  onClick={() => applyField(parseFr(axG), parseFr(ayG), parseFr(azG))}
-                >
-                  Appliquer
-                </Button>
-              </div>
-            </section>
-
-            <div className="flex flex-wrap gap-1">
-              {LOAD_TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`flex items-center gap-1 rounded px-1.5 py-1 text-[12px] ${tab === t.id ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
-                  onClick={() => setTab(t.id)}
-                >
-                  <t.icon size={14} />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {tab === "nodal" ? (
-              <div className="space-y-2">
-                <label className="block text-[12px] text-ink-secondary">
-                  <Trans>Nœud</Trans>
-                  <select
-                    className="font-data mt-1 block w-full rounded-[4px] border border-hairline px-2 py-1.5 text-[13px]"
-                    value={nodeId}
-                    onChange={(e) => setNodeId(Number(e.currentTarget.value))}
-                  >
-                    {nodes.map((n) => (
-                      <option key={n.id} value={n.id}>
-                        N{n.id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {(
-                    [
-                      ["Fx (kN)", fx, setFx],
-                      ["Fy (kN)", fy, setFy],
-                      ["Fz (kN)", fz, setFz],
-                    ] as const
-                  ).map(([label, value, setter]) => (
-                    <label key={label} className="text-[11px] text-ink-muted">
-                      {label}
-                      <input
-                        className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                        value={value}
-                        onChange={(e) => setter(e.currentTarget.value)}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {tab === "uniform" || tab === "trapezoid" || tab === "point" ? (
-              <div className="space-y-2">
-                <label className="block text-[12px] text-ink-secondary">
-                  <Trans>Poutre</Trans>
-                  <select
-                    className="font-data mt-1 block w-full rounded-[4px] border border-hairline px-2 py-1.5 text-[13px]"
-                    value={beamId}
-                    onChange={(e) => setBeamId(Number(e.currentTarget.value))}
-                  >
-                    {beams.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        B{b.id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {tab === "uniform" ? (
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {(
-                      [
-                        ["qx (kN/m)", qx, setQx],
-                        ["qy (kN/m)", qy, setQy],
-                        ["qz (kN/m)", qz, setQz],
-                      ] as const
-                    ).map(([label, value, setter]) => (
-                      <label key={label} className="text-[11px] text-ink-muted">
-                        {label}
-                        <input
-                          className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                          value={value}
-                          onChange={(e) => setter(e.currentTarget.value)}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                ) : null}
-                {tab === "trapezoid" ? (
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <label className="text-[11px] text-ink-muted">
-                      q1 (kN/m)
-                      <input
-                        className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                        value={qz}
-                        onChange={(e) => setQz(e.currentTarget.value)}
-                      />
-                    </label>
-                    <label className="text-[11px] text-ink-muted">
-                      q2 (kN/m)
-                      <input
-                        className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                        value={q2z}
-                        onChange={(e) => setQ2z(e.currentTarget.value)}
-                      />
-                    </label>
-                  </div>
-                ) : null}
-                {tab === "point" ? (
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <label className="text-[11px] text-ink-muted">
-                      Fz (kN)
-                      <input
-                        className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                        value={fz}
-                        onChange={(e) => setFz(e.currentTarget.value)}
-                      />
-                    </label>
-                    <label className="text-[11px] text-ink-muted">
-                      a/L (%)
-                      <input
-                        className="font-data mt-0.5 w-full rounded-[4px] border border-hairline px-1.5 py-1 text-[12px]"
-                        value={ratio}
-                        onChange={(e) => setRatio(e.currentTarget.value)}
-                      />
-                    </label>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <Button disabled={nodes.length === 0 || beams.length === 0} onClick={add}>
-              <Trans>Ajouter la charge</Trans>
-            </Button>
-
-            {/* Live force resultants — rolling tabular digits (§8.1). */}
-            <dl
-              className="grid grid-cols-3 gap-2 rounded border border-hairline p-2"
-              data-testid="resultant-summary"
-            >
-              {(
-                [
-                  ["ΣFx", resultant.fx],
-                  ["ΣFy", resultant.fy],
-                  ["ΣFz", resultant.fz],
-                ] as const
-              ).map(([label, value]) => (
-                <div key={label}>
-                  <dt className="font-data text-[10px] text-ink-muted">{label} (kN)</dt>
-                  <dd className="text-[15px] text-ink-primary">
-                    <NumberFlowValue value={value} format={{ maximumFractionDigits: 2 }} />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-
-            <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
-              <Switch
-                checked={selfWeight}
-                onCheckedChange={(checked) => {
-                  if (checked !== selfWeight) toggleSelfWeight();
-                }}
+  const inspector = (
+    <BottomSheet testId="inspector-sheet" title={<Trans>Charges et combinaisons EN 1990</Trans>}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-data text-[11px] text-ink-muted">
+          {loads.length} charge(s) définie(s)
+        </span>
+        <button
+          type="button"
+          className="shrink-0 rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-fea-max hover:text-fea-max disabled:opacity-40"
+          data-testid="clear-loads"
+          disabled={loads.length === 0}
+          onClick={clearLoads}
+        >
+          <Trans>Vider les charges</Trans>
+        </button>
+      </div>
+      {/* G | Q | W | Acc tabs with the shared layoutId glider (§8.6). */}
+      <div className="flex items-center gap-1 border-b border-hairline" data-testid="case-tabs">
+        {CASES.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            className="relative flex min-h-8 items-center rounded px-2.5 text-[13px] data-[active=true]:text-accent"
+            data-active={caseId === c.id}
+            onClick={() => setCaseId(c.id)}
+          >
+            {c.label}
+            {caseId === c.id ? (
+              <motion.span
+                layoutId="case-tab-underline"
+                className="absolute inset-x-1 -bottom-px h-[2px] bg-accent"
+                transition={{ type: "spring", stiffness: 520, damping: 40 }}
               />
-              <SelfWeightGravity size={14} />
-              <Trans>Poids propre automatique (1g −Z)</Trans>
-            </label>
-            {/* v1.4.0: estimated self-weight mass beside the 1g toggle. */}
-            <p className="font-data text-[11px] text-ink-muted" data-testid="self-weight-mass">
-              {(() => {
-                let total = 0;
-                for (const b of beams) {
-                  const section = sections[b.section_id] as { a?: number } | undefined;
-                  const material = materials[b.material_id] as { rho?: number } | undefined;
-                  const length = memberLength(nodes, b);
-                  if (section == null || material == null || length <= 0) continue;
-                  total += (material.rho ?? 0) * (section.a ?? 0) * length;
-                }
-                const label =
-                  total >= 1000 ? `${(total / 1000).toFixed(2)} t` : `${total.toFixed(1)} kg`;
-                return `Masse à vide estimée : ${label}`;
-              })()}
-            </p>
-            {/* v1.4.0: viewport equilibrium status pill (mockups tape_3). */}
-            <p
-              className={`font-data self-start rounded-full border px-2 py-0.5 text-[11px] ${
-                reactionCountValid
-                  ? "border-pass-border bg-pass-bg text-pass-text"
-                  : "border-fail-border bg-fail-bg text-fail-text"
-              }`}
-              data-testid="equilibrium-pill"
-            >
-              {reactionCountValid ? "Système équilibré" : "Appuis incomplets"}
-            </p>
+            ) : null}
+          </button>
+        ))}
+      </div>
 
-            {/* Primary CTA: runs the worker solve and moves to Step 4. */}
-            <Button
-              size="lg"
-              className="w-full"
-              data-testid="cta-solve"
-              onClick={() => void navigate({ to: "/results" })}
+      {/* g-acceleration quick scenarios (RDM 7 parity). */}
+      <section className="border-t border-hairline pt-3" data-testid="accel-field">
+        <h3 className="text-xs font-medium text-ink-secondary">Champs d'accélération (g)</h3>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="scenario-selfweight"
+            onClick={() => applyField(0, 0, -1)}
+          >
+            Poids propre seul 1g −Z
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="scenario-transport"
+            onClick={() => applyField(0.8, 0, -1.5)}
+          >
+            Transport 0,8g X / 1,5g −Z
+          </Button>
+        </div>
+        <div className="mt-2 grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+          <label className="text-xs font-medium text-ink-secondary" htmlFor="accel-ax">
+            ax (×g)
+          </label>
+          <NumberFieldRoot
+            id="accel-ax"
+            value={axG}
+            step={0.1}
+            onValueChange={(v) => {
+              if (v !== null) setAxG(v);
+            }}
+          >
+            <NumberFieldInput className="h-8" />
+          </NumberFieldRoot>
+          <label className="text-xs font-medium text-ink-secondary" htmlFor="accel-ay">
+            ay (×g)
+          </label>
+          <NumberFieldRoot
+            id="accel-ay"
+            value={ayG}
+            step={0.1}
+            onValueChange={(v) => {
+              if (v !== null) setAyG(v);
+            }}
+          >
+            <NumberFieldInput className="h-8" />
+          </NumberFieldRoot>
+          <label className="text-xs font-medium text-ink-secondary" htmlFor="accel-az">
+            az (×g)
+          </label>
+          <NumberFieldRoot
+            id="accel-az"
+            value={azG}
+            step={0.1}
+            onValueChange={(v) => {
+              if (v !== null) setAzG(v);
+            }}
+          >
+            <NumberFieldInput className="h-8" />
+          </NumberFieldRoot>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="font-data text-[11px] text-ink-muted">
+            {field === undefined
+              ? "aucun champ actif"
+              : `actif : (${field.ax_g} ; ${field.ay_g} ; ${field.az_g}) ×g`}
+          </span>
+          <Button size="sm" onClick={() => applyField(axG, ayG, azG)}>
+            Appliquer
+          </Button>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap gap-1">
+        {LOAD_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`flex items-center gap-1 rounded px-1.5 py-1 text-[12px] ${tab === t.id ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
+            onClick={() => setTab(t.id)}
+          >
+            <t.icon size={14} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <section className="border-t border-hairline pt-3">
+        {tab === "nodal" ? (
+          <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-node">
+              <Trans>Nœud</Trans>
+            </label>
+            <select
+              id="load-node"
+              className="font-data h-8 w-full rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
+              value={nodeId}
+              onChange={(e) => setNodeId(Number(e.currentTarget.value))}
             >
-              <Trans>Lancer le calcul 3D & Eurocode 3 →</Trans>
-            </Button>
-          </aside>
-        }
-        main={
-          <section className="flex min-h-0 min-w-0 flex-1 flex-col rounded-panel border border-hairline bg-panel p-3">
-            <div className="relative min-h-[320px] flex-1 overflow-hidden rounded border border-hairline">
-              <ViewportCanvas nodes={nodes} beams={beams} testId="viewport-canvas">
-                <ForceVectors3D nodes={nodes} beams={beams} loads={loads} />
-              </ViewportCanvas>
-            </div>
-            <div className="mt-2 max-h-40 overflow-auto">
-              <table className="w-full text-[13px]">
-                <thead className="text-left text-[11px] text-ink-muted">
-                  <tr>
-                    <th className="py-1">
-                      <Trans>Cas</Trans>
-                    </th>
-                    <th>
-                      <Trans>Type</Trans>
-                    </th>
-                    <th>
-                      <Trans>Cible</Trans>
-                    </th>
-                    <th>Intensité</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody className="font-data">
-                  {loads.map((l, index) => (
-                    <tr key={index} className="border-t border-hairline">
-                      <td className="py-1">{l.case}</td>
-                      <td>{l.kind}</td>
-                      <td>
-                        {l.kind === "Nodal"
-                          ? `N${l.node_id}`
-                          : l.kind === "PointOnSpan"
-                            ? `B${l.beam_id} @ ${(l.position_ratio * 100).toFixed(0)}%`
-                            : l.kind === "Trapezoid"
-                              ? `B${l.beam_id}`
-                              : "3D"}
-                      </td>
-                      <td>
-                        {l.kind === "Trapezoid"
-                          ? `${(l.q_start / 1000).toFixed(2)} → ${(l.q_end / 1000).toFixed(2)} kN/m`
-                          : l.kind === "AccelerationField"
-                            ? `(${l.ax_g} ; ${l.ay_g} ; ${l.az_g}) ×g`
-                            : `${(l.forces.fz / 1000).toFixed(2)} kN`}
-                      </td>
-                      <td className="text-right">
-                        <button
-                          type="button"
-                          aria-label="remove load"
-                          className="text-ink-muted hover:text-fea-max"
-                          onClick={() => removeLoad(index)}
-                        >
-                          <IconTrash size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {loads.length === 0 ? (
-                <p className="py-2 text-[13px] text-ink-muted">
-                  <Trans>
-                    Aucune charge définie — choisissez un scénario d'accélération ou ajoutez une
-                    charge.
-                  </Trans>
-                </p>
-              ) : null}
-            </div>
-          </section>
-        }
-      />
-    </div>
+              {nodes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  N{n.id}
+                </option>
+              ))}
+            </select>
+            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fx">
+              Fx (kN)
+            </label>
+            <NumberFieldRoot
+              id="load-fx"
+              value={fx}
+              step={0.5}
+              onValueChange={(v) => {
+                if (v !== null) setFx(v);
+              }}
+            >
+              <NumberFieldInput className="h-8" />
+            </NumberFieldRoot>
+            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fy">
+              Fy (kN)
+            </label>
+            <NumberFieldRoot
+              id="load-fy"
+              value={fy}
+              step={0.5}
+              onValueChange={(v) => {
+                if (v !== null) setFy(v);
+              }}
+            >
+              <NumberFieldInput className="h-8" />
+            </NumberFieldRoot>
+            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fz">
+              Fz (kN)
+            </label>
+            <NumberFieldRoot
+              id="load-fz"
+              value={fz}
+              step={0.5}
+              onValueChange={(v) => {
+                if (v !== null) setFz(v);
+              }}
+            >
+              <NumberFieldInput className="h-8" />
+            </NumberFieldRoot>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-beam">
+              <Trans>Poutre</Trans>
+            </label>
+            <select
+              id="load-beam"
+              className="font-data h-8 w-full rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
+              value={beamId}
+              onChange={(e) => setBeamId(Number(e.currentTarget.value))}
+            >
+              {beams.map((b) => (
+                <option key={b.id} value={b.id}>
+                  B{b.id}
+                </option>
+              ))}
+            </select>
+            {tab === "uniform" ? (
+              <>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qx">
+                  qx (kN/m)
+                </label>
+                <NumberFieldRoot
+                  id="load-qx"
+                  value={qx}
+                  step={0.5}
+                  onValueChange={(v) => {
+                    if (v !== null) setQx(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qy">
+                  qy (kN/m)
+                </label>
+                <NumberFieldRoot
+                  id="load-qy"
+                  value={qy}
+                  step={0.5}
+                  onValueChange={(v) => {
+                    if (v !== null) setQy(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qz">
+                  qz (kN/m)
+                </label>
+                <NumberFieldRoot
+                  id="load-qz"
+                  value={qz}
+                  step={0.5}
+                  onValueChange={(v) => {
+                    if (v !== null) setQz(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+              </>
+            ) : null}
+            {tab === "trapezoid" ? (
+              <>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-q1">
+                  q1 (kN/m)
+                </label>
+                <NumberFieldRoot
+                  id="load-q1"
+                  value={qz}
+                  step={0.5}
+                  onValueChange={(v) => {
+                    if (v !== null) setQz(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-q2">
+                  q2 (kN/m)
+                </label>
+                <NumberFieldRoot
+                  id="load-q2"
+                  value={q2z}
+                  step={0.5}
+                  onValueChange={(v) => {
+                    if (v !== null) setQ2z(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+              </>
+            ) : null}
+            {tab === "point" ? (
+              <>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-span-fz">
+                  Fz (kN)
+                </label>
+                <NumberFieldRoot
+                  id="load-span-fz"
+                  value={fz}
+                  step={0.5}
+                  onValueChange={(v) => {
+                    if (v !== null) setFz(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-ratio">
+                  a/L (%)
+                </label>
+                <NumberFieldRoot
+                  id="load-ratio"
+                  value={ratio}
+                  step={5}
+                  min={0}
+                  max={100}
+                  onValueChange={(v) => {
+                    if (v !== null) setRatio(v);
+                  }}
+                >
+                  <NumberFieldInput className="h-8" />
+                </NumberFieldRoot>
+              </>
+            ) : null}
+          </div>
+        )}
+        <Button
+          className="mt-2 w-full"
+          disabled={tab === "nodal" ? nodes.length === 0 : beams.length === 0}
+          onClick={add}
+        >
+          <Trans>Ajouter la charge</Trans>
+        </Button>
+      </section>
+
+      {/* Live force resultants — rolling tabular digits (§8.1). */}
+      <dl
+        className="grid grid-cols-3 gap-2 border-t border-hairline pt-3"
+        data-testid="resultant-summary"
+      >
+        {(
+          [
+            ["ΣFx", resultant.fx],
+            ["ΣFy", resultant.fy],
+            ["ΣFz", resultant.fz],
+          ] as const
+        ).map(([label, value]) => (
+          <div key={label}>
+            <dt className="font-data text-[10px] text-ink-muted">{label} (kN)</dt>
+            <dd className="text-[15px] text-ink-primary">
+              <NumberFlowValue value={value} format={{ maximumFractionDigits: 2 }} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="border-t border-hairline pt-3">
+        <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
+          <Switch
+            checked={selfWeight}
+            onCheckedChange={(checked) => {
+              if (checked !== selfWeight) toggleSelfWeight();
+            }}
+          />
+          <SelfWeightGravity size={14} />
+          <Trans>Poids propre automatique (1g −Z)</Trans>
+        </label>
+        {/* v1.4.0: estimated self-weight mass beside the 1g toggle. */}
+        <p className="font-data mt-1 text-[11px] text-ink-muted" data-testid="self-weight-mass">
+          {(() => {
+            let total = 0;
+            for (const b of beams) {
+              const section = sections[b.section_id] as { a?: number } | undefined;
+              const material = materials[b.material_id] as { rho?: number } | undefined;
+              const length = memberLength(nodes, b);
+              if (section == null || material == null || length <= 0) continue;
+              total += (material.rho ?? 0) * (section.a ?? 0) * length;
+            }
+            const label =
+              total >= 1000 ? `${(total / 1000).toFixed(2)} t` : `${total.toFixed(1)} kg`;
+            return `Masse à vide estimée : ${label}`;
+          })()}
+        </p>
+        {/* v1.4.0: viewport equilibrium status pill (mockups tape_3). */}
+        <p
+          className={`font-data mt-2 self-start rounded-full border px-2 py-0.5 text-[11px] ${
+            reactionCountValid
+              ? "border-pass-border bg-pass-bg text-pass-text"
+              : "border-fail-border bg-fail-bg text-fail-text"
+          }`}
+          data-testid="equilibrium-pill"
+        >
+          {reactionCountValid ? "Système équilibré" : "Appuis incomplets"}
+        </p>
+      </div>
+
+      {/* Primary CTA: runs the worker solve and moves to Step 4. */}
+      <Button
+        size="lg"
+        className="w-full"
+        data-testid="cta-solve"
+        onClick={() => void navigate({ to: "/results" })}
+      >
+        <Trans>Lancer le calcul 3D & Eurocode 3 →</Trans>
+      </Button>
+    </BottomSheet>
   );
+
+  const main = (
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
+        <ViewportCanvas nodes={nodes} beams={beams} testId="viewport-canvas">
+          <ForceVectors3D nodes={nodes} beams={beams} loads={loads} />
+        </ViewportCanvas>
+      </div>
+      <div className="shrink-0 overflow-hidden rounded border border-hairline bg-panel">
+        <div className="max-h-40 overflow-auto">
+          <table className="w-full text-[13px]">
+            <thead className="text-left text-[11px] text-ink-muted">
+              <tr>
+                <th className="py-1 pl-2">
+                  <Trans>Cas</Trans>
+                </th>
+                <th>
+                  <Trans>Type</Trans>
+                </th>
+                <th>
+                  <Trans>Cible</Trans>
+                </th>
+                <th>Intensité</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody className="font-data">
+              {loads.map((l, index) => (
+                <tr key={index} className="border-t border-hairline">
+                  <td className="py-1 pl-2">{l.case}</td>
+                  <td>{l.kind}</td>
+                  <td>
+                    {l.kind === "Nodal"
+                      ? `N${l.node_id}`
+                      : l.kind === "PointOnSpan"
+                        ? `B${l.beam_id} @ ${(l.position_ratio * 100).toFixed(0)}%`
+                        : l.kind === "Trapezoid"
+                          ? `B${l.beam_id}`
+                          : "3D"}
+                  </td>
+                  <td>
+                    {l.kind === "Trapezoid"
+                      ? `${(l.q_start / 1000).toFixed(2)} → ${(l.q_end / 1000).toFixed(2)} kN/m`
+                      : l.kind === "AccelerationField"
+                        ? `(${l.ax_g} ; ${l.ay_g} ; ${l.az_g}) ×g`
+                        : `${(l.forces.fz / 1000).toFixed(2)} kN`}
+                  </td>
+                  <td className="text-right">
+                    <button
+                      type="button"
+                      aria-label="remove load"
+                      className="mr-2 text-ink-muted hover:text-fea-max"
+                      onClick={() => removeLoad(index)}
+                    >
+                      <IconTrash size={13} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {loads.length === 0 ? (
+            <p className="py-2 text-[13px] text-ink-muted">
+              <Trans>
+                Aucune charge définie — choisissez un scénario d'accélération ou ajoutez une charge.
+              </Trans>
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+
+  return <DesktopSplit inspector={inspector} main={main} />;
 }

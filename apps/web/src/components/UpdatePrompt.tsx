@@ -10,6 +10,8 @@ import { Trans } from "@lingui/react/macro";
  */
 export function UpdatePrompt() {
   const [needRefresh, setNeedRefresh] = useState(false);
+  // Mirrors the state for the "controlling" listener (stale-closure safe).
+  const needRefreshRef = useRef(false);
   const wbRef = useRef<Workbox | null>(null);
 
   useEffect(() => {
@@ -18,10 +20,16 @@ export function UpdatePrompt() {
     }
     const wb = new Workbox("/sw.js");
     wb.addEventListener("waiting", () => {
+      needRefreshRef.current = true;
       setNeedRefresh(true);
     });
+    // v1.5.0 defect: workbox fires "controlling" on the FIRST install too
+    // (clientsClaim) — force-reloading the app mid-task wiped user state
+    // and randomly interrupted flows. Reload only after an ACCEPTED update.
     wb.addEventListener("controlling", () => {
-      window.location.reload();
+      if (needRefreshRef.current) {
+        window.location.reload();
+      }
     });
     void wb.register();
     wbRef.current = wb;
@@ -35,7 +43,7 @@ export function UpdatePrompt() {
   }
   return (
     <div
-      className="fixed inset-x-4 bottom-4 z-50 flex items-center justify-between gap-3 rounded-panel border border-hairline bg-panel p-3 shadow-lg"
+      className="fixed right-4 bottom-20 z-50 flex max-w-sm items-center justify-between gap-3 rounded-panel border border-hairline bg-panel p-3 shadow-lg md:bottom-4"
       role="status"
       data-testid="update-prompt"
     >

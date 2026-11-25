@@ -2,12 +2,7 @@ import * as THREE from "three";
 import { useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { BeamData, NodeData } from "@/state/projectStore";
-import {
-  beamProfileLookup,
-  profileOutline,
-  squareOutline,
-  type ProfileDims,
-} from "./ProfileShapes";
+import { beamProfileLookup, profileOutline, type ProfileDims } from "./ProfileShapes";
 
 /**
  * Extruded volumetric beam rendering with the FEA thermal vertex-color
@@ -350,7 +345,13 @@ export function BeamMeshes({
     if (beam === undefined) {
       return null;
     }
-    return buildBeamGeometry(nodes, [beam], { displacements, deformScale, width: 0.12 });
+    // v1.5.0 defect: the selection rim extrudes the member's TRUE catalog
+    // profile (IPE 300 highlights its I-section) — the 0.12 m square box
+    // remains only the fallback when dims are absent.
+    const dims = sectionDims?.get(beam.section_id);
+    const profiles =
+      dims === undefined ? undefined : new Map<number, ProfileDims>([[beam.id, dims]]);
+    return buildBeamGeometry(nodes, [beam], { displacements, deformScale, width: 0.12, profiles });
   }, [nodes, beams, selectedBeamId, displacements, deformScale, sectionDims]);
 
   // Table -> viewport hover highlight (v1.3.0, `#93C5FD` edge tint).

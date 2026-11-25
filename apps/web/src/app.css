@@ -129,8 +129,9 @@ textarea {
   font-size: 13px;
 }
 
-/* Mobile inputs at 16px prevent iOS Safari auto-zoom (DESIGN.md §1). */
-@media (max-width: 1023px) {
+/* Mobile inputs at 16px prevent iOS Safari auto-zoom (DESIGN.md §1).
+ * v1.5.0: aligned with the unified 768px mobile threshold. */
+@media (max-width: 767px) {
   input,
   select,
   textarea {

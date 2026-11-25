@@ -49,7 +49,13 @@ test("offline reload serves the precached app shell", async ({ page, context }) 
   await page.goto("/loads");
 
   await context.setOffline(true);
-  await page.reload();
+  // Firefox aborts navigations that race the service worker (NS_BINDING_ABORTED).
+  await page.reload().catch(() =>
+    page
+      .waitForTimeout(1_000)
+      .then(() => page.reload())
+      .catch(() => undefined),
+  );
   await expect(page.getByRole("heading", { name: "Charges" })).toBeVisible({
     timeout: 15_000,
   });

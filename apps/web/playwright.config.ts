@@ -7,7 +7,9 @@ export default defineConfig({
     baseURL: "http://localhost:5173",
   },
   webServer: {
-    command: "pnpm dev --port 5173 --strictPort",
+    // PWA offline tests run against the production build: the service
+    // worker only exists in the built artifact.
+    command: "pnpm exec vite build && pnpm exec vite preview --port 5173 --strictPort",
     url: "http://localhost:5173",
     reuseExistingServer: true,
     timeout: 60_000,

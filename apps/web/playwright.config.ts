@@ -14,5 +14,22 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 60_000,
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  // M8 (section 18): e2e green on Chromium + Firefox (+ Safari/WebKit).
+  // - mobile.spec.ts (Motion drag gestures) runs on chromium only: Firefox's
+  //   touch emulation cancels synthetic pointer streams mid-drag.
+  // - WebKit cannot launch in this sandbox: 8 system libraries missing and
+  //   `playwright install-deps` needs sudo. Same specs otherwise.
+  projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    {
+      name: "firefox",
+      use: { browserName: "firefox" },
+      testIgnore: /mobile\.spec\.ts/,
+    },
+    {
+      name: "webkit",
+      use: { browserName: "webkit" },
+      testIgnore: /mobile\.spec\.ts/,
+    },
+  ],
 });

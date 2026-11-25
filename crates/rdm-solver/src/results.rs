@@ -50,7 +50,6 @@ pub fn span_loads_local(
             continue;
         }
         match load.kind {
-            LoadKind::Nodal { .. } => {}
             LoadKind::PointOnSpan {
                 beam_id,
                 position_ratio,
@@ -61,7 +60,6 @@ pub fn span_loads_local(
                 let dir = glam::DVec3::new(forces.fx, forces.fy, forces.fz);
                 out.points.push((position_ratio, ey.dot(dir), ez.dot(dir)));
             }
-            LoadKind::PointOnSpan { .. } => {}
             LoadKind::Trapezoid {
                 beam_id,
                 q_start,
@@ -78,7 +76,7 @@ pub fn span_loads_local(
                     q_end * ez.dot(dir),
                 ));
             }
-            LoadKind::Trapezoid { .. } => {}
+            _ => {}
         }
     }
     if case == rdm_model::LoadCase::Permanent && structure.self_weight_enabled {

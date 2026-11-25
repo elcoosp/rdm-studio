@@ -233,6 +233,25 @@ pub fn beam_case_load_local(
                     l,
                 );
             }
+            LoadKind::AccelerationField { ax_g, ay_g, az_g } => {
+                // v1.3.0: exact distributed inertial body force
+                // `q = ρ·A·g·(ax, ay, az)` (N/m) on every member, projected
+                // through the same consistent trapezoid vector as gravity.
+                let section = structure.sections.get(&beam.section_id);
+                let material = structure.materials.get(&beam.material_id);
+                if let (Some(section), Some(material)) = (section, material) {
+                    let q = material.rho * section.a * STANDARD_GRAVITY;
+                    if q.abs() > 0.0 {
+                        f_local += trapezoid_in_local_axes(
+                            &data.rotation,
+                            q,
+                            q,
+                            DVec3::new(ax_g, ay_g, az_g),
+                            l,
+                        );
+                    }
+                }
+            }
             _ => {}
         }
     }

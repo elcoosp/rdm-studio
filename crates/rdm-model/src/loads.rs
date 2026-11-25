@@ -91,7 +91,7 @@ impl Direction {
     /// Returns [`LoadError::ZeroDirection`] when the vector has zero norm.
     pub fn normalized(x: f64, y: f64, z: f64) -> Result<Self, LoadError> {
         let norm = (x * x + y * y + z * z).sqrt();
-        if !(norm > 0.0) {
+        if norm <= 0.0 || norm.is_nan() {
             return Err(LoadError::ZeroDirection);
         }
         Ok(Self {
@@ -116,12 +116,18 @@ impl Direction {
 pub struct Load {
     /// Elementary case this load belongs to.
     pub case: LoadCase,
-    /// Where the load acts and how it is distributed.
+    /// Where the load acts and how it is distributed (flattened so the
+    /// canonical JSON is `{ case, kind, ...fields }`).
+    #[serde(flatten)]
     pub kind: LoadKind,
 }
 
 /// Spatial definition of a load.
+///
+/// Serde is internally tagged (`{ "kind": "Nodal", ... }`) — the canonical
+/// `.rdm` JSON shape shared with the Valibot schema in `apps/web`.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "PascalCase")]
 pub enum LoadKind {
     /// Concentrated action applied directly at a node.
     Nodal {

@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { Trans } from "@lingui/react/macro";
 import { IconPlus, IconTrash } from "@/components/icons";
+import { BottomSheet } from "@/components/BottomSheet";
 import { feaClient, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
 import { useViewportStore } from "@/state/viewportStore";
@@ -102,10 +103,7 @@ function GeometryPage() {
           </button>
         </div>
       </section>
-      <aside className="w-full shrink-0 rounded-panel border border-hairline bg-panel p-4 lg:w-[320px] lg:overflow-auto">
-        <h2 className="mb-3 text-[15px] font-semibold">
-          <Trans>Inspecteur de section</Trans>
-        </h2>
+      <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
         <label className="block text-[12px] text-ink-secondary">
           <Trans>Profil (EN 10365)</Trans>
         </label>
@@ -142,7 +140,7 @@ function GeometryPage() {
           </dt>
           <dd>{sections.length} profils — EN 10365 / 10210 / 10056</dd>
         </dl>
-      </aside>
+      </BottomSheet>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { MotionConfig } from "motion/react";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { activateLocale, initialLocale } from "@/i18n/i18n";
@@ -36,10 +37,12 @@ if (root === null) {
 // page headings come up translated (no flash of source strings).
 void activateLocale(initialLocale()).finally(() => {
   createRoot(root).render(
-    <StrictMode>
-      <I18nProvider i18n={i18n}>
-        <RouterProvider router={router} />
-      </I18nProvider>
-    </StrictMode>,
+    <MotionConfig reducedMotion="user">
+      <StrictMode>
+        <I18nProvider i18n={i18n}>
+          <RouterProvider router={router} />
+        </I18nProvider>
+      </StrictMode>
+    </MotionConfig>,
   );
 });

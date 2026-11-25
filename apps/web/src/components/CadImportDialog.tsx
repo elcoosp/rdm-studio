@@ -1,11 +1,11 @@
 import { useRef } from "react";
 import { Trans } from "@lingui/react/macro";
 import {
-  Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export function CadImportDialog({
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
+    <DialogRoot open={open} onOpenChange={(next: boolean) => (next ? undefined : onClose())}>
       <DialogContent data-testid="cad-import-dialog">
         <DialogHeader>
           <DialogTitle>
@@ -78,11 +78,13 @@ export function CadImportDialog({
           </p>
         ) : null}
         <div className="mt-3 flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="ghost" size="sm">
-              <Trans>Annuler</Trans>
-            </Button>
-          </DialogClose>
+          <DialogClose
+            render={
+              <Button variant="ghost" size="sm">
+                <Trans>Annuler</Trans>
+              </Button>
+            }
+          />
           <Button
             size="sm"
             disabled={busy}
@@ -93,6 +95,6 @@ export function CadImportDialog({
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
+    </DialogRoot>
   );
 }

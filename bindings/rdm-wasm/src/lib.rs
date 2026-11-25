@@ -764,12 +764,16 @@ mod tests {
             node_id: 1,
             locked_dofs: [true, true, true, true, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         // Fork support at node 2: Uy+Uz (restrains the yaw rigid mode).
         s.supports.push(Support {
             node_id: 2,
             locked_dofs: [false, true, true, false, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         s.loads.push(rdm_model::Load {
             case: LoadCase::Variable,
@@ -1316,6 +1320,10 @@ fn import_cad_structure(
         loads: Vec::new(),
         sections: BTreeMap::new(),
         materials: BTreeMap::new(),
+        settings: rdm_model::ModelSettings::default(),
+        load_cases: Vec::new(),
+        groups: Vec::new(),
+        levels: Vec::new(),
         self_weight_enabled: true,
     };
     let project = rdm_model::ProjectFile {

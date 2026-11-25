@@ -54,6 +54,9 @@ renamed_and_removed_lints = { level = "allow", priority = 1 }
 # Pedantic is enforced by the G0 gate (`cargo clippy ... -W pedantic`); the
 # targeted exceptions below carry an explicit engineering rationale each.
 pedantic = { level = "warn", priority = -1 }
+# Single-char locals in the benchmark suite (e, b, s) are standard math
+# shorthand; the pedantic min_ident_chars rule stays allowed at config level.
+min_ident_chars = "allow"
 # SI-unit code converts between metres/millimetres and node indices constantly;
 # lossy `as` casts on physically bounded magnitudes are reviewed by unit tests.
 cast_precision_loss = { level = "allow", priority = 1 }

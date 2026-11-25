@@ -92,6 +92,8 @@ fn fork(node_id: u32, lock_x: bool) -> Support {
         node_id,
         locked_dofs: [lock_x, true, true, false, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     }
 }
 
@@ -102,6 +104,8 @@ fn frame_base(node_id: u32, first: bool) -> Support {
         node_id,
         locked_dofs: [true, true, true, first, false, false],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     }
 }
 
@@ -111,6 +115,8 @@ fn fixed(node_id: u32) -> Support {
         node_id,
         locked_dofs: [true; 6],
         spring_stiffness: [0.0; 6],
+        incline: None,
+        settlement: [0.0; 6],
     }
 }
 

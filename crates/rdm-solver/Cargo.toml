@@ -7,6 +7,7 @@ authors.workspace = true
 
 [dependencies]
 rdm-model = { path = "../rdm-model" }
+rdm-eurocode = { path = "../rdm-eurocode" }
 faer = { workspace = true }
 nalgebra = { workspace = true }
 glam = { workspace = true }
@@ -17,7 +18,6 @@ approx = { workspace = true }
 proptest = { workspace = true }
 insta = { workspace = true }
 serde_json = { workspace = true }
-rdm-eurocode = { path = "../rdm-eurocode" }
 
 [lints]
 workspace = true

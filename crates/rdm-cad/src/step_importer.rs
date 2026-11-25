@@ -155,14 +155,26 @@ fn import_iges(bytes: &[u8]) -> Result<Vec<RawSegment>, CadError> {
         if bytes_line.len() < 73 {
             continue;
         }
+        // v1.7.0 fuzz hardening: the payload may carry multi-byte UTF-8
+        // sequences — every slice goes through `str::get` (char-boundary
+        // safe) instead of raw byte indexing.
         let section = bytes_line[72] as char;
-        let seq = line[73..].trim().parse::<u32>().unwrap_or(u32::MAX);
+        let seq = line
+            .get(73..)
+            .unwrap_or("")
+            .trim()
+            .parse::<u32>()
+            .unwrap_or(u32::MAX);
         match section {
             'P' => {
-                p_params.push((seq, line[..64].to_owned()));
+                if let Some(head) = line.get(..64) {
+                    p_params.push((seq, head.to_owned()));
+                }
             }
             'G' => {
-                g_params.push_str(line[..72.min(line.len())].trim());
+                if let Some(head) = line.get(..72) {
+                    g_params.push_str(head.trim());
+                }
             }
             _ => {}
         }

@@ -142,7 +142,7 @@ impl ProfileCatalog {
     /// # Errors
     ///
     /// Returns [`Ec3Error::CatalogParse`] when any embedded file is invalid.
-    pub fn from_strs(open: &str, hollow: &str, angles: &str) -> Result<Self, Ec3Error> {
+    pub fn parse_catalog_strs(open: &str, hollow: &str, angles: &str) -> Result<Self, Ec3Error> {
         let mut entries = BTreeMap::new();
         for (text, label) in [
             (open, "en10365_profiles.json"),
@@ -253,7 +253,7 @@ impl MaterialCatalog {
     /// # Errors
     ///
     /// Returns [`Ec3Error::CatalogParse`] when the file is invalid.
-    pub fn from_str(text: &str) -> Result<Self, Ec3Error> {
+    pub fn parse_str(text: &str) -> Result<Self, Ec3Error> {
         let file: MaterialFile = serde_json::from_str(text)
             .map_err(|e| Ec3Error::CatalogParse(format!("en10025_materials.json: {e}")))?;
         let mut entries = BTreeMap::new();

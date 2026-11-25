@@ -185,8 +185,7 @@ mod tests {
             uls.multipliers
                 .iter()
                 .find(|(c, _)| *c == LoadCase::Permanent)
-                .map(|(_, f)| *f)
-                .unwrap_or_default(),
+                .map_or(0.0, |(_, f)| *f),
             1.35
         );
         let sls = &combos[1];
@@ -212,8 +211,7 @@ mod tests {
                 .multipliers
                 .iter()
                 .find(|(c, _)| *c == case)
-                .map(|(_, f)| *f)
-                .unwrap_or_default()
+                .map_or(0.0, |(_, f)| *f)
         };
         assert_abs_diff_eq!(factor_of(LoadCase::Wind), 1.5);
         assert_abs_diff_eq!(factor_of(LoadCase::Variable), 0.7);

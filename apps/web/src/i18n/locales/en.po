@@ -11,6 +11,10 @@ msgstr ""
 msgid "+ Nœud"
 msgstr "+ Node"
 
+#: src/routes/geometry.tsx
+msgid "+ Placer un premier nœud"
+msgstr "+ Place a first node"
+
 #: src/routes/loads.tsx
 msgid "Ajouter la charge"
 msgstr "Add load"
@@ -26,6 +30,14 @@ msgstr "Add nodes, connect them with N1 → N2 members, import a DXF drawing or 
 #: src/routes/results.tsx
 msgid "Amplification"
 msgstr "Amplification"
+
+#: src/routes/supports.tsx
+msgid "Appuis actifs"
+msgstr "Active supports"
+
+#: src/routes/supports.tsx
+msgid "Aucun appui — sélectionnez un nœud puis choisissez un preset."
+msgstr "No supports — select a node then pick a preset."
 
 #: src/components/CommandPalette.tsx
 msgid "Aucun résultat."
@@ -44,16 +56,20 @@ msgid "Cas"
 msgstr "Case"
 
 #: src/routes/loads.tsx
-msgid "Cas de charge"
-msgstr "Load case"
+#~ msgid "Cas de charge"
+#~ msgstr "Load case"
 
 #: src/routes/geometry.tsx
 msgid "Catalogue"
 msgstr "Catalog"
 
 #: src/routes/loads.tsx
-msgid "Charge ponctuelle"
-msgstr "Point load"
+#~ msgid "Charge ponctuelle"
+#~ msgstr "Point load"
+
+#: src/routes/geometry.tsx
+msgid "Charger un modèle type"
+msgstr "Load a template"
 
 #: src/routes/loads.tsx
 msgid "Charges et combinaisons EN 1990"
@@ -128,6 +144,10 @@ msgstr "Import DXF"
 msgid "Inspecteur de section"
 msgstr "Section inspector"
 
+#: src/routes/loads.tsx
+msgid "Lancer le calcul 3D & Eurocode 3"
+msgstr "Run the 3D & Eurocode 3 calculation"
+
 #: src/routes/results.tsx
 msgid "Lancer un calcul pour afficher les résultats."
 msgstr "Run a calculation to display results."
@@ -135,6 +155,18 @@ msgstr "Run a calculation to display results."
 #: src/routes/report.tsx
 msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 msgstr "The .rdm model is compressed (lz-string) into the URL and validated by Valibot on read."
+
+#: src/routes/supports.tsx
+msgid "Liaisons (RDM 7)"
+msgstr "Connections (RDM 7)"
+
+#: src/routes/supports.tsx
+msgid "Libre"
+msgstr "Free"
+
+#: src/routes/geometry.tsx
+msgid "Matériau"
+msgstr "Material"
 
 #: src/routes/supports.tsx
 msgid "Matrice 6 DDL des appuis"
@@ -170,9 +202,14 @@ msgid "Poids propre automatique"
 msgstr "Automatic self-weight"
 
 #: src/routes/loads.tsx
-msgid "Poids propre automatique (cas G)"
-msgstr "Automatic self-weight (G case)"
+msgid "Poids propre automatique (1g −Z)"
+msgstr "Self-weight (1g −Z)"
 
+#: src/routes/loads.tsx
+#~ msgid "Poids propre automatique (cas G)"
+#~ msgstr "Automatic self-weight (G case)"
+
+#: src/routes/loads.tsx
 #: src/routes/results.tsx
 msgid "Poutre"
 msgstr "Beam"
@@ -182,8 +219,12 @@ msgid "Poutres"
 msgstr "Beams"
 
 #: src/routes/loads.tsx
-msgid "poutres résolues par élément"
-msgstr "beams solved per element"
+#~ msgid "poutres résolues par élément"
+#~ msgstr "beams solved per element"
+
+#: src/routes/supports.tsx
+msgid "Presets d'appui"
+msgstr "Support presets"
 
 #: src/routes/geometry.tsx
 msgid "Profil"
@@ -226,7 +267,11 @@ msgid "Resultats CSV (Excel)"
 msgstr "Results CSV (Excel)"
 
 #: src/routes/results.tsx
-msgid "Resultats de calcul"
+#~ msgid "Resultats de calcul"
+#~ msgstr "Calculation results"
+
+#: src/routes/results.tsx
+msgid "Résultats de calcul"
 msgstr "Calculation results"
 
 #: src/routes/geometry.tsx
@@ -249,6 +294,16 @@ msgstr "Case factors give the order of magnitude: SI to display conversions live
 msgid "Une nouvelle version est disponible."
 msgstr "A new version is available."
 
+#. placeholder {0}: uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id
+#. placeholder {1}: (maxUls * 100).toFixed(1).replace(".", ",")
+#: src/routes/results.tsx
+msgid "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
+msgstr "EC3 check exceeded — governing member: P{0} (η ={1} %). A 1-click reinforcement is offered."
+
 #: src/viewport3d/ViewportCanvas.tsx
-msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
-msgstr "3D view unavailable (WebGL) — editing and solving remain active."
+#~ msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
+#~ msgstr "3D view unavailable (WebGL) — editing and solving remain active."
+
+#: src/viewport3d/ViewportCanvas.tsx
+msgid "Vue 3D indisponible (WebGL) — édition et calculs actifs."
+msgstr "3D view unavailable (WebGL) — editing and calculations stay active."

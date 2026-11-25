@@ -19,7 +19,10 @@ use wasm_bindgen::prelude::*;
 
 use rdm_eurocode::{Factors, build_combinations, member_check};
 use rdm_model::{LoadCase, MaterialProperties, SectionProperties, Structure};
-use rdm_solver::{SolveError, SolvedModel, superimpose, validate_and_solve};
+use rdm_solver::{
+    SolveError, SolvedModel, build_elements, span_loads_local, station_forces, superimpose,
+    validate_and_solve, von_mises_grid,
+};
 
 /// One case of the solve report (flat arrays, SI units).
 #[derive(Debug, Clone, Serialize)]
@@ -168,6 +171,7 @@ fn build_combination_reports(
     let present: Vec<LoadCase> = solved.cases.iter().map(|(c, _)| *c).collect();
     let combos = build_combinations(&present, &Factors::default());
     let mut reports = Vec::new();
+    let elements = build_elements(structure)?;
 
     for combo in &combos {
         let (_u, _r, f) = superimpose(solved, &combo.multipliers)?;
@@ -178,30 +182,53 @@ fn build_combination_reports(
             let (utilization, deflection) = match (section, material) {
                 (Some(section), Some(material)) => {
                     let length = beam_length(structure, beam).unwrap_or(0.0);
-                    // Local end forces layout: [ux uy uz rx ry rz] * 2 nodes.
+                    // v1.0.0 bug 3: evaluate the EN 1993-1-1 check at span
+                    // stations [0, 0.25, 0.5, 0.75, 1] — end forces alone
+                    // miss midspan sagging (PL/4, qL²/8). Span loads are
+                    // superposed with the same combination weights.
+                    let data = &elements[index];
+                    let mut spans = rdm_solver::SpanLoads::default();
+                    for (case, weight) in &combo.multipliers {
+                        if *weight == 0.0 {
+                            continue;
+                        }
+                        let case_spans = span_loads_local(structure, data, *case)?;
+                        for &(a, fy, fz) in &case_spans.points {
+                            spans.points.push((a, weight * fy, weight * fz));
+                        }
+                        for &(qy1, qy2, qz1, qz2) in &case_spans.trapezoids {
+                            spans.trapezoids.push((
+                                weight * qy1,
+                                weight * qy2,
+                                weight * qz1,
+                                weight * qz2,
+                            ));
+                        }
+                    }
                     let end = 12 * index;
-                    let n_ed = f[end];
-                    let my_ed = f[end + 4];
-                    let mz_ed = f[end + 5];
-                    let vz_ed = f[end + 2];
-                    let t_ed = f[end + 3];
-                    let check = member_check(rdm_eurocode::MemberCheckInput {
-                        beam_id: beam.id,
-                        length,
-                        k_buckling: (beam.k_buckling_y, beam.k_buckling_z),
-                        section,
-                        material,
-                        forces: (n_ed, my_ed, mz_ed, vz_ed, t_ed),
-                        combination: combo.label(),
-                    });
-                    let utilization = match check {
-                        Ok(check) => check
-                            .utilizations
-                            .iter()
-                            .map(|(_, v)| *v)
-                            .fold(0.0f64, f64::max),
-                        Err(_) => 0.0,
-                    };
+                    let block = &f[end..end + 12];
+                    let mut utilization = 0.0f64;
+                    for ratio in rdm_solver::STATIONS {
+                        let forces = station_forces(block, &spans, length, ratio);
+                        let check = member_check(rdm_eurocode::MemberCheckInput {
+                            beam_id: beam.id,
+                            length,
+                            k_buckling: (beam.k_buckling_y, beam.k_buckling_z),
+                            section,
+                            material,
+                            forces: (forces.n_axial, forces.my, forces.mz, forces.vz, forces.t),
+                            combination: combo.label(),
+                        });
+                        if let Ok(check) = check {
+                            utilization = utilization.max(
+                                check
+                                    .utilizations
+                                    .iter()
+                                    .map(|(_, v)| *v)
+                                    .fold(0.0f64, f64::max),
+                            );
+                        }
+                    }
                     let deflection = rdm_solver::midspan_deflection_metric(
                         structure,
                         solved,
@@ -234,8 +261,237 @@ fn beam_length(structure: &Structure, beam: &rdm_model::Beam) -> Option<f64> {
 }
 
 // --------------------------------------------------------------------------
+// Modal + section-cut engines (v1.0.0)
+// --------------------------------------------------------------------------
+
+/// Serializable modal DTO (solver types stay serde-free).
+#[derive(Debug, Clone, Serialize)]
+pub struct ModeShapeDto {
+    /// 1-based mode index.
+    pub mode_index: usize,
+    /// Natural frequency (Hz).
+    pub frequency_hz: f64,
+    /// Circular frequency (rad/s).
+    pub omega: f64,
+    /// Global modal displacements `[6n]`.
+    pub displacements: Vec<f64>,
+}
+
+/// Serializable modal report.
+#[derive(Debug, Clone, Serialize)]
+pub struct ModalReportDto {
+    /// Number of extracted modes.
+    pub n_modes: usize,
+    /// Modes, ascending frequency.
+    pub modes: Vec<ModeShapeDto>,
+}
+
+/// Serializable stress point.
+#[derive(Debug, Clone, Serialize)]
+pub struct StressPointDto {
+    /// Local horizontal coordinate (m).
+    pub y: f64,
+    /// Local vertical coordinate (m).
+    pub z: f64,
+    /// Von Mises equivalent stress (Pa).
+    pub sigma_vm: f64,
+}
+
+/// Serializable cross-section stress grid.
+#[derive(Debug, Clone, Serialize)]
+pub struct StressGridDto {
+    /// Section extremes `(y0, y1, z0, z1)` in m.
+    pub bounds: (f64, f64, f64, f64),
+    /// Grid points.
+    pub points: Vec<StressPointDto>,
+}
+
+/// Combination weights for the requested kind (`ULS`/`SLS`).
+fn combination_weights(solved: &SolvedModel, kind: &str) -> Option<Vec<(LoadCase, f64)>> {
+    let present: Vec<LoadCase> = solved.cases.iter().map(|(c, _)| *c).collect();
+    let combos = build_combinations(&present, &Factors::default());
+    combos
+        .iter()
+        .find(|c| c.kind.code() == kind)
+        .map(|c| c.multipliers.clone())
+}
+
+// --------------------------------------------------------------------------
 // wasm_bindgen wrappers
 // --------------------------------------------------------------------------
+
+/// Serializable section outline metadata for the 3D extrusion (bug 2).
+#[derive(Debug, Clone, Serialize)]
+pub struct SectionShapeDto {
+    /// Profile designation (`IPE 200`, ...).
+    pub designation: String,
+    /// Shape family name (`DoubleSymmetricI`, ...).
+    pub shape: String,
+    /// Overall depth h (m).
+    pub h: Option<f64>,
+    /// Flange width b (m).
+    pub b: Option<f64>,
+    /// Web thickness tw (m).
+    pub tw: Option<f64>,
+    /// Flange thickness tf (m).
+    pub tf: Option<f64>,
+}
+
+/// Lists every profile with its true SI outline dimensions (bug 2: real
+/// extruded profiles instead of 80 mm square boxes).
+///
+/// # Errors
+///
+/// Returns a `JsValue` fault when serialization fails.
+#[wasm_bindgen]
+pub fn catalog_section_shapes() -> Result<JsValue, JsValue> {
+    let profiles = rdm_eurocode::profile_catalog();
+    let shapes: Vec<SectionShapeDto> = profiles
+        .designations()
+        .into_iter()
+        .filter_map(|d| {
+            let props = profiles.properties(d).ok()?;
+            Some(SectionShapeDto {
+                designation: d.to_owned(),
+                shape: format!("{:?}", props.shape),
+                h: props.h,
+                b: props.b,
+                tw: props.tw,
+                tf: props.tf,
+            })
+        })
+        .collect();
+    serde_wasm_bindgen::to_value(&shapes).map_err(Into::into)
+}
+
+/// Serializable EN 10365 properties for the Step 1 inspector.
+#[derive(Debug, Clone, Serialize)]
+pub struct SectionPropertiesDto {
+    /// Profile designation.
+    pub designation: String,
+    /// Area A (m²).
+    pub a: f64,
+    /// Strong-axis second moment Iy (m⁴).
+    pub iy: f64,
+    /// Weak-axis second moment Iz (m⁴).
+    pub iz: f64,
+    /// St-Venant torsion constant It (m⁴).
+    pub it: f64,
+    /// Warping constant Iw (m⁶, optional).
+    pub iw: Option<f64>,
+    /// Elastic strong-axis modulus Wely (m³).
+    pub wel_y: f64,
+    /// Plastic strong-axis modulus Wply (m³, optional).
+    pub wpl_y: Option<f64>,
+    /// Linear mass (kg/m).
+    pub mass_per_m: f64,
+}
+
+/// Full catalog properties of one designation (EN 10365 inspector row).
+///
+/// # Errors
+///
+/// Returns a `JsValue` fault when the designation is unknown or
+/// serialization fails.
+#[wasm_bindgen]
+pub fn catalog_section_properties(designation: &str) -> Result<JsValue, JsValue> {
+    let profiles = rdm_eurocode::profile_catalog();
+    let outcome = (|| {
+        let props = profiles
+            .properties(designation)
+            .map_err(|e| e.to_string())?;
+        let mass_per_m = props.a * 7850.0;
+        Ok(SectionPropertiesDto {
+            designation: designation.to_owned(),
+            a: props.a,
+            iy: props.iy,
+            iz: props.iz,
+            it: props.it,
+            iw: props.iw,
+            wel_y: props.wel_y,
+            wpl_y: props.wpl_y,
+            mass_per_m,
+        })
+    })();
+    match outcome {
+        Ok(dto) => serde_wasm_bindgen::to_value(&dto).map_err(Into::into),
+        Err(message) => serde_wasm_bindgen::to_value(&SolveFault {
+            kind: "Catalog".to_owned(),
+            message,
+        })
+        .map_err(Into::into),
+    }
+}
+
+/// Serializable internal forces at one span station.
+#[derive(Debug, Clone, Serialize)]
+pub struct SpanForcesDto {
+    /// Ratio along the member (0..1).
+    pub ratio: f64,
+    /// Axial force N (N).
+    pub n: f64,
+    /// Bending My (N·m).
+    pub my: f64,
+    /// Bending Mz (N·m).
+    pub mz: f64,
+    /// Shear Vz (N).
+    pub vz: f64,
+}
+
+/// n-point internal-force sampling of one member under a combination
+/// (Step 4 docked diagrams).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid inputs.
+#[wasm_bindgen]
+pub fn beam_span_forces(
+    project_json: &str,
+    beam_id: u32,
+    combo_kind: &str,
+    n_ratios: usize,
+) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<Vec<SpanForcesDto>, SolveError> {
+        let project: rdm_model::ProjectFile =
+            serde_json::from_str(project_json).map_err(|e| SolveError::InvalidModel {
+                message: format!("malformed .rdm payload: {e}"),
+            })?;
+        let mut structure = project.structure;
+        resolve_properties(&mut structure);
+        let solved = validate_and_solve(&structure)?;
+        let index =
+            structure
+                .beams
+                .iter()
+                .position(|b| b.id == beam_id)
+                .ok_or(SolveError::Sparse {
+                    message: format!("unknown beam id {beam_id}"),
+                })?;
+        let weights = combination_weights(&solved, combo_kind).ok_or(SolveError::Sparse {
+            message: format!("unknown combination kind {combo_kind}"),
+        })?;
+        let state = rdm_solver::superimposed_beam_state(&structure, &solved, &weights, index)?;
+        let n = n_ratios.max(2);
+        let stations = rdm_solver::beam_forces_at(&state, n).map_err(SolveError::Load)?;
+        Ok(stations
+            .iter()
+            .map(|(a, f)| SpanForcesDto {
+                ratio: *a,
+                n: f.n_axial,
+                my: f.my,
+                mz: f.mz,
+                vz: f.vz,
+            })
+            .collect())
+    })();
+    match outcome {
+        Ok(dtos) => serde_wasm_bindgen::to_value(&dtos).map_err(Into::into),
+        Err(err) => {
+            let fault: SolveFault = SolveFault::from(&err);
+            serde_wasm_bindgen::to_value(&fault).map_err(Into::into)
+        }
+    }
+}
 
 /// Lists every profile designation of the embedded catalogs.
 ///
@@ -370,5 +626,163 @@ mod tests {
         resolve_properties(&mut structure);
         assert!(structure.sections.contains_key("IPE 200"));
         assert!(structure.materials.contains_key("S235JR"));
+    }
+}
+
+/// Natural frequencies and mode shapes (v1.0.0 Step 4 KPI 4 + modal table).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid models or solver
+/// failure.
+#[wasm_bindgen]
+pub fn modal_analysis(project_json: &str, n_modes: usize) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<ModalReportDto, SolveError> {
+        let project: rdm_model::ProjectFile =
+            serde_json::from_str(project_json).map_err(|e| SolveError::InvalidModel {
+                message: format!("malformed .rdm payload: {e}"),
+            })?;
+        let mut structure = project.structure;
+        resolve_properties(&mut structure);
+        let _solved = validate_and_solve(&structure)?;
+        let report =
+            rdm_solver::modal_analysis(&structure, n_modes).map_err(|e| SolveError::Sparse {
+                message: e.to_string(),
+            })?;
+        Ok(ModalReportDto {
+            n_modes: report.n_modes,
+            modes: report
+                .modes
+                .iter()
+                .map(|m| ModeShapeDto {
+                    mode_index: m.mode_index,
+                    frequency_hz: m.frequency_hz,
+                    omega: m.omega,
+                    displacements: m.displacements.clone(),
+                })
+                .collect(),
+        })
+    })();
+    match outcome {
+        Ok(dto) => serde_wasm_bindgen::to_value(&dto).map_err(Into::into),
+        Err(err) => {
+            let fault: SolveFault = SolveFault::from(&err);
+            serde_wasm_bindgen::to_value(&fault).map_err(Into::into)
+        }
+    }
+}
+
+/// `sigma_vM(y, z)` cross-section grid at one span station (Step 4 heatmap).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid inputs.
+#[wasm_bindgen]
+pub fn section_stress_grid(
+    project_json: &str,
+    beam_id: u32,
+    combo_kind: &str,
+    ratio: f64,
+    grid_n: usize,
+) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<StressGridDto, SolveError> {
+        let project: rdm_model::ProjectFile =
+            serde_json::from_str(project_json).map_err(|e| SolveError::InvalidModel {
+                message: format!("malformed .rdm payload: {e}"),
+            })?;
+        let mut structure = project.structure;
+        resolve_properties(&mut structure);
+        let solved = validate_and_solve(&structure)?;
+        let index =
+            structure
+                .beams
+                .iter()
+                .position(|b| b.id == beam_id)
+                .ok_or(SolveError::Sparse {
+                    message: format!("unknown beam id {beam_id}"),
+                })?;
+        let weights = combination_weights(&solved, combo_kind).ok_or({
+            SolveError::Sparse {
+                message: format!("unknown combination kind {combo_kind}"),
+            }
+        })?;
+        let state = rdm_solver::superimposed_beam_state(&structure, &solved, &weights, index)?;
+        let beam = &structure.beams[index];
+        let section = structure.sections.get(&beam.section_id).ok_or({
+            SolveError::Sparse {
+                message: format!("unknown section {}", beam.section_id),
+            }
+        })?;
+        let length = beam_length(&structure, beam).unwrap_or(1.0);
+        let forces = rdm_solver::station_forces(&state.end_forces, &state.spans, length, ratio);
+        let grid = von_mises_grid(section, forces, grid_n);
+        Ok(StressGridDto {
+            bounds: grid.bounds,
+            points: grid
+                .points
+                .iter()
+                .map(|p| StressPointDto {
+                    y: p.y,
+                    z: p.z,
+                    sigma_vm: p.sigma_vm,
+                })
+                .collect(),
+        })
+    })();
+    match outcome {
+        Ok(dto) => serde_wasm_bindgen::to_value(&dto).map_err(Into::into),
+        Err(err) => {
+            let fault: SolveFault = SolveFault::from(&err);
+            serde_wasm_bindgen::to_value(&fault).map_err(Into::into)
+        }
+    }
+}
+
+/// Imports a DXF drawing as a fresh `.rdm` model (v1.0.0 Step 1 CAD modal):
+/// `LINE` / polyline entities become members, coincident nodes merge within
+/// a 1 mm tolerance and T/X intersections split. Every member gets the
+/// default `IPE 200` / `S235JR` designation; the user refines afterwards.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on parse or topology failure.
+#[wasm_bindgen]
+pub fn import_dxf(bytes: &[u8], project_name: &str) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<String, String> {
+        let segments = rdm_cad::import_dxf(bytes).map_err(|e| e.to_string())?;
+        let topology = rdm_cad::clean_topology(&segments, 1e-3).map_err(|e| e.to_string())?;
+        let nodes: Vec<rdm_model::Node> = topology
+            .nodes
+            .iter()
+            .map(|n| rdm_model::Node::new(n.id, n.position[0], n.position[1], n.position[2]))
+            .collect();
+        let beams: Vec<rdm_model::Beam> = topology
+            .beams
+            .iter()
+            .map(|b| rdm_model::Beam::frame(b.n1.max(b.n2), b.n1, b.n2, "IPE 200", "S235JR"))
+            .collect();
+        let structure = rdm_model::Structure {
+            nodes,
+            beams,
+            supports: Vec::new(),
+            loads: Vec::new(),
+            sections: BTreeMap::new(),
+            materials: BTreeMap::new(),
+            self_weight_enabled: true,
+        };
+        let project = rdm_model::ProjectFile {
+            version: 1,
+            name: project_name.to_owned(),
+            structure,
+        };
+        serde_json::to_string(&project).map_err(|e| e.to_string())
+    })();
+    match outcome {
+        Ok(json) => serde_wasm_bindgen::to_value(&json).map_err(Into::into),
+        Err(message) => serde_wasm_bindgen::to_value(&SolveFault {
+            kind: "Cad".to_owned(),
+            message,
+        })
+        .map_err(Into::into),
     }
 }

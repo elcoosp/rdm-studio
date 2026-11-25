@@ -7,10 +7,12 @@
 //! consecutive segments.
 
 pub mod dxf_importer;
+pub mod parametric;
 pub mod step_importer;
 pub mod topology_cleaner;
 
 pub use dxf_importer::{import_dxf, RawSegment};
+pub use parametric::{generate_structure, ParametricError, ParametricParams, ParametricTemplate};
 pub use step_importer::import_step_or_iges;
 pub use topology_cleaner::{clean_topology, Topology, TopologyError};
 

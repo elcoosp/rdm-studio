@@ -6,6 +6,11 @@ edition = "2021"
 [dependencies]
 dxf = "0.6.2"
 thiserror = "2"
+serde = { workspace = true }
+rdm-model = { path = "../rdm-model" }
+
+[dev-dependencies]
+approx = { workspace = true }
 
 [lints]
 workspace = true

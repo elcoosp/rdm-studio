@@ -29,6 +29,16 @@ export default defineConfig({
         name: "RDM Studio",
         short_name: "RDM",
         description: "3D Structural Engineering Workstation",
+        icons: [
+          { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png" },
+          {
+            src: "icon-maskable-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
         theme_color: "#0891B2",
         background_color: "#F9FAFB",
         display: "standalone",

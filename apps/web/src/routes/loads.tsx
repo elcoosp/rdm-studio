@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BottomSheet } from "@/components/BottomSheet";
 import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { IconPlus, IconTrash } from "@/components/icons";
@@ -79,10 +80,7 @@ function LoadsPage() {
           </p>
         ) : null}
       </section>
-      <aside className="rounded-panel border border-hairline bg-panel p-4">
-        <h2 className="mb-3 text-[15px] font-semibold">
-          <Trans>Charge ponctuelle</Trans>
-        </h2>
+      <BottomSheet testId="inspector-sheet" title={<Trans>Charge ponctuelle</Trans>}>
         <label className="block text-[12px] text-ink-secondary">
           <Trans>Noeud</Trans>
         </label>
@@ -134,7 +132,7 @@ function LoadsPage() {
         <p className="mt-2 text-[11px] text-ink-muted font-data">
           {beams.length} <Trans>poutres résolues par élément</Trans>
         </p>
-      </aside>
+      </BottomSheet>
     </div>
   );
 }

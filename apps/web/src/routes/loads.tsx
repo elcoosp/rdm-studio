@@ -32,7 +32,7 @@ function LoadsPage() {
           <Trans>Charges et combinaisons EN 1990</Trans>
         </h2>
         <table className="w-full text-[13px]">
-          <thead className="text-left text-[11px] uppercase tracking-wide text-ink-muted">
+          <thead className="text-left text-[11px] text-ink-muted">
             <tr>
               <th className="py-1">
                 <Trans>Cas</Trans>
@@ -82,7 +82,7 @@ function LoadsPage() {
       </section>
       <BottomSheet testId="inspector-sheet" title={<Trans>Charge ponctuelle</Trans>}>
         <label className="block text-[12px] text-ink-secondary">
-          <Trans>Noeud</Trans>
+          <Trans>Nœud</Trans>
         </label>
         <select
           className="font-data mt-1 w-full rounded border border-hairline px-2 py-1.5 text-[13px]"

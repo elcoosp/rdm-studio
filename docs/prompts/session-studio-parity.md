@@ -1,15 +1,16 @@
-Task: github.com/elcoosp/rdm-studio. Ship v1.2.0 — full-stack Rust/WASM + UI/UX completion: close all 6 live-browser video defects AND deliver 100% RDM 7 Studio workstation parity (pure-Rust STEP/IGES + DXF CAD importer, solver-native inertial `g`-acceleration fields, per-beam `max_sigma_vm` & governing EC3 check in WASM, and high-craft UI) following `AGENTS.md`, `ARCHITECTURE.md`, and `DESIGN.md` (§1–§8).
+Task: github.com/elcoosp/rdm-studio. Ship v1.2.0 — full-stack Rust/WASM + UI/UX completion: close all 6 live-browser video defects, deliver 100% RDM 7 Studio workstation parity (pure-Rust STEP/IGES + DXF CAD importer, solver-native inertial `g`-acceleration fields, per-beam `max_sigma_vm` & governing EC3 check in WASM), AND execute a genuine `impeccable` visual craft audit & polish pass across all 5 routes following `AGENTS.md`, `ARCHITECTURE.md`, and `DESIGN.md` (§1–§8).
 
 EXECUTION CONTRACT (NON-NEGOTIABLE):
 
 - Keep strict SI units (`m`, `N`, `Pa`, `rad`, `kg/m³`) and zero `.unwrap()` / `.expect()` / `panic!()` in `crates/` and `bindings/rdm-wasm`.
 - Preserve all v1.1.0 features already on `main` (`shadcn/ui`, 32 `EngineeringIcons`, extruded profiles, `@number-flow/react`, `CameraControls`, 3D cutting plane, `modal.rs`, `section_cut.rs`, `rdm-cad`).
-- Enforce `DESIGN.md` surgical craft: NO emojis in UI buttons, NO ALL-CAPS kickers, strict `kN` / `kN/m` / `mm` / `MPa` display units, and full `zundo` Undo/Redo (`⌘Z`) support.
+- **MANDATORY `impeccable` SKILL EXECUTION:** You MUST inspect `find .agents/skills/impeccable -maxdepth 3` and READ `.agents/skills/impeccable/SKILL.md` (plus its craft/polish reference files) before touching UI files, and explicitly apply its rules (visual hierarchy, spatial rhythm, hairline borders, zero card clutter, crisp tabular alignment, and tactile focus states) across Steps 1–5.
 - Write complete, clean files (never blind regex/tab patches) to avoid `oxfmt` whitespace no-ops.
 
-1. **Bootstrap & Sync (< 3 tool calls):**
+1. **Bootstrap, Sync & Read `impeccable` Craft Skill (< 3 tool calls):**
    - If `rdm-studio` is not cloned locally, `git clone https://github.com/elcoosp/rdm-studio.git && cd rdm-studio`; otherwise `cd rdm-studio && git fetch origin && git reset --hard origin/main`.
-   - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com/elcoosp/ship`) are installed, then read `STATUS.md` and `DESIGN.md`.
+   - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com/elcoosp/ship`) are installed.
+   - Install `impeccable` if missing (`pnpm dlx skills add https://github.com/pbakaus/impeccable --skill impeccable -y || true`), list all files under `.agents/skills/impeccable/`, and **read `.agents/skills/impeccable/SKILL.md` in full** alongside `STATUS.md` and `DESIGN.md`.
 
 2. **Rust Core & WASM Enhancements (`crates/` + `bindings/rdm-wasm` — SI Units, Zero Panics):**
    - **A. Pure-Rust STEP & IGES Wireframe Importer (`crates/rdm-cad/src/step_importer.rs`, `crates/rdm-cad/src/lib.rs`, `bindings/rdm-wasm/src/lib.rs`):**
@@ -27,11 +28,12 @@ EXECUTION CONTRACT (NON-NEGOTIABLE):
    3. **3-Zone Balanced Header & Active Locale Pill (`__root.tsx`):** Lay out `<header>` with `justify-between` (Left: `/logo-rdm-studio.svg` + `RDM Studio / Projet ▾`; Center: `Étape 1..5`; Right: `ml-auto` cluster with node/beam counter, `⌘K`, `OfflinePill`, `?`, and active-highlighted `FR` / `EN` toggle).
    4. **Bottom-Right 3D Gizmo (`ViewportCanvas.tsx`):** Anchor `<GizmoHelper alignment="bottom-right" margin={}>` in the bottom-right corner so the top-right `3D Iso | Dessus XY | Face XZ | Côté YZ` preset bar is 100% unobstructed.
 
-4. **Deliver High-Craft RDM 7 Studio Workstation Parity (Zero Prototype Hacks):**
+4. **Deliver High-Craft RDM 7 Studio Workstation Parity + `impeccable` Polish:**
    - **Step 1 (`geometry.tsx`):** Add segmented 3D tool mode bar (`Sélection [V]` · `+ Nœud [N]` · `Relier [B]`) with magnetic `SnapGrid` (never place accidental nodes while orbiting), bidirectional hover highlight (`#93C5FD`) between `Nœuds`/`Poutres` tables and 3D viewport, `CadImportDialog` supporting `.dxf`, `.step`/`.stp`, and `.igs`/`.iges` with optional `"Encastrer le nœud le plus à gauche"` + undoable `zundo` import, and `"Suivant : Définir les liaisons →"`.
    - **Step 2 (`supports.tsx`):** 4 primary quick-preset cards (`Encastrement`, `Rotule`, `Appui simple Z`, `Glissière`) + grouped **15-preset RDM 7 selector** (Appuis simples XY/XZ/YZ, Glissants X/Y/Z, Glissières X/Y/Z, Pivots X/Y/Z, Personnalisée) synced with `2×3` DOF checkboxes, 3D node click-to-restrain, `"Tout supprimer"` (undoable), and `"Suivant : Définir les charges →"`.
    - **Step 3 (`loads.tsx`):** Quick scenarios (`Poids propre seul 1g -Z`, `Transport 0,8g X / 1,5g -Z`) + `(ax, ay, az)` `g`-acceleration form wired to `AccelerationField`, 3-axis nodal (`Fx, Fy, Fz` kN) & beam (`qx, qy, qz` kN/m + `Ponctuelle a/L`) forms, `"Vider les charges"` (undoable), and primary CTA `"Lancer le calcul 3D & Eurocode 3 →"`.
    - **Step 4 (`results.tsx`):** 6 eigenmodes (`Mode propre 1..6`) alongside `ELU` & `ELS` with harmonic `Play/Pause`, plus **3 calibrated thermal scale modes** (`Taux EC3 (0 → 1,00)`, `Contrainte σvM (0 → fy)`, `Auto (0 → Max)`) driven by the solver's real `max_sigma_vm` & `utilization`.
+   - **`impeccable` Craft Audit & Polish:** Inspect every inspector panel, spacing rhythm (`8px` grid), border contrast (`1px #E2E8F0`), button hierarchy, and empty/dense table states across Steps 1–5 against `.agents/skills/impeccable/SKILL.md`, eliminating any nested-box clutter or raw form controls.
 
 5. **Add Regression Tests & Verify All Gates (`G0 → G6`, `AGENTS.md` §4):**
    - Add Rust tests for `step_importer` (ASCII STEP `LINE` extraction + `mm → m` scaling) and `AccelerationField` inertial force equilibrium, plus Playwright E2E assertions for duplicate-beam guard, responsive resize navigation, 15 RDM 7 support presets, and quick load scenarios.

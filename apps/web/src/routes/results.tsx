@@ -9,10 +9,7 @@ import { Toaster, toast } from "sonner";
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import { computeModelMassKg, nextHeavierProfile } from "@/lib/resultsMath";
-import { NumberFlowValue } from "@/components/NumberFlowValue";
-import { CuttingPlane } from "@/viewport3d/CuttingPlane";
-import { SectionCut, DeflectionLimit, ModalVibration } from "@/components/icons/EngineeringIcons";
-import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/workerClient";
+import type { SpanForceSample, StressGrid } from "@/wasmBridge/workerClient";
 import { formatMm, formatRatio } from "@/lib/units";
 import {
   feaClient,
@@ -73,18 +70,8 @@ function ResultsPage() {
   const [amplification, setAmplification] = useState(1);
   const [eigenMode, setEigenMode] = useState(0);
   const [modal, setModal] = useState<ModalReport | null>(null);
-  const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
-  // Combination / eigenmode selector + harmonic modal play (§ mockups tape_4).
-  const [viewMode, setViewMode] = useState<"ELU" | "ELS" | "MODE">("ELS");
-  const [eigenIndex, setEigenIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [harmonic, setHarmonic] = useState(1);
-  // Cutting plane sync (§8.5): beam + x/L scrubbed from the docked inspector.
-  const [cutBeamId, setCutBeamId] = useState<number>(project.structure.beams[0]?.id ?? 0);
-  const [station, setStation] = useState(0.5);
   const [massKg, setMassKg] = useState<number | null>(null);
   const ipeSeriesRef = useRef<string[]>([]);
-  const areasRef = useRef<Map<string, number>>(new Map());
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -93,20 +80,7 @@ function ResultsPage() {
         feaClient.modalAnalysis(project, 3).catch(() => null),
       ]);
       if (cancelled) return;
-      if (catalog !== null) {
-        ipeSeriesRef.current = catalog.sections.map((x) => x.designation);
-        // v1.1.0 bug 3: Step 4 extrudes the true catalog profiles too.
-        setSectionDims(new Map(catalog.sectionDims.map((d) => [d.designation, d])));
-        // Catalog areas for the what-if mass delta preview (§7.4).
-        const areas = new Map<string, number>();
-        await Promise.all(
-          catalog.sectionDims.slice(0, 40).map(async (d) => {
-            const props = await feaClient.catalogSectionProperties(d.designation).catch(() => null);
-            if (props !== null) areas.set(d.designation, props.a);
-          }),
-        );
-        areasRef.current = areas;
-      }
+      if (catalog !== null) ipeSeriesRef.current = catalog.sections.map((x) => x.designation);
       setModal(modalReport);
     })();
     return () => {
@@ -116,22 +90,6 @@ function ResultsPage() {
   useEffect(() => {
     setMassKg(computeModelMassKg(project));
   }, [project]);
-  useEffect(() => {
-    if (!playing) {
-      setHarmonic(1);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = (now - start) / 1000;
-      setHarmonic(Math.sin(t * Math.PI * 2) * 0.9 + 0.1);
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [playing]);
-
   const maxUls = uls !== undefined ? uls.beams.reduce((m, b) => Math.max(m, b.utilization), 0) : 0;
   const overloaded = (uls?.beams ?? []).filter((b) => b.utilization > 1);
   const maxSlsDeflMm =
@@ -140,7 +98,6 @@ function ResultsPage() {
   const upgradeOverloaded = () => {
     if (overloaded.length === 0 || ipeSeriesRef.current.length === 0) return;
     const undo: { beamId: number; section: string }[] = [];
-    const before = computeModelMassKg(project, areasRef.current);
     for (const b of overloaded) {
       const beam = project.structure.beams.find((x) => x.id === b.beam_id);
       if (beam === undefined) continue;
@@ -150,28 +107,19 @@ function ResultsPage() {
       useProjectStore.getState().updateBeam(beam.id, { section_id: next });
     }
     if (undo.length === 0) return;
-    // What-if delta preview (§7.4): mass diff from the catalog areas and the
-    // previous governing utilization.
-    const after = computeModelMassKg(project, areasRef.current);
-    const deltaKg = after - before;
-    const etaBefore = maxUls * 100;
-    // Auto-solve (bug 10) refreshes the results within 150 ms; the toast
-    // shows the captured "before" utilization and offers a 5 s undo.
-    toast(
-      `Profil renforcé — Masse : ${deltaKg >= 0 ? "+" : ""}${deltaKg.toFixed(1).replace(".", ",")} kg · Taux EC3 : ${etaBefore.toFixed(1).replace(".", ",")} % → recalcul`,
-      {
-        description: undo.map((u) => `B${u.beamId}: ${u.section} → profil supérieur`).join(", "),
-        action: {
-          label: "Annuler (⌘Z)",
-          onClick: () => {
-            for (const u of undo) {
-              useProjectStore.getState().updateBeam(u.beamId, { section_id: u.section });
-            }
-          },
+    // Auto-solve (bug 10) refreshes the results within 150 ms.
+    toast("Profil renforcé — recalcul en cours", {
+      description: undo.map((u) => `B${u.beamId}: ${u.section} → profil supérieur`).join(", "),
+      action: {
+        label: "Annuler",
+        onClick: () => {
+          for (const u of undo) {
+            useProjectStore.getState().updateBeam(u.beamId, { section_id: u.section });
+          }
         },
-        duration: 5_000,
       },
-    );
+      duration: 5_000,
+    });
   };
 
   // Deformed-shape inputs: characteristic SLS superposition (1.00G + 1.00Q)
@@ -210,39 +158,11 @@ function ResultsPage() {
   }, [report, uls, project]);
   const amplificationRef = useRef(amplification);
   amplificationRef.current = amplification;
-  const scaledDeformed = useMemo(() => {
-    if (deformed === null) {
-      return null;
-    }
-    if (viewMode === "MODE" && modal !== null) {
-      const mode = modal.modes[eigenIndex] ?? modal.modes[0];
-      if (mode !== undefined) {
-        const ndof = project.structure.nodes.length * 6;
-        const displacements = Array.from<number>({ length: ndof }).fill(0);
-        for (let i = 0; i < ndof; i++) {
-          displacements[i] = (mode.displacements[i] ?? 0) * harmonic;
-        }
-        const colorRatios = new Map<number, number>(
-          project.structure.beams.map((b) => [b.id, 0.5]),
-        );
-        return {
-          displacements,
-          colorRatios,
-          deformScale: deformed.deformScale * amplification,
-        };
-      }
-    }
-    return { ...deformed, deformScale: deformed.deformScale * amplification };
-  }, [
-    deformed,
-    amplification,
-    viewMode,
-    modal,
-    eigenIndex,
-    harmonic,
-    project.structure.beams,
-    project.structure.nodes.length,
-  ]);
+  const scaledDeformed = useMemo(
+    () =>
+      deformed === null ? null : { ...deformed, deformScale: deformed.deformScale * amplification },
+    [deformed, amplification],
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
@@ -250,61 +170,18 @@ function ResultsPage() {
       {/* 4-KPI strip (mockups tape_4) */}
       {report !== null ? (
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" data-testid="kpi-strip">
+          <KpiCard label="Masse totale" value={massKg === null ? "—" : `${massKg.toFixed(0)} kg`} />
+          <KpiCard label="Flèche max ELS" value={`${maxSlsDeflMm.toFixed(2)} mm`} />
           <KpiCard
-            label="Masse totale"
-            value={massKg ?? 0}
-            suffix="kg"
-            decimals={0}
-            testId="kpi-mass"
-          />
-          <KpiCard
-            label={
-              <span className="flex items-center gap-1">
-                <DeflectionLimit size={12} />
-                Flèche max ELS
-              </span>
-            }
-            value={maxSlsDeflMm}
-            suffix="mm"
-            testId="kpi-deflection"
-          />
-          <KpiCard
-            label={
-              <span className="flex items-center gap-1">
-                <SectionCut size={12} />
-                Taux max EC3
-              </span>
-            }
-            value={maxUls * 100}
-            suffix="%"
-            decimals={1}
+            label="Taux max EC3"
+            value={formatRatio(maxUls)}
             pass={maxUls <= 1}
             onCorrective={maxUls > 1 ? upgradeOverloaded : undefined}
-            testId="kpi-utilization"
           />
           <KpiCard
-            label={
-              <span className="flex items-center gap-1">
-                <ModalVibration size={12} />
-                1er mode propre
-              </span>
-            }
-            value={modal?.modes[0]?.frequency_hz ?? 0}
-            suffix="Hz"
-            testId="kpi-modal"
+            label="1er mode propre"
+            value={modal === null ? "—" : `${modal.modes[0]?.frequency_hz.toFixed(2) ?? "—"} Hz`}
           />
-        </div>
-      ) : null}
-      {maxUls > 1 && uls !== undefined ? (
-        <div
-          className="rounded border border-fail-border bg-fail-bg p-2 text-[12px] text-fail-text"
-          data-testid="governing-diagnostic"
-        >
-          <Trans>
-            Vérification EC3 dépassée — élément déterminant : P
-            {uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id} (η =
-            {(maxUls * 100).toFixed(1).replace(".", ",")} %). Un renforcement en 1 clic est proposé.
-          </Trans>
         </div>
       ) : null}
       {report !== null && scaledDeformed !== null ? (
@@ -313,68 +190,22 @@ function ResultsPage() {
             <h2 className="text-[15px] font-semibold">
               <Trans>Déformée & exploitation (ELU)</Trans>
             </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                className="flex items-center gap-1 rounded border border-hairline p-0.5"
-                data-testid="view-selector"
-              >
-                {(["ELU", "ELS"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    className={`rounded px-2 py-0.5 text-[12px] ${viewMode === mode ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
-                    onClick={() => setViewMode(mode)}
-                  >
-                    {mode === "ELU" ? "ELU 1.35G + 1.50Q" : "ELS 1.00G + 1.00Q"}
-                  </button>
-                ))}
-                {modal !== null
-                  ? modal.modes.slice(0, 3).map((m) => (
-                      <button
-                        key={m.mode_index}
-                        type="button"
-                        className={`rounded px-2 py-0.5 text-[12px] ${viewMode === "MODE" && eigenIndex === m.mode_index - 1 ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
-                        onClick={() => {
-                          setEigenIndex(m.mode_index - 1);
-                          setViewMode("MODE");
-                        }}
-                      >
-                        Mode {m.mode_index} ({m.frequency_hz.toFixed(2)} Hz)
-                      </button>
-                    ))
-                  : null}
-              </div>
-              {viewMode === "MODE" ? (
-                <button
-                  type="button"
-                  className="relative rounded border border-hairline px-2 py-0.5 text-[12px] text-ink-secondary"
-                  onClick={() => setPlaying(!playing)}
-                  data-testid="modal-play"
-                >
-                  {playing ? "⏸ Pause" : "▶ Play harmonique"}
-                </button>
-              ) : null}
-              <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
-                <Trans>Amplification</Trans>
-                <input
-                  type="range"
-                  min={1}
-                  max={30}
-                  step={1}
-                  value={amplification}
-                  className="w-32"
-                  onChange={(e) => setAmplification(Number(e.currentTarget.value))}
-                />
-                <span className="font-data">×{amplification}</span>
-              </label>
-            </div>
+            <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
+              <Trans>Amplification</Trans>
+              <input
+                type="range"
+                min={1}
+                max={30}
+                step={1}
+                value={amplification}
+                className="w-32"
+                onChange={(e) => setAmplification(Number(e.currentTarget.value))}
+              />
+              <span className="font-data">×{amplification}</span>
+            </label>
           </div>
           <div className="relative min-h-[280px] flex-1 overflow-hidden rounded border border-hairline">
-            <ViewportCanvas
-              testId="results-viewport"
-              nodes={project.structure.nodes}
-              beams={project.structure.beams}
-            >
+            <ViewportCanvas testId="results-viewport">
               <BeamMeshes
                 nodes={project.structure.nodes}
                 beams={project.structure.beams}
@@ -384,19 +215,12 @@ function ResultsPage() {
                 wireframe={false}
                 selectedBeamId={null}
                 onPick={() => {}}
-                sectionDims={sectionDims}
               />
               <SupportMarkers
                 nodes={project.structure.nodes}
                 supports={project.structure.supports}
               />
               <ForceVectors3D nodes={project.structure.nodes} loads={project.structure.loads} />
-              <CuttingPlane
-                nodes={project.structure.nodes}
-                beams={project.structure.beams}
-                beamId={cutBeamId}
-                ratio={station}
-              />
             </ViewportCanvas>
           </div>
           <div className="mt-2 flex items-center gap-2" data-testid="fea-legend">
@@ -419,7 +243,7 @@ function ResultsPage() {
       <section className="rounded-panel border border-hairline bg-panel p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-[15px] font-semibold">
-            <Trans>Résultats de calcul</Trans>
+            <Trans>Resultats de calcul</Trans>
           </h2>
           <button
             type="button"
@@ -476,14 +300,7 @@ function ResultsPage() {
         ) : null}
       </section>
       {report !== null && project.structure.beams.length > 0 ? (
-        <DockedInspector
-          project={project}
-          beams={project.structure.beams}
-          beamId={cutBeamId}
-          station={station}
-          onBeamChange={setCutBeamId}
-          onStationChange={setStation}
-        />
+        <DockedInspector project={project} beams={project.structure.beams} />
       ) : null}
       <BottomSheet testId="inspector-sheet" title={<Trans>Déplacements nodaux (Q)</Trans>}>
         {report === null ? (
@@ -524,30 +341,18 @@ function ResultsPage() {
 function KpiCard({
   label,
   value,
-  suffix = "",
-  decimals = 2,
   pass,
   onCorrective,
-  testId,
 }: {
-  label: React.ReactNode;
-  value: number;
-  suffix?: string;
-  decimals?: number;
+  label: string;
+  value: string;
   pass?: boolean;
   onCorrective?: () => void;
-  testId?: string;
 }) {
   return (
-    <div className="rounded border border-hairline bg-panel p-3" data-testid={testId}>
+    <div className="rounded border border-hairline bg-panel p-3">
       <p className="text-[11px] text-ink-muted">{label}</p>
-      <p className="mt-1 text-[17px] font-semibold text-ink-primary">
-        <NumberFlowValue
-          value={value}
-          format={{ minimumFractionDigits: decimals, maximumFractionDigits: decimals }}
-        />
-        <span className="font-data text-[12px] text-ink-secondary"> {suffix}</span>
-      </p>
+      <p className="font-data mt-1 text-[17px] font-semibold text-ink-primary">{value}</p>
       {pass !== undefined ? (
         <span
           className={`font-data mt-1 inline-block rounded border px-1.5 py-0.5 text-[11px] ${
@@ -580,18 +385,12 @@ function KpiCard({
 function DockedInspector({
   project,
   beams,
-  beamId,
-  station,
-  onBeamChange,
-  onStationChange,
 }: {
   project: ReturnType<typeof useProjectStore.getState>["project"];
   beams: { id: number; section_id: string }[];
-  beamId: number;
-  station: number;
-  onBeamChange: (id: number) => void;
-  onStationChange: (ratio: number) => void;
 }) {
+  const [beamId, setBeamId] = useState(beams[0]?.id ?? 0);
+  const [station, setStation] = useState(0.5);
   const [stress, setStress] = useState<StressGrid | null>(null);
   const [forces, setForces] = useState<SpanForceSample[] | null>(null);
   const plotRef = useRef<HTMLDivElement>(null);
@@ -655,7 +454,7 @@ function DockedInspector({
           <select
             className="font-data rounded border border-hairline px-1 py-0.5 text-[11px]"
             value={beamId}
-            onChange={(e) => onBeamChange(Number(e.currentTarget.value))}
+            onChange={(e) => setBeamId(Number(e.currentTarget.value))}
           >
             {beams.map((b) => (
               <option key={b.id} value={b.id}>
@@ -674,22 +473,14 @@ function DockedInspector({
             step={0.05}
             value={station}
             className="flex-1"
-            onChange={(e) => onStationChange(Number(e.currentTarget.value))}
+            onChange={(e) => setStation(Number(e.currentTarget.value))}
           />
           <span className="font-data">{station.toFixed(2)} L</span>
         </label>
       </div>
       <div>
         <h3 className="text-[13px] font-semibold text-ink-secondary">Efforts internes</h3>
-        <div className="relative mt-1" data-testid="forces-plot">
-          <div ref={plotRef} />
-          {/* Vertical cursor synced with the 3D cutting plane (§8.5). */}
-          <div
-            className="pointer-events-none absolute top-0 h-full w-px bg-accent"
-            style={{ left: `${station * 100}%` }}
-            data-testid="uplot-cursor"
-          />
-        </div>
+        <div ref={plotRef} className="mt-1" />
       </div>
     </section>
   );

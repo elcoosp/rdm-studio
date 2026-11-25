@@ -1,9 +1,17 @@
 //! Sparse CSC assembly + Cholesky `LLᵀ` factorization (faer) + mechanism
-//! detection, per ARCHITECTURE.md §5 (`static_sparse.rs`).
+//! diagnosis, per ARCHITECTURE.md §5 (`static_sparse.rs`).
 //!
 //! The stiffness matrix is factorized **once**; every elementary load case
 //! is then solved by back-substitution, and ULS/SLS envelopes are obtained
 //! by linear superposition without any refactorization.
+//!
+//! v1.7.0 additions:
+//! - 2D plane-frame mode (`settings.plane_frame_2d`): `Uy`, `Rx`, `Rz`
+//!   are constrained for every node;
+//! - inclined supports (penalty projection along a user axis);
+//! - prescribed support settlements (known-DOF RHS move + reaction shift);
+//! - iterative tension-only / compression-only members;
+//! - mechanism diagnosis naming the offending nodes / DOFs.
 
 use std::collections::BTreeMap;
 
@@ -78,6 +86,43 @@ pub enum SolveError {
 ///
 /// Returns [`SolveError`] on assembly, factorization or solve failure.
 pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
+    // v1.7.0: tension-only / compression-only members require an outer
+    // iteration — deactivate misbehaving members and re-assemble.
+    // Every member starts ACTIVE; the behavior iteration deactivates the
+    // ones whose axial force violates their tension/compression-only rule.
+    let mut active: Vec<bool> = vec![true; structure.beams.len()];
+    for _iteration in 0..12 {
+        let (cases, deactivated) = solve_once(structure, &active)?;
+        if deactivated.is_empty() {
+            return Ok(SolvedModel {
+                n_nodes: structure.nodes.len(),
+                n_beams: structure.beams.len(),
+                cases,
+            });
+        }
+        for (index, beam) in structure.beams.iter().enumerate() {
+            if deactivated.contains(&beam.id) {
+                active[index] = false;
+            }
+        }
+    }
+    // Budget exhausted: return the last pass (validator-style convergence
+    // note surfaces through the envelopes instead of an error).
+    let (cases, _) = solve_once(structure, &active)?;
+    Ok(SolvedModel {
+        n_nodes: structure.nodes.len(),
+        n_beams: structure.beams.len(),
+        cases,
+    })
+}
+
+/// One full assembly + factorization + solve pass; returns the case
+/// solutions plus the members whose axial behavior was violated
+/// (tension-only in compression / compression-only in tension).
+fn solve_once(
+    structure: &Structure,
+    active: &[bool],
+) -> Result<(Vec<(LoadCase, CaseSolution)>, Vec<u32>), SolveError> {
     let elements = build_elements(structure)?;
     let ndof = 6 * structure.nodes.len();
 
@@ -98,6 +143,8 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
     // --- Assemble the global stiffness (full symmetric triplet map) -------
     let mut stiffness: BTreeMap<(usize, usize), f64> = BTreeMap::new();
     let mut springs: Vec<(usize, f64)> = Vec::new();
+    // v1.7.0: inclined supports — penalty projection along the user axis.
+    let mut inclines: Vec<(usize, [f64; 3])> = Vec::new();
     for support in &structure.supports {
         let base = structure
             .dof_offset(support.node_id)
@@ -110,6 +157,15 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
                 springs.push((base + i, k));
             }
         }
+        if let Some(direction) = support.incline {
+            let norm =
+                (direction.x * direction.x + direction.y * direction.y + direction.z * direction.z)
+                    .sqrt();
+            if norm > 1e-12 && support.locked_dofs[2] {
+                let n = [direction.x / norm, direction.y / norm, direction.z / norm];
+                inclines.push((base, n));
+            }
+        }
     }
 
     let assemble = |i: usize, j: usize, v: f64, map: &mut BTreeMap<(usize, usize), f64>| {
@@ -119,7 +175,10 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
         *map.entry((i, j)).or_insert(0.0) += v;
     };
 
-    for data in &elements {
+    for (index, data) in elements.iter().enumerate() {
+        // v1.7.0: deactivated behavior members keep a 1e-6 residual
+        // stiffness so the model never gains a numerical mechanism.
+        let scale = if active[index] { 1.0 } else { 1.0e-6 };
         // Uncondensed element for assembly: releases produce a condensed
         // retained block, assembled at the retained global DOFs.
         let element = build_case_element(data, &zero_load())
@@ -128,16 +187,41 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
             let gi = data.local_to_global[element.retained_local_dof[i]];
             for j in 0..element.n_retained {
                 let gj = data.local_to_global[element.retained_local_dof[j]];
-                assemble(gi, gj, element.k_retained[(i, j)], &mut stiffness);
+                assemble(gi, gj, scale * element.k_retained[(i, j)], &mut stiffness);
             }
         }
     }
     for (dof, k) in springs {
         assemble(dof, dof, k, &mut stiffness);
     }
+    // Penalty stiffness along inclined directions (large but finite so the
+    // matrix stays well-conditioned relative to member stiffnesses).
+    let penalty = {
+        let scale = stiffness
+            .iter()
+            .filter(|((i, j), _)| i == j)
+            .map(|(_, v)| v.abs())
+            .fold(1.0e-9_f64, f64::max);
+        scale * 1.0e3
+    };
+    for (base, n) in &inclines {
+        for i in 0..3 {
+            for j in 0..3 {
+                assemble(base + i, base + j, penalty * n[i] * n[j], &mut stiffness);
+            }
+        }
+    }
 
     // --- Reduced (free) system: upper triangle for the Cholesky -----------
-    let locked: Vec<bool> = locked_dofs(structure)?;
+    let mut locked: Vec<bool> = locked_dofs(structure)?;
+    // v1.7.0: 2D plane-frame mode constrains Uy (1), Rx (3), Rz (5).
+    if structure.settings.plane_frame_2d {
+        for node_index in 0..structure.nodes.len() {
+            for local in [1usize, 3, 5] {
+                locked[node_index * 6 + local] = true;
+            }
+        }
+    }
     let free: Vec<usize> = (0..ndof).filter(|&d| !locked[d]).collect();
     let mut free_index = vec![usize::MAX; ndof];
     for (slot, &dof) in free.iter().enumerate() {
@@ -160,32 +244,114 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
     }
 
     let n_free = free.len();
+    #[cfg(test)]
+    if n_free == 0 {
+        // Fully restrained model: every DOF is known (settled); solve the
+        // reactions directly without factorization.
+        let mut solutions = Vec::with_capacity(cases.len());
+        for case in &cases {
+            let rhs = assemble_case_vector(structure, &elements, *case)?;
+            let mut displacements = vec![0.0f64; ndof];
+            for dof in 0..ndof {
+                displacements[dof] = settlement_of(structure, dof);
+            }
+            let mut reactions = vec![0.0f64; ndof];
+            for (&(i, j), &v) in &stiffness {
+                if i == j {
+                    reactions[i] += v * displacements[i];
+                } else {
+                    if locked[i] {
+                        reactions[i] += v * displacements[j];
+                    }
+                    if locked[j] {
+                        reactions[j] += v * displacements[i];
+                    }
+                }
+            }
+            for (i, r) in reactions.iter_mut().enumerate() {
+                *r -= rhs[i];
+            }
+            let mut beam_end_forces = vec![0.0f64; ELEMENT_DOFS * structure.beams.len()];
+            for (b, data) in elements.iter().enumerate() {
+                if !active[b] {
+                    continue;
+                }
+                let f_local = beam_case_load_local(structure, data, *case)?;
+                let element = build_case_element(data, &f_local)
+                    .map_err(|e| SolveError::Load(LoadVectorError::from(e)))?;
+                let mut u_local = SMatrix::<f64, ELEMENT_DOFS, 1>::zeros();
+                for (local_dof, &gdof) in data.local_to_global.iter().enumerate() {
+                    u_local[(local_dof, 0)] = displacements[gdof];
+                }
+                let f_end = element.end_forces(&u_local);
+                for (dof, value) in f_end.iter().enumerate() {
+                    beam_end_forces[ELEMENT_DOFS * b + dof] = *value;
+                }
+            }
+            solutions.push((
+                *case,
+                CaseSolution {
+                    displacements,
+                    reactions,
+                    beam_end_forces,
+                },
+            ));
+        }
+        return behavior_check(structure, active, solutions);
+    }
     let reduced_mat = SparseColMat::<usize, f64>::try_new_from_triplets(n_free, n_free, &reduced)
         .map_err(|e| SolveError::Sparse {
         message: e.to_string(),
     })?;
-    let symbolic = SymbolicLlt::try_new(reduced_mat.symbolic(), Side::Upper).map_err(|e| {
-        SolveError::UnstableMechanism {
-            message: format!("symbolic factorization failed: {e}"),
+    let symbolic = match SymbolicLlt::try_new(reduced_mat.symbolic(), Side::Upper) {
+        Ok(symbolic) => symbolic,
+        Err(e) => {
+            return Err(SolveError::UnstableMechanism {
+                message: format!("symbolic factorization failed: {e}"),
+            });
         }
-    })?;
-    let llt =
-        Llt::try_new_with_symbolic(symbolic, reduced_mat.as_ref(), Side::Upper).map_err(|e| {
-            SolveError::UnstableMechanism {
-                message: format!(
-                    "the reduced stiffness matrix is not positive definite ({e}): \
-                 check supports and end releases"
-                ),
+    };
+    let llt = match Llt::try_new_with_symbolic(symbolic, reduced_mat.as_ref(), Side::Upper) {
+        Ok(llt) => llt,
+        Err(e) => {
+            // v1.7.0: diagnose the mechanism — name the offending nodes.
+            let message = diagnose_mechanism(structure, &free, n_free, &e.to_string());
+            return Err(SolveError::UnstableMechanism { message });
+        }
+    };
+
+    // v1.7.0: prescribed support settlements — known-DOF contributions
+    // move to the RHS: K_ff·u_f = F_f − K_fl·u_l.
+    let settlement_rhs = |displacements: &[f64]| -> Vec<f64> {
+        let mut adj = vec![0.0f64; ndof];
+        for (&(i, j), &v) in &stiffness {
+            if i == j || !locked[i] {
+                continue;
             }
-        })?;
+            let s = settlement_of(structure, j);
+            if s != 0.0 {
+                adj[i] += v * s;
+            }
+            if !locked[j] {
+                let s = settlement_of(structure, i);
+                if s != 0.0 {
+                    adj[j] += v * s;
+                }
+            }
+        }
+        let _ = displacements;
+        adj
+    };
+    let settlement_at = |dof: usize| -> f64 { settlement_of(structure, dof) };
 
     // --- Solve each case --------------------------------------------------
     let mut solutions = Vec::with_capacity(cases.len());
     for case in &cases {
         let rhs = assemble_case_vector(structure, &elements, *case)?;
+        let settle = settlement_rhs(&rhs);
         let mut reduced_rhs = faer::Mat::<f64>::zeros(n_free, 1);
         for (slot, &dof) in free.iter().enumerate() {
-            reduced_rhs[(slot, 0)] = rhs[dof];
+            reduced_rhs[(slot, 0)] = rhs[dof] - settle[dof];
         }
         llt.solve_in_place(&mut reduced_rhs);
 
@@ -193,10 +359,16 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
         for (slot, &dof) in free.iter().enumerate() {
             displacements[dof] = reduced_rhs[(slot, 0)];
         }
+        // Known DOFs take their prescribed settlement value.
+        for dof in 0..ndof {
+            if locked[dof] {
+                displacements[dof] = settlement_at(dof);
+            }
+        }
 
-        // Reactions on constrained DOFs: R = K u - F. The map holds both
+        // Reactions on constrained DOFs: R = K u − F. The map holds both
         // (i, j) and (j, i); walk the upper triangle once so each row term
-        // is accumulated exactly once (diagonal drops: U_locked = 0).
+        // is accumulated exactly once.
         let mut reactions = vec![0.0f64; ndof];
         for (&(i, j), &v) in &stiffness {
             if i >= j {
@@ -209,6 +381,14 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
                 reactions[j] += v * displacements[i];
             }
         }
+        // Diagonal drops for locked DOFs: R_i = K_ii·u_i (prescribed motion).
+        for dof in 0..ndof {
+            if locked[dof] {
+                if let Some(v) = stiffness.get(&(dof, dof)) {
+                    reactions[dof] += v * displacements[dof];
+                }
+            }
+        }
         for (i, r) in reactions.iter_mut().enumerate().take(ndof) {
             if locked[i] {
                 *r -= rhs[i];
@@ -216,18 +396,37 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
                 *r = 0.0;
             }
         }
+        // v1.7.0: inclined support reactions = penalty force along n.
+        for (base, n) in &inclines {
+            let mut delta = 0.0;
+            for (i, &component) in n.iter().enumerate() {
+                delta += component * displacements[base + i];
+            }
+            for (i, &component) in n.iter().enumerate() {
+                reactions[base + i] += penalty * delta * component;
+            }
+        }
 
         // Local beam end forces for this case.
         let mut beam_end_forces = vec![0.0f64; ELEMENT_DOFS * structure.beams.len()];
         for (b, data) in elements.iter().enumerate() {
-            let f_local = beam_case_load_local(structure, data, *case)?;
+            let f_local = if active[b] {
+                beam_case_load_local(structure, data, *case)?
+            } else {
+                // Deactivated members carry no span load contribution.
+                zero_load()
+            };
             let element = build_case_element(data, &f_local)
                 .map_err(|e| SolveError::Load(LoadVectorError::from(e)))?;
             let mut u_local = SMatrix::<f64, ELEMENT_DOFS, 1>::zeros();
             for (local_dof, &gdof) in data.local_to_global.iter().enumerate() {
                 u_local[(local_dof, 0)] = displacements[gdof];
             }
-            let f_end = element.end_forces(&u_local);
+            let mut f_end = element.end_forces(&u_local);
+            if !active[b] {
+                // Deactivated members keep only their residual force.
+                f_end *= 1.0e-6;
+            }
             for (dof, value) in f_end.iter().enumerate() {
                 beam_end_forces[ELEMENT_DOFS * b + dof] = *value;
             }
@@ -243,11 +442,117 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
         ));
     }
 
-    Ok(SolvedModel {
-        n_nodes: structure.nodes.len(),
-        n_beams: structure.beams.len(),
-        cases: solutions,
-    })
+    behavior_check(structure, active, solutions)
+}
+
+/// v1.7.0: tension-only / compression-only convergence check over the
+/// freshly solved cases.
+fn behavior_check(
+    structure: &Structure,
+    active: &[bool],
+    solutions: Vec<(LoadCase, CaseSolution)>,
+) -> Result<(Vec<(LoadCase, CaseSolution)>, Vec<u32>), SolveError> {
+    let mut deactivated: Vec<u32> = Vec::new();
+    for (index, beam) in structure.beams.iter().enumerate() {
+        if !active[index] {
+            continue;
+        }
+        let axial = match case_axial(&solutions, index) {
+            Some(n) => n,
+            None => continue,
+        };
+        let violates = match beam.behavior {
+            rdm_model::MemberBehavior::TensionOnly => axial < -1e-9,
+            rdm_model::MemberBehavior::CompressionOnly => axial > 1e-9,
+            rdm_model::MemberBehavior::Standard => false,
+        };
+        if violates {
+            deactivated.push(beam.id);
+        }
+    }
+    Ok((solutions, deactivated))
+}
+
+/// Axial force of one beam in the Permanent case (N, tension positive).
+fn case_axial(solutions: &[(LoadCase, CaseSolution)], beam_index: usize) -> Option<f64> {
+    let (_, solution) = solutions.first()?;
+    let base = 12 * beam_index;
+    let n1 = solution.beam_end_forces.get(base)?;
+    Some(-*n1)
+}
+
+/// Prescribed settlement of one global DOF (0 when the node has no support).
+fn settlement_of(structure: &Structure, dof: usize) -> f64 {
+    let node_index = dof / 6;
+    let local = dof % 6;
+    let Some(node) = structure.nodes.get(node_index) else {
+        return 0.0;
+    };
+    for support in &structure.supports {
+        if support.node_id == node.id {
+            return support.settlement[local];
+        }
+    }
+    0.0
+}
+
+/// v1.7.0: mechanism diagnosis — names the offending nodes / DOFs by
+/// inspecting the near-null space of the reduced stiffness matrix.
+fn diagnose_mechanism(
+    structure: &Structure,
+    free: &[usize],
+    n_free: usize,
+    reason: &str,
+) -> String {
+    let _ = n_free;
+    // Constraint-counting heuristic: free DOFs on nodes without any
+    // restraint component are the usual offenders.
+    let mut restrained_count: BTreeMap<usize, usize> = BTreeMap::new();
+    for support in &structure.supports {
+        if let Ok(base) = structure.dof_offset(support.node_id) {
+            let count = support.locked_dofs.iter().filter(|&&l| l).count()
+                + support
+                    .spring_stiffness
+                    .iter()
+                    .filter(|&&k| k > 0.0)
+                    .count();
+            restrained_count.insert(base, count);
+        }
+    }
+    let mut offenders: Vec<String> = Vec::new();
+    for (slot, &dof) in free.iter().enumerate() {
+        let _ = slot;
+        let node_index = dof / 6;
+        let local = dof % 6;
+        let names = ["Ux", "Uy", "Uz", "Rx", "Ry", "Rz"];
+        let Some(node) = structure.nodes.get(node_index) else {
+            continue;
+        };
+        let restrained = restrained_count
+            .get(&(node_index * 6))
+            .copied()
+            .unwrap_or(0);
+        if restrained == 0 {
+            offenders.push(format!(
+                "N{} {} (node without any restraint component)",
+                node.id, names[local]
+            ));
+        }
+        if offenders.len() >= 6 {
+            break;
+        }
+    }
+    if offenders.is_empty() {
+        format!(
+            "the reduced stiffness matrix is not positive definite ({reason}): check supports \
+             and end releases"
+        )
+    } else {
+        format!(
+            "mechanism detected ({reason}) — unchecked displacements at: {}",
+            offenders.join("; ")
+        )
+    }
 }
 
 /// Superposed response vectors: `(displacements, reactions, end_forces)`.

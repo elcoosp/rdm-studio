@@ -104,34 +104,85 @@ pub fn rotation_matrix(frame: &LocalFrame) -> SMatrix<f64, ELEMENT_DOFS, ELEMENT
 ///
 /// `ea`: axial stiffness `E·A` (N), `gj`: `G·It` (N·m²), `eiy`/`eiz`:
 /// bending stiffnesses `E·I` about local y / z (N·m²), `l`: length (m).
+/// Timoshenko bending-block coefficients with shear flexibility
+/// `Φ = 12 E I / (G As L²)` (v1.7.0). `phi = 0.0` recovers the
+/// Euler-Bernoulli block exactly.
+fn timoshenko_block(span: f64, phi: f64) -> [[f64; 4]; 4] {
+    let length = span;
+    // Dimensionless shape coefficients (multiply by EI / L³ afterwards).
+    if phi <= 0.0 {
+        return [
+            [12.0, 6.0 * length, -12.0, 6.0 * length],
+            [
+                6.0 * length,
+                4.0 * length * length,
+                -6.0 * length,
+                2.0 * length * length,
+            ],
+            [-12.0, -6.0 * length, 12.0, -6.0 * length],
+            [
+                6.0 * length,
+                2.0 * length * length,
+                -6.0 * length,
+                4.0 * length * length,
+            ],
+        ];
+    }
+    let d = 1.0 + phi;
+    let k11 = 12.0 / d;
+    let k12 = 6.0 * length / d;
+    // k22 = EI/L · (4+Φ)/(1+Φ), k24 = EI/L · (2-Φ)/(1+Φ) — in EI/L³
+    // units the coefficients are L²·(4+Φ)/(1+Φ) and L²·(2-Φ)/(1+Φ).
+    let k22 = length * length * (4.0 + phi) / d;
+    let k24 = length * length * (2.0 - phi) / d;
+    [
+        [k11, k12, -k11, k12],
+        [k12, k22, -k12, k24],
+        [-k11, -k12, k11, -k12],
+        [k12, k24, -k12, k22],
+    ]
+}
+
 pub fn local_stiffness_matrix(
     ea: f64,
     gj: f64,
     eiy: f64,
     eiz: f64,
-    l: f64,
+    length: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, ELEMENT_DOFS> {
+    local_stiffness_matrix_shear(ea, gj, eiy, eiz, length, 0.0, 0.0)
+}
+
+/// Timoshenko variant of [`local_stiffness_matrix`] (v1.7.0): `phi_z`
+/// applies to the bending plane x-y (stiffness `EIz`, shear along y) and
+/// `phi_y` to the plane x-z (stiffness `EIy`, shear along z); `0.0`
+/// recovers the Euler-Bernoulli element.
+pub fn local_stiffness_matrix_shear(
+    ea: f64,
+    gj: f64,
+    eiy: f64,
+    eiz: f64,
+    length: f64,
+    phi_y: f64,
+    phi_z: f64,
+) -> SMatrix<f64, ELEMENT_DOFS, ELEMENT_DOFS> {
+    let length = length;
     let mut k = SMatrix::<f64, ELEMENT_DOFS, ELEMENT_DOFS>::zeros();
     // Axial: DOFs 0 (ux1) and 6 (ux2).
-    let ax = ea / l;
+    let ax = ea / length;
     k[(0, 0)] = ax;
     k[(0, 6)] = -ax;
     k[(6, 0)] = -ax;
     k[(6, 6)] = ax;
     // Torsion: DOFs 3 (rx1) and 9 (rx2).
-    let tr = gj / l;
+    let tr = gj / length;
     k[(3, 3)] = tr;
     k[(3, 9)] = -tr;
     k[(9, 3)] = -tr;
     k[(9, 9)] = tr;
     // Bending in the x-y plane (deflection uy, rotation rz) with EIz.
-    let kz = eiz / (l * l * l);
-    let c = [
-        [12.0, 6.0 * l, -12.0, 6.0 * l],
-        [6.0 * l, 4.0 * l * l, -6.0 * l, 2.0 * l * l],
-        [-12.0, -6.0 * l, 12.0, -6.0 * l],
-        [6.0 * l, 2.0 * l * l, -6.0 * l, 4.0 * l * l],
-    ];
+    let kz = eiz / (length * length * length);
+    let c = timoshenko_block(length, phi_z);
     // Local DOFs: uy1=1, rz1=5, uy2=7, rz2=11.
     let idx = [1usize, 5, 7, 11];
     for (i, &ii) in idx.iter().enumerate() {
@@ -140,13 +191,15 @@ pub fn local_stiffness_matrix(
         }
     }
     // Bending in the x-z plane (deflection uz, rotation ry) with EIy; the
-    // coupling signs flip because ry points opposite to the y-plane normal.
-    let ky = eiy / (l * l * l);
+    // coupling signs flip because ry points opposite to the y-plane normal
+    // (only the 8 coupling entries change sign — diagonals stay positive).
+    let ky = eiy / (length * length * length);
+    let b = timoshenko_block(length, phi_y);
     let c2 = [
-        [12.0, -6.0 * l, -12.0, -6.0 * l],
-        [-6.0 * l, 4.0 * l * l, 6.0 * l, 2.0 * l * l],
-        [-12.0, 6.0 * l, 12.0, 6.0 * l],
-        [-6.0 * l, 2.0 * l * l, 6.0 * l, 4.0 * l * l],
+        [b[0][0], -b[0][1], b[0][2], -b[0][3]],
+        [-b[1][0], b[1][1], -b[1][2], b[1][3]],
+        [b[2][0], -b[2][1], b[2][2], -b[2][3]],
+        [-b[3][0], b[3][1], -b[3][2], b[3][3]],
     ];
     // Local DOFs: uz1=2, ry1=4, uz2=8, ry2=10.
     let idx2 = [2usize, 4, 8, 10];
@@ -313,28 +366,72 @@ pub fn trapezoid_local_vector(
     axis: usize,
     l: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, 1> {
+    partial_trapezoid_local_vector(q1, q2, 0.0, 1.0, axis, l)
+}
+
+/// v1.7.0: consistent local load vector of a PARTIAL-span trapezoid
+/// (`a1`..`a2` are span ratios in `[0, 1]`) obtained by 4-point
+/// Gauss-Legendre integration of the cubic Hermite shape functions —
+/// exact for linear intensity (integrand degree 4). `axis = 0` axial,
+/// `1` local y, `2` local z.
+pub fn partial_trapezoid_local_vector(
+    q1: f64,
+    q2: f64,
+    a1: f64,
+    a2: f64,
+    axis: usize,
+    length: f64,
+) -> SMatrix<f64, ELEMENT_DOFS, 1> {
+    let length = length;
+    // 4-point Gauss-Legendre nodes/weights on [-1, 1].
+    const GL: [(f64, f64); 4] = [
+        (-0.861_136_311_594_052_6, 0.347_854_845_137_453_85),
+        (-0.339_981_043_584_856_3, 0.652_145_154_862_546_1),
+        (0.339_981_043_584_856_3, 0.652_145_154_862_546_1),
+        (0.861_136_311_594_052_6, 0.347_854_845_137_453_85),
+    ];
+    let lo = a1.clamp(0.0, 1.0);
+    let hi = a2.clamp(0.0, 1.0);
+    if hi <= lo {
+        return SMatrix::zeros();
+    }
+    let half = (hi - lo) / 2.0;
+    let mid = (hi + lo) / 2.0;
     let mut v = SMatrix::<f64, ELEMENT_DOFS, 1>::zeros();
-    let base = axis; // ux1=0, uy1=1, uz1=2 share the low offsets
-    match axis {
-        0 => {
-            // Axial: linear shape functions N = [1-xi, xi].
-            v[(0, 0)] = l * (2.0 * q1 + q2) / 6.0;
-            v[(6, 0)] = l * (q1 + 2.0 * q2) / 6.0;
+    for &(xi, w) in &GL {
+        // Map the quadrature node to the span ratio a and the physical x.
+        let a = mid + half * xi;
+        let x = a * length;
+        let li = 1.0 - a;
+        // Linear intensity interpolation along the FULL span ratios
+        // (q1 at a=0, q2 at a=1).
+        let q = q1 * li + q2 * a;
+        let jac = half * length * w;
+        if axis == 0 {
+            // Axial linear shape functions N = [1-xi, xi].
+            v[(0, 0)] += q * li * jac;
+            v[(6, 0)] += q * a * jac;
+            continue;
         }
-        1 => {
-            // Bending in x-y plane: fy1, rz1, fy2, rz2.
-            v[(base, 0)] = l * (7.0 * q1 + 3.0 * q2) / 20.0;
-            v[(base + 4, 0)] = l * l * (3.0 * q1 + 2.0 * q2) / 60.0;
-            v[(base + 6, 0)] = l * (3.0 * q1 + 7.0 * q2) / 20.0;
-            v[(base + 10, 0)] = -l * l * (2.0 * q1 + 3.0 * q2) / 60.0;
+        // Transverse cubic Hermite shape functions.
+        let n1 = 1.0 - 3.0 * a * a + 2.0 * a * a * a;
+        let n2 = length * (a - 2.0 * a * a + a * a * a);
+        let n3 = 3.0 * a * a - 2.0 * a * a * a;
+        let n4 = length * (-a * a + a * a * a);
+        if axis == 1 {
+            v[(1, 0)] += q * n1 * jac;
+            v[(5, 0)] += q * n2 * jac;
+            v[(7, 0)] += q * n3 * jac;
+            v[(11, 0)] += q * n4 * jac;
+        } else {
+            // x-z plane: ry is right-handed about +y (slope = -ry), so the
+            // rotation shape functions carry the opposite sign.
+            v[(2, 0)] += q * n1 * jac;
+            v[(8, 0)] += q * n3 * jac;
+            v[(4, 0)] -= q * n2 * jac;
+            v[(10, 0)] -= q * n4 * jac;
         }
-        _ => {
-            // Bending in x-z plane: fz1, ry1, fz2, ry2 (moment signs flip).
-            v[(base, 0)] = l * (7.0 * q1 + 3.0 * q2) / 20.0;
-            v[(base + 2, 0)] = -l * l * (3.0 * q1 + 2.0 * q2) / 60.0;
-            v[(base + 6, 0)] = l * (3.0 * q1 + 7.0 * q2) / 20.0;
-            v[(base + 8, 0)] = l * l * (2.0 * q1 + 3.0 * q2) / 60.0;
-        }
+        let _ = x;
     }
     v
 }
@@ -347,9 +444,10 @@ pub fn trapezoid_local_vector(
 pub fn point_local_vector(
     local: &[f64; 6],
     position_ratio: f64,
-    l: f64,
+    length: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, 1> {
     let mut v = SMatrix::<f64, ELEMENT_DOFS, 1>::zeros();
+    let length = length;
     let a = position_ratio.clamp(0.0, 1.0);
     let li = 1.0 - a;
     // Axial + torsion: linear distribution.
@@ -359,9 +457,9 @@ pub fn point_local_vector(
     v[(9, 0)] = local[3] * a;
     // Transverse + bending: Hermite polynomials.
     let n1 = 1.0 - 3.0 * a * a + 2.0 * a * a * a;
-    let n2 = l * (a - 2.0 * a * a + a * a * a);
+    let n2 = length * (a - 2.0 * a * a + a * a * a);
     let n3 = 3.0 * a * a - 2.0 * a * a * a;
-    let n4 = l * (-a * a + a * a * a);
+    let n4 = length * (-a * a + a * a * a);
     v[(1, 0)] = local[1] * n1;
     v[(5, 0)] = local[1] * n2;
     v[(7, 0)] = local[1] * n3;

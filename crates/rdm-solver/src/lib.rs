@@ -6,6 +6,7 @@
 //! reactions and local beam end forces; ULS/SLS superposition is delegated
 //! to `rdm-eurocode` (linear superposition, ARCHITECTURE.md §4).
 
+pub mod envelopes;
 pub mod internal_forces;
 pub mod loads;
 pub mod modal;
@@ -13,7 +14,9 @@ pub mod results;
 pub mod section_cut;
 pub mod static_sparse;
 pub mod stiffness;
+pub mod validation;
 
+pub use envelopes::{BeamEnvelope, compute_envelopes};
 pub use internal_forces::{STATIONS, StationForces, station_envelope, station_forces};
 pub use loads::{
     BeamElementData, LoadVectorError, assemble_case_vector, beam_case_load_local,
@@ -26,6 +29,7 @@ pub use section_cut::{
 };
 pub use static_sparse::{CaseSolution, SolveError, SolvedModel, solve_model, superimpose};
 pub use stiffness::{LocalFrame, beam_local_frame, local_stiffness_matrix};
+pub use validation::{BenchResult, run_validation_suite};
 
 use rdm_model::Structure;
 

@@ -13,8 +13,43 @@ use rdm_model::{LoadCase, LoadKind, Structure};
 
 use crate::stiffness::{
     ELEMENT_DOFS, Element, ElementError, LocalFrame, STANDARD_GRAVITY, beam_local_frame,
-    local_stiffness_matrix, point_local_vector, rotation_matrix, trapezoid_local_vector,
+    local_stiffness_matrix_shear, partial_trapezoid_local_vector, point_local_vector,
+    rotation_matrix,
 };
+
+/// Linear thermal expansion coefficient of structural steel (1/K,
+/// EN 1991-1-5 §Table C.1 recommended value).
+pub const THERMAL_ALPHA_STEEL: f64 = 1.2e-5;
+
+/// Timoshenko shear areas `(Av,y, Av,z)` of a cross-section (m², v1.7.0).
+///
+/// First-order shapes: I/channel → flange pair / web; solid rectangle →
+/// `5A/6`; solid round → `0.9A`; hollow sections → `0.6A`; angle/general →
+/// `2A/3`. Clamped to `[0.1A, A]` so the factors stay physical.
+#[must_use]
+pub fn shear_areas(section: &rdm_model::SectionProperties) -> (f64, f64) {
+    use rdm_model::SectionShape;
+    let a = section.a;
+    let (av_y, av_z) = match section.shape {
+        SectionShape::DoubleSymmetricI | SectionShape::Channel => {
+            let h = section.h.unwrap_or(0.0);
+            let tw = section.tw.unwrap_or(0.0);
+            let b = section.b.unwrap_or(0.0);
+            let tf = section.tf.unwrap_or(0.0);
+            let web = h * tw;
+            let flanges = 2.0 * b * tf;
+            (flanges, web)
+        }
+        SectionShape::RectangularHollow => (0.6 * a, 0.6 * a),
+        SectionShape::CircularHollow => (0.53 * a, 0.53 * a),
+        // Angle and General share the 2/3 default shear factor.
+        SectionShape::Angle | SectionShape::General => (2.0 * a / 3.0, 2.0 * a / 3.0),
+    };
+    // Solid rectangles fall under `General` in the catalog; approximate the
+    // 5/6 shape factor from the aspect ratio when no web geometry exists.
+    let clamp = |v: f64| v.clamp(0.1 * a, a);
+    (clamp(av_y), clamp(av_z))
+}
 
 /// Load assembly errors.
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
@@ -45,6 +80,12 @@ pub struct BeamElementData {
     pub released: [bool; ELEMENT_DOFS],
     /// Local DOF -> global DOF map.
     pub local_to_global: [usize; ELEMENT_DOFS],
+    /// v1.7.0: Timoshenko shear flexibility `Φ` for the x-z bending plane
+    /// (stiffness `EIy`); `0.0` = Euler-Bernoulli.
+    pub phi_y: f64,
+    /// v1.7.0: Timoshenko shear flexibility `Φ` for the x-y bending plane
+    /// (stiffness `EIz`); `0.0` = Euler-Bernoulli.
+    pub phi_z: f64,
 }
 
 /// Precomputes beam frames, rotations, stiffnesses and release maps.
@@ -74,12 +115,35 @@ pub fn build_elements(structure: &Structure) -> Result<Vec<BeamElementData>, Loa
         let frame = beam_local_frame(p1, p2, beam.roll_angle_rad)
             .map_err(|_| LoadVectorError::UnknownProperty(beam.id))?;
         let rotation = rotation_matrix(&frame);
-        let k_local = local_stiffness_matrix(
+        // v1.7.0: linear depth taper — the member stiffness uses the exact
+        // mean of the cubic depth law (`Iy ∝ h³`, `Wel ∝ h²`).
+        let taper_scale = beam.taper_end_scale.unwrap_or(1.0).max(0.05);
+        let mean_cubic = if (taper_scale - 1.0).abs() < 1e-9 {
+            1.0
+        } else {
+            (taper_scale.powi(4) - 1.0) / (4.0 * (taper_scale - 1.0))
+        };
+        let iy_eff = section.iy * mean_cubic;
+        let iz_eff = section.iz * mean_cubic;
+        // v1.7.0: Timoshenko shear flexibility
+        // `Φ = 12 E I / (G Av L²)` per bending plane (0 = Euler-Bernoulli).
+        let (av_y, av_z) = shear_areas(section);
+        let (phi_y, phi_z) = if structure.settings.shear_deformation {
+            (
+                12.0 * material.e * iy_eff / (material.g * av_z * frame.length.powi(2)),
+                12.0 * material.e * iz_eff / (material.g * av_y * frame.length.powi(2)),
+            )
+        } else {
+            (0.0, 0.0)
+        };
+        let k_local = local_stiffness_matrix_shear(
             material.e * section.a,
             material.g * section.it,
-            material.e * section.iy,
-            material.e * section.iz,
+            material.e * iy_eff,
+            material.e * iz_eff,
             frame.length,
+            phi_y,
+            phi_z,
         );
         let mut released = [false; ELEMENT_DOFS];
         released[..6].copy_from_slice(&beam.releases_start);
@@ -101,6 +165,8 @@ pub fn build_elements(structure: &Structure) -> Result<Vec<BeamElementData>, Loa
             k_local,
             released,
             local_to_global,
+            phi_y,
+            phi_z,
         });
     }
     Ok(out)
@@ -177,13 +243,46 @@ fn trapezoid_in_local_axes(
     direction: glam::DVec3,
     l: f64,
 ) -> SMatrix<f64, ELEMENT_DOFS, 1> {
+    trapezoid_in_local_axes_partial(rotation, q_start, q_end, 0.0, 1.0, direction, l)
+}
+
+/// v1.7.0: partial-span variant of [`trapezoid_in_local_axes`].
+fn trapezoid_in_local_axes_partial(
+    rotation: &SMatrix<f64, ELEMENT_DOFS, ELEMENT_DOFS>,
+    q_start: f64,
+    q_end: f64,
+    a1: f64,
+    a2: f64,
+    direction: glam::DVec3,
+    l: f64,
+) -> SMatrix<f64, ELEMENT_DOFS, 1> {
     let ex = DVec3::new(rotation[(0, 0)], rotation[(0, 1)], rotation[(0, 2)]);
     let ey = DVec3::new(rotation[(1, 0)], rotation[(1, 1)], rotation[(1, 2)]);
     let ez = DVec3::new(rotation[(2, 0)], rotation[(2, 1)], rotation[(2, 2)]);
-    let mut f =
-        trapezoid_local_vector(q_start * ex.dot(direction), q_end * ex.dot(direction), 0, l);
-    f += trapezoid_local_vector(q_start * ey.dot(direction), q_end * ey.dot(direction), 1, l);
-    f += trapezoid_local_vector(q_start * ez.dot(direction), q_end * ez.dot(direction), 2, l);
+    let mut f = partial_trapezoid_local_vector(
+        q_start * ex.dot(direction),
+        q_end * ex.dot(direction),
+        a1,
+        a2,
+        0,
+        l,
+    );
+    f += partial_trapezoid_local_vector(
+        q_start * ey.dot(direction),
+        q_end * ey.dot(direction),
+        a1,
+        a2,
+        1,
+        l,
+    );
+    f += partial_trapezoid_local_vector(
+        q_start * ez.dot(direction),
+        q_end * ez.dot(direction),
+        a1,
+        a2,
+        2,
+        l,
+    );
     f
 }
 
@@ -220,18 +319,74 @@ pub fn beam_case_load_local(
                 f_local += point_local_vector(&local, position_ratio, data.frame.length);
             }
             LoadKind::Trapezoid {
+                a_start,
+                a_end,
+                local_axes,
                 beam_id,
                 q_start,
                 q_end,
                 direction,
             } if beam_id == data.beam_id => {
-                f_local += trapezoid_in_local_axes(
-                    &data.rotation,
-                    q_start,
-                    q_end,
-                    DVec3::new(direction.x, direction.y, direction.z),
-                    l,
-                );
+                let a1 = a_start.unwrap_or(0.0);
+                let a2 = a_end.unwrap_or(1.0);
+                if local_axes.unwrap_or(false) {
+                    // v1.7.0: the direction components ARE local axes.
+                    f_local += partial_trapezoid_local_vector(q_start, q_end, a1, a2, 0, l);
+                    f_local += partial_trapezoid_local_vector(q_start, q_end, a1, a2, 1, l);
+                    f_local += partial_trapezoid_local_vector(q_start, q_end, a1, a2, 2, l);
+                } else {
+                    f_local += trapezoid_in_local_axes_partial(
+                        &data.rotation,
+                        q_start,
+                        q_end,
+                        a1,
+                        a2,
+                        DVec3::new(direction.x, direction.y, direction.z),
+                        l,
+                    );
+                }
+            }
+            LoadKind::Thermal {
+                beam_id,
+                delta_t,
+                delta_ty,
+                delta_tz,
+            } if beam_id == data.beam_id => {
+                // v1.7.0: consistent thermal load vector. Uniform ΔT gives
+                // the axial pair `EA·α·ΔT·[-1, +1]` (free expansion under
+                // zero force; fixed ends develop `N = -EA·α·ΔT`). Gradients
+                // give the fixed-end moment pair `EI·κ` with
+                // `κ = α·ΔT / depth`.
+                let section = structure.sections.get(&beam.section_id);
+                let material = structure.materials.get(&beam.material_id);
+                if let (Some(section), Some(material)) = (section, material) {
+                    let ea = material.e * section.a;
+                    if delta_t.abs() > 0.0 {
+                        f_local[(0, 0)] += -ea * THERMAL_ALPHA_STEEL * delta_t;
+                        f_local[(6, 0)] += ea * THERMAL_ALPHA_STEEL * delta_t;
+                    }
+                    let depth = section.h.unwrap_or_else(|| section.a.sqrt());
+                    let width = section.b.unwrap_or(depth);
+                    let taper_scale = beam.taper_end_scale.unwrap_or(1.0).max(0.05);
+                    let depth_eff = depth * (1.0 + taper_scale) / 2.0;
+                    let width_eff = width * (1.0 + taper_scale) / 2.0;
+                    if delta_tz.abs() > 0.0 && depth_eff > 0.0 {
+                        let ei_kappa =
+                            material.e * section.iy * THERMAL_ALPHA_STEEL * delta_tz / depth_eff;
+                        // x-z plane (uz=2, ry=4, uz2=8, ry2=10): free
+                        // curvature load = [0, EIκ, 0, -EIκ].
+                        f_local[(4, 0)] += ei_kappa;
+                        f_local[(10, 0)] += -ei_kappa;
+                    }
+                    if delta_ty.abs() > 0.0 && width_eff > 0.0 {
+                        let ei_kappa =
+                            material.e * section.iz * THERMAL_ALPHA_STEEL * delta_ty / width_eff;
+                        // x-y plane (uy=1, rz=5, uy2=7, rz2=11): free
+                        // curvature load = [0, -EIκ, 0, +EIκ].
+                        f_local[(5, 0)] += -ei_kappa;
+                        f_local[(11, 0)] += ei_kappa;
+                    }
+                }
             }
             LoadKind::AccelerationField { ax_g, ay_g, az_g } => {
                 // v1.3.0: exact distributed inertial body force

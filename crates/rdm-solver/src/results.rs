@@ -65,16 +65,49 @@ pub fn span_loads_local(
                 q_start,
                 q_end,
                 direction,
+                a_start,
+                a_end,
+                local_axes,
             } if beam_id == data.beam_id => {
-                let ey = local_axis(data, 1);
-                let ez = local_axis(data, 2);
-                let dir = glam::DVec3::new(direction.x, direction.y, direction.z);
-                out.trapezoids.push((
-                    q_start * ey.dot(dir),
-                    q_end * ey.dot(dir),
-                    q_start * ez.dot(dir),
-                    q_end * ez.dot(dir),
-                ));
+                let a1 = a_start.unwrap_or(0.0);
+                let a2 = a_end.unwrap_or(1.0);
+                let full_span = a1 <= 1e-9 && a2 >= 1.0 - 1e-9;
+                if full_span && !local_axes.unwrap_or(false) {
+                    let ey = local_axis(data, 1);
+                    let ez = local_axis(data, 2);
+                    let dir = glam::DVec3::new(direction.x, direction.y, direction.z);
+                    out.trapezoids.push((
+                        q_start * ey.dot(dir),
+                        q_end * ey.dot(dir),
+                        q_start * ez.dot(dir),
+                        q_end * ez.dot(dir),
+                    ));
+                } else {
+                    // v1.7.0: partial-span / local-axis trapezoids reduce to
+                    // their resultant at the segment centroid for the
+                    // station reconstruction (exact outside the loaded
+                    // segment, documented first-order inside).
+                    let span = (a2 - a1).max(1e-9);
+                    let qm = q_start.midpoint(q_end);
+                    let centroid =
+                        a1 + span * (q_start + 2.0 * q_end) / (3.0 * (q_start + q_end).max(1e-12));
+                    // (midpoint-style interpolation guarded against overflow by
+                    // the 1e-12 floor above)
+                    let r = qm * span;
+                    let ey = local_axis(data, 1);
+                    let ez = local_axis(data, 2);
+                    // Local-axes vs global interpretation differ only in
+                    // the ASSEMBLY path; the reconstruction consumes the
+                    // already-projected intensities.
+                    let dir = glam::DVec3::new(direction.x, direction.y, direction.z);
+                    let fy = r * ey.dot(dir);
+                    let fz = r * ez.dot(dir);
+                    out.points.push((centroid.clamp(0.0, 1.0), fy, fz));
+                }
+            }
+            LoadKind::Thermal { .. } => {
+                // v1.7.0: thermal actions enter through the end-force array
+                // (axial pair + fixed-end moment pair); no span load term.
             }
             LoadKind::AccelerationField { ax_g, ay_g, az_g } => {
                 // v1.3.0: the EC3 station superposition sees the same
@@ -409,11 +442,15 @@ mod tests {
             node_id: 1,
             locked_dofs: [true, true, true, true, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         s.supports.push(rdm_model::Support {
             node_id: 2,
             locked_dofs: [false, true, true, false, false, false],
             spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
         });
         let solved = crate::solve_model(&s).expect("solve");
         let (_, case) = solved

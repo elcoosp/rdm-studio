@@ -160,3 +160,25 @@ All interactive UI primitives (`Button`, `Select`, `Dialog`, `Command`, `Tabs`, 
    - Pressing `⌘P` / `Ctrl+P` in Step 5 hides all navigation bars and canvas backgrounds, expands the A4 calculation sheet to full width without borders, and applies `break-inside: avoid` on tables and cross-section figures.
 7. **Transparent Local / Offline Status Pill (`PWA Status`):**
    - Header displays a subtle status indicator (`Enregistré en local`) that switches cleanly to an amber badge (`Mode hors-ligne actif`) whenever `navigator.onLine === false`.
+
+
+---
+
+## 8. Curated Metrology Micro-Interactions (v1.2 — Zero-Bounce Precision)
+
+All animations follow a **critically damped precision-instrument curve** (`cubic-bezier(0.22, 1, 0.36, 1)` or `stiffness: 520, damping: 40`, zero rubbery overshoot) and honor `<MotionConfig reducedMotion="user">`:
+
+1. **Rolling Tabular Telemetry (`@number-flow/react`):**
+   - Top 4 KPI readouts (`Masse totale`, `Flèche max ELS`, `Taux de travail EC3`, `1er Mode propre`) and global force resultants animate numeric transitions smoothly in `JetBrains Mono` (`tabular-nums`, `240 ms`) whenever profiles upgrade or cursor `x` moves.
+2. **Critically Damped 3D Camera Glides (`@react-three/drei` `CameraControls`):**
+   - Switching camera presets (`3D Iso`, `Dessus XY`, `Face XZ`, `Côté YZ`) or pressing `F` (Zoom Extents) glides smoothly over `250 ms` (`smoothTime = 0.25`) instead of hard-jumping.
+3. **3D Snap Reticle & Orthogonal Laser Guide (`SnapGrid`):**
+   - Hovering near a node expands a **Cobalt `#1D4ED8` ring**; hovering near a beam midpoint morphs it into a **Cyan `#06B6D4` triangle**; holding `Shift` projects a dashed orthogonal axis guide line, paired with a `8 ms` mobile haptic tick (`navigator.vibrate(8)`).
+4. **Hover Cursor Pill & Selection Rim (`< 0.2 ms` BVH):**
+   - Hovering a beam highlights its edges in soft Cobalt (`#93C5FD`) and displays a floating cursor pill (`B-14 · IPE 200 · L = 4,00 m`); clicking locks a sharp `#1D4ED8` selection outline.
+5. **Synchronized 3D Cutting Plane & `uPlot` Scrubber (Step 4):**
+   - Scrubbing curvilinear position `x ∈ [0, L]` across the `My / Vz / N` `uPlot` diagrams translates a translucent **Cobalt cutting plane** along the 3D beam in real time while updating the 2D Von Mises cross-section heatmap.
+6. **Shared-Element Gliding Indicators (`motion` `layoutId`):**
+   - Both the 5-step header bar (`2px solid #1D4ED8`) and Step 3 `EN 1990` load case tabs (`G | Q | W | Acc`) use a shared `layoutId` indicator.
+7. **Eurocode 3 Overstress Reveal (`η > 1.00`):**
+   - Exceeding `100 %` transitions the KPI badge to Crimson (`#FEF2F2`) in `180 ms` and reveals the 1-click corrective profile upgrade button with a 5-second `Annuler (⌘Z)` toast.

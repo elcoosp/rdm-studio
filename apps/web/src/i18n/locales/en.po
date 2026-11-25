@@ -7,238 +7,172 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
-
-
 #: src/routes/loads.tsx
 msgid "Ajouter la charge"
 msgstr "Add load"
-
-
 
 #: src/routes/geometry.tsx
 msgid "Ajouter un noeud"
 msgstr "Add node"
 
-
-
 #: src/routes/loads.tsx
 msgid "Aucune charge définie."
 msgstr "No load defined."
-
-
 
 #: src/routes/results.tsx
 msgid "Calculer"
 msgstr "Calculate"
 
-
-
 #: src/routes/loads.tsx
 msgid "Cas"
 msgstr "Case"
-
-
 
 #: src/routes/loads.tsx
 msgid "Cas de charge"
 msgstr "Load case"
 
-
-
 #: src/routes/geometry.tsx
 msgid "Catalogue"
 msgstr "Catalog"
-
-
 
 #: src/routes/loads.tsx
 msgid "Charge ponctuelle"
 msgstr "Point load"
 
-
-
 #: src/routes/loads.tsx
 msgid "Charges et combinaisons EN 1990"
 msgstr "Loads and EN 1990 combinations"
-
-
 
 #: src/routes/loads.tsx
 msgid "Cible"
 msgstr "Target"
 
-
-
 #: src/routes/supports.tsx
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
 msgstr "Tick the DOFs locked by each support. Free rotations let bending pass (pin)."
-
-
 
 #: src/routes/geometry.tsx
 msgid "Connecter au noeud sélectionné"
 msgstr "Connect to selected node"
 
-
-
 #: src/routes/report.tsx
 msgid "Copie !"
 msgstr "Copied!"
-
-
 
 #: src/routes/report.tsx
 msgid "Copier l'URL de partage"
 msgstr "Copy share URL"
 
-
+#: src/routes/results.tsx
+msgid "Deformee & exploitation (ULE)"
+msgstr "Deformed shape & ULS utilization"
 
 #: src/routes/results.tsx
 msgid "Deplacements nodaux (G)"
 msgstr "Nodal displacements (G)"
-
-
 
 #. placeholder {0}: index + 1
 #: src/routes/__root.tsx
 msgid "Étape {0}"
 msgstr "Step {0}"
 
-
-
 #: src/routes/results.tsx
 msgid "Exploitation EC3"
 msgstr "EC3 utilization"
-
-
 
 #: src/routes/loads.tsx
 msgid "Fz (kN, négatif vers le bas)"
 msgstr "Fz (kN, negative downward)"
 
-
-
 #: src/routes/geometry.tsx
 msgid "Inspecteur de section"
 msgstr "Section inspector"
-
-
 
 #: src/routes/results.tsx
 msgid "Lancer un calcul pour afficher les resultats."
 msgstr "Run a calculation to display results."
 
-
-
 #: src/routes/report.tsx
 msgid "Le modele .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 msgstr "The .rdm model is compressed (lz-string) into the URL and validated by Valibot on read."
 
-
-
 #: src/routes/supports.tsx
 msgid "Matrice 6 DDL des appuis"
 msgstr "6-DOF support matrix"
-
-
 
 #: src/routes/loads.tsx
 #: src/routes/supports.tsx
 msgid "Noeud"
 msgstr "Node"
 
-
-
 #: src/routes/geometry.tsx
 msgid "Noeuds"
 msgstr "Nodes"
-
-
 
 #: src/routes/report.tsx
 msgid "Noeuds / Poutres / Appuis / Charges"
 msgstr "Nodes / Beams / Supports / Loads"
 
-
-
 #: src/routes/report.tsx
 msgid "Nom du projet"
 msgstr "Project name"
-
-
 
 #: src/routes/report.tsx
 msgid "Partage par URL"
 msgstr "URL sharing"
 
-
-
 #: src/routes/report.tsx
 msgid "Poids propre automatique"
 msgstr "Automatic self-weight"
-
-
 
 #: src/routes/loads.tsx
 msgid "Poids propre automatique (cas G)"
 msgstr "Automatic self-weight (G case)"
 
-
-
 #: src/routes/results.tsx
 msgid "Poutre"
 msgstr "Beam"
-
-
 
 #: src/routes/geometry.tsx
 msgid "Poutres"
 msgstr "Beams"
 
-
-
 #: src/routes/loads.tsx
 msgid "poutres résolues par élément"
 msgstr "beams solved per element"
-
-
 
 #: src/routes/geometry.tsx
 msgid "Profil"
 msgstr "Profile"
 
-
-
 #: src/routes/geometry.tsx
 msgid "Profil (EN 10365)"
 msgstr "Profile (EN 10365)"
-
-
 
 #: src/routes/report.tsx
 msgid "Profils utilises"
 msgstr "Profiles used"
 
-
-
 #: src/routes/report.tsx
 msgid "Rapport de model"
 msgstr "Model report"
 
-
+#: src/components/UpdatePrompt.tsx
+msgid "Recharger"
+msgstr "Reload"
 
 #: src/routes/results.tsx
 msgid "Resultats de calcul"
 msgstr "Calculation results"
 
-
-
 #: src/routes/loads.tsx
 msgid "Type"
 msgstr "Type"
 
-
-
 #: src/routes/results.tsx
 msgid "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
 msgstr "Case factors give the order of magnitude: SI to display conversions live exclusively in the UI."
+
+#: src/components/UpdatePrompt.tsx
+msgid "Une nouvelle version est disponible."
+msgstr "A new version is available."

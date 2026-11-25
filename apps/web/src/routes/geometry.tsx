@@ -1,22 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import * as THREE from "three";
+import { useThree } from "@react-three/fiber";
 import { Trans } from "@lingui/react/macro";
 import { IconPlus, IconTrash } from "@/components/icons";
 import { feaClient, type SectionSummary } from "@/wasmBridge/workerClient";
-import { useProjectStore } from "@/state/projectStore";
+import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
+import { useViewportStore } from "@/state/viewportStore";
+import { ViewportCanvas } from "@/viewport3d/ViewportCanvas";
+import { BeamMeshes, buildBeamGeometry, nodePositions } from "@/viewport3d/BeamMeshes";
+import { SupportMarkers } from "@/viewport3d/SupportMarkers";
+import { ForceVectors3D } from "@/viewport3d/ForceVectors3D";
+import { useBeamBoundsTree, pickBeamAtRay } from "@/viewport3d/useBvhPicking";
 
 export const Route = createFileRoute("/geometry")({
   component: GeometryPage,
 });
 
+/**
+ * Step 1: 3D viewport + section inspector (DESIGN.md desktop layout:
+ * side-by-side). Picking runs through the three-mesh-bvh accelerated path
+ * and its latency is displayed live (M4 criterion).
+ */
 function GeometryPage() {
-  const { project, selection } = useProjectStore();
+  const project = useProjectStore((s) => s.project);
+  const selection = useProjectStore((s) => s.selection);
+  const layers = useViewportStore((s) => s.layers);
+  const renderMode = useViewportStore((s) => s.renderMode);
   const addNode = useProjectStore((s) => s.addNode);
-  const removeNode = useProjectStore((s) => s.removeNode);
   const addBeam = useProjectStore((s) => s.addBeam);
-  const removeBeam = useProjectStore((s) => s.removeBeam);
   const selectBeam = useProjectStore((s) => s.selectBeam);
   const [sections, setSections] = useState<SectionSummary[]>([]);
+  const [pickMs, setPickMs] = useState<number | undefined>(undefined);
   const [newSection, setNewSection] = useState("IPE 200");
 
   useEffect(() => {
@@ -27,13 +42,56 @@ function GeometryPage() {
   const material = project.structure.beams[0]?.material_id ?? "S235JR";
 
   return (
-    <div className="grid gap-4 p-4 lg:grid-cols-[1fr_320px]">
-      <section className="rounded-panel border border-hairline bg-panel p-4">
-        <h2 className="mb-3 text-[15px] font-semibold">
-          <Trans>Noeuds</Trans>
-        </h2>
-        <NodeTable />
-        <div className="mt-2 flex flex-wrap gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-3 p-3 lg:flex-row">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 rounded-panel border border-hairline bg-panel p-3">
+        <div className="relative min-h-[320px] flex-1 overflow-hidden rounded border border-hairline">
+          <ViewportCanvas pickLatency={pickMs}>
+            {layers.beams ? (
+              <BeamMeshes
+                nodes={project.structure.nodes}
+                beams={project.structure.beams}
+                wireframe={renderMode === "wireframe"}
+                selectedBeamId={selection.beamId}
+                onPick={(id) => selectBeam(id)}
+              />
+            ) : null}
+            {layers.supports ? (
+              <SupportMarkers
+                nodes={project.structure.nodes}
+                supports={project.structure.supports}
+              />
+            ) : null}
+            {layers.loads ? (
+              <ForceVectors3D nodes={project.structure.nodes} loads={project.structure.loads} />
+            ) : null}
+            {layers.nodes ? (
+              <NodeMarkers positions={nodePositions(project.structure.nodes)} />
+            ) : null}
+            <BvhPickLayer
+              nodes={project.structure.nodes}
+              beams={project.structure.beams}
+              onPick={(beamId, ms) => {
+                setPickMs(ms);
+                selectBeam(beamId);
+              }}
+            />
+          </ViewportCanvas>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="max-h-56 overflow-auto">
+            <h3 className="mb-1 text-[13px] font-semibold text-ink-secondary">
+              <Trans>Noeuds</Trans>
+            </h3>
+            <NodeTable />
+          </div>
+          <div className="max-h-56 overflow-auto">
+            <h3 className="mb-1 text-[13px] font-semibold text-ink-secondary">
+              <Trans>Poutres</Trans>
+            </h3>
+            <BeamTable />
+          </div>
+        </div>
+        <div className="flex gap-2">
           <button
             type="button"
             className="flex items-center gap-1 rounded bg-accent px-2.5 py-1.5 text-[13px] text-white"
@@ -43,12 +101,8 @@ function GeometryPage() {
             <Trans>Ajouter un noeud</Trans>
           </button>
         </div>
-        <h2 className="mt-6 mb-3 text-[15px] font-semibold">
-          <Trans>Poutres</Trans>
-        </h2>
-        <BeamTable />
       </section>
-      <aside className="rounded-panel border border-hairline bg-panel p-4">
+      <aside className="w-full shrink-0 rounded-panel border border-hairline bg-panel p-4 lg:w-[320px] lg:overflow-auto">
         <h2 className="mb-3 text-[15px] font-semibold">
           <Trans>Inspecteur de section</Trans>
         </h2>
@@ -91,6 +145,64 @@ function GeometryPage() {
       </aside>
     </div>
   );
+}
+
+/** Instanced node pins (Points layer). */
+function NodeMarkers({ positions }: { positions: Float32Array }) {
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return g;
+  }, [positions]);
+  return (
+    <points geometry={geometry}>
+      <pointsMaterial size={0.08} color="#111827" sizeAttenuation />
+    </points>
+  );
+}
+
+/**
+ * Canvas-level pointer picking through the accelerated BVH path; measures
+ * and reports the wall-clock selection cost (M4: < 0.2 ms @ 10k elements).
+ */
+function BvhPickLayer({
+  nodes,
+  beams,
+  onPick,
+}: {
+  nodes: NodeData[];
+  beams: BeamData[];
+  onPick: (beamId: number | null, ms: number) => void;
+}) {
+  const geometry = useMemo(() => {
+    if (beams.length === 0) {
+      return null;
+    }
+    return buildBeamGeometry(nodes, beams);
+  }, [nodes, beams]);
+  useBeamBoundsTree(geometry);
+  const { camera, gl } = useThree();
+
+  useEffect(() => {
+    if (geometry === null) {
+      return;
+    }
+    const dom = gl.domElement;
+    const handler = (event: PointerEvent) => {
+      const rect = dom.getBoundingClientRect();
+      const ndc = {
+        x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      };
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
+      const result = pickBeamAtRay(raycaster, geometry);
+      onPick(result.beamId, result.lastSelectionMs);
+    };
+    dom.addEventListener("pointerdown", handler);
+    return () => dom.removeEventListener("pointerdown", handler);
+  }, [geometry, camera, gl, onPick]);
+  return null;
 }
 
 function NodeTable() {

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { SearchParamsSchema } from "@/schemas/searchParams.schema";
 import { IconPlay } from "@/components/icons";
+import { BottomSheet } from "@/components/BottomSheet";
 import { formatKn, formatMm, formatRatio } from "@/lib/units";
 import { feaClient, type SolveFault, type SolveReport } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
@@ -180,10 +181,7 @@ function ResultsPage() {
           </>
         ) : null}
       </section>
-      <aside className="rounded-panel border border-hairline bg-panel p-4">
-        <h2 className="mb-3 text-[15px] font-semibold">
-          <Trans>Deplacements nodaux (G)</Trans>
-        </h2>
+      <BottomSheet testId="inspector-sheet" title={<Trans>Deplacements nodaux (G)</Trans>}>
         {report === null ? (
           <p className="text-[13px] text-ink-muted">
             <Trans>Lancer un calcul pour afficher les resultats.</Trans>
@@ -215,7 +213,7 @@ function ResultsPage() {
             ? `${report.n_nodes} N / ${report.n_beams} B — ${formatKn(0) === "0.0 kN" ? "" : ""}`
             : ""}
         </p>
-      </aside>
+      </BottomSheet>
     </div>
   );
 }

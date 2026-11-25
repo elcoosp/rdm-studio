@@ -40,29 +40,43 @@
 
 /*
  * Daylight CAD Workstation design tokens (DESIGN.md).
- * Linear light mode: #F9FAFB canvas, #FFFFFF panels, 1px #E5E7EB hairlines,
- * #0891B2 accent; FEA thermal spectrum reserved for 3D/curves.
+ * Linear light mode: #F8FAFC canvas, #FFFFFF panels, 1px #E2E8F0 hairlines,
+ * #1D4ED8 accent; FEA thermal spectrum reserved for 3D/curves.
  */
 @theme {
-  --color-canvas: #f9fafb;
+  /* Swiss Metrology daylight tokens (DESIGN.md v1.0.0 section 2). */
+  --color-canvas: #f8fafc;
   --color-panel: #ffffff;
-  --color-hairline: #e5e7eb;
-  --color-border-subtle: #d1d5db;
-  --color-ink-primary: #111827;
-  --color-ink-secondary: #4b5563;
-  --color-ink-muted: #6b7280;
-  --color-accent: #0891b2;
-  --color-accent-strong: #0e7490;
-  --color-fea-min: #2563eb;
+  --color-panel-subtle: #f1f5f9;
+  --color-hairline: #e2e8f0;
+  --color-border-subtle: #cbd5e1;
+  --color-ink-primary: #0f172a;
+  --color-ink-secondary: #475569;
+  --color-ink-muted: #94a3b8;
+  --color-accent: #1d4ed8;
+  --color-accent-strong: #1e40af;
+  --color-accent-tint: #eff6ff;
+  --color-accent-ring: #93c5fd;
+  /* FEA thermal spectrum tiers 1..5 (3D meshes and charts ONLY). */
+  --color-fea-min: #1d4ed8;
   --color-fea-low: #06b6d4;
   --color-fea-mid: #10b981;
   --color-fea-warn: #f59e0b;
-  --color-fea-max: #ef4444;
+  --color-fea-max: #dc2626;
+  /* EC3 compliance badges. */
+  --color-pass-bg: #ecfdf5;
+  --color-pass-border: #a7f3d0;
+  --color-pass-text: #065f46;
+  --color-fail-bg: #fef2f2;
+  --color-fail-border: #fecaca;
+  --color-fail-text: #991b1b;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --radius-panel: 0.5rem;
+  --radius-control: 4px;
+  --radius-overlay: 8px;
 }
 
 html,
@@ -85,4 +99,64 @@ body {
 .font-data {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-accent-ring);
+  color: var(--color-ink-primary);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--color-accent-ring);
+  outline-offset: 1px;
+}
+
+/* Numeric readouts: tabular figures with slashed zero (DESIGN.md §3). */
+.font-data {
+  font-feature-settings:
+    "tnum" 1,
+    "zero" 1;
+}
+
+input,
+select,
+textarea {
+  font-size: 13px;
+}
+
+/* Mobile inputs at 16px prevent iOS Safari auto-zoom (DESIGN.md §1). */
+@media (max-width: 1023px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Step 5 native print stylesheet (DESIGN.md §7.6). */
+@media print {
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .print-sheet {
+    border: none !important;
+    box-shadow: none !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  table,
+  figure {
+    break-inside: avoid;
+  }
 }

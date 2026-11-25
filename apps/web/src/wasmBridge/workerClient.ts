@@ -37,6 +37,13 @@ interface Pending {
   onError: (fault: SolveFault) => void;
 }
 
+/** Last successful solve, shared across routes (report/export step). */
+let lastReport: SolveReport | null = null;
+
+export function getLastReport(): SolveReport | null {
+  return lastReport;
+}
+
 /** Singleton worker client; requests are queued in order. */
 class FeaClient {
   private worker: Worker;
@@ -51,7 +58,8 @@ class FeaClient {
       const data = event.data as
         | { type: "SOLVE_RESULT"; report: SolveReport }
         | { type: "SOLVE_FAULT"; fault: SolveFault }
-        | { type: "CATALOG"; sections: SectionSummary[]; materials: string[] };
+        | { type: "CATALOG"; sections: SectionSummary[]; materials: string[] }
+        | { type: "PDF_RESULT"; pdf: Uint8Array };
       const pending = this.queue.shift()?.pending;
       if (pending === undefined) {
         return;
@@ -60,7 +68,10 @@ class FeaClient {
       if (data.type === "SOLVE_FAULT") {
         pending.onError(data.fault);
       } else if (data.type === "SOLVE_RESULT") {
+        lastReport = data.report;
         pending.onResult(data.report);
+      } else if (data.type === "PDF_RESULT") {
+        pending.onResult(data.pdf);
       } else {
         pending.onResult(data);
       }
@@ -89,6 +100,15 @@ class FeaClient {
       this.enqueue(
         { type: "SOLVE_MODEL", project },
         { onResult: (data) => resolve(data as SolveReport), onError: reject },
+      );
+    });
+  }
+
+  renderReportPdf(html: string, images?: { src: string; data: Uint8Array }[]): Promise<Uint8Array> {
+    return new Promise<Uint8Array>((resolve, reject) => {
+      this.enqueue(
+        { type: "RENDER_PDF", html, images },
+        { onResult: (data) => resolve(data as Uint8Array), onError: reject },
       );
     });
   }

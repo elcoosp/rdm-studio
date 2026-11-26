@@ -14,10 +14,5 @@
     "fmt": "cargo fmt --all && pnpm --filter web exec oxfmt",
     "i18n:extract": "pnpm --filter web i18n:extract",
     "i18n:compile": "pnpm --filter web i18n:compile"
-  },
-  "pnpm": {
-    "overrides": {
-      "@tanstack/router-generator": "1.99.9"
-    }
   }
 }

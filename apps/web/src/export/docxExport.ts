@@ -30,7 +30,13 @@ function documentXml(blocks: DocxBlock[], meta: CoverMeta): string {
   const cover = `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${esc(meta.firm)}</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">${esc(meta.engineer)} / ${esc(meta.checker)}</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">Révision ${esc(meta.revision)} — ${new Date().toISOString().slice(0, 10)}</w:t></w:r></w:p>
-<w:p><w:r><w:t xml:space="preserve">${esc(meta.disclaimer)}</w:t></w:r></w:p>`;
+<w:p><w:r><w:t xml:space="preserve">${esc(meta.disclaimer)}</w:t></w:r></w:p>${
+    // v2.1.1: Édition Découverte evaluation watermark (removed in Pro).
+    meta.evaluation === true
+      ? `
+<w:p><w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">Édition Découverte — Évaluation non contractuelle</w:t></w:r></w:p>`
+      : ""
+  }`;
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
 <w:body>
@@ -46,6 +52,8 @@ export interface CoverMeta {
   checker: string;
   revision: string;
   disclaimer: string;
+  /** v2.1.1: true under the free tier — adds the evaluation watermark. */
+  evaluation?: boolean;
 }
 
 /** CRC-32 for the ZIP local headers. */

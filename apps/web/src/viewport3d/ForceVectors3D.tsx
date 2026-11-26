@@ -23,8 +23,8 @@ export function ForceVectors3D({
         const intensity =
           l.kind === "Nodal" || l.kind === "PointOnSpan"
             ? Math.abs(l.forces.fz)
-            : l.kind === "Trapezoid"
-              ? Math.abs(l.q_start)
+            : l.kind === "Trapezoid" || l.kind === "Uniform"
+              ? Math.abs((l.q_start ?? 0) + (l.q_end ?? 0)) / 2
               : 0;
         return Math.max(m, intensity);
       }, 1),
@@ -117,6 +117,73 @@ export function ForceVectors3D({
           ];
           const magnitude = Math.abs(load.forces.fz) / maxAbs;
           return spanArrow(at, 0.2 + 0.8 * magnitude, load.forces.fz < 0, index);
+        }
+        // v2.1.2 (audit 519229b): Uniform loads (EN 1991 Snow / Wind /
+        // imposed generators) render as the SAME crimson arrow array as
+        // the Trapezoid case — they used to be invisible in 3D.
+        if (load.kind === "Uniform") {
+          const span = beamSpan(load.beam_id);
+          if (span === null) {
+            return null;
+          }
+          const arrows = [];
+          const count = 5;
+          const magnitude = Math.abs(((load.q_start ?? 0) + (load.q_end ?? 0)) / 2) / maxAbs;
+          const shaft = 0.15 + 0.7 * magnitude;
+          const meanDirection = load.direction ?? { x: 0, y: 0, z: -1 };
+          const downward = meanDirection.z < 0 || (meanDirection.z === 0 && meanDirection.y < 0);
+          for (let i = 0; i < count; i++) {
+            const t = i / (count - 1);
+            const at: [number, number, number] = [
+              span.a[0] + (span.b[0] - span.a[0]) * t,
+              span.a[1] + (span.b[1] - span.a[1]) * t,
+              span.a[2] + (span.b[2] - span.a[2]) * t,
+            ];
+            arrows.push(
+              <group
+                key={`${index}-${i}`}
+                position={[at[0], at[1], at[2] + (downward ? shaft / 2 : -shaft / 2)]}
+              >
+                <mesh>
+                  <cylinderGeometry args={[0.012, 0.012, shaft, 8]} />
+                  <meshStandardMaterial color="#DC2626" />
+                </mesh>
+                <mesh
+                  position={[0, 0, downward ? -shaft / 2 : shaft / 2]}
+                  rotation={[downward ? Math.PI : 0, 0, 0]}
+                >
+                  <coneGeometry args={[0.035, 0.09, 10]} />
+                  <meshStandardMaterial color="#DC2626" />
+                </mesh>
+              </group>,
+            );
+          }
+          // Top tie bar linking the arrow tails, oriented ALONG the member.
+          const tieY = (downward ? shaft : -shaft) + (downward ? 0.05 : -0.05);
+          const dir = new THREE.Vector3(
+            span.b[0] - span.a[0],
+            span.b[1] - span.a[1],
+            span.b[2] - span.a[2],
+          ).normalize();
+          const tieQuaternion = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(1, 0, 0),
+            dir,
+          );
+          arrows.push(
+            <mesh
+              key={`${index}-tie`}
+              position={[
+                (span.a[0] + span.b[0]) / 2,
+                (span.a[1] + span.b[1]) / 2,
+                (span.a[2] + span.b[2]) / 2 + tieY / 2,
+              ]}
+              quaternion={[tieQuaternion.x, tieQuaternion.y, tieQuaternion.z, tieQuaternion.w]}
+            >
+              <boxGeometry args={[span.length, 0.012, 0.012]} />
+              <meshStandardMaterial color="#DC2626" />
+            </mesh>,
+          );
+          return <group key={index}>{arrows}</group>;
         }
         if (load.kind === "Trapezoid") {
           const span = beamSpan(load.beam_id);

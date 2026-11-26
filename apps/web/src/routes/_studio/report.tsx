@@ -134,6 +134,34 @@ function ReportPage() {
     };
   }, [shareUrl]);
 
+  // v2.2.0: a direct /report visit must NEVER render 0,00 or blank boxes —
+  // auto-run the solver on mount whenever no report is cached (the same
+  // `fe.aClient.solveModel` path the KPI strip uses), and capture the
+  // persistent 3D stage on route LEAVE while the canvas is still visible
+  // so the note embeds a fresh snapshot instead of a stale/empty one.
+  useEffect(() => {
+    let cancelled = false;
+    if (getLastReport() === null) {
+      void feaClient
+        .solveModel(project)
+        .then((r) => {
+          if (!cancelled) {
+            void r;
+          }
+        })
+        .catch(() => undefined);
+    }
+    return () => {
+      cancelled = true;
+      // Route leave: mirror the project into the local snapshot store
+      // (crash-recovery slot) and grab the live 3D stage PNG while the
+      // canvas is still mounted, so a later /report visit renders a real
+      // snapshot instead of a blank box.
+      void saveSnapshot(project.name, project);
+      void captureViewportPng();
+    };
+  }, [project]);
+
   /** v1.6.0: one-click canonical `.rdm` export (Step 5 + header menu). */
   const exportRdm = () => {
     const canonical = JSON.stringify(project, null, 2);

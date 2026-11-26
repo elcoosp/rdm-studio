@@ -24,7 +24,7 @@ import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/work
 import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { UtilizationProgress } from "@/components/ui/progress";
-import { ArrowLeftRight, SlidersHorizontal } from "lucide-react";
+import { ArrowLeftRight, SlidersHorizontal, AlertTriangle } from "lucide-react";
 import {
   feaClient,
   type ModalReport,
@@ -86,6 +86,86 @@ const SLS_LIMITS = [
  * cross-section + fiber stresses | uPlot My/Mz/Vz/N/T with dashed
  * crimson ±M_Rd capacity lines, ResizeObserver-backed).
  */
+/**
+ * v2.2.0: pedagogical solver fault card (Swiss Metrology diagnostic alert).
+ * Replaces the raw mechanism dump banner: a crisp French summary of the
+ * unconstrained DOFs, a collapsible raw-details section for the audit trail,
+ * and a 1-click `Activer Plan 2D & recalculer` fix when the out-of-plane
+ * Uy / Rx / Rz DOFs are the cause (sets `plane_frame_2d: true` and re-runs
+ * the solver through the debounced auto-solve path).
+ */
+function SolverFaultCard({ fault, onRerun }: { fault: SolveFault; onRerun: () => void }) {
+  const updateSettings = useProjectStore((s) => s.updateSettings);
+  const outOfPlane = /\b(?:Uy|Rx|Rz)\b|out-of-plane|plane frame|hors plan/i.test(fault.message);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  return (
+    <div
+      className="flex shrink-0 items-start gap-2.5 rounded-[8px] border border-fail-border bg-fail-bg p-3"
+      data-testid="solve-fault"
+    >
+      <AlertTriangle
+        size={20}
+        strokeWidth={1.5}
+        className="mt-0.5 shrink-0 text-fail-text"
+        aria-hidden
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold text-fail-text">
+          <Trans>Le solveur a détecté un mécanisme</Trans>
+        </p>
+        <p className="mt-1 text-[12px] leading-5 text-fail-text/85">
+          {outOfPlane ? (
+            <Trans>
+              Certains degrés de liberté hors plan (Uy, Rx, Rz) ne sont pas contraints : le modèle
+              est hypostatique. Pour un portique ou une poutre plane, le mode plan 2D ajoute
+              automatiquement ces liaisons et relance le calcul.
+            </Trans>
+          ) : (
+            <Trans>
+              Certains degrés de liberté restent libres : le modèle n'est pas suffisamment soutenu.
+              Vérifiez les appuis de l'étape Liaisons ou les relâchements d'extrémité avant de
+              recalculer.
+            </Trans>
+          )}
+        </p>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          {outOfPlane ? (
+            <button
+              type="button"
+              data-testid="fix-plane-2d"
+              className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-strong"
+              onClick={() => {
+                updateSettings({ plane_frame_2d: true });
+                toast.success(t`Plan 2D activé — recalcul en cours`, { duration: 3200 });
+                onRerun();
+              }}
+            >
+              <Trans>Activer Plan 2D & recalculer</Trans>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            aria-expanded={detailsOpen}
+            data-testid="fault-details-toggle"
+            className="rounded border border-hairline bg-panel px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
+            onClick={() => setDetailsOpen((v) => !v)}
+          >
+            {detailsOpen ? t`Masquer les détails` : t`Détails techniques`}
+          </button>
+        </div>
+        {detailsOpen ? (
+          <pre
+            className="font-data mt-2.5 max-h-44 overflow-auto rounded-[4px] border border-hairline bg-panel p-2 text-[11px] leading-4 text-ink-secondary"
+            data-testid="fault-details"
+          >
+            {`${fault.kind}\n${fault.message}`}
+          </pre>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function ResultsPage() {
   const project = useProjectStore((s) => s.project);
   const updateBeam = useProjectStore((s) => s.updateBeam);
@@ -516,14 +596,7 @@ function ResultsPage() {
           </LoadingButton>
         </div>
       </div>
-      {fault !== null ? (
-        <p
-          className="shrink-0 rounded border border-fea-max/40 bg-fea-max/10 p-2 text-[12px] text-fea-max"
-          data-testid="solve-fault"
-        >
-          {fault.kind}: {fault.message}
-        </p>
-      ) : null}
+      {fault !== null ? <SolverFaultCard fault={fault} onRerun={run} /> : null}
       {report !== null ? (
         <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4" data-testid="kpi-strip">
           <KpiCard

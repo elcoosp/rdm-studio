@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { createFileRoute, redirect, useLocation, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
@@ -23,9 +23,17 @@ import {
   type SegmentedOption,
 } from "@/components/interior";
 import { HeroFallbackSvg, type HeroModel } from "@/components/HeroViewport3D";
+import { docsHref } from "@/lib/urls";
 
 export const Route = createFileRoute("/_marketing/")({
   staticData: { surface: "marketing" },
+  // v2.2.0: the landing page moved to the dedicated Oxide static site
+  // (PUBLIC_SITE_URL / rdm-studio-site.vercel.app) — `/` in the studio PWA
+  // immediately hands off to the 3D editor so a cold open lands on a
+  // calculable model instead of a marketing surface.
+  beforeLoad: () => {
+    throw redirect({ to: "/geometry", replace: true });
+  },
   component: LandingPage,
 });
 
@@ -849,7 +857,7 @@ function LandingPage() {
               ))}
             </ul>
             <a
-              href="/docs/"
+              href={docsHref("/")}
               target="_blank"
               rel="noreferrer"
               className="mt-5 flex items-center justify-center rounded border border-hairline px-3 py-2 text-[13px] font-semibold text-ink-secondary hover:border-accent hover:text-accent"

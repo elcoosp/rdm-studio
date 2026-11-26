@@ -317,7 +317,7 @@ function StudioLayout() {
             Réglages, 41/41 validation, ?, FR | EN. Secondary pills hide
             below 2xl so the named stepper never overflows. */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
-          <TooltipGroup className="hidden xl:inline-flex xl:items-center xl:gap-1.5">
+          <TooltipGroup className="hidden md:inline-flex md:items-center md:gap-1.5">
             <div className="flex items-center rounded-[4px] border border-hairline bg-panel p-0.5">
               <Tooltip label="Annuler (⌘Z)">
                 <button

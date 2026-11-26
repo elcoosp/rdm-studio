@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { Trans } from "@lingui/react/macro";
 import { ArrowRight } from "lucide-react";
 import { LicenseBadge } from "@/components/LicenseBadge";
+import { docsHref } from "@/lib/urls";
 import { LocaleSwitch } from "./_studio";
 
 /**
@@ -65,7 +66,7 @@ function MarketingHeader() {
             <Trans>Légal</Trans>
           </Link>
           <a
-            href="/docs/"
+            href={docsHref("/")}
             target="_blank"
             rel="noreferrer"
             className="hover:text-ink-primary"
@@ -138,7 +139,7 @@ function MarketingFooter() {
             <Trans>Documentation</Trans>
           </p>
           <a
-            href="/docs/"
+            href={docsHref("/")}
             target="_blank"
             rel="noreferrer"
             className="block py-0.5 text-ink-secondary hover:text-ink-primary"
@@ -148,7 +149,7 @@ function MarketingFooter() {
             </Trans>
           </a>
           <a
-            href="/docs/"
+            href={docsHref("/")}
             target="_blank"
             rel="noreferrer"
             className="block py-0.5 text-ink-secondary hover:text-ink-primary"

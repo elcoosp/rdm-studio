@@ -29,6 +29,13 @@ function RootLayout() {
     const openPalette = () => setPaletteOpen(true);
     window.addEventListener("rdm-open-license", openLicense);
     window.addEventListener("rdm-open-palette", openPalette);
+    // v2.2.0: the marketing site pricing CTAs deep-link into the studio with
+    // `?license=pass|pro` — the LicenseModal opens straight away, keeping the
+    // activation flow reachable even though `/` redirects to /geometry.
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("license")) {
+      setLicenseOpen(true);
+    }
     return () => {
       window.removeEventListener("rdm-open-license", openLicense);
       window.removeEventListener("rdm-open-palette", openPalette);

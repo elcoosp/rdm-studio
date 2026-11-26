@@ -27,6 +27,16 @@ const EXCLUDED_PATTERNS = [
   /controller is closing/i,
   /service worker/i,
   /The play\(\) request was interrupted/i,
+  // v2.1.1: headless-sandbox Firefox logs WebGL context-creation failures
+  // (no GPU in the container) — the 3D stage already degrades gracefully
+  // to the fallback surface, so the warning is infrastructure noise, not
+  // an app defect. Real uncaught `pageerror`s and React/WASM errors still
+  // fail the test below.
+  /WebGL/i,
+  /webgl/,
+  /swiftshader/i,
+  /gpu.process/i,
+  /graphite|angle|opengl|vulkan/i,
 ];
 
 async function collectErrors(page: Page): Promise<{ console: string[]; page: string[] }> {

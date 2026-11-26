@@ -7,6 +7,16 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/routes/_studio/report.tsx
+msgid ".docx téléchargé"
+msgstr ""
+
+#. placeholder {0}: template.name
+#. placeholder {1}: structure.beams.length
+#: src/components/ProjectGalleryModal.tsx
+msgid "{0} — {1} poutre(s) prête(s) à calculer."
+msgstr ""
+
 #. placeholder {0}: showcase.members
 #. placeholder {1}: showcase.sections
 #: src/routes/_marketing/index.tsx
@@ -41,7 +51,43 @@ msgid "+ Placer un premier nœud"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
+msgid "< 20 ms"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "<0><1/>Appuis élastiques (kx..krz)</0>"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "0 octet cloud"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
 msgid "100 % hors-ligne & zéro cloud"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "100 % local-first"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "15 liaisons normalisées, matrice 6 DDL et contrôle d'isostaticité en temps réel — appuis élastiques kx..krz inclus."
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+msgid "19 € HT — toutes les fonctions Pro actives 48 h sur ce poste (démonstration hors-ligne)."
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+msgid "19 € HT · 48 h de plein droit"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "41 / 41"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "48 h de plein droit, sans abonnement"
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -49,8 +95,16 @@ msgid "49 €/mois · Licence perpétuelle"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Accrochage magnétique 10/50/100 mm, subdivisions, extrusion, optimiseur EC3 1-clic avec retour arrière ⌘Z — la géométrie reste la source de vérité."
+msgid "À quoi sert le Pass Projet 48 h ?"
 msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Accrochage magnétique 10/50/100 mm, import DXF / STEP / IGES, sections personnalisées PRS / RHS / CHS et optimiseur Pareto EC3 en un clic — annulable instantanément."
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+#~ msgid "Accrochage magnétique 10/50/100 mm, subdivisions, extrusion, optimiseur EC3 1-clic avec retour arrière ⌘Z — la géométrie reste la source de vérité."
+#~ msgstr ""
 
 #: src/components/CommandPalette.tsx
 msgid "Accueil"
@@ -60,13 +114,38 @@ msgstr ""
 msgid "Acier"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "Acier S235–S460"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Acier, inox, alu, bois, béton, boulons, feu"
+msgstr ""
+
 #: src/components/LicenseModal.tsx
 msgid "Actif"
 msgstr ""
 
-#: src/components/LicenseModal.tsx
-msgid "Activer"
+#: src/components/OnboardingTour.tsx
+msgid "Actions & Combinaisons EN 1990"
 msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "actions navales & levage"
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+#: src/routes/_marketing/index.tsx
+msgid "Activation 1 clic, hors-ligne"
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+msgid "Activée"
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+#~ msgid "Activer"
+#~ msgstr ""
 
 #: src/components/LicenseModal.tsx
 #: src/routes/_marketing/index.tsx
@@ -74,8 +153,8 @@ msgid "Activer une démonstration Pro"
 msgstr ""
 
 #: src/components/CadToolbar.tsx
-msgid "Aide-mémoire des raccourcis"
-msgstr ""
+#~ msgid "Aide-mémoire des raccourcis"
+#~ msgstr ""
 
 #: src/routes/_studio/loads.tsx
 msgid "Ajouter la charge"
@@ -91,6 +170,10 @@ msgstr ""
 
 #: src/routes/_studio/geometry.tsx
 msgid "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou choisissez un modèle type dans la galerie de projets."
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Alu EN 1999"
 msgstr ""
 
 #: src/routes/results.tsx
@@ -112,6 +195,10 @@ msgstr ""
 
 #: src/components/SettingsPopover.tsx
 msgid "Annexe nationale"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Annexe nationale (FR / BE / DE / UK / EN), méthode EN 1990 6.10 ou 6.10a/b, cisaillement Timoshenko, P-Δ second ordre — et la suite de validation 41 / 41 benchmarks analytiques vérifie le solveur."
 msgstr ""
 
 #: src/components/CadImportDialog.tsx
@@ -140,7 +227,11 @@ msgid "Appuis actifs"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
-msgid "Appuis élastiques (kx..krz)"
+#~ msgid "Appuis élastiques (kx..krz)"
+#~ msgstr ""
+
+#: src/viewport3d/PersistentStage.tsx
+msgid "Articuler N1/N2"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -192,7 +283,19 @@ msgid "Benchmark"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Béton, bois, alu, mixte"
+msgid "benchmarks analytiques"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Béton EN 1992"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+#~ msgid "Béton, bois, alu, mixte"
+#~ msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Bibliothèque normalisée EN 10365"
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -201,6 +304,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "BIM IFC4 / SAF + support prioritaire"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Bois GL24h"
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -212,24 +319,45 @@ msgstr ""
 msgid "Bureau d'Études Pro"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "C'est une journée de plein droit pour un besoin ponctuel : toutes les fonctions Pro (branding, multi-matériaux, BIM, exports) actives 48 h sur votre poste, sans abonnement ni compte. Idéal pour livrer une note de calcul signée ce week-end."
+msgstr ""
+
 #: src/components/LicenseModal.tsx
 msgid "Cabinet"
 msgstr ""
 
+#: src/viewport3d/PersistentStage.tsx
+msgid "Cadrer"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Calcul 3D & Vérification Eurocode 3"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Calcul en cours…"
+msgstr ""
+
 #: src/components/ValidationModal.tsx
+#: src/routes/_studio/results.tsx
 msgid "Calculé"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
-msgid "Calculer"
-msgstr ""
+#~ msgid "Calculer"
+#~ msgstr ""
 
 #: src/components/CommandPalette.tsx
 msgid "Calculer 3D & Eurocode 3"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "CAO 3D interactive + optimiseur"
+#~ msgid "CAO 3D interactive + optimiseur"
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "CAO 3D interactive + optimiseur EC3"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -244,6 +372,10 @@ msgstr ""
 #~ msgid "Cas de charge"
 #~ msgstr "Load case"
 
+#: src/components/OnboardingTour.tsx
+msgid "Cas G / Q / W / S / Acc, générateurs EN 1991 (imposée, neige, vent, ΔT) et résultante globale en direct."
+msgstr ""
+
 #: src/routes/geometry.tsx
 #~ msgid "Catalogue"
 #~ msgstr "Catalog"
@@ -254,6 +386,10 @@ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "CGU & CGV"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Champs d'accélération 3D roulis / tangage / levage, analyse modale f₁..f₆, combinaisons CQC / SRSS (EN 1998-1) et charges mobiles EN 1991-2 LM1 — l'atelier couvre les structures qui bougent."
 msgstr ""
 
 #: src/components/OptimizerModal.tsx
@@ -267,6 +403,14 @@ msgstr ""
 #: src/routes/loads.tsx
 #~ msgid "Charge ponctuelle"
 #~ msgstr "Point load"
+
+#: src/routes/_marketing/index.tsx
+msgid "Charge q"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Charge répartie (kN)"
+msgstr ""
 
 #: src/components/CalcTraceTree.tsx
 msgid "Chargement de KaTeX…"
@@ -328,6 +472,10 @@ msgstr ""
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Combinaison affichée"
+msgstr ""
+
 #: src/components/SettingsPopover.tsx
 msgid "Combinaisons EN 1990"
 msgstr ""
@@ -339,6 +487,10 @@ msgstr ""
 
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Composante"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Conditions aux limites RDM 7"
 msgstr ""
 
 #: src/routes/_marketing/legal.tsx
@@ -363,6 +515,14 @@ msgid "Copie !"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
+msgid "Copié !"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Copier l'empreinte SHA-256"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
 msgid "Copier l'URL de partage"
 msgstr ""
 
@@ -380,6 +540,10 @@ msgstr ""
 
 #: src/routes/_studio/geometry.tsx
 msgid "Coupe EN — dimensions en mm"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "CQC / SRSS"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
@@ -403,12 +567,21 @@ msgstr ""
 #~ msgid "Déformée & exploitation (ELU)"
 #~ msgstr "Deformed shape & ULS utilization"
 
+#: src/components/OnboardingTour.tsx
+msgid "Déformée amplifiée, diagnostic de flambement/déversement, coupe 2D σvM, curseur x ∈ [0, L] à crans aimantés et diagrammes synchronisés."
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Déformée ELS"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
 msgid "Déjà reliés"
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+#: src/routes/_marketing/index.tsx
+msgid "Démarrer le pass 48 h"
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -441,6 +614,10 @@ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Dernière mise à jour : novembre 2026 — v2.1.0."
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Diagnostic"
 msgstr ""
 
 #. placeholder {0}: inspected.beam_id
@@ -498,7 +675,19 @@ msgid "Données traitées localement : le projet courant (géométrie, profilés
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "EC3 complet + CalcTrace"
+msgid "DXF / STEP / IGES"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+#~ msgid "EC3 complet + CalcTrace"
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "EC3 complet + CalcTrace traçable"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Échelle thermique"
 msgstr ""
 
 #: src/components/LicenseBadge.tsx
@@ -529,6 +718,18 @@ msgstr ""
 msgid "EN 1990 / 1991 / 1992 / 1993 / 1995 / 1998 / 1999"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "EN 1990 → 1999"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "EN 1991-2 LM1"
+msgstr ""
+
+#: src/viewport3d/PersistentStage.tsx
+msgid "Encastrer le nœud"
+msgstr ""
+
 #: src/components/CadImportDialog.tsx
 msgid "Encastrer le nœud le plus à gauche"
 msgstr ""
@@ -542,11 +743,15 @@ msgid "Enregistrer le projet courant"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
-msgid "Enveloppes 3D"
-msgstr ""
+#~ msgid "Enveloppes 3D"
+#~ msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Équipe / Entreprise"
+#~ msgid "Équipe / Entreprise"
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Équipe / Intranet"
 msgstr ""
 
 #. placeholder {0}: step.stepOrder
@@ -610,6 +815,10 @@ msgstr ""
 msgid "Fermer"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "Feu R30–R120"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Fichier canonique réimportable à l'identique (round-trip Valibot)."
 msgstr ""
@@ -635,13 +844,17 @@ msgstr ""
 msgid "Flèche max"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "Flèche δ"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Flèches ELS (mm)"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "flux CAD verrouillé"
-msgstr ""
+#~ msgid "flux CAD verrouillé"
+#~ msgstr ""
 
 #: src/routes/_marketing.tsx
 msgid "Fonctionnalités"
@@ -675,6 +888,7 @@ msgstr ""
 msgid "Galerie — 12 modèles"
 msgstr ""
 
+#: src/routes/_studio.tsx
 #: src/routes/_studio/geometry.tsx
 msgid "Galerie de projets"
 msgstr ""
@@ -701,6 +915,14 @@ msgstr ""
 msgid "Grandeur"
 msgstr ""
 
+#: src/viewport3d/PersistentStage.tsx
+msgid "Grille"
+msgstr ""
+
+#: src/viewport3d/LayerToolbar.tsx
+msgid "Grille d'accrochage magnétique"
+msgstr ""
+
 #: src/routes/_marketing.tsx
 msgid "Guides & tutoriels <0>↗</0>"
 msgstr ""
@@ -712,6 +934,11 @@ msgstr ""
 #: src/routes/_studio/report.tsx
 #~ msgid "HTML 3D"
 #~ msgstr ""
+
+#: src/components/LicenseModal.tsx
+#: src/routes/_marketing/index.tsx
+msgid "Idéal pour un livrable signé ce week-end"
+msgstr ""
 
 #: src/routes/_studio/geometry.tsx
 msgid "Importer CAO"
@@ -737,6 +964,14 @@ msgstr ""
 msgid "Ingénieur"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "Inox 304L"
+msgstr ""
+
+#: src/viewport3d/PersistentStage.tsx
+msgid "Inspecter sur Étape 4"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Inspecteur de section"
 msgstr ""
@@ -746,7 +981,11 @@ msgid "Inverser la sélection"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "L'édition Découverte est complète pour apprendre et calculer. L'édition Pro ajoute le branding du bureau d'études et le multi-matériaux — activation hors-ligne, sans compte."
+#~ msgid "L'édition Découverte est complète pour apprendre et calculer. L'édition Pro ajoute le branding du bureau d'études et le multi-matériaux — activation hors-ligne, sans compte."
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "L'édition Découverte est complète pour apprendre et calculer. Le Pass Projet 48 h débloque tout pour un livrable ponctuel, l'édition Pro ajoute le branding du bureau d'études et le multi-matériaux — activation hors-ligne, sans compte."
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -775,6 +1014,10 @@ msgstr ""
 
 #: src/components/CalcTraceTree.tsx
 msgid "Lancer une vérification pour afficher la trace."
+msgstr ""
+
+#: src/routes/_studio.tsx
+msgid "Langue de l'interface"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -816,6 +1059,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "licences flottantes, déploiement interne"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Limite de flèche ELS"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -867,6 +1114,10 @@ msgstr ""
 msgid "Miroir"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "Modal f₁..f₆"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Mode"
 msgstr ""
@@ -879,6 +1130,14 @@ msgstr ""
 #: src/components/ProjectGalleryModal.tsx
 #: src/routes/_studio/report.tsx
 msgid "Modèle .rdm exporté"
+msgstr ""
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Modèle chargé"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Modèle du hero"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
@@ -912,6 +1171,10 @@ msgstr ""
 
 #: src/components/AdvancedPanels.tsx
 msgid "Multimatière / joints / feu"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Naval, levage & dynamique"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
@@ -956,21 +1219,33 @@ msgstr ""
 #~ msgid "Note de calcul A4 / PDF"
 #~ msgstr ""
 
-#: src/routes/_marketing/index.tsx
-msgid "Note de calcul A4 PDF vectorielle (polices embarquées), .docx structuré et BIM IFC4 / SAF — plus l'export HTML 3D autonome."
+#: src/components/OnboardingTour.tsx
+msgid "Note de calcul A4 & Exports"
 msgstr ""
+
+#: src/routes/_marketing/index.tsx
+#~ msgid "Note de calcul A4 PDF vectorielle (polices embarquées), .docx structuré et BIM IFC4 / SAF — plus l'export HTML 3D autonome."
+#~ msgstr ""
 
 #: src/components/CommandPalette.tsx
 msgid "Note de calcul PDF / A4"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Note de calcul vectorielle & BIM"
 msgstr ""
 
 #: src/components/CalcTraceTree.tsx
 msgid "OK"
 msgstr ""
 
-#: src/components/OptimizerModal.tsx
-msgid "Optimiseur de sections"
+#: src/routes/_marketing/index.tsx
+msgid "optimiseur 1-clic"
 msgstr ""
+
+#: src/components/OptimizerModal.tsx
+#~ msgid "Optimiseur de sections"
+#~ msgstr ""
 
 #: src/components/CommandPalette.tsx
 msgid "Optimiseur EC3"
@@ -978,6 +1253,10 @@ msgstr ""
 
 #: src/components/OptimizerModal.tsx
 msgid "Optimiseur EC3 — profil le plus léger"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Orbite librement, basculez les vues Iso / XY / XZ / YZ, profitez de l'accrochage aimanté sur nœuds et milieux — et clic droit sur une poutre pour le menu contextuel."
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1016,8 +1295,16 @@ msgstr ""
 msgid "Outils secondaires"
 msgstr ""
 
+#: src/components/OnboardingTour.tsx
+msgid "Ouvrez la galerie, chargez un modèle type ou importez une CAO .dxf / .step / .igs — le titre du projet est éditable en place (Entrée pour enregistrer)."
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Ouvrir dans l'atelier"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Ouvrir dans l'atelier →"
 msgstr ""
 
 #: src/routes/_marketing.tsx
@@ -1038,8 +1325,16 @@ msgstr ""
 msgid "Palette"
 msgstr ""
 
+#: src/components/OnboardingTour.tsx
+msgid "Palette de commandes contextuelle, ⌘Entrée pour calculer, ⌘P pour le rapport, Alt pour les raccourcis — tout tourne en moins de 20 ms, hors-ligne."
+msgstr ""
+
 #: src/components/OptimizerModal.tsx
 msgid "Pareto (masse, taux)"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Pareto EC3"
 msgstr ""
 
 #: src/routes/report.tsx
@@ -1050,17 +1345,38 @@ msgstr ""
 msgid "Partage par URL : si vous utilisez le lien de partage, le modèle est compressé dans l'URL elle-même. Ne transmettez ce lien qu'aux destinataires visés ; il ne transite par aucun serveur de RDM Studio, mais il figure dans l'historique de votre navigateur et celui de vos correspondants."
 msgstr ""
 
+#: src/components/LicenseModal.tsx
+#: src/routes/_marketing/index.tsx
+msgid "Pass Projet 48 h"
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+msgid "Pass Projet 48 h démarré"
+msgstr ""
+
 #: src/components/OptimizerModal.tsx
 msgid "Passes"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "PDF A4 vectoriel Takumi (polices embarquées), .docx structuré, BIM IFC4 / SAF / OpenSees / glTF et maquette 3D HTML autonome — la note de calcul sort prête à signer."
 msgstr ""
 
 #: src/routes/_studio/report.tsx
 msgid "PDF Takumi"
 msgstr ""
 
-#: src/routes/_marketing/index.tsx
-msgid "PDF vectoriel, .docx & BIM"
+#: src/routes/_studio/report.tsx
+msgid "PDF téléchargé"
 msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "PDF vectoriel Takumi, .docx structuré, CSV Excel, maquette 3D HTML autonome, BIM IFC4 / SAF et empreinte SHA-256."
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+#~ msgid "PDF vectoriel, .docx & BIM"
+#~ msgstr ""
 
 #: src/components/FamilyPills.tsx
 msgid "Perso"
@@ -1114,6 +1430,10 @@ msgstr ""
 msgid "Portique encastré-articulé en HEA 200, traversé IPE 300 — le cas d'école de la transmission M/N au nœud rigide."
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Position de la coupe"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "pour toujours, sans compte"
 msgstr ""
@@ -1135,12 +1455,20 @@ msgstr ""
 msgid "Poutre continue 3 × 4 m : moments négatifs sur appuis et redistribution — comparez 6.10 et 6.10a/b ici."
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Poutre inspectée"
+msgstr ""
+
 #: src/routes/geometry.tsx
 #~ msgid "Poutres"
 #~ msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Poutres 3D 6 DDL en Rust/WASM : cisaillement Timoshenko, P-Δ second ordre, analyse modale et flambement linéaire — résolu localement dans votre navigateur."
+#~ msgid "Poutres 3D 6 DDL en Rust/WASM : cisaillement Timoshenko, P-Δ second ordre, analyse modale et flambement linéaire — résolu localement dans votre navigateur."
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Poutres 3D 6 DDL en Rust/WASM (Cholesky creuse faer) : cisaillement Timoshenko, second ordre géométrique P-Δ et flambement linéaire global λcr — résolus localement dans votre navigateur."
 msgstr ""
 
 #: src/routes/loads.tsx
@@ -1151,12 +1479,24 @@ msgstr ""
 msgid "Pré-remplit la couverture A4 / .docx de l'étape 5 (cabinet, ingénieur, vérificateur)."
 msgstr ""
 
+#: src/components/OnboardingTour.tsx
+msgid "Précédent"
+msgstr ""
+
 #: src/components/CommandPalette.tsx
 msgid "Préférences & Aide"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "Presets d'appui"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Preuves techniques"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Productivité clavier ⌘K"
 msgstr ""
 
 #: src/routes/_marketing.tsx
@@ -1184,11 +1524,19 @@ msgid "Profilés"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Profilés EN 10365 / 10210 / 10056 et matériaux EN 1992 / 1995 / 1998 / 1999 : kmod, kdef et catégories de service intégrés au même modèle."
-msgstr ""
+#~ msgid "Profilés EN 10365 / 10210 / 10056 et matériaux EN 1992 / 1995 / 1998 / 1999 : kmod, kdef et catégories de service intégrés au même modèle."
+#~ msgstr ""
 
 #: src/routes/_studio/report.tsx
 msgid "Profils utilisés"
+msgstr ""
+
+#: src/components/ProjectGalleryModal.tsx
+msgid "Projets"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Projets & Modèles paramétriques"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1198,6 +1546,10 @@ msgstr ""
 #: src/components/LicenseModal.tsx
 #: src/routes/_marketing/index.tsx
 msgid "Projets IndexedDB locaux"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "PRS / RHS / CHS"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1276,6 +1628,10 @@ msgstr ""
 msgid "Recharger"
 msgstr ""
 
+#: src/components/OnboardingTour.tsx
+msgid "Recherche instantanée de profilés (IPE, HEA, CHS…), inerties Iy/Iz, relâchements et flambement ky/kz — chaque ligne affiche sa masse kg/m et sa hauteur h."
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Recommandé"
 msgstr ""
@@ -1284,12 +1640,21 @@ msgstr ""
 msgid "Réduire la portée ou ajouter un appui"
 msgstr ""
 
+#: src/components/LicenseModal.tsx
+msgid "Refusée"
+msgstr ""
+
 #: src/components/SettingsPopover.tsx
 msgid "Réglages"
 msgstr ""
 
 #: src/components/CommandPalette.tsx
+#: src/components/SettingsPopover.tsx
 msgid "Réglages normatifs"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Réglages normatifs & 41 benchmarks"
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -1313,8 +1678,20 @@ msgstr ""
 msgid "Relier N1 → N2"
 msgstr ""
 
+#: src/viewport3d/LayerToolbar.tsx
+msgid "Rendu filaire"
+msgstr ""
+
+#: src/viewport3d/LayerToolbar.tsx
+msgid "Rendu volumique 3D"
+msgstr ""
+
 #: src/routes/_studio/results.tsx
 msgid "Renforcer le profil (1 clic)"
+msgstr ""
+
+#: src/viewport3d/PersistentStage.tsx
+msgid "Repère Z-up"
 msgstr ""
 
 #: src/viewport3d/LayerToolbar.tsx
@@ -1366,8 +1743,20 @@ msgstr ""
 msgid "Rust + WASM · < 20 ms"
 msgstr ""
 
+#: src/components/LicenseModal.tsx
+msgid "Sans abonnement ni compte"
+msgstr ""
+
 #: src/components/ScenarioCompareModal.tsx
 msgid "Scénario {slot}"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Scène 3D métrologique"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Scène temps réel · WebGL"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1375,15 +1764,27 @@ msgstr ""
 #~ msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Schéma structurel d'un portique chargé"
+#~ msgid "Schéma structurel d'un portique chargé"
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Sections classes 1–4, χy / χz / χLT, Nb,Rd, Mc,Rd : chaque clause s'ouvre en formule KaTeX pas-à-pas, vérifiable par le contresignateur, avec empreinte SHA-256 du modèle."
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Sections classes 1–4, χy/χz/χLT, Nb,Rd, Mc,Rd et formules KaTeX traçables : chaque étape de calcul est documentée pour le vérificateur."
-msgstr ""
+#~ msgid "Sections classes 1–4, χy/χz/χLT, Nb,Rd, Mc,Rd et formules KaTeX traçables : chaque étape de calcul est documentée pour le vérificateur."
+#~ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Sections légales"
+msgstr ""
+
+#: src/viewport3d/PersistentStage.tsx
+msgid "Sélection"
+msgstr ""
+
+#: src/viewport3d/PersistentStage.tsx
+msgid "Sélection : aucune"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
@@ -1402,8 +1803,16 @@ msgstr ""
 msgid "Sismique EN 1998-1"
 msgstr ""
 
+#: src/components/AdvancedPanels.tsx
+msgid "Sol"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Solveur + EC3 + note A4"
+msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "solveur Cholesky WASM"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1415,7 +1824,11 @@ msgid "Solveur Timoshenko + EC3"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "Solveur Timoshenko 3D"
+#~ msgid "Solveur Timoshenko 3D"
+#~ msgstr ""
+
+#: src/routes/_marketing/index.tsx
+msgid "Solveur Timoshenko 3D + P-Δ + flambement"
 msgstr ""
 
 #: src/components/AdvancedPanels.tsx
@@ -1435,8 +1848,16 @@ msgstr ""
 msgid "Subdiviser"
 msgstr ""
 
+#: src/viewport3d/PersistentStage.tsx
+msgid "Subdiviser en 4 tronçons"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Subdiviser en N tronçons"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Suivant"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
@@ -1456,7 +1877,12 @@ msgid "Supprime le déversement si MB,Rd gouverne"
 msgstr ""
 
 #: src/components/ScenarioCompareModal.tsx
+#: src/viewport3d/PersistentStage.tsx
 msgid "Supprimer"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Supprimés"
 msgstr ""
 
 #: src/routes/_marketing/legal.tsx
@@ -1479,8 +1905,16 @@ msgstr ""
 msgid "Tarifs & éditions"
 msgstr ""
 
+#: src/routes/_marketing/index.tsx
+msgid "Taux EC3 η"
+msgstr ""
+
 #: src/components/ScenarioCompareModal.tsx
 msgid "Taux max"
+msgstr ""
+
+#: src/components/OnboardingTour.tsx
+msgid "Terminer"
 msgstr ""
 
 #: src/components/FamilyPills.tsx
@@ -1493,6 +1927,11 @@ msgstr ""
 
 #: src/components/LicenseModal.tsx
 msgid "Toutes les fonctionnalités Pro sont débloquées sur ce poste."
+msgstr ""
+
+#: src/components/LicenseModal.tsx
+#: src/routes/_marketing/index.tsx
+msgid "Toutes les fonctions Pro pendant 48 h"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -1535,12 +1974,20 @@ msgstr ""
 #~ msgid "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
 #~ msgstr "Case factors give the order of magnitude: SI to display conversions live exclusively in the UI."
 
+#: src/routes/_marketing/index.tsx
+msgid "Un même modèle traverse les matériaux : profils EN 10365 / 10210 / 10056, S235–S460, inox 304L, alu 6061/6082-T6 (EN 1999), lamellé-collé GL24h (EN 1995), béton armé (EN 1992), assemblages boulonnés (EC3-1-8) et feu R30–R120 (EC3-1-2)."
+msgstr ""
+
 #: src/components/LicenseModal.tsx
 msgid "Une clé valide commence par RDM-PRO-."
 msgstr ""
 
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "URL de partage"
 msgstr ""
 
 #: src/components/CadToolbar.tsx
@@ -1557,8 +2004,8 @@ msgid "Validation — 41 benchmarks analytiques"
 msgstr ""
 
 #: src/components/ValidationModal.tsx
-msgid "Validation suite"
-msgstr ""
+#~ msgid "Validation suite"
+#~ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Vente. Les commandes d'abonnements ou de licences perpétuelles sont conclus directement avec l'éditeur au moment de l'ouverture de la boutique ; le droit de rétractation de 14 jours s'applique aux consommateurs pour tout contenu numérique non encore activé, conformément aux articles L221-18 et suivants du Code de la consommation. Les clés activées avant la rétractation donnent lieu à un remboursement au prorata des fonctions déjà utilisées."
@@ -1590,12 +2037,24 @@ msgstr ""
 msgid "Vérification Eurocode 3"
 msgstr ""
 
+#: src/components/LicenseModal.tsx
+msgid "Vérification…"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "vérifications EC3"
 msgstr ""
 
 #: src/routes/_studio/loads.tsx
+msgid "Vidées"
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
 msgid "Vider les charges"
+msgstr ""
+
+#: src/routes/_studio.tsx
+msgid "Visite guidée illustrée"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1622,13 +2081,21 @@ msgstr ""
 msgid "Vue 3D indisponible (WebGL) — édition et calculs actifs."
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Vue des efforts"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Word (.docx)"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
-msgid "zéro télémétrie"
+msgid "zéro cloud"
 msgstr ""
+
+#: src/routes/_marketing/index.tsx
+#~ msgid "zéro télémétrie"
+#~ msgstr ""
 
 #: src/components/ScenarioCompareModal.tsx
 msgid "Δ CO₂"

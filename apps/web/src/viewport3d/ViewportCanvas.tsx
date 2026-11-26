@@ -30,6 +30,7 @@ import { useProjectStore } from "@/state/projectStore";
 import { useViewportStore, type CameraPreset } from "@/state/viewportStore";
 import { useViewportParams } from "@/hooks/useStudioQuery";
 import { LayerToolbar } from "./LayerToolbar";
+import { SegmentedControl } from "@/components/interior";
 import { modelBounds } from "./ProfileShapes";
 import { SnapOverlay, type ViewportRuntime } from "./SnapOverlay";
 import { KeycapHint } from "@/components/KeycapHints";
@@ -304,20 +305,27 @@ export function ViewportCanvas({
   const modelBeams = beams ?? [];
   useViewportShortcuts(modelNodes, controlsRef, runtimeRef, setCameraPreset);
 
+  // v2.1.2: camera presets as an interior.dev SegmentedControl — the
+  // shared spring pill glides between Iso | XY | XZ | YZ (zero layout
+  // jump), contract test ids view-* preserved on each option button.
   const viewPresets = (
-    <div className="absolute top-2 right-2 z-30 flex gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
-      {VIEW_PRESETS.map(([preset, label, hint]) => (
-        <button
-          key={preset}
-          type="button"
-          data-testid={`view-${preset}`}
-          className={`relative rounded px-2 py-1 text-[11px] ${cameraPreset === preset ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-          onClick={() => setCameraPreset(preset)}
-        >
-          {label}
-          <KeycapHint label={hint} />
-        </button>
-      ))}
+    <div className="absolute top-2 right-2 z-30 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
+      <SegmentedControl
+        size="sm"
+        label="Vue caméra"
+        value={cameraPreset}
+        onValueChange={(next) => setCameraPreset(next as CameraPreset)}
+        options={VIEW_PRESETS.map(([preset, label, hint]) => ({
+          value: preset,
+          label: (
+            <span className="relative inline-flex items-center">
+              {label}
+              <KeycapHint label={hint} />
+            </span>
+          ),
+          testId: `view-${preset}`,
+        }))}
+      />
     </div>
   );
 

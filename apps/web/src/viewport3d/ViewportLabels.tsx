@@ -1,6 +1,6 @@
 import { Html } from "@react-three/drei";
 import { useMemo } from "react";
-import { useViewportStore } from "@/state/viewportStore";
+import { useViewportParams } from "@/hooks/useStudioQuery";
 import { useLastReport } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
 import type { BeamData, NodeData } from "@/state/projectStore";
@@ -73,8 +73,10 @@ export function ViewportLabels({
   beams: BeamData[];
   pathname: string;
 }) {
-  const labelsOn = useViewportStore((s) => s.layers.labels);
-  const reactionsOn = useViewportStore((s) => s.layers.reactions);
+  // v2.1.0: label / reaction layers are URL-backed (`?layers=`).
+  const { layers } = useViewportParams();
+  const labelsOn = layers.labels;
+  const reactionsOn = layers.reactions;
   const report = useLastReport();
   const supports = useProjectStore((s) => s.project.structure.supports);
 

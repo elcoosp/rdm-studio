@@ -8,18 +8,12 @@ import { useProjectStore, type ModelSettingsData } from "../state/projectStore";
  * combination method, Timoshenko shear and 2D plane-frame mode — all
  * schema-v2 fields of the `.rdm` settings block.
  */
-/** Module-level default — a fresh literal inside the selector would
- * return a new reference every render and loop useSyncExternalStore. */
-const DEFAULT_SETTINGS: ModelSettingsData = {
-  national_annex: "FR",
-  combination_method: "Eq610",
-  p_delta: false,
-  shear_deformation: true,
-  plane_frame_2d: false,
-};
 
 export function SettingsPopover(): React.ReactElement {
-  const settings = useProjectStore((st) => st.project.structure.settings ?? DEFAULT_SETTINGS);
+  const nationalAnnex = useProjectStore((st) => st.project.structure.settings?.national_annex ?? "FR");
+  const combinationMethod = useProjectStore((st) => st.project.structure.settings?.combination_method ?? "Eq610");
+  const shearDeformation = useProjectStore((st) => st.project.structure.settings?.shear_deformation ?? true);
+  const planeFrame2d = useProjectStore((st) => st.project.structure.settings?.plane_frame_2d ?? false);
   const updateSettings = useProjectStore((st) => st.updateSettings);
   const [open, setOpen] = useState(false);
 
@@ -32,12 +26,9 @@ export function SettingsPopover(): React.ReactElement {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md border border-slate-300 px-2 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
+        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
       >
-        ⚙<span className="hidden sm:inline">&nbsp;Réglages</span>
-        <span className="sr-only">
-          <Trans>Réglages normatifs</Trans>
-        </span>
+        <Trans>Réglages normatifs</Trans>
       </button>
       {open ? (
         <div
@@ -55,7 +46,7 @@ export function SettingsPopover(): React.ReactElement {
                 type="button"
                 onClick={() => updateSettings({ national_annex: annex })}
                 className={`rounded px-2 py-1 text-xs font-semibold ${
-                  settings.national_annex === annex
+                  nationalAnnex === annex
                     ? "bg-blue-600 text-white"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
                 }`}
@@ -72,7 +63,7 @@ export function SettingsPopover(): React.ReactElement {
               type="button"
               onClick={() => updateSettings({ combination_method: "Eq610" })}
               className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
-                settings.combination_method === "Eq610"
+                combinationMethod === "Eq610"
                   ? "bg-blue-600 text-white"
                   : "bg-slate-100 dark:bg-slate-800"
               }`}
@@ -83,7 +74,7 @@ export function SettingsPopover(): React.ReactElement {
               type="button"
               onClick={() => updateSettings({ combination_method: "Eq610ab" })}
               className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
-                settings.combination_method === "Eq610ab"
+                combinationMethod === "Eq610ab"
                   ? "bg-blue-600 text-white"
                   : "bg-slate-100 dark:bg-slate-800"
               }`}
@@ -92,18 +83,10 @@ export function SettingsPopover(): React.ReactElement {
             </button>
           </div>
           <label className="mb-2 flex items-center justify-between text-sm">
-            <Trans>P-Δ (second ordre)</Trans>
-            <input
-              type="checkbox"
-              checked={settings.p_delta ?? false}
-              onChange={(e) => updateSettings({ p_delta: e.target.checked })}
-            />
-          </label>
-          <label className="mb-2 flex items-center justify-between text-sm">
             <Trans>Cisaillement Timoshenko</Trans>
             <input
               type="checkbox"
-              checked={settings.shear_deformation ?? true}
+              checked={shearDeformation}
               onChange={(e) => updateSettings({ shear_deformation: e.target.checked })}
             />
           </label>
@@ -111,7 +94,7 @@ export function SettingsPopover(): React.ReactElement {
             <Trans>Plan 2D (Uy/Rx/Rz bloqués)</Trans>
             <input
               type="checkbox"
-              checked={settings.plane_frame_2d ?? false}
+              checked={planeFrame2d}
               onChange={(e) => updateSettings({ plane_frame_2d: e.target.checked })}
             />
           </label>

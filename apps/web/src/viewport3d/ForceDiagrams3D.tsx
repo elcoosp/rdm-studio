@@ -36,24 +36,12 @@ export function ForceDiagrams3D(): ReactElement {
     void feaClient
       .engineCall("compute_envelopes_json", project)
       .then((payload) => {
-        // The engine may answer a fault object or an id-keyed map —
-        // normalize to a flat array before the diagram renders.
-        const value = payload as
-          | BeamEnvelopeDto[]
-          | { kind?: string }
-          | Record<string, BeamEnvelopeDto>;
-        if (value === null || typeof value !== "object") {
+        if (Array.isArray(payload)) {
+          setEnvelopes(payload as BeamEnvelopeDto[]);
+        } else {
+          console.error("compute_envelopes_json returned non-array:", payload);
           setEnvelopes(null);
-          return;
         }
-        if ("kind" in value && typeof value.kind === "string") {
-          setEnvelopes(null);
-          return;
-        }
-        const list = Array.isArray(value)
-          ? value
-          : Object.values(value as Record<string, BeamEnvelopeDto>);
-        setEnvelopes(list.length > 0 ? list : null);
       })
       .catch(() => setEnvelopes(null));
     return undefined;

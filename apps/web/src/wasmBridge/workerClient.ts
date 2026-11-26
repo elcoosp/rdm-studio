@@ -211,6 +211,10 @@ const enginePending = new Map<number, LanePending>();
 let engineCallCounter = 0;
 /** v2.0.1: the single validation-suite slot (only one runs at a time). */
 let validationPending: LanePending | null = null;
+/** v2.1.1: the in-flight validation Promise — React 19 StrictMode's
+ * double `useEffect` coalesces onto THIS promise instead of rejecting
+ * with "validation in flight" (cleared in `.finally(...)`). */
+let validationInFlight: Promise<BenchResultDto[]> | null = null;
 let liveTokenCounter = 0;
 let liveListeners = new Set<(token: number) => void>();
 
@@ -456,19 +460,25 @@ class FeaClient {
     });
   }
 
-  /** v1.8.0: the 41 closed-form benchmarks for the Validation modal. */
+  /** v1.8.0: the 41 closed-form benchmarks for the Validation modal.
+   * v2.1.1: concurrent callers share the in-flight Promise (StrictMode
+   * safe) — the second `useEffect` call awaits the SAME run instead of
+   * rejecting with "validation in flight". */
   fetchValidationSuite(): Promise<BenchResultDto[]> {
-    return new Promise<BenchResultDto[]>((resolve, reject) => {
-      if (validationPending !== null) {
-        reject({ kind: "Fault", message: "validation in flight" });
-        return;
-      }
+    if (validationInFlight !== null) {
+      return validationInFlight;
+    }
+    const run = new Promise<BenchResultDto[]>((resolve, reject) => {
       validationPending = {
         resolve: resolve as (value: unknown) => void,
         reject,
       };
       this.worker.postMessage({ type: "VALIDATION_SUITE" } satisfies WorkerRequest);
     });
+    validationInFlight = run.finally(() => {
+      validationInFlight = null;
+    });
+    return validationInFlight;
   }
 
   /** v2.0.2: legacy v1 `.rdm` migration through the worker. */

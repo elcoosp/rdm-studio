@@ -1,4 +1,4 @@
-import { useViewportStore } from "@/state/viewportStore";
+import { useViewportParams } from "@/hooks/useStudioQuery";
 import { MagneticSnap, VolumetricMesh, WireframeMesh } from "@/components/icons/EngineeringIcons";
 import { Trans } from "@lingui/react/macro";
 
@@ -25,12 +25,9 @@ const SNAP_STEPS = [
 ] as const;
 
 export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) {
-  const layers = useViewportStore((s) => s.layers);
-  const toggleLayer = useViewportStore((s) => s.toggleLayer);
-  const renderMode = useViewportStore((s) => s.renderMode);
-  const setRenderMode = useViewportStore((s) => s.setRenderMode);
-  const snapStep = useViewportStore((s) => s.snapStep);
-  const setSnapStep = useViewportStore((s) => s.setSnapStep);
+  // v2.1.0: layer flags (`?layers=`), render mode (`?render=`) and the
+  // snap grid (`?snap=`) all live in the URL — shareable per keystroke.
+  const { layers, toggleLayer, render, setRender, snapStep, setSnapStep } = useViewportParams();
 
   return (
     <div
@@ -80,8 +77,8 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
         type="button"
         data-testid="render-volumetric"
         aria-label="Rendu volumique 3D"
-        className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${renderMode === "volumetric" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-        onClick={() => setRenderMode("volumetric")}
+        className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${render === "volumetric" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        onClick={() => setRender("volumetric")}
       >
         <VolumetricMesh size={14} />
       </button>
@@ -89,8 +86,8 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
         type="button"
         data-testid="render-wireframe"
         aria-label="Rendu filaire"
-        className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${renderMode === "wireframe" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-        onClick={() => setRenderMode("wireframe")}
+        className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${render === "wireframe" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+        onClick={() => setRender("wireframe")}
       >
         <WireframeMesh size={14} />
       </button>

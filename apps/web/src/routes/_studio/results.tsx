@@ -17,7 +17,7 @@ import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/work
 import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { UtilizationProgress } from "@/components/ui/progress";
-import { ArrowLeftRight, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
+import { ArrowLeftRight, SlidersHorizontal } from "lucide-react";
 import {
   feaClient,
   type ModalReport,
@@ -127,6 +127,9 @@ function ResultsPage() {
   const [playing, setPlaying] = useState(false);
   const [harmonic, setHarmonic] = useState(1);
   const [breakdownOpen, setBreakdownOpen] = useState(true);
+  // v2.1.1: the 340px rail splits into 2 tabs (EC3 verification |
+  // advanced analyses) so λcr / sismique / multimatière never clip.
+  const [railTab, setRailTab] = useState<"ec3" | "advanced">("ec3");
   // The docked inspector drives `?cutBeam=` + `?cut=` (0..1) directly —
   // the persistent stage renders the plane from the URL, no store hop.
   const cutBeamId = cutting?.beamId ?? project.structure.beams[0]?.id ?? 0;
@@ -169,7 +172,10 @@ function ResultsPage() {
           catalog.sectionDims.filter((d) => d.a > 0).map((d) => [d.designation, d.a]),
         );
       }
-      setModal(modalReport);
+      // v2.1.1: only accept a usable modal report — a payload without a
+      // `modes` array (small/ill-conditioned models) used to crash the
+      // whole Step 4 cockpit (`modes[0]` of undefined).
+      setModal(modalReport !== null && Array.isArray(modalReport.modes) ? modalReport : null);
     })();
     return () => {
       cancelled = true;
@@ -383,7 +389,7 @@ function ResultsPage() {
               </option>
             ))}
             {modal !== null
-              ? modal.modes.slice(0, 6).map((m) => (
+              ? (modal.modes ?? []).slice(0, 6).map((m) => (
                   <option key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
                     {`Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`}
                   </option>
@@ -445,7 +451,10 @@ function ResultsPage() {
         </div>
       </div>
       {fault !== null ? (
-        <p className="shrink-0 rounded border border-fea-max/40 bg-fea-max/10 p-2 text-[12px] text-fea-max">
+        <p
+          className="shrink-0 rounded border border-fea-max/40 bg-fea-max/10 p-2 text-[12px] text-fea-max"
+          data-testid="solve-fault"
+        >
           {fault.kind}: {fault.message}
         </p>
       ) : null}
@@ -520,12 +529,15 @@ function ResultsPage() {
           >
             {null}
           </StageContent>
-          {/* Bottom-center horizontal thermal legend bar (η = 0 → 1.25). */}
+          {/* v2.1.1: thermal legend at bottom-LEFT (clear of the XYZ
+              gizmo at bottom-right), labels synced to the active scale. */}
           <div
-            className="absolute bottom-2 left-1/2 z-30 flex w-64 max-w-[70%] -translate-x-1/2 items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
+            className="absolute bottom-2 left-3 z-30 flex w-56 max-w-[60%] items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
             data-testid="fea-legend"
           >
-            <span className="font-data text-[11px] text-ink-muted">η = 0</span>
+            <span className="font-data text-[11px] text-ink-muted">
+              {scaleMode === "ec3" ? "η = 0" : scaleMode === "svm" ? "0" : "Min"}
+            </span>
             <div
               className="h-2 flex-1 rounded"
               style={{
@@ -537,130 +549,176 @@ function ResultsPage() {
                   .join(", ")})`,
               }}
             />
-            <span className="font-data text-[11px] text-ink-muted">η = 1.25</span>
+            <span className="font-data text-[11px] text-ink-muted">
+              {scaleMode === "ec3" ? "η = 1,25" : scaleMode === "svm" ? "235 MPa (fy)" : "Max"}
+            </span>
           </div>
         </section>
-        {/* v1.6.0: right 340px EC3 diagnostic rail (zero-scroll cockpit). */}
+        {/* v2.1.1: right 340px diagnostic rail — 2 clean tabs so the EC3
+            verification AND the advanced analyses (λcr, sismique,
+            multimatière) fit with zero clipping inside 100dvh. */}
         {report !== null && inspected !== null ? (
           <aside
-            className="hidden w-[340px] shrink-0 flex-col gap-2 overflow-y-auto rounded-panel border border-hairline bg-panel p-2.5 md:flex"
+            className="hidden w-[340px] shrink-0 flex-col overflow-hidden rounded-panel border border-hairline bg-panel md:flex"
             data-testid="ec3-rail"
           >
-            <h3 className="text-[13px] font-semibold text-ink-secondary">
-              <Trans>
-                Diagnostic EN 1993-1-1 — P{inspected.beam_id} ({inspected.governing_check})
-              </Trans>
-            </h3>
-            <div className="font-data flex flex-wrap items-center gap-1 text-[11px]">
-              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                Classe {inspected.class_index ?? "—"}
-              </span>
-              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                χy = {(inspected.chi_y ?? 1).toFixed(2).replace(".", ",")}
-              </span>
-              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                χz = {(inspected.chi_z ?? 1).toFixed(2).replace(".", ",")}
-              </span>
-              <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
-                χLT ={" "}
-                {inspected.chi_lt == null ? "1,00" : inspected.chi_lt.toFixed(2).replace(".", ",")}
-              </span>
-            </div>
-            <dl className="font-data grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-ink-secondary">
-              <dt>Npl,Rd</dt>
-              <dd className="text-right">
-                {(inspected.n_pl_rd / 1000).toFixed(1).replace(".", ",")} kN
-              </dd>
-              <dt>Vpl,Rd</dt>
-              <dd className="text-right">
-                {(inspected.v_pl_rd / 1000).toFixed(1).replace(".", ",")} kN
-              </dd>
-              <dt>Mcr</dt>
-              <dd className="text-right">
-                {inspected.m_cr == null
-                  ? "—"
-                  : `${(inspected.m_cr / 1000).toFixed(1).replace(".", ",")} kN·m`}
-              </dd>
-              <dt>λLT</dt>
-              <dd className="text-right">
-                {inspected.lambda_lt == null
-                  ? "—"
-                  : inspected.lambda_lt.toFixed(2).replace(".", ",")}
-              </dd>
-              <dt>Mb,Rd</dt>
-              <dd className="text-right">
-                {(inspected.m_rd / 1000).toFixed(1).replace(".", ",")} kN·m
-              </dd>
-              <dt>L</dt>
-              <dd className="text-right">{inspected.length.toFixed(2).replace(".", ",")} m</dd>
-            </dl>
-            <dl className="grid gap-x-4 gap-y-1">
-              {inspected.checks.map(([name, ratio]) => (
-                <div key={name} className="flex items-center gap-2">
-                  <dt className="font-data w-24 shrink-0 text-[11px] text-ink-secondary">{name}</dt>
-                  <UtilizationProgress value={ratio} className="flex-1" />
-                  <dd className="font-data w-16 shrink-0 text-right text-[11px] text-ink-primary">
-                    {(ratio * 100).toFixed(1).replace(".", ",")} %
-                  </dd>
-                </div>
+            <div
+              className="flex shrink-0 items-center gap-1 border-b border-hairline p-1.5"
+              role="tablist"
+              aria-label="Diagnostic"
+            >
+              {(
+                [
+                  ["ec3", <Trans key="ec3">Vérification EC3</Trans>],
+                  ["advanced", <Trans key="advanced">Analyses avancées</Trans>],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={railTab === key}
+                  data-testid={`rail-tab-${key}`}
+                  onClick={() => setRailTab(key)}
+                  className={`flex-1 rounded px-2 py-1 text-[12px] font-medium ${
+                    railTab === key
+                      ? "bg-accent-tint font-semibold text-accent"
+                      : "text-ink-secondary hover:text-ink-primary"
+                  }`}
+                >
+                  {label}
+                </button>
               ))}
-            </dl>
-            {/* v1.6.0: BOTH mitigation buttons. */}
-            {inspected.utilization > 1 ? (
-              <div className="mt-auto flex flex-col gap-1.5">
-                <button
-                  type="button"
-                  className="rounded border border-hairline px-2 py-1 text-[12px] text-accent hover:bg-accent-tint"
-                  data-testid="mitigate-lateral"
-                  onClick={() => {
-                    const target = inspected.beam_id;
-                    updateBeam(target, { k_buckling_z: 0.5 });
-                    toast("Maintien latéral mi-travée (kz = 0,5)", {
-                      description: "Recalcul automatique en cours…",
-                    });
-                  }}
-                >
-                  <Trans>Maintien latéral mi-travée (kz = 0,5)</Trans>
-                </button>
-                <button
-                  type="button"
-                  className="rounded bg-accent px-2 py-1 text-[12px] text-white"
-                  data-testid="rail-upgrade"
-                  onClick={upgradeOverloaded}
-                >
-                  <Trans>Renforcer le profil (1 clic)</Trans>
-                </button>
-              </div>
-            ) : (
-              <p className="font-data mt-auto text-[11px] text-pass-text">
-                <Trans>Toutes les vérifications EC3 sont vérifiées (η ≤ 1,00).</Trans>
-              </p>
-            )}
-            {/* v2.0.1: optimizer / scenario entries + advanced-analysis
-                tabs docked INSIDE the 340px diagnostic rail. */}
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
-              <button
-                type="button"
-                onClick={() => setOptimizerOpen(true)}
-                className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent/90"
-              >
-                <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
-                Optimiseur EC3
-              </button>
-              <button
-                type="button"
-                onClick={() => setScenarioOpen(true)}
-                className="flex items-center gap-1.5 rounded-md border border-hairline px-3 py-1.5 text-xs font-semibold "
-              >
-                <ArrowLeftRight size={14} strokeWidth={1.5} aria-hidden />
-                Scénarios
-              </button>
             </div>
-            <AdvancedPanels />
+            <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+              {railTab === "ec3" ? (
+                <>
+                  <h3 className="text-[13px] font-semibold text-ink-secondary">
+                    <Trans>
+                      Diagnostic EN 1993-1-1 — P{inspected.beam_id} ({inspected.governing_check})
+                    </Trans>
+                  </h3>
+                  <div className="font-data flex flex-wrap items-center gap-1 text-[11px]">
+                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                      Classe {inspected.class_index ?? "—"}
+                    </span>
+                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                      χy = {(inspected.chi_y ?? 1).toFixed(2).replace(".", ",")}
+                    </span>
+                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                      χz = {(inspected.chi_z ?? 1).toFixed(2).replace(".", ",")}
+                    </span>
+                    <span className="rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-ink-secondary">
+                      χLT ={" "}
+                      {inspected.chi_lt == null
+                        ? "1,00"
+                        : inspected.chi_lt.toFixed(2).replace(".", ",")}
+                    </span>
+                  </div>
+                  <dl className="font-data grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-ink-secondary">
+                    <dt>Npl,Rd</dt>
+                    <dd className="text-right">
+                      {(inspected.n_pl_rd / 1000).toFixed(1).replace(".", ",")} kN
+                    </dd>
+                    <dt>Vpl,Rd</dt>
+                    <dd className="text-right">
+                      {(inspected.v_pl_rd / 1000).toFixed(1).replace(".", ",")} kN
+                    </dd>
+                    <dt>Mcr</dt>
+                    <dd className="text-right">
+                      {inspected.m_cr == null
+                        ? "—"
+                        : `${(inspected.m_cr / 1000).toFixed(1).replace(".", ",")} kN·m`}
+                    </dd>
+                    <dt>λLT</dt>
+                    <dd className="text-right">
+                      {inspected.lambda_lt == null
+                        ? "—"
+                        : inspected.lambda_lt.toFixed(2).replace(".", ",")}
+                    </dd>
+                    <dt>Mb,Rd</dt>
+                    <dd className="text-right">
+                      {(inspected.m_rd / 1000).toFixed(1).replace(".", ",")} kN·m
+                    </dd>
+                    <dt>L</dt>
+                    <dd className="text-right">
+                      {inspected.length.toFixed(2).replace(".", ",")} m
+                    </dd>
+                  </dl>
+                  <dl className="grid gap-x-4 gap-y-1">
+                    {(inspected.checks ?? []).map(([name, ratio]) => (
+                      <div key={name} className="flex items-center gap-2">
+                        <dt className="font-data w-24 shrink-0 text-[11px] text-ink-secondary">
+                          {name}
+                        </dt>
+                        <UtilizationProgress value={ratio} className="flex-1" />
+                        <dd className="font-data w-16 shrink-0 text-right text-[11px] text-ink-primary">
+                          {(ratio * 100).toFixed(1).replace(".", ",")} %
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {/* v1.6.0: BOTH mitigation buttons. */}
+                  {inspected.utilization > 1 ? (
+                    <div className="mt-auto flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        className="rounded border border-hairline px-2 py-1 text-[12px] text-accent hover:bg-accent-tint"
+                        data-testid="mitigate-lateral"
+                        onClick={() => {
+                          const target = inspected.beam_id;
+                          updateBeam(target, { k_buckling_z: 0.5 });
+                          toast("Maintien latéral mi-travée (kz = 0,5)", {
+                            description: "Recalcul automatique en cours…",
+                          });
+                        }}
+                      >
+                        <Trans>Maintien latéral mi-travée (kz = 0,5)</Trans>
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded bg-accent px-2 py-1 text-[12px] text-white"
+                        data-testid="rail-upgrade"
+                        onClick={upgradeOverloaded}
+                      >
+                        <Trans>Renforcer le profil (1 clic)</Trans>
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="font-data mt-auto text-[11px] text-pass-text">
+                      <Trans>Toutes les vérifications EC3 sont vérifiées (η ≤ 1,00).</Trans>
+                    </p>
+                  )}
+                  {/* v2.0.1: optimizer / scenario entries live in the EC3 tab. */}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setOptimizerOpen(true)}
+                      className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent/90"
+                    >
+                      <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
+                      Optimiseur EC3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScenarioOpen(true)}
+                      className="flex items-center gap-1.5 rounded-md border border-hairline px-3 py-1.5 text-xs font-semibold "
+                    >
+                      <ArrowLeftRight size={14} strokeWidth={1.5} aria-hidden />
+                      Scénarios
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <AdvancedPanels />
+              )}
+            </div>
           </aside>
         ) : null}
       </div>
-      {/* Zone 3 — bottom precision dock (h-[220px]). */}
+      {/* Zone 3 — bottom precision dock (h-[220px]). v2.1.1: the
+          "Enveloppes 3D" view renders ForceDiagrams3DPanel INSIDE the
+          dock — the overflowing bar below it is gone. */}
       {report !== null && project.structure.beams.length > 0 ? (
         <DockedInspector
           project={project}
@@ -672,32 +730,9 @@ function ResultsPage() {
           slsLabel={sls?.label}
           maxSlsDeflMm={maxSlsDeflMm}
           mRd={uls?.beams.find((b) => b.beam_id === cutBeamId)?.m_rd ?? null}
+          view3d={diagramsOpen}
+          onView3dChange={setDiagramsOpen}
         />
-      ) : null}
-      {/* v2.0.1: ForceDiagrams3D as a clean toggleable panel BELOW the
-          220px dock — the 3D canvas and the uPlot dock stay uncovered. */}
-      {report !== null && project.structure.beams.length > 0 ? (
-        <section className="shrink-0">
-          <button
-            type="button"
-            data-testid="force-diagrams-toggle"
-            onClick={() => setDiagramsOpen(!diagramsOpen)}
-            aria-expanded={diagramsOpen}
-            className="flex min-h-8 w-full items-center justify-between rounded-panel border border-hairline bg-panel px-3 text-[12px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
-          >
-            <Trans>Diagrammes d'efforts 3D (enveloppes)</Trans>
-            {diagramsOpen ? (
-              <ChevronUp size={14} strokeWidth={1.5} aria-hidden />
-            ) : (
-              <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
-            )}
-          </button>
-          {diagramsOpen ? (
-            <div className="mt-2">
-              <ForceDiagrams3DPanel />
-            </div>
-          ) : null}
-        </section>
       ) : null}
       {/* Phone drawer: nodal displacements + SI/UI conversion note. */}
       {isMobile ? (
@@ -769,7 +804,11 @@ function KpiCard({
   return (
     <div className="rounded border border-hairline bg-panel p-2.5" data-testid={testId}>
       <p className="text-[11px] text-ink-muted">{label}</p>
-      <p className="mt-1 text-[17px] font-semibold text-ink-primary">
+      <p
+        className="mt-1 text-[17px] font-semibold text-ink-primary"
+        data-testid={testId === undefined ? undefined : `${testId}-value`}
+        data-value={value}
+      >
         <NumberFlowValue
           value={value}
           format={{ minimumFractionDigits: decimals, maximumFractionDigits: decimals }}
@@ -815,11 +854,15 @@ function KpiCard({
 }
 
 /**
- * Bottom precision dock (v1.6.0, h-[220px], grid-cols-[280px_1fr]): the 2D
- * σvM cross-section heatmap with TOP / neutral-axis / BOTTOM fiber stress
- * readouts beside the uPlot internal-force diagrams (My, Mz, Vz, N, T —
- * all 5 curves) with the dashed crimson ±M_Rd capacity lines, live cursor
- * force readouts and a ResizeObserver keeping the plot glued to its pane.
+ * Bottom precision dock (v2.1.1, h-[220px], grid-cols-[280px_1fr]): the 2D
+ * σvM cross-section heatmap beside the uPlot internal-force diagrams
+ * (My, Mz, Vz, N, T — all 5 curves + dashed ±M_Rd capacity lines).
+ * v2.1.1 fixes: `scales.x.time = false` kills the uPlot Unix-timestamp
+ * axis bug (`:00.000` / `1/1/70 1:00am`), the built-in legend is OFF and
+ * replaced by a 1-line color-key pill strip + the `5 courbes |
+ * Enveloppes 3D` switcher in the dock header (height 145 fits 100%
+ * inside the 220px dock), and the Enveloppes 3D view renders the
+ * ForceDiagrams3DPanel INSIDE the dock — no overflowing bar below it.
  */
 function DockedInspector({
   project,
@@ -831,6 +874,8 @@ function DockedInspector({
   slsLabel,
   maxSlsDeflMm,
   mRd,
+  view3d,
+  onView3dChange,
 }: {
   project: ReturnType<typeof useProjectStore.getState>["project"];
   beams: { id: number; section_id: string }[];
@@ -841,6 +886,8 @@ function DockedInspector({
   slsLabel?: string;
   maxSlsDeflMm: number;
   mRd: number | null;
+  view3d: boolean;
+  onView3dChange: (open: boolean) => void;
 }) {
   const [stress, setStress] = useState<StressGrid | null>(null);
   const [forces, setForces] = useState<SpanForceSample[] | null>(null);
@@ -927,7 +974,7 @@ function DockedInspector({
   }, [forces, station]);
 
   useEffect(() => {
-    if (forces === null || plotRef.current === null) {
+    if (forces === null || view3d || plotRef.current === null) {
       return;
     }
     const data: uPlot.AlignedData = [
@@ -941,9 +988,16 @@ function DockedInspector({
     ] as unknown as uPlot.AlignedData;
     const opts: uPlot.Options = {
       width: plotRef.current.clientWidth,
-      height: 122,
-      legend: { show: true },
-      axes: [{}, { values: (u: uPlot, ticks: number[]) => ticks.map((v) => `${v.toFixed(0)}`) }],
+      height: 145,
+      // v2.1.1: the x axis carries station ratios (0..1 L), NOT Unix
+      // timestamps — `time: false` removes the `:00.000` / `1/1/70`
+      // overlap, and the explicit formatters print `0,05 L`-style ticks.
+      scales: { x: { time: false } },
+      legend: { show: false },
+      axes: [
+        { values: (_u: uPlot, ticks: number[]) => ticks.map((v) => `${v.toFixed(2)}L`) },
+        { values: (_u: uPlot, ticks: number[]) => ticks.map((v) => `${v.toFixed(0)}`) },
+      ],
       series: [
         {},
         { label: "My (kN·m)", stroke: "#1d4ed8", width: 1.5 },
@@ -966,7 +1020,7 @@ function DockedInspector({
       plot.destroy();
       uplotRef.current = null;
     };
-  }, [forces, mRd, syncCursor]);
+  }, [forces, mRd, syncCursor, view3d]);
 
   // v1.6.0 bug 5: ResizeObserver keeps uPlot glued to its pane (the old
   // fixed-width build overflowed / clipped on pane resizes).
@@ -978,7 +1032,7 @@ function DockedInspector({
     const observer = new ResizeObserver(() => {
       const plot = uplotRef.current;
       if (plot !== null) {
-        plot.setSize({ width: el.clientWidth, height: 122 });
+        plot.setSize({ width: el.clientWidth, height: 145 });
         syncCursor();
       }
     });
@@ -988,7 +1042,7 @@ function DockedInspector({
 
   return (
     <section
-      className="grid h-[220px] shrink-0 grid-cols-1 gap-3 rounded-panel border border-hairline bg-panel p-2.5 lg:grid-cols-[280px_1fr]"
+      className="grid h-[220px] shrink-0 grid-cols-1 gap-3 overflow-hidden rounded-panel border border-hairline bg-panel p-2.5 lg:grid-cols-[280px_1fr]"
       data-testid="docked-inspector"
     >
       <div className="flex min-h-0 flex-col">
@@ -1041,51 +1095,124 @@ function DockedInspector({
         </p>
       </div>
       <div className="flex min-h-0 flex-col">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Dock header: title + 1-line color-key pill strip + the view
+            switcher (5 courbes | Enveloppes 3D). */}
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <h3 className="text-xs font-medium text-ink-secondary">
             <Trans>Efforts internes (5 courbes)</Trans>
           </h3>
-          {/* Live cursor readouts at the scrubbed station. */}
           <div
-            className="font-data flex gap-2 text-[10px] text-ink-secondary"
-            data-testid="cursor-readouts"
+            className="font-data flex flex-wrap items-center gap-1 text-[10px]"
+            data-testid="force-color-key"
           >
-            {cursorForces !== null ? (
-              <span>
-                My = {cursorForces.my.toFixed(1)} · Mz = {cursorForces.mz.toFixed(1)} kN·m · Vz ={" "}
-                {cursorForces.vz.toFixed(1)} kN · N = {cursorForces.n.toFixed(1)} kN · T ={" "}
-                {cursorForces.t.toFixed(1)} kN·m
+            {(
+              [
+                ["My", "#1d4ed8", false],
+                ["Mz", "#06b6d4", false],
+                ["Vz", "#dc2626", false],
+                ["N", "#10b981", false],
+                ["T", "#f59e0b", false],
+              ] as const
+            ).map(([label, stroke]) => (
+              <span key={label} className="flex items-center gap-0.5 text-ink-secondary">
+                <span
+                  aria-hidden
+                  className="inline-block h-[2px] w-3 rounded"
+                  style={{ backgroundColor: stroke }}
+                />
+                {label}
+              </span>
+            ))}
+            {mRd !== null ? (
+              <span className="flex items-center gap-0.5 text-ink-secondary">
+                <span
+                  aria-hidden
+                  className="inline-block h-[2px] w-3 rounded"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(90deg, #dc2626 0 3px, transparent 3px 6px)",
+                  }}
+                />
+                ±M_Rd
               </span>
             ) : null}
           </div>
-        </div>
-        <div className="relative mt-1 min-h-0 flex-1" data-testid="forces-plot">
-          {/* v1.4.0: click/drag to scrub the station across the diagrams. */}
           <div
-            ref={plotRef}
-            className="cursor-crosshair"
-            data-testid="forces-plot-surface"
-            onPointerDown={(e) => {
-              e.currentTarget.setPointerCapture(e.pointerId);
-              scrubTo(e);
-            }}
-            onPointerMove={(e) => {
-              if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-                scrubTo(e);
-              }
-            }}
-          />
-          {/* Vertical cursor anchored to the uPlot plot area (§8.5). */}
-          <div
-            className="pointer-events-none absolute top-0 h-full w-px bg-accent"
-            style={{ left: `${cursorLeftPx}px` }}
-            data-testid="uplot-cursor"
-          />
+            className="flex shrink-0 items-center gap-0.5 rounded border border-hairline p-0.5"
+            data-testid="forces-view-switcher"
+          >
+            <button
+              type="button"
+              data-testid="forces-curves"
+              aria-pressed={!view3d}
+              className={`rounded px-1.5 py-0.5 text-[10px] ${
+                !view3d ? "bg-accent-tint font-semibold text-accent" : "text-ink-secondary"
+              }`}
+              onClick={() => onView3dChange(false)}
+            >
+              5 courbes
+            </button>
+            <button
+              type="button"
+              data-testid="force-diagrams-toggle"
+              aria-pressed={view3d}
+              aria-expanded={view3d}
+              className={`rounded px-1.5 py-0.5 text-[10px] ${
+                view3d ? "bg-accent-tint font-semibold text-accent" : "text-ink-secondary"
+              }`}
+              onClick={() => onView3dChange(true)}
+            >
+              <Trans>Enveloppes 3D</Trans>
+            </button>
+          </div>
         </div>
+        {view3d ? (
+          /* Enveloppes 3D: the ForceDiagrams3DPanel lives INSIDE the dock
+              (overflowing bottom bar removed in v2.1.1). */
+          <div className="mt-1 min-h-0 flex-1 overflow-auto" data-testid="force-diagrams-dock">
+            <ForceDiagrams3DPanel />
+          </div>
+        ) : (
+          <>
+            {/* Live cursor readouts at the scrubbed station. */}
+            <div
+              className="font-data mt-0.5 flex shrink-0 gap-2 text-[10px] text-ink-secondary"
+              data-testid="cursor-readouts"
+            >
+              {cursorForces !== null ? (
+                <span>
+                  My = {cursorForces.my.toFixed(1)} · Mz = {cursorForces.mz.toFixed(1)} kN·m · Vz ={" "}
+                  {cursorForces.vz.toFixed(1)} kN · N = {cursorForces.n.toFixed(1)} kN · T ={" "}
+                  {cursorForces.t.toFixed(1)} kN·m
+                </span>
+              ) : null}
+            </div>
+            <div className="relative mt-1 min-h-0 flex-1" data-testid="forces-plot">
+              {/* v1.4.0: click/drag to scrub the station across the diagrams. */}
+              <div
+                ref={plotRef}
+                className="cursor-crosshair"
+                data-testid="forces-plot-surface"
+                onPointerDown={(e) => {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  scrubTo(e);
+                }}
+                onPointerMove={(e) => {
+                  if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                    scrubTo(e);
+                  }
+                }}
+              />
+              {/* Vertical cursor anchored to the uPlot plot area (§8.5). */}
+              <div
+                className="pointer-events-none absolute top-0 h-full w-px bg-accent"
+                style={{ left: `${cursorLeftPx}px` }}
+                data-testid="uplot-cursor"
+              />
+            </div>
+          </>
+        )}
       </div>
-      {/* v2.0.1: the Optimiseur EC3 / Scénarios entries and the advanced
-          panels now live inside the right 340px diagnostic rail (ec3-rail)
-          — they no longer overlap the 220px uPlot dock. */}
     </section>
   );
 }

@@ -6,7 +6,27 @@ import { t } from "@lingui/core/macro";
 import { useProjectStore, type ProjectData } from "@/state/projectStore";
 import { downloadText } from "@/export/csvExport";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
-import { feaClient, type ParametricParamsInput } from "@/wasmBridge/workerClient";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxRoot,
+} from "@/components/ui/combobox";
+import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
+import {
+  ContinuousBeamIcon,
+  PortalFrameIcon,
+  WarrenTrussIcon,
+} from "@/components/icons/EngineeringIcons";
+import { feaClient, type SectionDims, type ParametricParamsInput } from "@/wasmBridge/workerClient";
 
 /**
  * Project gallery modal (mockups cran_7): saved models from IndexedDB
@@ -17,6 +37,14 @@ import { feaClient, type ParametricParamsInput } from "@/wasmBridge/workerClient
  * generator (`rdm-cad::parametric` through `generate_parametric_structure`)
  * with configurable Portée L / Hauteur H / Travées / Profilés, and the
  * modal doubles as the header project menu's `Exporter (.rdm)` surface.
+ *
+ * v2.1.2 (audit `519229b`): the 12 `ENGINEERING_TEMPLATES` `Charger`
+ * buttons now default the load direction to gravity `{ x: 0, y: 0, z: -1 }`
+ * (the old `{ x: 0, y: -1, z: 0 }` aimed loads sideways in the Z-up
+ * scene), confirm with a toast, and close the modal. Every picker is a
+ * Base UI Select / searchable Combobox (profile rows carry right-aligned
+ * kg/m + h mm metadata in JetBrains Mono), and the shell is a portal
+ * `DialogRoot` — zero raw overlays.
  */
 const GALLERY_KEY = "rdm-projects";
 
@@ -180,6 +208,26 @@ const PARAMETRIC_TEMPLATES = [
   { kind: "continue", label: "Poutre continue" },
 ];
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  WarrenTruss: "Treillis Warren",
+  PortalFrame: "Portique",
+  Cantilever: "Potence (cantilever)",
+  ContinuousBeam: "Poutre continue multi-travées",
+};
+
+const PROFILE_CHOICES = [
+  "IPE 140",
+  "IPE 160",
+  "IPE 200",
+  "IPE 240",
+  "IPE 300",
+  "HEA 180",
+  "HEA 200",
+  "HEA 240",
+  "CHS 114.3x6",
+  "RHS 120x80x6",
+] as const;
+
 export function ProjectGalleryModal({
   open,
   onClose,
@@ -202,11 +250,26 @@ export function ProjectGalleryModal({
   const [paramSection, setParamSection] = useState("IPE 200");
   const [paramSecondary, setParamSecondary] = useState("IPE 140");
   const [paramBusy, setParamBusy] = useState(false);
+  // v2.1.2: catalog outline dims for the profile Combobox metadata rows
+  // (kg/m from the exact area × 7 850 kg/m³, h in mm).
+  const [catalogDims, setCatalogDims] = useState<Map<string, SectionDims>>(new Map());
   useEffect(() => {
     if (!open) return;
     void get<GalleryEntry[]>(GALLERY_KEY).then((list) => setEntries(list ?? []));
+    void feaClient
+      .fetchCatalog()
+      .then((c) => setCatalogDims(new Map(c.sectionDims.map((d) => [d.designation, d]))))
+      .catch(() => undefined);
   }, [open]);
-  if (!open) return null;
+
+  /** Profile metadata row: mass (kg/m) + depth h (mm), right-aligned mono. */
+  const profileMeta = (designation: string): string => {
+    const dims = catalogDims.get(designation);
+    if (dims === undefined) return "";
+    const kgPerM = dims.a * 7850;
+    const hMm = dims.h !== null ? Math.round(dims.h * 1000) : null;
+    return `${kgPerM.toFixed(1).replace(".", ",")} kg/m${hMm !== null ? ` · h ${hMm}` : ""}`;
+  };
 
   /** v1.6.0: generate through the pure-Rust parametric engine. */
   const generateParametric = () => {
@@ -245,19 +308,26 @@ export function ProjectGalleryModal({
       .finally(() => setParamBusy(false));
   };
 
+  /** Template icon per parametric kind. */
+  const templateIcon = (kind: string) => {
+    if (kind === "warren" || kind === "WarrenTruss") return <WarrenTrussIcon size={22} />;
+    if (kind === "portique" || kind === "PortalFrame") return <PortalFrameIcon size={22} />;
+    if (kind === "continue" || kind === "ContinuousBeam") return <ContinuousBeamIcon size={22} />;
+    return <PortalFrameIcon size={22} />;
+  };
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-primary/20 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[90dvh] w-full max-w-lg overflow-auto rounded-lg border border-hairline bg-panel shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
-        onClick={(e) => e.stopPropagation()}
+    <DialogRoot open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
+      <DialogContent
+        className="max-h-[90dvh] w-[min(92vw,680px)] overflow-auto"
+        data-testid="project-gallery-modal"
       >
-        <div className="border-b border-hairline p-3">
-          <h2 className="text-[15px] font-semibold">Projets</h2>
-        </div>
-        <div className="p-3">
+        <DialogHeader>
+          <DialogTitle>
+            <Trans>Projets</Trans>
+          </DialogTitle>
+        </DialogHeader>
+        <div>
           {/* v1.6.0: parametric configurator (moteur Rust rdm-cad). */}
           <div
             className="rounded border border-accent-ring bg-accent-tint/60 p-2"
@@ -266,23 +336,52 @@ export function ProjectGalleryModal({
             <h3 className="flex items-center gap-1.5 text-[12px] font-semibold text-accent">
               <Trans>Générateur paramétrique (Rust)</Trans>
             </h3>
-            <div className="mt-2 grid grid-cols-[92px_1fr] items-center gap-x-2 gap-y-1.5">
+            <div className="mt-2 grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-1.5">
               <label className="text-[11px] text-ink-secondary" htmlFor="param-template">
                 <Trans>Gabarit</Trans>
               </label>
-              <select
+              <SelectRoot
                 id="param-template"
-                className="h-7 w-full rounded border border-hairline bg-panel px-1 text-[12px]"
                 value={paramTemplate}
-                onChange={(e) =>
-                  setParamTemplate(e.currentTarget.value as ParametricParamsInput["template"])
+                onValueChange={(next) =>
+                  setParamTemplate(next as ParametricParamsInput["template"])
                 }
               >
-                <option value="WarrenTruss">Treillis Warren</option>
-                <option value="PortalFrame">Portique</option>
-                <option value="Cantilever">Potence (cantilever)</option>
-                <option value="ContinuousBeam">Poutre continue multi-travées</option>
-              </select>
+                <SelectTrigger aria-label={t`Gabarit`} data-testid="param-template-select">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {templateIcon(paramTemplate)}
+                    <span className="min-w-0 truncate">
+                      {TEMPLATE_LABELS[paramTemplate] ?? paramTemplate}
+                    </span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="WarrenTruss">
+                    <span className="flex items-center gap-1.5">
+                      <WarrenTrussIcon size={16} />
+                      Treillis Warren
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="PortalFrame">
+                    <span className="flex items-center gap-1.5">
+                      <PortalFrameIcon size={16} />
+                      Portique
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="Cantilever">
+                    <span className="flex items-center gap-1.5">
+                      <PortalFrameIcon size={16} />
+                      Potence (cantilever)
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="ContinuousBeam">
+                    <span className="flex items-center gap-1.5">
+                      <ContinuousBeamIcon size={16} />
+                      Poutre continue multi-travées
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </SelectRoot>
               <label className="text-[11px] text-ink-secondary" htmlFor="param-span">
                 <Trans>Portée L (m)</Trans>
               </label>
@@ -329,35 +428,53 @@ export function ProjectGalleryModal({
               <label className="text-[11px] text-ink-secondary" htmlFor="param-primary">
                 <Trans>Profilé principal</Trans>
               </label>
-              <select
-                id="param-primary"
-                className="font-data h-7 w-full rounded border border-hairline bg-panel px-1 text-[12px]"
+              <ComboboxRoot
+                items={[...PROFILE_CHOICES]}
                 value={paramSection}
-                onChange={(e) => setParamSection(e.currentTarget.value)}
+                onValueChange={(next: string | null) => {
+                  if (next !== null) setParamSection(next);
+                }}
               >
-                {["IPE 140", "IPE 200", "IPE 240", "IPE 300", "HEA 180", "HEA 200", "HEA 240"].map(
-                  (d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ),
-                )}
-              </select>
+                <ComboboxInput id="param-primary" className="h-7" />
+                <ComboboxContent
+                  className="min-w-[300px]"
+                  renderItem={(designation: string) => (
+                    <ComboboxItem key={designation} value={designation}>
+                      <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
+                      <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
+                        {profileMeta(designation)}
+                      </span>
+                    </ComboboxItem>
+                  )}
+                >
+                  <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
+                </ComboboxContent>
+              </ComboboxRoot>
               <label className="text-[11px] text-ink-secondary" htmlFor="param-secondary">
                 <Trans>Profilé secondaire</Trans>
               </label>
-              <select
-                id="param-secondary"
-                className="font-data h-7 w-full rounded border border-hairline bg-panel px-1 text-[12px]"
+              <ComboboxRoot
+                items={[...PROFILE_CHOICES]}
                 value={paramSecondary}
-                onChange={(e) => setParamSecondary(e.currentTarget.value)}
+                onValueChange={(next: string | null) => {
+                  if (next !== null) setParamSecondary(next);
+                }}
               >
-                {["IPE 140", "IPE 160", "IPE 200", "CHS 114.3x6", "RHS 120x80x6"].map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                <ComboboxInput id="param-secondary" className="h-7" />
+                <ComboboxContent
+                  className="min-w-[300px]"
+                  renderItem={(designation: string) => (
+                    <ComboboxItem key={designation} value={designation}>
+                      <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
+                      <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
+                        {profileMeta(designation)}
+                      </span>
+                    </ComboboxItem>
+                  )}
+                >
+                  <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
+                </ComboboxContent>
+              </ComboboxRoot>
             </div>
             <button
               type="button"
@@ -399,9 +516,9 @@ export function ProjectGalleryModal({
             </button>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            {PARAMETRIC_TEMPLATES.map((t) => {
+            {PARAMETRIC_TEMPLATES.map((tpl) => {
               // v1.4.0: rich metadata cards (node/beam counts, span, tags).
-              const preview = buildTemplate(t.kind);
+              const preview = buildTemplate(tpl.kind);
               const nodeCount = preview.structure.nodes.length;
               const beamCount = preview.structure.beams.length;
               const xs = preview.structure.nodes.map((n) => n.x);
@@ -410,16 +527,19 @@ export function ProjectGalleryModal({
               const height = zs.length > 0 ? Math.max(...zs) - Math.min(...zs) : 0;
               return (
                 <button
-                  key={t.kind}
+                  key={tpl.kind}
                   type="button"
                   className="rounded border border-hairline p-2 text-left text-[12px] hover:border-accent hover:bg-accent-tint"
-                  data-testid={`gallery-${t.kind}`}
+                  data-testid={`gallery-${tpl.kind}`}
                   onClick={() => {
                     loadProject(preview);
                     onClose();
                   }}
                 >
-                  <span className="font-medium text-ink-primary">{t.label}</span>
+                  <span className="flex items-center gap-1.5 font-medium text-ink-primary">
+                    {templateIcon(tpl.kind)}
+                    {tpl.label}
+                  </span>
                   <span className="font-data mt-1 block text-[11px] text-ink-muted">
                     {nodeCount} nœuds · {beamCount} poutres · portée {span.toFixed(0)} m
                     {height > 0 ? ` · h ${height.toFixed(1)} m` : ""}
@@ -428,11 +548,13 @@ export function ProjectGalleryModal({
                 </button>
               );
             })}
-            {/* v2.0.0: the 12 validated engineering templates with "Pourquoi ce modèle" notes. */}
+            {/* v2.0.0: the 12 validated engineering templates with
+                "Pourquoi ce modèle" notes. v2.1.2 audit fix: gravity
+                direction { x: 0, y: 0, z: -1 }, onClose() + toast. */}
             {ENGINEERING_TEMPLATES.map((template) => (
-              <div key={template.id} className="rounded-lg border border-hairline p-3 ">
+              <div key={template.id} className="rounded-lg border border-hairline p-3">
                 <p className="text-sm font-semibold">{template.name}</p>
-                <p className="mt-1 text-xs italic text-ink-secondary ">
+                <p className="mt-1 text-xs italic text-ink-secondary">
                   « Pourquoi ce modèle » — {template.why}
                 </p>
                 <button
@@ -463,15 +585,24 @@ export function ProjectGalleryModal({
                         q_start: load.q_start ?? 0,
                         q_end: load.q_end ?? 0,
                         forces: { fx: 0, fy: 0, fz: load.fz ?? 0, mx: 0, my: 0, mz: 0 },
-                        direction: load.direction ?? { x: 0, y: -1, z: 0 },
+                        // v2.1.2 (audit 519229b): gravity is −Z in the
+                        // Z-up scene — the old { x: 0, y: -1, z: 0 } aimed
+                        // distributed loads sideways in 3D.
+                        direction: load.direction ?? { x: 0, y: 0, z: -1 },
                       })),
                       sections: {},
                       materials: {},
                       self_weight_enabled: false,
                     };
                     loadProject({ version: 2, name: template.name, structure });
+                    toast(t`Modèle chargé`, {
+                      description: t`${template.name} — ${structure.beams.length} poutre(s) prête(s) à calculer.`,
+                      duration: 4_000,
+                    });
+                    onClose();
                   }}
                   className="mt-2 w-full rounded bg-accent py-1 text-xs font-semibold text-white"
+                  data-testid={`gallery-engineering-${template.id}`}
                 >
                   Charger
                 </button>
@@ -520,7 +651,7 @@ export function ProjectGalleryModal({
             </ul>
           )}
         </div>
-        <div className="flex gap-2 border-t border-hairline p-3">
+        <div className="mt-3 flex gap-2 border-t border-hairline pt-3">
           <button
             type="button"
             className="flex-1 rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary"
@@ -549,7 +680,7 @@ export function ProjectGalleryModal({
             <Trans>Exporter (.rdm)</Trans>
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </DialogRoot>
   );
 }

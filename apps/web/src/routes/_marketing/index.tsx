@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import {
@@ -249,13 +249,17 @@ function buildFaq() {
 
 function HeroArt() {
   // Geometry SVG only (crisp vector linework — never an illustration):
-  // isometric portal frame with the thermal IPE emblem accent.
+  // a front-elevation portal frame whose girder carries a distributed
+  // load line with red point arrows landing cleanly ON the top flange,
+  // a subtle My bending-moment envelope under the girder and clean
+  // fixed (encastrement) / pinned (articulation) support symbols.
+  const loadXs = [110, 148, 186, 224, 262, 300];
   return (
     <svg
       viewBox="0 0 420 260"
       className="h-full w-full"
       role="img"
-      aria-label={t`Schéma isométrique d'un portique en profilés IPE`}
+      aria-label={t`Schéma structurel d'un portique chargé`}
     >
       <g stroke="#E2E8F0" strokeWidth="1">
         {[0, 1, 2, 3, 4].map((i) => (
@@ -265,27 +269,78 @@ function HeroArt() {
           <line key={`h${i}`} x1="30" y1={50 + i * 60} x2="390" y2={50 + i * 60} />
         ))}
       </g>
+      {/* Subtle My bending-moment envelope under the girder (analytical
+          overlay — cobalt linework, light fill, no interface palette). */}
+      <path
+        d="M110 86 C 152 126, 258 126, 300 86 L300 88 C 256 134, 154 134, 110 88 Z"
+        fill="#1D4ED8"
+        opacity="0.08"
+      />
+      <path
+        d="M110 86 C 152 126, 258 126, 300 86"
+        fill="none"
+        stroke="#1D4ED8"
+        strokeWidth="1.2"
+        strokeDasharray="4 3"
+        opacity="0.55"
+      />
+      <text x="152" y="146" fontSize="10" fill="#1D4ED8" className="font-data" opacity="0.8">
+        My
+      </text>
+      {/* Portal frame: two columns + the girder (top flange line). */}
       <g stroke="#1D4ED8" strokeWidth="3" fill="none" strokeLinecap="round">
-        <path d="M110 210 V110 L300 80 V210" />
-        <path d="M110 110 L110 80 L300 50 V80" strokeWidth="1.5" opacity="0.55" />
+        <path d="M110 210 V80 H300 V210" />
       </g>
-      <g fill="#0F172A">
-        <circle cx="110" cy="110" r="5" />
-        <circle cx="300" cy="80" r="5" />
-        <circle cx="110" cy="210" r="4" />
-        <circle cx="300" cy="210" r="4" />
-      </g>
-      <g fill="#1D4ED8">
-        <rect x="98" y="208" width="24" height="4" rx="1" />
-        <rect x="288" y="208" width="24" height="4" rx="1" />
-      </g>
+      {/* Distributed load line with the 6 red arrows landing on the
+          top flange (arrowheads touch y = 78, flange crown at 80). */}
       <g stroke="#DC2626" strokeWidth="1.5" fill="none">
-        <path d="M205 140 V170 M199 164 L205 170 L211 164" />
+        <line x1="106" y1="54" x2="304" y2="54" />
+        {loadXs.map((x) => (
+          <g key={x}>
+            <line x1={x} y1="54" x2={x} y2="76" />
+            <path d={`M${x - 4} 70 L${x} 78 L${x + 4} 70`} strokeLinejoin="round" />
+          </g>
+        ))}
+        <text x="316" y="50" fontSize="10" fill="#DC2626" stroke="none" className="font-data">
+          q
+        </text>
       </g>
-      <text x="205" y="190" textAnchor="middle" fontSize="10" fill="#475569" className="font-data">
+      {/* Point load Fz at midspan, landing on the top flange too. */}
+      <g stroke="#DC2626" strokeWidth="1.5" fill="none">
+        <path d="M205 30 V44 M201 38 L205 44 L209 38" strokeLinejoin="round" />
+      </g>
+      <text x="219" y="40" fontSize="10" fill="#DC2626" className="font-data">
         Fz
       </text>
-      <text x="110" y="236" textAnchor="middle" fontSize="10" fill="#94A3B8" className="font-data">
+      {/* Joint nodes (haunches + bases). */}
+      <g fill="#0F172A">
+        <circle cx="110" cy="80" r="4" />
+        <circle cx="300" cy="80" r="4" />
+        <circle cx="110" cy="210" r="3.5" />
+        <circle cx="300" cy="210" r="3.5" />
+      </g>
+      {/* Left support: encastrément (base plate + ground hatching). */}
+      <g>
+        <rect x="94" y="212" width="32" height="4" rx="1" fill="#1D4ED8" />
+        <g stroke="#94A3B8" strokeWidth="1">
+          <line x1="86" y1="222" x2="134" y2="222" />
+          {[88, 96, 104, 112, 120, 128].map((x) => (
+            <line key={x} x1={x} y1="222" x2={x - 5} y2="228" />
+          ))}
+        </g>
+      </g>
+      {/* Right support: articulation (pin triangle + ground hatching). */}
+      <g>
+        <path d="M292 220 L308 220 L300 212 Z" fill="#1D4ED8" />
+        <circle cx="300" cy="212" r="1.8" fill="#F8FAFC" />
+        <g stroke="#94A3B8" strokeWidth="1">
+          <line x1="286" y1="222" x2="314" y2="222" />
+          {[288, 296, 304, 312].map((x) => (
+            <line key={x} x1={x} y1="222" x2={x - 5} y2="228" />
+          ))}
+        </g>
+      </g>
+      <text x="110" y="244" textAnchor="middle" fontSize="10" fill="#94A3B8" className="font-data">
         18,0 m
       </text>
     </svg>
@@ -294,6 +349,23 @@ function HeroArt() {
 
 function LandingPage() {
   const [activeShowcase, setActiveShowcase] = useState(0);
+  // v2.1.1: hash navigation arriving from /legal (or a cold `/` load with
+  // #fonctionnalites / #tarifs) must land on the section — TanStack's
+  // hashScrollIntoView covers in-app Link clicks; this effect covers the
+  // mount-after-navigation case where the section mounts post-scroll.
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (pathname !== "/" || hash === "") {
+      return;
+    }
+    const id = hash.replace(/^#/, "");
+    const scroll = () => {
+      document.getElementById(id)?.scrollIntoView({ block: "start" });
+    };
+    scroll();
+    const raf = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(raf);
+  }, [pathname, hash]);
   // Built at render time so every Lingui literal resolves in the active
   // locale (module-level t`` would freeze the source strings).
   const showcaseItems = buildShowcase();
@@ -325,12 +397,14 @@ function LandingPage() {
                 <Trans>Ouvrir l'atelier 3D</Trans>
                 <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
               </Link>
-              <a
-                href="#tarifs"
+              <Link
+                to="/"
+                hash="tarifs"
+                hashScrollIntoView={true}
                 className="rounded border border-hairline px-4 py-2 text-[14px] font-semibold text-ink-secondary hover:border-accent hover:text-accent"
               >
                 <Trans>Voir les tarifs</Trans>
-              </a>
+              </Link>
             </div>
             {/* Live technical badges — JetBrains Mono, hairline pills. */}
             <ul className="font-data mt-6 flex flex-wrap gap-2 text-[11px] text-ink-secondary">

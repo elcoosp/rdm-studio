@@ -195,7 +195,8 @@ export type EngineFn =
   | "seismic_spectrum_json"
   | "export_bim"
   | "multi_material_check_json"
-  | "moving_loads_envelope_json";
+  | "moving_loads_envelope_json"
+  | "migrate_project_json";
 
 interface LanePending {
   resolve: (value: unknown) => void;
@@ -468,6 +469,11 @@ class FeaClient {
       };
       this.worker.postMessage({ type: "VALIDATION_SUITE" } satisfies WorkerRequest);
     });
+  }
+
+  /** v2.0.2: legacy v1 `.rdm` migration through the worker. */
+  migrateProjectJson(projectJson: string): Promise<string> {
+    return this.engineCall("migrate_project_json", projectJson) as Promise<string>;
   }
 
   /** v1.8.0/v1.9.0: named engine call over the generic lane.

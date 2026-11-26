@@ -16,6 +16,7 @@ import init, {
   import_dxf,
   member_calc_trace,
   multi_material_check_json,
+  migrate_project_json,
   moving_loads_envelope_json,
   modal_analysis,
   optimize_sections_json,
@@ -142,7 +143,8 @@ export interface EngineCallRequest {
     | "seismic_spectrum_json"
     | "export_bim"
     | "multi_material_check_json"
-    | "moving_loads_envelope_json";
+    | "moving_loads_envelope_json"
+    | "migrate_project_json";
   args: unknown[];
 }
 
@@ -346,6 +348,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           break;
         case "multi_material_check_json":
           result = multi_material_check_json(args[0] as string, JSON.stringify(args[1]));
+          break;
+        case "migrate_project_json":
+          result = migrate_project_json(args[0] as string);
           break;
         case "moving_loads_envelope_json":
           result = moving_loads_envelope_json(

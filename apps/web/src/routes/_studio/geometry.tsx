@@ -14,6 +14,22 @@ import { DesktopSplit } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
+import { Input } from "@/components/ui/input";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxRoot,
+} from "@/components/ui/combobox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
 import { FamilyPills, familyOfDesignation, type FamilyName } from "@/components/FamilyPills";
@@ -23,6 +39,8 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { quickStartProject } from "@/state/projectStore";
 import { parseUnitValue } from "@/modeling/cadTools";
 import {
+  MassWeightIcon,
+  NodePin,
   ProfileAngle,
   ProfileChs,
   ProfileHea,
@@ -30,17 +48,11 @@ import {
   ProfileRhs,
   ProfileUpn,
   ReleaseHinge,
+  SteelJointIcon,
   TorqueMoment,
 } from "@/components/icons/EngineeringIcons";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { CadImportDialog } from "@/components/CadImportDialog";
-import {
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxRoot,
-} from "@/components/ui/combobox";
 
 export const Route = createFileRoute("/_studio/geometry")({
   staticData: {
@@ -57,10 +69,14 @@ export const Route = createFileRoute("/_studio/geometry")({
 });
 
 /**
- * Step 1 (DESIGN.md §4 desktop + mockups tape_1, v1.6.0): locked `md+`
+ * Step 1 (DESIGN.md §4 desktop + mockups tape_1, v2.1.2): locked `md+`
  * workstation — 320px left inspector beside a full-height 3D viewport
  * (the PERSISTENT stage slot) with a collapsible bottom data dock. The
- * 3D canvas lives in `__root.tsx` and never remounts across Steps 1–4.
+ * 3D canvas lives in the `_studio` layout and never remounts across
+ * Steps 1–4. Every picker is a shadcn/Base UI primitive (Matériau =
+ * Select with engineering icons, N1/N2 + batch profile = searchable
+ * Combobox with right-aligned kg/m · h metadata), the release toggles
+ * are Base UI `Checkbox`es and the placement fields ride `Input`.
  */
 function GeometryPage() {
   const project = useProjectStore((s) => s.project);
@@ -74,6 +90,7 @@ function GeometryPage() {
   const loadProject = useProjectStore((s) => s.loadProject);
   const updateBeam = useProjectStore((s) => s.updateBeam);
   const [sections, setSections] = useState<SectionSummary[]>([]);
+  const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
   const [newSection, setNewSection] = useState("IPE 200");
   const [beamN1, setBeamN1] = useState<number | null>(null);
   const [beamN2, setBeamN2] = useState<number | null>(null);
@@ -101,6 +118,7 @@ function GeometryPage() {
   useEffect(() => {
     void feaClient.fetchCatalog().then((c) => {
       setSections(c.sections);
+      setSectionDims(new Map(c.sectionDims.map((d) => [d.designation, d])));
     });
   }, []);
 
@@ -118,6 +136,15 @@ function GeometryPage() {
       : ipeSections.filter((s) => familyOfDesignation(s.designation) === family);
   const selectedBeam = project.structure.beams.find((b) => b.id === beamId) ?? null;
   const nodeIds = project.structure.nodes.map((n) => n.id);
+
+  /** Profile metadata row: mass (kg/m) + depth h (mm), right-aligned mono. */
+  const profileMeta = (designation: string): string => {
+    const dims = sectionDims.get(designation);
+    if (dims === undefined) return "";
+    const kgPerM = dims.a * 7850;
+    const hMm = dims.h !== null ? Math.round(dims.h * 1000) : null;
+    return `${kgPerM.toFixed(1).replace(".", ",")} kg/m${hMm !== null ? ` · h ${hMm}` : ""}`;
+  };
 
   // Keep the connector defaults sensible as nodes come and go (v1.3.0
   // defect 2: default to the LAST two nodes that are not yet linked).
@@ -281,35 +308,56 @@ function GeometryPage() {
           <label className="text-xs font-medium text-ink-secondary" htmlFor="material-select">
             <Trans>Matériau</Trans>
           </label>
-          <select
+          <SelectRoot
             id="material-select"
-            className="h-8 w-full rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
             value={material}
-            onChange={(e) => {
-              const next = e.currentTarget.value;
+            onValueChange={(next) => {
+              if (next === null) return;
               setMaterial(next);
               if (selectedBeam !== null) {
                 updateBeam(selectedBeam.id, { material_id: next });
               }
             }}
           >
-            {["S235JR", "S355J2", "304L", "6061-T6"].map((m) => (
-              <option key={m} value={m}>
-                {m === "S235JR"
-                  ? "Acier S235JR"
-                  : m === "S355J2"
-                    ? "Acier S355J2"
-                    : m === "304L"
-                      ? "Inox 304L"
-                      : "Alu 6061-T6"}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger aria-label={t`Matériau`} data-testid="material-select">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <MaterialIcon material={material} />
+                <SelectValue />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="S235JR">
+                <span className="flex items-center gap-1.5">
+                  <SteelJointIcon size={16} />
+                  Acier S235JR
+                </span>
+              </SelectItem>
+              <SelectItem value="S355J2">
+                <span className="flex items-center gap-1.5">
+                  <SteelJointIcon size={16} />
+                  Acier S355J2
+                </span>
+              </SelectItem>
+              <SelectItem value="304L">
+                <span className="flex items-center gap-1.5">
+                  <SteelJointIcon size={16} />
+                  Inox 304L
+                </span>
+              </SelectItem>
+              <SelectItem value="6061-T6">
+                <span className="flex items-center gap-1.5">
+                  <MassWeightIcon size={16} />
+                  Alu 6061-T6
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </SelectRoot>
           <label className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
-            <ProfileIpe size={14} />
+            <ProfileIpe size={16} />
             <Trans>Profil (EN 10365)</Trans>
           </label>
-          {/* v1.6.0: family-accurate cross-section icons per designation. */}
+          {/* v1.6.0: family-accurate cross-section icons per designation,
+              v2.1.2: right-aligned kg/m · h metadata on every row. */}
           <ComboboxRoot
             items={familySections.map((s) => s.designation)}
             value={selectedBeam?.section_id ?? newSection}
@@ -323,10 +371,14 @@ function GeometryPage() {
           >
             <ComboboxInput id="section-search" className="h-8" />
             <ComboboxContent
+              className="min-w-[300px]"
               renderItem={(designation: string) => (
                 <ComboboxItem key={designation} value={designation}>
                   <ProfileFamilyIcon designation={designation} />
-                  <span className="font-data flex-1">{designation}</span>
+                  <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
+                  <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
+                    {profileMeta(designation)}
+                  </span>
                 </ComboboxItem>
               )}
             >
@@ -337,7 +389,8 @@ function GeometryPage() {
         <SectionCatalogRow designation={selectedBeam?.section_id ?? newSection} />
       </section>
 
-      {/* Bug 5: explicit N1 → N2 selection replaces the hardcoded demo pair. */}
+      {/* Bug 5: explicit N1 → N2 selection replaces the hardcoded demo pair.
+          v2.1.2: searchable Comboboxes with NodePin icons + coordinates. */}
       <section className="border-t border-hairline pt-3">
         <h3 className="text-xs font-medium text-ink-secondary">
           <Trans>Créer une poutre</Trans>
@@ -345,37 +398,25 @@ function GeometryPage() {
         <div className="mt-2 grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
           <span className="text-xs font-medium text-ink-secondary">Extrémités</span>
           <div className="flex items-center gap-2">
-            <select
-              aria-label="N1"
-              className="font-data h-8 w-full rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
-              value={beamN1 ?? ""}
-              onChange={(e) => {
+            <NodeCombobox
+              ariaLabel="N1"
+              nodes={project.structure.nodes}
+              value={beamN1}
+              onPick={(id) => {
                 userN1.current = true;
-                setBeamN1(Number(e.currentTarget.value));
+                setBeamN1(id);
               }}
-            >
-              {nodeIds.map((id) => (
-                <option key={id} value={id}>
-                  N{id}
-                </option>
-              ))}
-            </select>
+            />
             <span className="font-data text-[13px] text-ink-muted">→</span>
-            <select
-              aria-label="N2"
-              className="font-data h-8 w-full rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
-              value={beamN2 ?? ""}
-              onChange={(e) => {
+            <NodeCombobox
+              ariaLabel="N2"
+              nodes={project.structure.nodes}
+              value={beamN2}
+              onPick={(id) => {
                 userN2.current = true;
-                setBeamN2(Number(e.currentTarget.value));
+                setBeamN2(id);
               }}
-            >
-              {nodeIds.map((id) => (
-                <option key={id} value={id}>
-                  N{id}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         </div>
         <button
@@ -437,8 +478,8 @@ function GeometryPage() {
 
   const main = (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
-      {/* v1.6.0: the persistent stage slot — the ONE canvas in __root.tsx
-          overlays this pane, so orbit/zoom survive every step switch. */}
+      {/* v1.6.0: the persistent stage slot — the ONE canvas in the studio
+          layout overlays this pane, so orbit/zoom survive every step. */}
       {/* v2.0.1: the CAD toolbar docks as a flow row ABOVE the viewport
           slot — it can no longer overlap the app header, the in-stage
           layer toolbar or the Iso|XY|XZ|YZ camera presets. */}
@@ -504,12 +545,10 @@ function GeometryPage() {
             </p>
           </div>
         ) : null}
-        {/* v1.5.0 HUD corners: LayerToolbar (inside the persistent stage)
-            top-left and camera presets top-right; the profile legend owns
-            bottom-left and the hint bottom-center (z-30 > stage z-10). */}
+        {/* v2.1.2: HUD corners lifted above the 24px stage status bar. */}
         {sectionCounts.length > 0 && project.structure.nodes.length > 0 ? (
           <div
-            className="pointer-events-none absolute bottom-2 left-2 z-30 flex max-w-[62%] flex-wrap gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
+            className="pointer-events-none absolute bottom-8 left-2 z-30 flex max-w-[62%] flex-wrap gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
             data-testid="profile-legend"
           >
             {sectionCounts.map(([designation, count]) => (
@@ -523,10 +562,10 @@ function GeometryPage() {
           </div>
         ) : null}
         <p
-          className="pointer-events-none absolute bottom-2 left-1/2 z-30 hidden -translate-x-1/2 font-data text-[10px] text-ink-muted md:block"
+          className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 font-data text-[10px] text-ink-muted md:block"
           data-testid="viewport-hint"
         >
-          Clic G Sélection · Clic D Orbite · Maj+Glisser Pan · Suppr Effacer
+          Clic G Sélection · Clic D Orbite · Maj+Glisser Pan · Clic D Nœud Menu · Suppr Effacer
         </p>
       </div>
       {/* Route render inputs for the shared stage geometry. */}
@@ -585,25 +624,89 @@ function GeometryPage() {
   return <DesktopSplit inspector={inspector} main={main} />;
 }
 
+/** Material-family icon for the Matériau Select trigger rows. */
+function MaterialIcon({ material }: { material: string }): React.ReactElement {
+  if (material === "6061-T6") {
+    return <MassWeightIcon size={16} />;
+  }
+  if (material === "304L") {
+    return <SteelJointIcon size={16} />;
+  }
+  return <SteelJointIcon size={16} />;
+}
+
+/**
+ * Searchable node picker (v2.1.2): a Base UI Combobox whose rows carry the
+ * `NodePin` icon, the node id and its (x, y, z) coordinates — replacing
+ * the raw `<select aria-label="N1">` (zero raw selects anywhere).
+ */
+function NodeCombobox({
+  ariaLabel,
+  nodes,
+  value,
+  onPick,
+}: {
+  ariaLabel: string;
+  nodes: NodeData[];
+  value: number | null;
+  onPick: (id: number) => void;
+}) {
+  const selected = nodes.find((n) => n.id === value);
+  return (
+    <ComboboxRoot
+      items={nodes.map((n) => n.id)}
+      value={value ?? null}
+      onValueChange={(next: number | null) => {
+        if (next !== null) onPick(next);
+      }}
+      itemToStringValue={(id: number) => `N${id}`}
+    >
+      <ComboboxInput
+        aria-label={ariaLabel}
+        className="h-8"
+        placeholder={selected !== undefined ? `N${selected.id}` : "N…"}
+      />
+      <ComboboxContent
+        renderItem={(id: number) => {
+          const node = nodes.find((n) => n.id === id);
+          return (
+            <ComboboxItem key={id} value={id}>
+              <NodePin size={16} />
+              <span className="font-data flex-1">
+                N{id}
+                {node !== undefined
+                  ? ` · (${node.x.toFixed(2)} ; ${node.y.toFixed(2)} ; ${node.z.toFixed(2)})`
+                  : ""}
+              </span>
+            </ComboboxItem>
+          );
+        }}
+      >
+        <ComboboxEmpty>Aucun nœud</ComboboxEmpty>
+      </ComboboxContent>
+    </ComboboxRoot>
+  );
+}
+
 /** Family-accurate profile icon (EN 10365 / 10210 / 10056 designations). */
 export function ProfileFamilyIcon({ designation }: { designation: string }) {
   const d = designation.toUpperCase();
   if (d.startsWith("HE")) {
-    return <ProfileHea size={14} />;
+    return <ProfileHea size={16} />;
   }
   if (d.startsWith("UP") || d.startsWith("UPE")) {
-    return <ProfileUpn size={14} />;
+    return <ProfileUpn size={16} />;
   }
   if (d.startsWith("CHS")) {
-    return <ProfileChs size={14} />;
+    return <ProfileChs size={16} />;
   }
   if (d.startsWith("RHS") || d.startsWith("SHS")) {
-    return <ProfileRhs size={14} />;
+    return <ProfileRhs size={16} />;
   }
   if (d.startsWith("L ") || d.includes("ANGLE")) {
-    return <ProfileAngle size={14} />;
+    return <ProfileAngle size={16} />;
   }
-  return <ProfileIpe size={14} />;
+  return <ProfileIpe size={16} />;
 }
 
 /**
@@ -738,7 +841,7 @@ function UnitCoordinateField({
   return (
     <label className="flex items-center gap-1 text-[11px] text-ink-muted">
       <span className="font-data shrink-0">{axis} (m)</span>
-      <input
+      <Input
         inputMode="decimal"
         aria-label={`Placement ${axis} (m)`}
         placeholder={axis}
@@ -749,7 +852,7 @@ function UnitCoordinateField({
           onValue(parseUnitValue(raw));
         }}
         onBlur={() => setDraft(null)}
-        className="font-data h-6 w-16 rounded border border-hairline bg-panel px-1 text-[12px] text-ink-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-ring"
+        className="h-6 w-16 px-1 text-[12px]"
       />
     </label>
   );
@@ -871,6 +974,7 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
       },
     ];
   }, [removeBeam, storeNodes]);
+  const batchProfiles = useMemo(() => Array.from(new Set(beams.map((b) => b.section_id))), [beams]);
   return (
     <>
       <DataTable<BeamData>
@@ -929,24 +1033,26 @@ function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void 
             );
           })()}
           <div className="mt-1 flex gap-2">
-            <select
-              aria-label="batch section"
-              className="font-data h-8 w-full rounded-[4px] border border-hairline bg-panel px-1 text-[12px]"
-              onChange={(e) => {
-                batchUpdateBeams(selectedBeamIds, { section_id: e.currentTarget.value });
+            {/* v2.1.2: batch section picker as a Select (zero raw selects). */}
+            <SelectRoot
+              value=""
+              onValueChange={(next) => {
+                if (next === null || next === "") return;
+                batchUpdateBeams(selectedBeamIds, { section_id: next });
                 useProjectStore.getState().clearBeamSelection();
               }}
-              defaultValue=""
             >
-              <option value="" disabled>
-                Profil…
-              </option>
-              {Array.from(new Set(beams.map((b) => b.section_id))).map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger aria-label="batch section" className="h-8 text-[12px]">
+                <SelectValue placeholder="Profil…" />
+              </SelectTrigger>
+              <SelectContent>
+                {batchProfiles.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </SelectRoot>
             <button
               type="button"
               className="rounded border border-hairline px-2 text-[12px] text-ink-secondary"
@@ -1027,7 +1133,7 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
           updateBeam(beam.id, { releases_start: next, releases_end: next });
         }}
       >
-        <ReleaseHinge size={14} />
+        <ReleaseHinge size={16} />
         <Trans>Barre de treillis (articuler N1/N2)</Trans>
       </button>
       {/* v1.6.0: subdivide the member into N collinear tronçons. */}
@@ -1036,7 +1142,7 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
         data-testid="subdivide-panel"
       >
         <span className="flex items-center gap-1.5 text-[12px] text-ink-secondary">
-          <TorqueMoment size={14} />
+          <TorqueMoment size={16} />
           <Trans>Subdiviser en N tronçons</Trans>
         </span>
         <NumberFieldRoot
@@ -1075,14 +1181,15 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
               {releaseLabels.map((label, i) => (
                 <label key={label} className="font-data flex flex-col items-center text-[10px]">
                   {label}
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={beam[side][i] ?? false}
-                    onChange={(e) => {
+                    onCheckedChange={(checked) => {
                       const next = [...beam[side]];
-                      next[i] = e.currentTarget.checked;
+                      next[i] = checked === true;
                       updateBeam(beam.id, { [side]: next });
                     }}
+                    aria-label={`${side === "releases_start" ? "N1" : "N2"} ${label}`}
+                    className="mt-0.5"
                   />
                 </label>
               ))}

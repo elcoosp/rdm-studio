@@ -1,0 +1,54 @@
+# RDM Studio documentation glossary (term-glossary plugin).
+# Flat line format parsed by @elcoosp/docs-toolkit: `- term: X` starts an
+# entry; `definition`, `href` and `locale` lines complete it. Terms are
+# auto-linked when they appear verbatim in prose of the matching locale.
+
+- term: Cholesky
+  definition: Sparse symmetric factorization LDLᵀ used to solve the global stiffness system [Ke + Kg(N)]·u = F in under 20 ms.
+  href: /explanation/solver-architecture/
+  locale: en
+
+- term: CalcTrace
+  definition: The step-by-step Eurocode verification tree where every clause unfolds into KaTeX formulas with its normative source.
+  href: /guides/ec3-check-and-optimizer/
+  locale: en
+
+- term: P-Δ
+  definition: Second-order geometric effect accounted for by adding the geometric stiffness [Kg(N)] to the elastic stiffness before factorization.
+  href: /explanation/solver-architecture/
+  locale: en
+
+- term: Timoshenko
+  definition: Beam theory including shear deformation — the 12-DOF 3D element used by the RDM Studio solver.
+  href: /explanation/solver-architecture/
+  locale: en
+
+- term: Diataxis
+  definition: Documentation framework separating tutorials, how-to guides, reference and explanation.
+  href: /
+  locale: en
+
+- term: Cholesky
+  definition: Factorisation symétrique creuse LDLᵀ qui résout le système de rigidité global [Ke + Kg(N)]·u = F en moins de 20 ms.
+  href: /fr/explanation/solver-architecture/
+  locale: fr
+
+- term: CalcTrace
+  definition: Arbre de vérification Eurocode pas-à-pas où chaque clause se déplie en formules KaTeX avec sa source normative.
+  href: /fr/guides/ec3-check-and-optimizer/
+  locale: fr
+
+- term: P-Δ
+  definition: Effet géométrique du second ordre pris en compte en ajoutant la raideur géométrique [Kg(N)] à la raideur élastique avant factorisation.
+  href: /fr/explanation/solver-architecture/
+  locale: fr
+
+- term: Timoshenko
+  definition: Théorie de poutre incluant le cisaillement — l'élément 3D 12 DDL utilisé par le solveur RDM Studio.
+  href: /fr/explanation/solver-architecture/
+  locale: fr
+
+- term: Diataxis
+  definition: Cadre de documentation séparant tutoriels, guides pratiques, référence et explication.
+  href: /fr/
+  locale: fr

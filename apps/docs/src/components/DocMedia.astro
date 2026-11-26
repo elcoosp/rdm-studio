@@ -1,0 +1,84 @@
+---
+/**
+ * DocMedia — structured media slot for every RDM Studio documentation page.
+ *
+ * Renders a `<figure>` with either:
+ *  1. the real captured screenshot / GIF at `/media/<id>.png` (or `.gif`),
+ *     when the file already exists in `public/media/` at build time, or
+ *  2. the Stitch technical illustration declared as `fallback` in
+ *     `apps/docs/media-manifest.json` today.
+ *
+ * The next automated capture session (Session 21) walks
+ * `media-manifest.json`, drives the routes in each item's `capture` block
+ * through Playwright, writes `public/media/<id>.png|gif`, and every page
+ * swaps to the real capture WITHOUT editing any MDX prose.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  /** Stable media id — must exist in apps/docs/media-manifest.json. */
+  id: string;
+  /** `screenshot` resolves to /media/<id>.png, `gif` to /media/<id>.gif. */
+  type?: 'screenshot' | 'gif';
+  /** Accessible description (overrides the manifest alt when given). */
+  alt?: string;
+  /** Visible caption (overrides the manifest caption when given). */
+  caption?: string;
+  /** Explicit fallback override (otherwise the manifest fallback). */
+  fallback?: string;
+}
+
+const manifestPath = path.resolve(process.cwd(), 'media-manifest.json');
+let manifest: { items?: Array<Record<string, unknown>> } = {};
+try {
+  manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+} catch {
+  manifest = {};
+}
+
+const { id, type, alt, caption, fallback } = Astro.props;
+const entry = (manifest.items ?? []).find((item) => item['id'] === id);
+if (entry === undefined) {
+  throw new Error(`[DocMedia] id "${id}" is not declared in media-manifest.json`);
+}
+
+const resolvedType = (type ?? entry['type'] ?? 'screenshot') as 'screenshot' | 'gif';
+const ext = resolvedType === 'gif' ? '.gif' : '.png';
+const captureCandidates = [`/media/${id}${ext}`, `/media/${id}.png`];
+const mediaDir = path.resolve(process.cwd(), 'public/media');
+let src = (fallback ?? (entry['fallback'] as string | undefined)) as string;
+for (const candidate of captureCandidates) {
+  const file = path.join(mediaDir, path.basename(candidate));
+  if (fs.existsSync(file) && fs.statSync(file).size > 0) {
+    src = candidate;
+    break;
+  }
+}
+
+const resolvedAlt = (alt ?? (entry['alt'] as string | undefined)) as string;
+const resolvedCaption = (caption ?? (entry['caption'] as string | undefined)) as string | undefined;
+---
+
+<figure class="doc-media not-content">
+  <img src={src} alt={resolvedAlt} loading="lazy" decoding="async" width="1200" height="750" />
+  {resolvedCaption !== undefined && <figcaption>{resolvedCaption}</figcaption>}
+</figure>
+
+<style>
+  .doc-media {
+    margin-block: 1.5rem;
+  }
+  .doc-media img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.5rem;
+    background: var(--sl-color-bg);
+  }
+  .doc-media figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--sl-color-gray-60);
+  }
+</style>

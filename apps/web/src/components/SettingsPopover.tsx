@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { SlidersHorizontal } from "lucide-react";
+import { Settings2 } from "lucide-react";
+import { PopoverContent, PopoverRoot, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { useProjectStore, type ModelSettingsData } from "../state/projectStore";
 
 /**
- * Header settings popover (v1.7.0/v1.8.0): National Annex, EN 1990
- * combination method, Timoshenko shear, 2D plane-frame mode and the
- * v2.0.1 P-Δ second-order toggle — all schema-v2 fields of the `.rdm`
- * settings block.
+ * Header settings popover (v2.1.2, audit `519229b` fix): migrated onto the
+ * Base UI `<PopoverRoot> / <PopoverTrigger> / <PopoverContent>` portal
+ * primitive + `<Switch />` toggles — the old absolutely-positioned
+ * `role="dialog"` div was CLIPPED invisible behind the `<header>`; the
+ * portal now opens reliably above the 3D stage. Schema-v2 fields:
+ * National Annex, EN 1990 combination method, Timoshenko shear, 2D plane
+ * frame and the P-Δ second-order toggle.
  */
 
 /**
@@ -56,97 +61,94 @@ export function SettingsPopover(): React.ReactElement {
   const annexes: ModelSettingsData["national_annex"][] = ["FR", "BE", "DE", "UK", "EN"];
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
+    <PopoverRoot open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
         aria-label={t`Réglages`}
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 rounded-md border border-hairline px-1.5 py-1 text-[12px] font-medium text-ink-secondary hover:bg-panel-subtle xl:px-3 xl:py-1.5 xl:text-sm"
+        title={t`Réglages normatifs`}
+        className="flex h-7 items-center gap-1 rounded-[4px] border border-hairline bg-panel px-2 text-[12px] font-medium text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
       >
-        <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
+        <Settings2 size={14} strokeWidth={1.5} aria-hidden />
         <span className="hidden xl:inline">
           <Trans>Réglages</Trans>
         </span>
-      </button>
-      {open ? (
-        <div
-          role="dialog"
-          aria-label={t`Normative settings`}
-          className="absolute right-0 z-50 mt-2 w-72 rounded-lg border border-hairline bg-panel p-4 shadow-lg"
-        >
-          <p className="mb-2 text-sm font-semibold">
-            <Trans>Annexe nationale</Trans>
-          </p>
-          <div className="mb-3 flex flex-wrap gap-1">
-            {annexes.map((annex) => (
-              <button
-                key={annex}
-                type="button"
-                onClick={() => updateSettings({ national_annex: annex })}
-                className={`rounded px-2 py-1 text-xs font-semibold ${
-                  nationalAnnex === annex
-                    ? "bg-accent text-white"
-                    : "bg-panel-subtle text-ink-secondary hover:bg-accent-tint hover:text-accent"
-                }`}
-              >
-                {annex}
-              </button>
-            ))}
-          </div>
-          <p className="mb-2 text-sm font-semibold">
-            <Trans>Combinaisons EN 1990</Trans>
-          </p>
-          <div className="mb-3 flex gap-1">
+      </PopoverTrigger>
+      <PopoverContent
+        aria-label={t`Normative settings`}
+        data-testid="settings-popover"
+        className="w-80 p-4"
+        align="end"
+      >
+        <p className="mb-2 text-sm font-semibold">
+          <Trans>Annexe nationale</Trans>
+        </p>
+        <div className="mb-3 flex flex-wrap gap-1">
+          {annexes.map((annex) => (
             <button
+              key={annex}
               type="button"
-              onClick={() => updateSettings({ combination_method: "Eq610" })}
-              className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
-                combinationMethod === "Eq610" ? "bg-accent text-white" : "bg-panel-subtle"
+              onClick={() => updateSettings({ national_annex: annex })}
+              className={`rounded px-2 py-1 text-xs font-semibold ${
+                nationalAnnex === annex
+                  ? "bg-accent text-white"
+                  : "bg-panel-subtle text-ink-secondary hover:bg-accent-tint hover:text-accent"
               }`}
             >
-              6.10
+              {annex}
             </button>
-            <button
-              type="button"
-              onClick={() => updateSettings({ combination_method: "Eq610ab" })}
-              className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
-                combinationMethod === "Eq610ab" ? "bg-accent text-white" : "bg-panel-subtle"
-              }`}
-            >
-              6.10a/b
-            </button>
-          </div>
-          <label className="mb-2 flex items-center justify-between text-sm">
-            <Trans>Cisaillement Timoshenko</Trans>
-            <input
-              type="checkbox"
-              checked={shearDeformation}
-              onChange={(e) => updateSettings({ shear_deformation: e.target.checked })}
-            />
-          </label>
-          <label className="mb-2 flex items-center justify-between text-sm">
-            <Trans>Plan 2D (Uy/Rx/Rz bloqués)</Trans>
-            <input
-              type="checkbox"
-              checked={planeFrame2d}
-              onChange={(e) => updateSettings({ plane_frame_2d: e.target.checked })}
-            />
-          </label>
-          <label
-            className="flex items-center justify-between text-sm"
-            data-testid="settings-p-delta"
-          >
-            <Trans>P-Δ (second ordre)</Trans>
-            <input
-              type="checkbox"
-              checked={pDelta}
-              onChange={(e) => updateSettings({ p_delta: e.target.checked })}
-            />
-          </label>
+          ))}
         </div>
-      ) : null}
-    </div>
+        <p className="mb-2 text-sm font-semibold">
+          <Trans>Combinaisons EN 1990</Trans>
+        </p>
+        <div className="mb-3 flex gap-1">
+          <button
+            type="button"
+            onClick={() => updateSettings({ combination_method: "Eq610" })}
+            className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
+              combinationMethod === "Eq610" ? "bg-accent text-white" : "bg-panel-subtle"
+            }`}
+          >
+            6.10
+          </button>
+          <button
+            type="button"
+            onClick={() => updateSettings({ combination_method: "Eq610ab" })}
+            className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
+              combinationMethod === "Eq610ab" ? "bg-accent text-white" : "bg-panel-subtle"
+            }`}
+          >
+            6.10a/b
+          </button>
+        </div>
+        <label className="mb-2 flex items-center justify-between gap-2 text-sm">
+          <Trans>Cisaillement Timoshenko</Trans>
+          <Switch
+            checked={shearDeformation}
+            onCheckedChange={(checked) => updateSettings({ shear_deformation: checked })}
+            aria-label={t`Cisaillement Timoshenko`}
+          />
+        </label>
+        <label className="mb-2 flex items-center justify-between gap-2 text-sm">
+          <Trans>Plan 2D (Uy/Rx/Rz bloqués)</Trans>
+          <Switch
+            checked={planeFrame2d}
+            onCheckedChange={(checked) => updateSettings({ plane_frame_2d: checked })}
+            aria-label={t`Plan 2D (Uy/Rx/Rz bloqués)`}
+          />
+        </label>
+        <label
+          className="flex items-center justify-between gap-2 text-sm"
+          data-testid="settings-p-delta"
+        >
+          <Trans>P-Δ (second ordre)</Trans>
+          <Switch
+            checked={pDelta}
+            onCheckedChange={(checked) => updateSettings({ p_delta: checked })}
+            aria-label={t`P-Δ (second ordre)`}
+            data-testid="settings-p-delta-switch"
+          />
+        </label>
+      </PopoverContent>
+    </PopoverRoot>
   );
 }

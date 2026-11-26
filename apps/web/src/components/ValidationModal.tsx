@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { t } from "@lingui/core/macro";
 import { X } from "lucide-react";
+import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import { feaClient, type BenchResultDto } from "../wasmBridge/workerClient";
 
 /**
@@ -87,32 +88,28 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
   const passed = results?.filter((r) => r.passed).length ?? 0;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t`Validation suite`}
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-xl bg-panel p-6 shadow-2xl "
-        onClick={(e) => e.stopPropagation()}
+    <DialogRoot open onOpenChange={(next) => (next ? undefined : onClose())}>
+      <DialogContent
+        className="max-h-[80vh] w-[min(92vw,768px)] overflow-auto"
+        data-testid="validation-modal"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">
-            <Trans>Validation — 41 benchmarks analytiques</Trans>
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t`Fermer`}
-            className="flex h-7 w-7 items-center justify-center rounded text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
-          >
-            {/* 22fd9fa audit: the raw `×` glyph is replaced by the standard
-                18px Lucide close icon (strokeWidth 1.5). */}
-            <X size={18} strokeWidth={1.5} aria-hidden />
-          </button>
-        </div>
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              <Trans>Validation — 41 benchmarks analytiques</Trans>
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t`Fermer`}
+              className="flex h-7 w-7 items-center justify-center rounded text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
+            >
+              {/* 22fd9fa audit: the raw `×` glyph is replaced by the
+                  standard 18px Lucide close icon (strokeWidth 1.5). */}
+              <X size={18} strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
+        </DialogHeader>
         <p className="mb-4 text-sm text-ink-secondary " aria-live="polite">
           {results === null ? (
             <Trans>Exécution en cours…</Trans>
@@ -164,7 +161,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </DialogRoot>
   );
 }

@@ -1752,7 +1752,13 @@ pub fn generate_env_loads_json(
         ),
         _ => return fault_js("InvalidModel", format!("unknown EN 1991 kind {kind}")),
     };
-    serde_wasm_bindgen::to_value(&vec![load]).map_err(Into::into)
+    // v2.1.1: serialize through serde_json as a STRING — serde_wasm_bindgen
+    // cannot represent the internally-tagged flattened `Load` enum and used
+    // to hand back `[{}]`, poisoning the model with case-less loads.
+    match serde_json::to_string(&vec![load]) {
+        Ok(json) => Ok(JsValue::from_str(&json)),
+        Err(e) => fault_js("InvalidModel", format!("serialize loads: {e}")),
+    }
 }
 
 /// v1.8.0: iterative EC3 section optimizer over the catalog-like

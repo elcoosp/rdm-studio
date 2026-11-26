@@ -184,8 +184,9 @@ test.describe("v1.6.0 — parametric & metrology", () => {
     await page.locator("table tbody tr").first().click();
     await page.getByTestId("preset-rotule").first().click();
     await expect(page.getByTestId("support-row-1")).toContainText("Ux");
-    // Expandable élastique section with the 6 spring fields.
-    await page.locator('[data-testid="spring-section"] summary').click();
+    // v2.1.2: the élastique section is an ExpandablePanel — click its
+    // trigger button (the <summary> element is gone).
+    await page.locator('[data-testid="spring-section"] button').first().click();
     await expect(page.locator('[data-testid="spring-fields-1"]')).toBeVisible();
     await page.getByTestId("apply-springs-1").click();
     await expect(page.getByTestId("support-row-1")).toContainText("élastique");
@@ -265,8 +266,8 @@ test.describe("v1.6.0 — layout matrix (AGENTS.md §4)", () => {
       // FR | EN always visible (locale switch inside the viewport).
       // v2.1.1: exact match (substring mode collided) + auto-waiting —
       // a bare isVisible() raced React hydration on cold loads.
-      await expect(page.getByRole("button", { name: "FR", exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: "EN", exact: true })).toBeVisible();
+      await expect(page.getByRole("radio", { name: "FR", exact: true })).toBeVisible();
+      await expect(page.getByRole("radio", { name: "EN", exact: true })).toBeVisible();
       // No page-level horizontal scroll.
       const bodyOverflow = await page.evaluate(
         () => document.body.scrollWidth - document.body.clientWidth,

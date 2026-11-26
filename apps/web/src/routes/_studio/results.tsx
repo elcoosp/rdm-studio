@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import * as v from "valibot";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "@lingui/react/macro";
+import { t } from "@lingui/core/macro";
 import { ResultsFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useSelectedIds, useUpdateSearch, useViewportParams } from "@/hooks/useStudioQuery";
-import { IconPlay, IconResults } from "@/components/icons";
+import { IconResults } from "@/components/icons";
 import { BottomSheet } from "@/components/BottomSheet";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -12,7 +13,13 @@ import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import { computeModelMassKg, nextHeavierProfile } from "@/lib/resultsMath";
 import { NumberFlowValue } from "@/components/NumberFlowValue";
-import { SectionCut, DeflectionLimit, ModalVibration } from "@/components/icons/EngineeringIcons";
+import {
+  LoadCombination,
+  ModalVibration,
+  SectionCut,
+  DeflectionLimit,
+  BeamSegment,
+} from "@/components/icons/EngineeringIcons";
 import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/workerClient";
 import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -31,6 +38,21 @@ import { AdvancedPanels } from "@/components/AdvancedPanels";
 import { ScenarioCompareModal } from "@/components/ScenarioCompareModal";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { spectrumColor } from "@/viewport3d/BeamMeshes";
+import { LoadingButton, SegmentedControl, SliderDetents, StatusBadge } from "@/components/interior";
+import {
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxRoot,
+} from "@/components/ui/combobox";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_studio/results")({
   staticData: {
@@ -211,6 +233,22 @@ function ResultsPage() {
     }
   }, [project.structure.beams, cutting, setCutting]);
 
+  // v2.1.2: registered items (value → label) so the closed Select trigger
+  // shows the human combination label instead of the raw `SLS:0` key.
+  const comboItems = useMemo(() => {
+    const items = combinations.map((c, i) => ({
+      value: `${c.kind}:${i}`,
+      label: c.label,
+    }));
+    for (const m of (modal?.modes ?? []).slice(0, 6)) {
+      items.push({
+        value: `MODE:${m.mode_index - 1}`,
+        label: `Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`,
+      });
+    }
+    return items;
+  }, [combinations, modal]);
+
   const uls = combinations.find((c) => c.kind === "ULS");
   const sls = combinations.find((c) => c.kind === "SLS");
   const maxUls = uls !== undefined ? uls.beams.reduce((m, b) => Math.max(m, b.utilization), 0) : 0;
@@ -359,43 +397,73 @@ function ResultsPage() {
           <Trans>Résultats de calcul</Trans>
         </h2>
         <div className="flex items-center gap-2">
-          {/* v1.6.0: SLS deflection limit selector (L/200 | L/250 | L/300). */}
-          <span
-            className="flex items-center gap-0.5 rounded border border-hairline bg-panel p-0.5"
+          {/* v2.1.2: SLS deflection limit as a SegmentedControl (shared
+              spring pill) — L/200 | L/250 | L/300 with contract test ids. */}
+          <div
             data-testid="sls-limit-selector"
+            className="flex shrink-0 items-center rounded-[6px] border border-hairline bg-panel p-0.5"
           >
-            {SLS_LIMITS.map(([denominator, label]) => (
-              <button
-                key={denominator}
-                type="button"
-                data-testid={`sls-limit-${denominator}`}
-                className={`font-data rounded px-1.5 py-0.5 text-[10px] ${slsDenominator === denominator ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-                onClick={() => setSlsDenominator(denominator)}
-              >
-                {label}
-              </button>
-            ))}
-          </span>
+            <SegmentedControl
+              size="sm"
+              label={t`Limite de flèche ELS`}
+              value={String(slsDenominator)}
+              onValueChange={(next) => setSlsDenominator(Number(next) as 200 | 250 | 300)}
+              options={SLS_LIMITS.map(([denominator, label]) => ({
+                value: String(denominator),
+                label,
+                testId: `sls-limit-${denominator}`,
+              }))}
+            />
+          </div>
 
-          <select
-            className="font-data h-7 rounded border border-hairline bg-panel px-1 text-[11px]"
-            data-testid="combination-selector"
+          {/* v2.1.2: combination + eigenmode selector as a Base UI Select
+              (LoadCombination / ModalVibration icons) — zero raw selects. */}
+          <SelectRoot
+            items={comboItems}
             value={viewKey}
-            onChange={(e) => setViewKey(e.currentTarget.value)}
+            onValueChange={(next) => {
+              if (next !== null) setViewKey(next);
+            }}
           >
-            {combinations.map((c, i) => (
-              <option key={`${c.kind}:${i}`} value={`${c.kind}:${i}`}>
-                {c.label}
-              </option>
-            ))}
-            {modal !== null
-              ? (modal.modes ?? []).slice(0, 6).map((m) => (
-                  <option key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
-                    {`Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`}
-                  </option>
-                ))
-              : null}
-          </select>
+            <SelectTrigger
+              className="h-7 w-56 gap-1 font-data text-[11px]"
+              data-testid="combination-selector"
+              aria-label={t`Combinaison affichée`}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                {viewKey.startsWith("MODE") ? (
+                  <ModalVibration size={14} />
+                ) : (
+                  <LoadCombination size={14} />
+                )}
+                {/* Deterministic label (Base UI SelectValue falls back to
+                    the raw value when the popup is unopened). */}
+                <span className="min-w-0 truncate font-data">
+                  {comboItems.find((item) => item.value === viewKey)?.label ?? viewKey}
+                </span>
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              {combinations.map((c, i) => (
+                <SelectItem key={`${c.kind}:${i}`} value={`${c.kind}:${i}`}>
+                  <span className="flex items-center gap-1.5">
+                    <LoadCombination size={14} />
+                    {c.label}
+                  </span>
+                </SelectItem>
+              ))}
+              {modal !== null
+                ? (modal.modes ?? []).slice(0, 6).map((m) => (
+                    <SelectItem key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
+                      <span className="flex items-center gap-1.5">
+                        <ModalVibration size={14} />
+                        {`Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`}
+                      </span>
+                    </SelectItem>
+                  ))
+                : null}
+            </SelectContent>
+          </SelectRoot>
           {isModeView ? (
             <button
               type="button"
@@ -406,29 +474,23 @@ function ResultsPage() {
               {playing ? "⏸ Pause" : "▶ Play harmonique"}
             </button>
           ) : null}
+          {/* v2.1.2: thermal scale as a SegmentedControl — Taux EC3 |
+              σvM / fy | Auto (contract test ids scale-ec3/svm/auto). */}
           <div
-            className="flex items-center gap-0.5 rounded border border-hairline p-0.5"
             data-testid="scale-modes"
+            className="flex shrink-0 items-center rounded-[6px] border border-hairline bg-panel p-0.5"
           >
-            {(
-              [
-                ["ec3", "Taux EC3"],
-                ["svm", "σvM / fy"],
-                ["auto", "Auto"],
-              ] as const
-            ).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                data-testid={`scale-${mode}`}
-                className={`rounded px-1.5 py-0.5 text-[10px] ${
-                  scaleMode === mode ? "bg-accent-tint text-accent" : "text-ink-secondary"
-                }`}
-                onClick={() => setScaleMode(mode)}
-              >
-                {label}
-              </button>
-            ))}
+            <SegmentedControl
+              size="sm"
+              label={t`Échelle thermique`}
+              value={scaleMode}
+              onValueChange={(next) => setScaleMode(next as "ec3" | "svm" | "auto")}
+              options={[
+                { value: "ec3", label: "Taux EC3", testId: "scale-ec3" },
+                { value: "svm", label: "σvM / fy", testId: "scale-svm" },
+                { value: "auto", label: "Auto", testId: "scale-auto" },
+              ]}
+            />
           </div>
           {/* v1.5.0 mobile: 1-tap hand-off to the A4/PDF note. */}
           <button
@@ -439,15 +501,19 @@ function ResultsPage() {
           >
             <Trans>Rapport PDF</Trans>
           </button>
-          <button
-            type="button"
-            className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-[13px] text-white disabled:opacity-40"
+          {/* v2.1.2: Calculer as a LoadingButton (locked width, idle →
+              pending → success label swap). */}
+          <LoadingButton
+            testId="calculate-button"
+            className="h-8"
             disabled={busy}
-            onClick={run}
+            onAction={run}
+            pendingLabel={t`Calcul en cours…`}
+            successLabel={t`Calculé`}
+            resetAfter={900}
           >
-            <IconPlay size={12} />
-            <Trans>Calculer</Trans>
-          </button>
+            Calculer
+          </LoadingButton>
         </div>
       </div>
       {fault !== null ? (
@@ -470,7 +536,7 @@ function ResultsPage() {
           <KpiCard
             label={
               <span className="flex items-center gap-1">
-                <DeflectionLimit size={12} />
+                <DeflectionLimit size={18} />
                 Flèche max ELS
               </span>
             }
@@ -486,7 +552,7 @@ function ResultsPage() {
           <KpiCard
             label={
               <span className="flex items-center gap-1">
-                <SectionCut size={12} />
+                <SectionCut size={18} />
                 Taux max EC3
               </span>
             }
@@ -503,7 +569,7 @@ function ResultsPage() {
           <KpiCard
             label={
               <span className="flex items-center gap-1">
-                <ModalVibration size={12} />
+                <ModalVibration size={18} />
                 1er mode propre
               </span>
             }
@@ -532,7 +598,7 @@ function ResultsPage() {
           {/* v2.1.1: thermal legend at bottom-LEFT (clear of the XYZ
               gizmo at bottom-right), labels synced to the active scale. */}
           <div
-            className="absolute bottom-2 left-3 z-30 flex w-56 max-w-[60%] items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
+            className="absolute bottom-8 left-3 z-30 flex w-56 max-w-[60%] items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
             data-testid="fea-legend"
           >
             <span className="font-data text-[11px] text-ink-muted">
@@ -563,32 +629,21 @@ function ResultsPage() {
             data-testid="ec3-rail"
           >
             <div
-              className="flex shrink-0 items-center gap-1 border-b border-hairline p-1.5"
+              className="flex shrink-0 items-center border-b border-hairline p-1.5"
               role="tablist"
               aria-label="Diagnostic"
             >
-              {(
-                [
-                  ["ec3", <Trans key="ec3">Vérification EC3</Trans>],
-                  ["advanced", <Trans key="advanced">Analyses avancées</Trans>],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  aria-selected={railTab === key}
-                  data-testid={`rail-tab-${key}`}
-                  onClick={() => setRailTab(key)}
-                  className={`flex-1 rounded px-2 py-1 text-[12px] font-medium ${
-                    railTab === key
-                      ? "bg-accent-tint font-semibold text-accent"
-                      : "text-ink-secondary hover:text-ink-primary"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              {/* v2.1.2: right-rail tabs as a SegmentedControl (spring pill). */}
+              <SegmentedControl
+                className="w-full"
+                label={t`Diagnostic`}
+                value={railTab}
+                onValueChange={(next) => setRailTab(next as "ec3" | "advanced")}
+                options={[
+                  { value: "ec3", label: t`Vérification EC3`, testId: "rail-tab-ec3" },
+                  { value: "advanced", label: t`Analyses avancées`, testId: "rail-tab-advanced" },
+                ]}
+              />
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
               {railTab === "ec3" ? (
@@ -817,15 +872,9 @@ function KpiCard({
       </p>
       <div className="mt-1 flex flex-wrap items-center gap-1">
         {pass !== undefined ? (
-          <span
-            className={`font-data inline-block rounded border px-1.5 py-0.5 text-[11px] ${
-              pass
-                ? "border-pass-border bg-pass-bg text-pass-text"
-                : "border-fail-border bg-fail-bg text-fail-text"
-            }`}
-          >
+          <StatusBadge tone={pass ? "pass" : "fail"} mono testId={`${testId}-badge`}>
             {pass ? (passLabels?.pass ?? "Conforme EC3") : (passLabels?.fail ?? "Dépassement EC3")}
-          </span>
+          </StatusBadge>
         ) : null}
         {onCorrective !== undefined ? (
           <button
@@ -1050,17 +1099,31 @@ function DockedInspector({
           <h3 className="text-xs font-medium text-ink-secondary">
             <Trans>Coupe 2D σvM</Trans>
           </h3>
-          <select
-            className="font-data h-7 rounded border border-hairline px-1 text-[11px]"
+          {/* v2.1.2: cutting-plane member target = searchable Combobox. */}
+          <ComboboxRoot
+            items={beams.map((b) => b.id)}
             value={beamId}
-            onChange={(e) => onBeamChange(Number(e.currentTarget.value))}
+            onValueChange={(next: number | null) => {
+              if (next !== null) onBeamChange(next);
+            }}
+            itemToStringValue={(id: number) => `B${id}`}
           >
-            {beams.map((b) => (
-              <option key={b.id} value={b.id}>
-                B{b.id}
-              </option>
-            ))}
-          </select>
+            <ComboboxInput
+              aria-label={t`Poutre inspectée`}
+              className="h-7 w-24 font-data text-[11px]"
+              placeholder="B…"
+            />
+            <ComboboxContent
+              renderItem={(id: number) => (
+                <ComboboxItem key={id} value={id}>
+                  <BeamSegment size={16} />
+                  <span className="font-data flex-1">B{id}</span>
+                </ComboboxItem>
+              )}
+            >
+              <ComboboxEmpty>Aucune poutre</ComboboxEmpty>
+            </ComboboxContent>
+          </ComboboxRoot>
         </div>
         {stress !== null ? <HeatmapSvg grid={stress} /> : null}
         {/* v1.5.0: top fiber / neutral axis / bottom fiber σvM readouts. */}
@@ -1074,19 +1137,23 @@ function DockedInspector({
             <span>σinf {fibers.bottom.toFixed(1)} MPa</span>
           </div>
         ) : null}
-        <label className="mt-1 flex items-center gap-2 text-[10px] text-ink-muted">
-          x ∈ [0, L]
-          <input
-            type="range"
+        {/* v2.1.2: cutting-plane scrubber with magnetic detents at
+            0 · 0,25 L · 0,50 L · 0,75 L · 1,00 L (SliderDetents). */}
+        <div className="mt-1 flex items-center gap-2 text-[10px] text-ink-muted">
+          <span className="shrink-0">x ∈ [0, L]</span>
+          <SliderDetents
+            label={t`Position de la coupe`}
             min={0}
             max={1}
-            step={0.05}
+            step={0.01}
+            detents={[0, 0.25, 0.5, 0.75, 1]}
+            magnetRadius={0.02}
             value={station}
-            className="flex-1"
-            onChange={(e) => onStationChange(Number(e.currentTarget.value))}
+            onValueChange={onStationChange}
+            formatValue={(v) => `${v.toFixed(2)} L`}
+            className="min-w-0 flex-1"
           />
-          <span className="font-data">{station.toFixed(2)} L</span>
-        </label>
+        </div>
         <h3 className="mt-1 border-t border-hairline pt-1 text-[11px] font-medium text-ink-secondary">
           {slsLabel !== undefined ? `${slsLabel} · Déplacements ELS` : "Déplacements ELS"}
         </h3>
@@ -1138,38 +1205,26 @@ function DockedInspector({
             ) : null}
           </div>
           <div
-            className="flex shrink-0 items-center gap-0.5 rounded border border-hairline p-0.5"
+            className="flex shrink-0 items-center rounded-[6px] border border-hairline p-0.5"
             data-testid="forces-view-switcher"
           >
-            <button
-              type="button"
-              data-testid="forces-curves"
-              aria-pressed={!view3d}
-              className={`rounded px-1.5 py-0.5 text-[10px] ${
-                !view3d ? "bg-accent-tint font-semibold text-accent" : "text-ink-secondary"
-              }`}
-              onClick={() => onView3dChange(false)}
-            >
-              5 courbes
-            </button>
-            <button
-              type="button"
-              data-testid="force-diagrams-toggle"
-              aria-pressed={view3d}
-              aria-expanded={view3d}
-              className={`rounded px-1.5 py-0.5 text-[10px] ${
-                view3d ? "bg-accent-tint font-semibold text-accent" : "text-ink-secondary"
-              }`}
-              onClick={() => onView3dChange(true)}
-            >
-              <Trans>Enveloppes 3D</Trans>
-            </button>
+            {/* v2.1.2: dock view switcher as a SegmentedControl. */}
+            <SegmentedControl
+              size="sm"
+              label={t`Vue des efforts`}
+              value={view3d ? "3d" : "curves"}
+              onValueChange={(next) => onView3dChange(next === "3d")}
+              options={[
+                { value: "curves", label: "5 courbes", testId: "forces-curves" },
+                { value: "3d", label: "Enveloppes 3D", testId: "force-diagrams-toggle" },
+              ]}
+            />
           </div>
         </div>
         {view3d ? (
           /* Enveloppes 3D: the ForceDiagrams3DPanel lives INSIDE the dock
               (overflowing bottom bar removed in v2.1.1). */
-          <div className="mt-1 min-h-0 flex-1 overflow-auto" data-testid="force-diagrams-dock">
+          <div className="mt-1 min-h-0 flex-1 overflow-hidden" data-testid="force-diagrams-dock">
             <ForceDiagrams3DPanel />
           </div>
         ) : (

@@ -38,6 +38,10 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
    - **`NumberFlow` Shadow DOM:** Keep `data-value={String(value)}` on `NumberFlowValue` so E2E tests can read numeric values directly without piercing Shadow DOM.
    - **Collinear `X`-Beam Torsion (`Rx`):** Every collinear `X`-axis template/quick-start model must lock `Rx` (`locked_dofs[3] = true`) on at least one support.
    - **Lingui Live Locale Re-render:** Shared header/overlay components using `t` macros must invoke `useLingui()` so they re-render immediately when `activateLocale` switches `FR ↔ EN`.
+   - **Zero Raw HTML Form/Overlay Primitives:** Never emit raw `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">`, or hand-rolled `<div role="dialog">` in `apps/web/src/{components,routes,viewport3d}`; always use `@/components/ui/*` (Base UI) and `@/components/interior/*`, preserving locked E2E selectors (`N1`, `N2`, `combination-selector`, `sls-limit-selector`, `scale-modes`, `clear-supports`, `clear-loads`, `hero-cta`, `showcase-*`, `launch-*`, `.driver-popover-rdm`).
+   - **Context-Lean Wave Execution:** Always prepend `$HOME/.cargo/bin` to `PATH` before probing `cargo`/`wasm-pack`/`ship`, and read files per-wave (in parallel) rather than reading the entire repo upfront.
+   - **Zero Raw HTML Form/Overlay Primitives:** Never emit raw `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">`, or hand-rolled `<div role="dialog">` in `apps/web/src/{components,routes,viewport3d}`; always use `@/components/ui/*` (Base UI) and `@/components/interior/*`, preserving locked E2E selectors (`N1`, `N2`, `combination-selector`, `sls-limit-selector`, `scale-modes`, `clear-supports`, `clear-loads`, `hero-cta`, `showcase-*`, `launch-*`, `.driver-popover-rdm`).
+   - **Context-Lean Wave Execution:** Always prepend `$HOME/.cargo/bin` to `PATH` before probing `cargo`/`wasm-pack`/`ship`, and read files per-wave (in parallel) rather than reading the entire repo upfront.
 
 ---
 

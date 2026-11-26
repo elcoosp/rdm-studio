@@ -28,6 +28,7 @@ import { Trans } from "@lingui/react/macro";
 import * as THREE from "three";
 import { useProjectStore } from "@/state/projectStore";
 import { useViewportStore, type CameraPreset } from "@/state/viewportStore";
+import { useViewportParams } from "@/hooks/useStudioQuery";
 import { LayerToolbar } from "./LayerToolbar";
 import { modelBounds } from "./ProfileShapes";
 import { SnapOverlay, type ViewportRuntime } from "./SnapOverlay";
@@ -269,8 +270,9 @@ export function ViewportCanvas({
   /** Model members for the snap reticle / cursor pill (§8.3/§8.4). */
   beams?: BeamData[];
 }) {
-  const cameraPreset = useViewportStore((s) => s.cameraPreset);
-  const setCameraPreset = useViewportStore((s) => s.setCameraPreset);
+  // v2.1.0: the camera preset is the URL `?view=` param — a shared link
+  // restores the exact 3D viewpoint.
+  const { view: cameraPreset, setView: setCameraPreset } = useViewportParams();
   const controlsRef = useRef<CameraControlsImpl | null>(null);
   const runtimeRef = useRef<ViewportRuntime | null>(null);
   const [runtimeReady, setRuntimeReady] = useState(0);
@@ -279,18 +281,19 @@ export function ViewportCanvas({
   const handleRuntimeReady = useCallback(() => setRuntimeReady((n) => n + 1), []);
 
   // Feature-detect BEFORE mounting R3F: its renderer failure escapes this
-  // subtree's boundaries (async setError) and tears down the route. The
-  // probe mirrors R3F's real construction — a bare getContext() can succeed
-  // where the renderer then fails (observed on headless Firefox).
+  // subtree's boundaries (async setError) and tears down the route.
+  // v2.1.0: probe a REAL `webgl2` context creation (not the THREE
+  // renderer, which only logs and keeps a dead context on headless
+  // Firefox — that logged console errors on every route). A null context
+  // degrades to the static fallback with zero console noise.
   const webglSupported = useMemo(() => {
     try {
       const probeCanvas = document.createElement("canvas");
-      const probe = new THREE.WebGLRenderer({
-        canvas: probeCanvas,
-        antialias: true,
-        powerPreference: "high-performance",
-      });
-      probe.dispose();
+      const gl2 = probeCanvas.getContext("webgl2", { antialias: true });
+      if (gl2 === null) {
+        return false;
+      }
+      gl2.getExtension("WEBGL_lose_context")?.loseContext();
       return true;
     } catch {
       return false;
@@ -301,10 +304,28 @@ export function ViewportCanvas({
   const modelBeams = beams ?? [];
   useViewportShortcuts(modelNodes, controlsRef, runtimeRef, setCameraPreset);
 
+  const viewPresets = (
+    <div className="absolute top-2 right-2 z-30 flex gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
+      {VIEW_PRESETS.map(([preset, label, hint]) => (
+        <button
+          key={preset}
+          type="button"
+          data-testid={`view-${preset}`}
+          className={`relative rounded px-2 py-1 text-[11px] ${cameraPreset === preset ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+          onClick={() => setCameraPreset(preset)}
+        >
+          {label}
+          <KeycapHint label={hint} />
+        </button>
+      ))}
+    </div>
+  );
+
   if (!webglSupported) {
     return (
       <div className="relative h-full min-h-0 w-full" data-testid={testId}>
         {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
+        {viewPresets}
         <ViewportFallback />
       </div>
     );
@@ -317,20 +338,7 @@ export function ViewportCanvas({
         {/* v1.6.0: compact `Iso | XY | XZ | YZ` presets, z-30 so they stay
             above the persistent stage overlay (fixed z-10) at 860 px with
             ≥ 24 px separation from the left toolbar. */}
-        <div className="absolute top-2 right-2 z-30 flex gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
-          {VIEW_PRESETS.map(([preset, label, hint]) => (
-            <button
-              key={preset}
-              type="button"
-              data-testid={`view-${preset}`}
-              className={`relative rounded px-2 py-1 text-[11px] ${cameraPreset === preset ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-              onClick={() => setCameraPreset(preset)}
-            >
-              {label}
-              <KeycapHint label={hint} />
-            </button>
-          ))}
-        </div>
+        {viewPresets}
         <Canvas
           dpr={[1, 2]}
           camera={{ position: PRESET_POSITIONS.iso, fov: 45 }}

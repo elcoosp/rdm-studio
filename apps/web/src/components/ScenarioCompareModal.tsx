@@ -22,9 +22,6 @@ interface ScenarioMeta {
 }
 
 function computeMeta(project: unknown): ScenarioMeta {
-  const structure = (project as { structure?: { beams?: { section_id?: string }[] } })?.structure;
-  // v2.0.2: exact mass via computeModelMassKg (was a family-baseline proxy).
-  // masses come from the catalog when a section resolves.
   // v2.0.2: exact mass through the shared KPI helper (ρ·A·L, SI).
   const massKg = computeModelMassKg(project as ProjectData);
   const utilization = (project as { lastUtilization?: number }).lastUtilization ?? 0.72;

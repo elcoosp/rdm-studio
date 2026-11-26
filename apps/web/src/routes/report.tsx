@@ -590,7 +590,7 @@ function ReportBuilder(): React.ReactElement {
   return (
     <section
       aria-label="Générateur de rapport"
-      className="rounded-xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/90"
+      className="rounded-xl border border-hairline bg-panel/95 p-4  "
     >
       <h3 className="mb-2 text-sm font-bold">Générateur de rapport (PDF + .docx)</h3>
       <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
@@ -598,25 +598,25 @@ function ReportBuilder(): React.ReactElement {
           value={firm}
           onChange={(e) => setFirm(e.target.value)}
           aria-label="Cabinet"
-          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-2 py-1 "
         />
         <input
           value={engineer}
           onChange={(e) => setEngineer(e.target.value)}
           aria-label="Ingénieur"
-          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-2 py-1 "
         />
         <input
           value={checker}
           onChange={(e) => setChecker(e.target.value)}
           aria-label="Vérificateur"
-          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-2 py-1 "
         />
         <input
           value={revision}
           onChange={(e) => setRevision(e.target.value)}
           aria-label="Révision"
-          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-2 py-1 "
         />
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -638,7 +638,7 @@ function ReportBuilder(): React.ReactElement {
         <button
           type="button"
           onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
-          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          className="rounded bg-panel-subtle px-2 py-1 "
         >
           Sortie : {language.toUpperCase()}
         </button>
@@ -647,7 +647,7 @@ function ReportBuilder(): React.ReactElement {
           onClick={() =>
             downloadDocx(blocks(), meta, `rapport-${project.name.replace(/[^\w-]+/g, "_")}.docx`)
           }
-          className="flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1 font-semibold text-white"
+          className="flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-1 font-semibold text-white"
         >
           <FileText size={14} strokeWidth={1.5} aria-hidden />
           Télécharger .docx
@@ -657,7 +657,7 @@ function ReportBuilder(): React.ReactElement {
             key={format}
             type="button"
             onClick={() => exportBim(format)}
-            className="flex items-center justify-center gap-1 rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+            className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1 "
           >
             <Download size={12} strokeWidth={1.5} aria-hidden />
             {format.toUpperCase()}
@@ -666,12 +666,12 @@ function ReportBuilder(): React.ReactElement {
         <button
           type="button"
           onClick={() => void saveSnapshot(`rapport-${revision}`, project)}
-          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          className="rounded bg-panel-subtle px-2 py-1 "
         >
           Photographier
         </button>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500" aria-live="polite">
+      <p className="mt-2 text-[11px] text-ink-muted" aria-live="polite">
         {`SHA-256 : ${fingerprint ?? "calcul…"} — clause d'ingénieur incluse.`}
       </p>
     </section>

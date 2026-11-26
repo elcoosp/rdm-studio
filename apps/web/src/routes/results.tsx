@@ -339,6 +339,69 @@ function ResultsPage() {
               </button>
             ))}
           </span>
+
+          <select
+            className="font-data h-7 rounded border border-hairline bg-panel px-1 text-[11px]"
+            data-testid="combination-selector"
+            value={viewKey}
+            onChange={(e) => setViewKey(e.currentTarget.value)}
+          >
+            {combinations.map((c, i) => (
+              <option key={`${c.kind}:${i}`} value={`${c.kind}:${i}`}>
+                {c.label}
+              </option>
+            ))}
+            {modal !== null
+              ? modal.modes.slice(0, 6).map((m) => (
+                  <option key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
+                    {`Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`}
+                  </option>
+                ))
+              : null}
+          </select>
+          {isModeView ? (
+            <button
+              type="button"
+              className="relative rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary"
+              onClick={() => setPlaying(!playing)}
+              data-testid="modal-play"
+            >
+              {playing ? "⏸ Pause" : "▶ Play harmonique"}
+            </button>
+          ) : null}
+          <div
+            className="flex items-center gap-0.5 rounded border border-hairline p-0.5"
+            data-testid="scale-modes"
+          >
+            {(
+              [
+                ["ec3", "Taux EC3"],
+                ["svm", "σvM / fy"],
+                ["auto", "Auto"],
+              ] as const
+            ).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                data-testid={`scale-${mode}`}
+                className={`rounded px-1.5 py-0.5 text-[10px] ${
+                  scaleMode === mode ? "bg-accent-tint text-accent" : "text-ink-secondary"
+                }`}
+                onClick={() => setScaleMode(mode)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* v1.5.0 mobile: 1-tap hand-off to the A4/PDF note. */}
+          <button
+            type="button"
+            className="rounded bg-accent px-2 py-1 text-[11px] text-white md:hidden"
+            data-testid="mobile-report-pdf"
+            onClick={() => void navigate({ to: "/report" })}
+          >
+            <Trans>Rapport PDF</Trans>
+          </button>
           <button
             type="button"
             className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-[13px] text-white disabled:opacity-40"
@@ -426,75 +489,6 @@ function ResultsPage() {
           >
             {null}
           </StageContent>
-          {/* Single consolidated control bar (combination / eigenmode,
-              thermal scale, mobile PDF). */}
-          <div
-            className="absolute right-2 top-12 z-30 flex max-w-[calc(100%-1rem)] flex-wrap items-center gap-1.5 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
-            data-testid="results-controls"
-          >
-            <select
-              className="font-data h-7 rounded border border-hairline bg-panel px-1 text-[11px]"
-              data-testid="combination-selector"
-              value={viewKey}
-              onChange={(e) => setViewKey(e.currentTarget.value)}
-            >
-              {combinations.map((c, i) => (
-                <option key={`${c.kind}:${i}`} value={`${c.kind}:${i}`}>
-                  {c.label}
-                </option>
-              ))}
-              {modal !== null
-                ? modal.modes.slice(0, 6).map((m) => (
-                    <option key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
-                      {`Mode propre ${m.mode_index} · ${m.frequency_hz.toFixed(2).replace(".", ",")} Hz`}
-                    </option>
-                  ))
-                : null}
-            </select>
-            {isModeView ? (
-              <button
-                type="button"
-                className="relative rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary"
-                onClick={() => setPlaying(!playing)}
-                data-testid="modal-play"
-              >
-                {playing ? "⏸ Pause" : "▶ Play harmonique"}
-              </button>
-            ) : null}
-            <div
-              className="flex items-center gap-0.5 rounded border border-hairline p-0.5"
-              data-testid="scale-modes"
-            >
-              {(
-                [
-                  ["ec3", "Taux EC3"],
-                  ["svm", "σvM / fy"],
-                  ["auto", "Auto"],
-                ] as const
-              ).map(([mode, label]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  data-testid={`scale-${mode}`}
-                  className={`rounded px-1.5 py-0.5 text-[10px] ${
-                    scaleMode === mode ? "bg-accent-tint text-accent" : "text-ink-secondary"
-                  }`}
-                  onClick={() => setScaleMode(mode)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {/* v1.5.0 mobile: 1-tap hand-off to the A4/PDF note. */}
-            <button
-              type="button"
-              className="rounded bg-accent px-2 py-1 text-[11px] text-white md:hidden"
-              data-testid="mobile-report-pdf"
-              onClick={() => void navigate({ to: "/report" })}
-            >
-              <Trans>Rapport PDF</Trans>
-            </button>
-          </div>
           {/* Bottom-center horizontal thermal legend bar (η = 0 → 1.25). */}
           <div
             className="absolute bottom-2 left-1/2 z-30 flex w-64 max-w-[70%] -translate-x-1/2 items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
@@ -617,7 +611,7 @@ function ResultsPage() {
               <button
                 type="button"
                 onClick={() => setOptimizerOpen(true)}
-                className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent/90"
               >
                 <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
                 Optimiseur EC3
@@ -625,7 +619,7 @@ function ResultsPage() {
               <button
                 type="button"
                 onClick={() => setScenarioOpen(true)}
-                className="flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
+                className="flex items-center gap-1.5 rounded-md border border-hairline px-3 py-1.5 text-xs font-semibold "
               >
                 <ArrowLeftRight size={14} strokeWidth={1.5} aria-hidden />
                 Scénarios
@@ -916,7 +910,7 @@ function DockedInspector({
     ] as unknown as uPlot.AlignedData;
     const opts: uPlot.Options = {
       width: plotRef.current.clientWidth,
-      height: 150,
+      height: 122,
       legend: { show: true },
       axes: [{}, { values: (u: uPlot, ticks: number[]) => ticks.map((v) => `${v.toFixed(0)}`) }],
       series: [
@@ -953,7 +947,7 @@ function DockedInspector({
     const observer = new ResizeObserver(() => {
       const plot = uplotRef.current;
       if (plot !== null) {
-        plot.setSize({ width: el.clientWidth, height: 150 });
+        plot.setSize({ width: el.clientWidth, height: 122 });
         syncCursor();
       }
     });

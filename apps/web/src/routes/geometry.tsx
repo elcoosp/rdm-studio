@@ -208,7 +208,7 @@ function GeometryPage() {
     <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
       {/* Flat action row — nested card borders stay out of the inspector.
           v1.6.0: 3 compact X/Y/Z NumberFields (mm → m) beside `+ Nœud`. */}
-      <div className="flex flex-wrap items-end gap-2" data-testid="node-placement">
+      <div className="flex items-end gap-2" data-testid="node-placement">
         <button
           type="button"
           className="flex items-center gap-1 rounded bg-accent px-2.5 py-1.5 text-[13px] text-white"
@@ -227,7 +227,7 @@ function GeometryPage() {
         ).map(([axis, value, setter]) => (
           <NumberFieldRoot key={axis} value={value} step={0.05} onValueChange={(v) => setter(v)}>
             <NumberFieldInput
-              className="font-data h-8 w-16 px-1 py-0 text-[12px]"
+              className="font-data h-6 w-16 px-1 py-0 text-[12px]"
               aria-label={`Placement ${axis} (m)`}
               placeholder={axis}
             />
@@ -247,6 +247,9 @@ function GeometryPage() {
       </div>
 
       {/* 2-column key-value property grid (craft-floor: flat hairlines). */}
+      {/* v2.0.2: family pills full-width above the grid, still filtering
+          the profile list directly by designation family. */}
+      <FamilyPills onPick={(picked: FamilyName) => setFamily(picked)} />
       <section className="border-t border-hairline pt-3">
         <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
           <label className="text-xs font-medium text-ink-secondary" htmlFor="material-select">
@@ -276,9 +279,6 @@ function GeometryPage() {
               </option>
             ))}
           </select>
-          {/* v2.0.1: family pills docked above the profile Combobox — they
-              filter the section list directly by designation family. */}
-          <FamilyPills onPick={(picked: FamilyName) => setFamily(picked)} />
           <label className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
             <ProfileIpe size={14} />
             <Trans>Profil (EN 10365)</Trans>
@@ -413,11 +413,7 @@ function GeometryPage() {
       {/* v2.0.1: the CAD toolbar docks as a flow row ABOVE the viewport
           slot — it can no longer overlap the app header, the in-stage
           layer toolbar or the Iso|XY|XZ|YZ camera presets. */}
-      <div className="shrink-0 overflow-x-auto rounded-panel border border-hairline bg-panel px-2 py-1.5">
-        <div className="min-w-max">
-          <CadToolbar />
-        </div>
-      </div>
+      <CadToolbar />
       <div
         ref={slotRef}
         className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"
@@ -641,19 +637,9 @@ function DataDock({
       {open ? (
         <div className="h-44 overflow-auto border-t border-hairline px-2 pb-2">
           {tab === "nodes" ? (
-            <>
-              <h3 className="py-1 text-[13px] font-semibold text-ink-secondary">
-                <Trans>Nœuds</Trans>
-              </h3>
-              <NodeTable onHoverNode={onHoverNode} />
-            </>
+            <NodeTable onHoverNode={onHoverNode} />
           ) : (
-            <>
-              <h3 className="py-1 text-[13px] font-semibold text-ink-secondary">
-                <Trans>Poutres</Trans>
-              </h3>
-              <BeamTable onHoverBeam={onHoverBeam} />
-            </>
+            <BeamTable onHoverBeam={onHoverBeam} />
           )}
         </div>
       ) : null}

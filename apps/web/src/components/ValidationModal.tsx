@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import { X } from "lucide-react";
 import { feaClient, type BenchResultDto } from "../wasmBridge/workerClient";
 
 /**
@@ -38,8 +39,15 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
           <h2 className="text-lg font-bold">
             <Trans>Validation — 41 benchmarks analytiques</Trans>
           </h2>
-          <button type="button" onClick={onClose} aria-label={t`Fermer`} className="text-xl">
-            ×
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t`Fermer`}
+            className="flex h-7 w-7 items-center justify-center rounded text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
+          >
+            {/* 22fd9fa audit: the raw `×` glyph is replaced by the standard
+                18px Lucide close icon (strokeWidth 1.5). */}
+            <X size={18} strokeWidth={1.5} aria-hidden />
           </button>
         </div>
         <p className="mb-4 text-sm text-ink-secondary " aria-live="polite">

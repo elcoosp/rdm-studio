@@ -82,7 +82,7 @@ test("Validation modal under FR shows 41/41 with French titles and no in-flight 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/geometry");
   await page.getByRole("button", { name: /Validation — 41 benchmarks/ }).click();
-  const dialog = page.getByTestId('validation-modal');
+  const dialog = page.getByTestId("validation-modal");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/41\/41 benchmarks passent/)).toBeVisible({
     timeout: 15_000,

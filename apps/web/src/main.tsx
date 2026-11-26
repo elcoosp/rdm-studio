@@ -1,36 +1,22 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { RouterProvider } from "@tanstack/react-router";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { activateLocale, initialLocale } from "@/i18n/i18n";
-import { parseProject } from "@/lib/urlShare";
-import { useProjectStore } from "@/state/projectStore";
-import { routeTree } from "./routeTree.gen";
+import { router } from "./router";
 import "./app.css";
-
-const router = createRouter({ routeTree });
 
 const root = document.getElementById("root");
 if (root === null) {
   throw new Error("missing #root mount point");
 }
 
-// v1.0.0 bug 4: deep links hydrate the shared model BEFORE the first
-// render — `/report?p=...` restores arbitrary non-demo projects on load.
-{
-  const params = new URLSearchParams(window.location.search);
-  const payload = params.get("p");
-  if (payload !== null && payload.length > 0) {
-    const parsed = parseProject(payload);
-    if (parsed.ok) {
-      const input = parsed.project as never;
-      useProjectStore.getState().loadProject(input);
-    } else {
-      console.warn("deep link rejected:", parsed.error);
-    }
-  }
-}
+// v2.1.0: the legacy `main.tsx` deep-link hydration moved into
+// `_studio.tsx`'s `beforeLoad` — `?p=` / `?template=` are now validated by
+// the Valibot search schema, hydrated BEFORE the first studio render and
+// stripped from the URL, so every entry path (`/geometry?p=…`,
+// `/results?template=warren`, a PWA launchQueue file) behaves identically.
 
 // Activate the persisted locale BEFORE the first render so the stepper and
 // page headings come up translated (no flash of source strings).

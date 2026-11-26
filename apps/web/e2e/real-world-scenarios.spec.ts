@@ -46,8 +46,9 @@ test("industrial portal frame: wind + snow + P-Δ + EC3 optimizer apply + ⌘Z u
 
   // Enable the second-order P-Δ toggle in the header settings popover.
   await page.getByRole("button", { name: /Réglages/ }).click();
-  const pDelta = page.getByTestId("settings-p-delta").locator("input");
-  await pDelta.check();
+  // v2.1.2: the normative toggles are Base UI Switches (role=switch).
+  const pDelta = page.getByTestId("settings-p-delta").getByRole("switch");
+  await pDelta.click();
   await page.keyboard.press("Escape");
 
   // Step 4 solve + EC3 diagnosis.
@@ -115,7 +116,8 @@ test("3-span continuous beam: ΣRz equilibrium + L/300 SLS limit + x scrub", asy
 
   // SLS limit switch to L/300 keeps the deflection KPI coherent.
   await page.getByTestId("sls-limit-300").click();
-  await expect(page.getByTestId("sls-limit-300")).toHaveClass(/bg-accent/);
+  // v2.1.2: the SLS limit is a SegmentedControl radio — active = checked.
+  await expect(page.getByTestId("sls-limit-300")).toHaveAttribute("aria-checked", "true");
 
   // Scrub x ∈ [0, L] on the uPlot dock — the cursor readouts stay live.
   const plot = page.getByTestId("forces-plot-surface");

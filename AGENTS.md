@@ -33,7 +33,11 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
    - **Standalone 3D HTML Export:** `three@0.187` ships `build/three.module.js` (no `three.min.js`); inline it via `<script type="module">`.
    - **3D Gizmo & WebGL Graceful Fallback:** Always wrap `<GizmoViewport />` inside `<GizmoHelper alignment="top-right" margin={[72, 72]}>` (never bare inside `<Canvas>`, which renders a 1m RGB block at `(0,0,0)`), and guard `<Canvas>` with a WebGL capability check + ErrorBoundary so headless GPU failures degrade gracefully. Run Playwright on `chromium` and `firefox` (skip `webkit` in rootless containers lacking GTK4/GStreamer system libs, and guard mobile synthetic touch-drag assertions with `test.skip(browserName !== "chromium")` because Firefox headless touch-emulation locks Motion `drag="y"` pointers).
    - **Clean Full-File Edits & `oxfmt` Whitespace:** `oxfmt` formats `.ts`/`.tsx` with 2-space indentation; prefer writing clean complete files or matching 2-space indentation rather than unasserted regex/tab replacements. Set `touch-action: none` on `BottomSheet` drag handles and `reuseExistingServer: !process.env.CI` in `playwright.config.ts`.
-   - **32 Custom Engineering Icons:** Port the exact `<svg viewBox="0 0 24 24">` paths from `mockups/icons-sheet.html` into `apps/web/src/components/icons/EngineeringIcons.tsx` (`strokeWidth="1.5"`, `#0F172A` + `#1D4ED8`).
+   - **44 Custom Engineering Icons:** Port the exact `<svg viewBox="0 0 24 24">` paths from `mockups/icons-sheet.html` (32) and `mockups/icons-sheet-v2.html` (12) into `apps/web/src/components/icons/EngineeringIcons.tsx` (`strokeWidth="1.5"`, `#0F172A` + `var(--color-accent)`).
+   - **WASM Enum Serialization (`Load`):** Never return `Vec<rdm_model::Load>` directly via `serde_wasm_bindgen::to_value` (`#[serde(tag = "kind")]` + `#[serde(flatten)]` emits `{}`); serialize via `serde_json::to_string` in Rust and `JSON.parse` in TypeScript.
+   - **`NumberFlow` Shadow DOM:** Keep `data-value={String(value)}` on `NumberFlowValue` so E2E tests can read numeric values directly without piercing Shadow DOM.
+   - **Collinear `X`-Beam Torsion (`Rx`):** Every collinear `X`-axis template/quick-start model must lock `Rx` (`locked_dofs[3] = true`) on at least one support.
+   - **Lingui Live Locale Re-render:** Shared header/overlay components using `t` macros must invoke `useLingui()` so they re-render immediately when `activateLocale` switches `FR ↔ EN`.
 
 ---
 

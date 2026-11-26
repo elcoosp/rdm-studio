@@ -225,22 +225,20 @@ test("Extruder CAD action stays responsive and doubles the model (no tab freeze)
   // Seed a minimal two-node model.
   await page.getByTestId("add-node").click();
   await page.waitForTimeout(300);
-  const nodesBefore = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("rdm-studio-project") ?? "null")?.state?.project?.structure
-        ?.nodes?.length ?? null,
-  );
+  // v2.1.0: the store persists in IndexedDB — the node count is read from
+  // the data dock counter instead of a localStorage snapshot.
+  const countOf = async () => {
+    const text = (await page.getByTestId("dock-tab-nodes").textContent()) ?? "";
+    return Number(text.replace(/\D/g, ""));
+  };
+  const nodesBefore = await countOf();
   // The extrude button must return control quickly (v2.0.2 regression).
   await page.getByRole("button", { name: "Extruder" }).click({ timeout: 5_000 });
   await page.waitForTimeout(500);
-  const nodesAfter = await page.evaluate(
-    () =>
-      JSON.parse(localStorage.getItem("rdm-studio-project") ?? "null")?.state?.project?.structure
-        ?.nodes?.length ?? null,
-  );
+  const nodesAfter = await countOf();
   // The page is still alive: the header link is clickable right after.
   await expect(page.getByRole("link", { name: /Étape 2/ })).toBeVisible({ timeout: 5_000 });
-  if (nodesBefore !== null && nodesAfter !== null) {
+  if (nodesBefore > 0 && nodesAfter > 0) {
     expect(nodesAfter).toBeGreaterThan(nodesBefore);
   }
 });

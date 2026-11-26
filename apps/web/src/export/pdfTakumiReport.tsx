@@ -49,6 +49,7 @@ export function buildReportHtml(
   meta: ReportMeta,
   qrPng?: { src: string; data: Uint8Array },
   stagePng?: { src: string; data: Uint8Array },
+  options?: { watermark?: boolean },
 ): { html: string; images?: { src: string; data: Uint8Array }[] } {
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
@@ -173,6 +174,11 @@ export function buildReportHtml(
 		  <span style="font-size: 9px; color: #94A3B8;">Scannez pour rouvrir le modele dans RDM Studio.</span>
 		</div>
 	  </div>
+	  ${
+      options?.watermark === true
+        ? '<div style="border-top: 1px solid #E2E8F0; margin-top: 6px; padding-top: 6px; text-align: center; font-size: 9px; color: #94A3B8;">Édition Découverte — Évaluation non contractuelle</div>'
+        : ""
+    }
 	</div>`;
 
   return { html, images: images.length > 0 ? images : undefined };

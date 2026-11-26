@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { useLocation, useMatches, useRouterState } from "@tanstack/react-router";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { useProjectStore } from "@/state/projectStore";
 import { useStageStore, captureViewportPng } from "@/state/stageStore";
+import { ForceDiagram3DLayer } from "./ForceDiagrams3D";
+import { useSelectedIds, useViewportParams } from "@/hooks/useStudioQuery";
 import { useViewportStore } from "@/state/viewportStore";
 import { ViewportCanvas } from "./ViewportCanvas";
 import { BeamMeshes, buildBeamGeometry, nodePositions } from "./BeamMeshes";
@@ -93,10 +95,11 @@ function StagePickLayer({
 /** Grid-plane click-to-place node + 2-node click-to-connect beam tools. */
 function ModelTools({ nodes }: { nodes: { id: number; x: number; y: number; z: number }[] }) {
   const toolMode = useViewportStore((s) => s.toolMode);
-  const snapStep = useViewportStore((s) => s.snapStep);
+  // v2.1.0: the magnetic snap grid is the URL `?snap=` param (10|50|100 mm).
+  const { snapStep } = useViewportParams();
   const addNode = useProjectStore((s) => s.addNode);
   const addBeam = useProjectStore((s) => s.addBeam);
-  const selectNode = useProjectStore((s) => s.selectNode);
+  const { selectNode } = useSelectedIds();
   const pendingRef = useRef<number | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
 
@@ -164,13 +167,19 @@ export function PersistentStage(): ReactElement {
   const beams = useProjectStore((s) => s.project.structure.beams);
   const supports = useProjectStore((s) => s.project.structure.supports);
   const loads = useProjectStore((s) => s.project.structure.loads);
-  const selectBeam = useProjectStore((s) => s.selectBeam);
-  const selectNode = useProjectStore((s) => s.selectNode);
-  const layers = useViewportStore((s) => s.layers);
-  const cutting = useViewportStore((s) => s.cutting);
+  // v2.1.0: selection writes go to the URL (`?beam=` / `?node=`); layer
+  // flags and the cutting plane are URL params too (zero store mirrors).
+  const { selectBeam, selectNode } = useSelectedIds();
+  const { layers, cutting } = useViewportParams();
   const contentGetter = useStageStore((s) => s.contentGetter);
   const optionsGetter = useStageStore((s) => s.optionsGetter);
   const pathname = useLocation().pathname;
+  const matches = useMatches();
+  // The stage only covers the active leaf route when its staticData
+  // declares `stageVisible: true` (report → false: the stage hides but
+  // keeps rendering for the A4 snapshot).
+  const stageVisible = matches.at(-1)?.staticData.stageVisible === true;
+  const diagramsOn = useRouterState({ select: (s) => s.location.search.diagrams === 1 });
   const wrapRef = useRef<HTMLDivElement>(null);
   const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
   const [pickMs, setPickMs] = useState<number | undefined>(undefined);
@@ -195,6 +204,8 @@ export function PersistentStage(): ReactElement {
   const hasModel = nodes.length > 0;
   const hasModelRef = useRef(hasModel);
   hasModelRef.current = hasModel;
+  const stageVisibleRef = useRef(stageVisible);
+  stageVisibleRef.current = stageVisible;
   // Glue the stage over the active slot pane every frame: direct style
   // writes keep 60 FPS and never re-render the R3F tree.
   useEffect(() => {
@@ -203,7 +214,7 @@ export function PersistentStage(): ReactElement {
     const tick = () => {
       const el = wrapRef.current;
       const slot = useStageStore.getState().slotEl;
-      const live = slot !== null && hasModelRef.current;
+      const live = slot !== null && stageVisibleRef.current && hasModelRef.current;
       if (el !== null) {
         if (!live) {
           // No slot (Step 5): keep the last geometry, hide from view —
@@ -304,6 +315,9 @@ export function PersistentStage(): ReactElement {
         ) : null}
         {layers.supports ? <SupportMarkers nodes={nodes} supports={supports} /> : null}
         {layers.loads ? <ForceVectors3D nodes={nodes} beams={beams} loads={loads} /> : null}
+        {/* v2.1.0: true 3D signed force diagrams along the members
+            (`?diagrams=1`, Step 4 only — 22fd9fa audit item). */}
+        {diagramsOn && pathname === "/results" ? <ForceDiagram3DLayer /> : null}
         {layers.nodes ? (
           <>
             <NodeMarkers

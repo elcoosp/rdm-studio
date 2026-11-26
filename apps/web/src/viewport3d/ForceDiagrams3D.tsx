@@ -5,6 +5,14 @@ import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { feaClient, type SpanForceSample } from "../wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "../state/projectStore";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 /**
  * ForceDiagrams3D (v2.1.0): TRUE 3D signed internal-force diagrams drawn
@@ -260,7 +268,10 @@ export function ForceDiagram3DLayer(): ReactElement | null {
   );
 }
 
-/** Docked control panel + envelope summary (Step 4, below the 220px dock). */
+/** Docked control panel + envelope summary (Step 4, inside the 220px
+ * dock). v2.1.2 (audit fix): the panel is COMPACT — p-2, one-line
+ * controls, h-20 SVG — so it fits inside the dock's 220px without any
+ * internal scrollbar. */
 export function ForceDiagrams3DPanel(): ReactElement {
   const component = useDiagramStore((st) => st.component);
   const amplitude = useDiagramStore((st) => st.amplitude);
@@ -274,53 +285,75 @@ export function ForceDiagrams3DPanel(): ReactElement {
   return (
     <section
       aria-label={t`Diagrammes d'efforts 3D`}
-      className="rounded-panel border border-hairline bg-panel p-4"
+      className="flex h-full min-h-0 flex-col rounded-panel border border-hairline bg-panel p-2"
       data-testid="force-diagrams-panel"
     >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-bold">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h3 className="text-[12px] font-semibold text-ink-primary">
           <Trans>Diagrammes N/V/T/M sur les membres 3D</Trans>
         </h3>
-        <select
+        <SelectRoot
           value={component}
-          onChange={(e) => setComponent(e.target.value as DiagramComponent)}
-          aria-label={t`Composante`}
-          className="font-data rounded-[4px] border border-hairline bg-panel px-2 py-1 text-xs"
+          onValueChange={(next) => setComponent(next as DiagramComponent)}
         >
-          {(Object.keys(COMPONENT_LABELS) as DiagramComponent[]).map((key) => (
-            <option key={key} value={key}>
-              {`${COMPONENT_LABELS[key]} (${COMPONENT_UNITS[key]})`}
-            </option>
-          ))}
-        </select>
-        <label className="flex items-center gap-1 text-xs">
+          <SelectTrigger
+            aria-label={t`Composante`}
+            className="h-7 w-auto gap-1 text-[11px]"
+            data-testid="diagram-component-select"
+          >
+            <span className="font-data">{`${COMPONENT_LABELS[component]} (${COMPONENT_UNITS[component]})`}</span>
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(COMPONENT_LABELS) as DiagramComponent[]).map((key) => (
+              <SelectItem key={key} value={key}>
+                {`${COMPONENT_LABELS[key]} (${COMPONENT_UNITS[key]})`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </SelectRoot>
+        <label className="flex w-40 items-center gap-1.5 text-[11px] text-ink-secondary">
           <Trans>Amplitude</Trans>
-          <input
-            type="range"
+          <Slider
+            value={amplitude}
             min={0.2}
             max={3}
             step={0.1}
-            value={amplitude}
-            onChange={(e) => setAmplitude(Number(e.target.value))}
+            onValueChange={(v) => {
+              if (typeof v === "number") setAmplitude(v);
+            }}
             aria-label={t`Amplitude`}
+            className="min-w-0 flex-1"
           />
         </label>
-        <select
+        <SelectRoot
           value={palette}
-          onChange={(e) => setPalette(e.target.value as keyof typeof PALETTES)}
-          aria-label={t`Palette`}
-          className="font-data rounded-[4px] border border-hairline bg-panel px-2 py-1 text-xs"
+          onValueChange={(next) => setPalette(next as keyof typeof PALETTES)}
         >
-          <option value="viridis">viridis</option>
-          <option value="cividis">cividis</option>
-        </select>
+          <SelectTrigger
+            aria-label={t`Palette`}
+            className="h-7 w-auto gap-1 text-[11px]"
+            data-testid="diagram-palette-select"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="viridis">viridis</SelectItem>
+            <SelectItem value="cividis">cividis</SelectItem>
+          </SelectContent>
+        </SelectRoot>
       </div>
       {beams.length === 0 || samples.size === 0 ? (
-        <p className="text-xs text-ink-muted">
+        <p className="mt-2 text-[11px] text-ink-muted">
           {t`Résoudre le modèle pour afficher les enveloppes.`}
         </p>
       ) : (
-        <svg viewBox="0 0 640 120" role="img" className="h-28 w-full" aria-hidden>
+        <svg
+          viewBox="0 0 640 120"
+          role="img"
+          className="mt-1 min-h-0 w-full flex-1"
+          preserveAspectRatio="xMidYMid meet"
+          aria-hidden
+        >
           {beams.map((beam, index) => {
             const memberSamples = samples.get(beam.id);
             if (memberSamples === undefined || memberSamples.length === 0) {

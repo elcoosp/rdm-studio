@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { useLocation, useMatches, useRouterState } from "@tanstack/react-router";
+import { useLocation, useMatches, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useLingui } from "@lingui/react/macro";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { useProjectStore } from "@/state/projectStore";
@@ -19,6 +20,13 @@ import { useBeamBoundsTree, pickBeamAtRay } from "./useBvhPicking";
 import { beamProfileLookup } from "./ProfileShapes";
 import type { SectionDims } from "@/wasmBridge/workerClient";
 import { feaClient } from "@/wasmBridge/workerClient";
+import {
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuRoot,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 /**
  * PersistentStage (v1.6.0, requirement 1): ONE WebGL stage mounted once in
@@ -27,11 +35,19 @@ import { feaClient } from "@/wasmBridge/workerClient";
  * survives every step switch — and ONE BVH-indexed `BufferGeometry`
  * serves both rendering (`BeamMeshes`) and picking (raycast layer).
  *
+ * v2.1.2 (audit `519229b`): the shared geometry memoization is STABILIZED
+ * — it depends only on the model identity and the meaningful render
+ * inputs (`colorRatios` / `displacements` / `deformScale`), never on the
+ * route's getter identities, so unrelated state ticks (hover, picking
+ * latency, URL params) can no longer rebuild & dispose the BVH tree.
+ *
  * The stage is glued over the active route's registered slot pane every
  * animation frame (fixed positioning updated by direct style writes, so
  * layout changes never re-render the React tree), and stays alive —
  * merely hidden — on `/report` so `captureViewportPng()` can embed a live
- * 3D snapshot into the A4 sheet & Takumi PDF.
+ * 3D snapshot into the A4 sheet & Takumi PDF. v2.1.2 adds a Base UI
+ * right-click context menu on beams/nodes and the 24px metrological
+ * status bar (`Repère Z-up · Grille · Sélection · [F] Cadrer`).
  */
 
 /** Re-renders on every R3F frame; writes the capture bridge once. */
@@ -88,6 +104,73 @@ function StagePickLayer({
     };
     dom.addEventListener("pointerdown", handler);
     return () => dom.removeEventListener("pointerdown", handler);
+  }, [geometry, camera, gl]);
+  return null;
+}
+
+/** Where the last stage right-click landed (member + nearest node). */
+interface StageContextPick {
+  beamId: number | null;
+  nodeId: number | null;
+  clientX: number;
+  clientY: number;
+}
+
+/**
+ * In-canvas bridge resolving the right-click target: BVH member pick plus
+ * the nearest endpoint node (distance to the ray), surfaced to the DOM
+ * context menu through a ref (never a re-render per event).
+ */
+function StageContextMenuBridge({
+  geometry,
+  nodes,
+  onPick,
+}: {
+  geometry: THREE.BufferGeometry | null;
+  nodes: { id: number; x: number; y: number; z: number }[];
+  onPick: (pick: StageContextPick) => void;
+}) {
+  const { camera, gl } = useThree();
+  const pickRef = useRef(onPick);
+  pickRef.current = onPick;
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
+  useEffect(() => {
+    if (geometry === null) {
+      return;
+    }
+    const dom = gl.domElement;
+    const handler = (event: MouseEvent) => {
+      const rect = dom.getBoundingClientRect();
+      const ndc = {
+        x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      };
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
+      const result = pickBeamAtRay(raycaster, geometry);
+      let nodeId: number | null = null;
+      if (result.beamId !== null) {
+        // Nearest node to the ray (contextual node target for Encastrer /
+        // Inspecter — the member under the pointer defines the vicinity).
+        let bestDist = Number.POSITIVE_INFINITY;
+        for (const n of nodesRef.current) {
+          const d = raycaster.ray.distanceToPoint(new THREE.Vector3(n.x, n.y, n.z));
+          if (d < bestDist) {
+            bestDist = d;
+            nodeId = n.id;
+          }
+        }
+      }
+      pickRef.current({
+        beamId: result.beamId,
+        nodeId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
+    };
+    dom.addEventListener("contextmenu", handler);
+    return () => dom.removeEventListener("contextmenu", handler);
   }, [geometry, camera, gl]);
   return null;
 }
@@ -167,14 +250,21 @@ export function PersistentStage(): ReactElement {
   const beams = useProjectStore((s) => s.project.structure.beams);
   const supports = useProjectStore((s) => s.project.structure.supports);
   const loads = useProjectStore((s) => s.project.structure.loads);
+  const updateBeam = useProjectStore((s) => s.updateBeam);
+  const subdivideBeam = useProjectStore((s) => s.subdivideBeam);
+  const setSupport = useProjectStore((s) => s.setSupport);
+  const removeBeam = useProjectStore((s) => s.removeBeam);
+  const removeNode = useProjectStore((s) => s.removeNode);
   // v2.1.0: selection writes go to the URL (`?beam=` / `?node=`); layer
   // flags and the cutting plane are URL params too (zero store mirrors).
-  const { selectBeam, selectNode } = useSelectedIds();
-  const { layers, cutting } = useViewportParams();
+  const { selectBeam, selectNode, beamId: selectedBeamId } = useSelectedIds();
+  const { layers, cutting, snapStep } = useViewportParams();
   const contentGetter = useStageStore((s) => s.contentGetter);
   const optionsGetter = useStageStore((s) => s.optionsGetter);
   const pathname = useLocation().pathname;
   const matches = useMatches();
+  const navigate = useNavigate();
+  const { t } = useLingui();
   // The stage only covers the active leaf route when its staticData
   // declares `stageVisible: true` (report → false: the stage hides but
   // keeps rendering for the A4 snapshot).
@@ -183,6 +273,8 @@ export function PersistentStage(): ReactElement {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [sectionDims, setSectionDims] = useState<Map<string, SectionDims>>(new Map());
   const [pickMs, setPickMs] = useState<number | undefined>(undefined);
+  const [ctxPick, setCtxPick] = useState<StageContextPick | null>(null);
+  const [ctxOpen, setCtxOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,84 +350,212 @@ export function PersistentStage(): ReactElement {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // ONE shared BVH-indexed geometry for rendering AND picking.
+  // v2.1.2 (audit 519229b): the meaningful render inputs are read from
+  // the route's options getter and tracked by VALUE, not by the getter's
+  // function identity — unrelated route re-render ticks (pick latency,
+  // hover, URL params) no longer rebuild + dispose the BVH geometry.
   const options = optionsGetter?.() ?? {};
+  const colorRatios = options.colorRatios ?? null;
+  const displacements = options.displacements ?? null;
+  const deformScale = options.deformScale ?? null;
+  const profiles = useMemo(
+    () => (sectionDims.size > 0 ? beamProfileLookup(beams, sectionDims) : undefined),
+    [beams, sectionDims],
+  );
   const sharedGeometry = useMemo(() => {
     if (beams.length === 0) {
       return null;
     }
     return buildBeamGeometry(nodes, beams, {
-      colorRatios: options.colorRatios,
-      displacements: options.displacements,
-      deformScale: options.deformScale,
-      profiles: sectionDims.size > 0 ? beamProfileLookup(beams, sectionDims) : undefined,
+      colorRatios: colorRatios ?? undefined,
+      displacements: displacements ?? undefined,
+      deformScale: deformScale ?? undefined,
+      profiles,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- options come
-    // from the route render pass; recompute on every stage render.
-  }, [nodes, beams, sectionDims, optionsGetter, contentGetter]);
+  }, [nodes, beams, colorRatios, displacements, deformScale, profiles]);
   useEffect(() => {
     return () => {
       sharedGeometry?.dispose();
     };
   }, [sharedGeometry]);
 
+  const selectedBeam = beams.find((b) => b.id === selectedBeamId) ?? null;
+  const ctxBeamId = ctxPick?.beamId ?? null;
+  const ctxBeam = beams.find((b) => b.id === ctxBeamId) ?? null;
+  const ctxNodeId = ctxPick?.nodeId ?? null;
+
   return (
-    <div
-      ref={wrapRef}
-      data-testid="persistent-stage"
-      className="fixed z-10 overflow-hidden"
-      style={{ visibility: "hidden" }}
+    <ContextMenuRoot
+      open={ctxOpen}
+      // The in-canvas bridge is the ONLY opener (it stores the pick
+      // first); this handler merely closes and clears the pick.
+      onOpenChange={(open) => {
+        if (!open) {
+          setCtxOpen(false);
+          setCtxPick(null);
+        }
+      }}
     >
-      <ViewportCanvas
-        // Kept `viewport-canvas` for the layout-craft regression suite.
-        testId="viewport-canvas"
-        pickLatency={pickMs}
-        nodes={nodes}
-        beams={beams}
-      >
-        <CaptureBridge />
-        <StagePickLayer
-          geometry={sharedGeometry}
-          onPick={(beamId, ms) => {
-            setPickMs(ms);
-            selectBeam(beamId);
-          }}
-        />
-        {contentGetter?.() ?? null}
-        {layers.beams && sharedGeometry !== null ? (
-          <BeamMeshes
-            nodes={nodes}
-            beams={beams}
-            geometry={sharedGeometry}
-            wireframe={options.wireframe === true}
-            selectedBeamId={options.selectedBeamId ?? null}
-            hoveredBeamId={options.hoveredBeamId ?? null}
-            onPick={(id) => selectBeam(id)}
+      <ContextMenuTrigger
+        render={
+          <div
+            ref={wrapRef}
+            data-testid="persistent-stage"
+            className="fixed z-10 overflow-hidden"
+            style={{ visibility: "hidden" }}
           />
-        ) : null}
-        {layers.supports ? <SupportMarkers nodes={nodes} supports={supports} /> : null}
-        {layers.loads ? <ForceVectors3D nodes={nodes} beams={beams} loads={loads} /> : null}
-        {/* v2.1.0: true 3D signed force diagrams along the members
-            (`?diagrams=1`, Step 4 only — 22fd9fa audit item). */}
-        {diagramsOn && pathname === "/results" ? <ForceDiagram3DLayer /> : null}
-        {layers.nodes ? (
-          <>
-            <NodeMarkers
-              positions={nodePositions(nodes)}
-              nodeIds={nodes.map((n) => n.id)}
-              highlightNodeId={null}
-              onPickNode={(id) => selectNode(id)}
+        }
+      >
+        <ViewportCanvas
+          // Kept `viewport-canvas` for the layout-craft regression suite.
+          testId="viewport-canvas"
+          pickLatency={pickMs}
+          nodes={nodes}
+          beams={beams}
+        >
+          <CaptureBridge />
+          <StagePickLayer
+            geometry={sharedGeometry}
+            onPick={(beamId, ms) => {
+              setPickMs(ms);
+              selectBeam(beamId);
+            }}
+          />
+          <StageContextMenuBridge
+            geometry={sharedGeometry}
+            nodes={nodes}
+            onPick={(pick) => {
+              setCtxPick(pick);
+              // Only open over a member / node — empty space keeps the
+              // default browser behaviour suppressed but shows no menu.
+              if (pick.beamId !== null || pick.nodeId !== null) {
+                setCtxOpen(true);
+              }
+            }}
+          />
+          {contentGetter?.() ?? null}
+          {layers.beams && sharedGeometry !== null ? (
+            <BeamMeshes
+              nodes={nodes}
+              beams={beams}
+              geometry={sharedGeometry}
+              wireframe={options.wireframe === true}
+              selectedBeamId={options.selectedBeamId ?? null}
+              hoveredBeamId={options.hoveredBeamId ?? null}
+              onPick={(id) => selectBeam(id)}
             />
-            <ModelTools nodes={nodes} />
+          ) : null}
+          {layers.supports ? <SupportMarkers nodes={nodes} supports={supports} /> : null}
+          {layers.loads ? <ForceVectors3D nodes={nodes} beams={beams} loads={loads} /> : null}
+          {/* v2.1.0: true 3D signed force diagrams along the members
+              (`?diagrams=1`, Step 4 only — 22fd9fa audit item). */}
+          {diagramsOn && pathname === "/results" ? <ForceDiagram3DLayer /> : null}
+          {layers.nodes ? (
+            <>
+              <NodeMarkers
+                positions={nodePositions(nodes)}
+                nodeIds={nodes.map((n) => n.id)}
+                highlightNodeId={null}
+                onPickNode={(id) => selectNode(id)}
+              />
+              <ModelTools nodes={nodes} />
+            </>
+          ) : null}
+          <ViewportLabels nodes={nodes} beams={beams} pathname={pathname} />
+          <DimensionLines nodes={nodes} beams={beams} pathname={pathname} />
+          {pathname === "/results" && cutting !== null ? (
+            <CuttingPlane beamId={cutting.beamId} ratio={cutting.ratio} />
+          ) : null}
+        </ViewportCanvas>
+        {/* v2.1.2: 24px bottom metrological status bar — Z-up convention,
+            live magnetic grid step, current selection and the [F] hint. */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex h-6 items-center justify-between gap-2 border-t border-hairline bg-panel/85 px-2 font-data text-[10px] text-ink-muted backdrop-blur"
+          data-testid="stage-status-bar"
+        >
+          <span>
+            {t`Repère Z-up`} · {t`Grille`} {Math.round(snapStep * 1000)} mm
+          </span>
+          <span className="min-w-0 truncate">
+            {selectedBeam !== null
+              ? `${t`Sélection`} : P${selectedBeam.id} (${selectedBeam.section_id})`
+              : t`Sélection : aucune`}
+          </span>
+          <span>[F] {t`Cadrer`}</span>
+        </div>
+      </ContextMenuTrigger>
+      {/* v2.1.2: Base UI right-click context menu on 3D beams/nodes —
+          portal-rendered above the WebGL stage. */}
+      <ContextMenuContent data-testid="stage-context-menu">
+        {ctxBeam !== null || ctxNodeId !== null ? (
+          <>
+            <ContextMenuItem
+              disabled={ctxBeamId === null}
+              onSelect={() => {
+                if (ctxBeamId === null) return;
+                selectBeam(ctxBeamId);
+                void navigate({ to: "/results" });
+                setCtxOpen(false);
+              }}
+            >
+              {t`Inspecter sur Étape 4`}
+            </ContextMenuItem>
+            <ContextMenuItem
+              disabled={ctxBeamId === null}
+              onSelect={() => {
+                if (ctxBeamId === null) return;
+                const beam = beams.find((b) => b.id === ctxBeamId);
+                if (beam === undefined) return;
+                const isTruss =
+                  beam.releases_start.slice(1).every(Boolean) &&
+                  beam.releases_end.slice(1).every(Boolean);
+                const next = isTruss
+                  ? [false, false, false, false, false, false]
+                  : [false, true, true, true, true, true];
+                updateBeam(ctxBeamId, { releases_start: next, releases_end: next });
+                setCtxOpen(false);
+              }}
+            >
+              {t`Articuler N1/N2`}
+            </ContextMenuItem>
+            <ContextMenuItem
+              disabled={ctxBeamId === null}
+              onSelect={() => {
+                if (ctxBeamId === null) return;
+                subdivideBeam(ctxBeamId, 4);
+                setCtxOpen(false);
+              }}
+            >
+              {t`Subdiviser en 4 tronçons`}
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              disabled={ctxNodeId === null}
+              onSelect={() => {
+                if (ctxNodeId === null) return;
+                setSupport(ctxNodeId, [true, true, true, true, true, true]);
+                setCtxOpen(false);
+              }}
+            >
+              {t`Encastrer le nœud`}
+            </ContextMenuItem>
+            <ContextMenuItem
+              disabled={ctxBeamId === null && ctxNodeId === null}
+              onSelect={() => {
+                if (ctxBeamId !== null) {
+                  removeBeam(ctxBeamId);
+                } else if (ctxNodeId !== null) {
+                  removeNode(ctxNodeId);
+                }
+                setCtxOpen(false);
+              }}
+            >
+              {t`Supprimer`}
+            </ContextMenuItem>
           </>
         ) : null}
-        <ViewportLabels nodes={nodes} beams={beams} pathname={pathname} />
-        <DimensionLines nodes={nodes} beams={beams} pathname={pathname} />
-        {pathname === "/results" && cutting !== null ? (
-          <CuttingPlane beamId={cutting.beamId} ratio={cutting.ratio} />
-        ) : null}
-      </ViewportCanvas>
-    </div>
+      </ContextMenuContent>
+    </ContextMenuRoot>
   );
 }
 

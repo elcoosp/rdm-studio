@@ -365,6 +365,9 @@ export function quickStartProject(kind: QuickStartKind): ProjectData {
     };
   }
   // Poutre 3 travées: 12 m, 3 × 4 m spans, continuous.
+  // v2.1.1: node 1 also locks Rx (torsion) — a 3D 6-DOF model without ANY
+  // Rx restraint can rotate about the global X axis and the solver
+  // (rightly) rejects it as a mechanism.
   const nodes = [0, 4, 8, 12].map((x, i) => point(i + 1, x, 0, 0));
   return {
     version: 1,
@@ -375,7 +378,7 @@ export function quickStartProject(kind: QuickStartKind): ProjectData {
       supports: [
         {
           node_id: 1,
-          locked_dofs: [true, true, true, false, false, false],
+          locked_dofs: [true, true, true, true, false, false],
           spring_stiffness: [0, 0, 0, 0, 0, 0],
         },
         {

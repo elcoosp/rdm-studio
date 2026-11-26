@@ -1,22 +1,28 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowRight, Lock } from "lucide-react";
 import {
-  ArrowRight,
-  Cpu,
-  FileCheck2,
-  HardDriveDownload,
-  Lock,
-  Ruler,
-  Workflow,
-} from "lucide-react";
+  ContinuousBeamIcon,
+  ConcreteBeamIcon,
+  DynamicAcceleration,
+  MagneticSnap,
+  PortalFrameIcon,
+  SectionCut,
+  SteelJointIcon,
+  VolumetricMesh,
+  WarrenTrussIcon,
+} from "@/components/icons/EngineeringIcons";
+import { NumberFlowValue } from "@/components/NumberFlowValue";
 import {
-  Accordion,
-  AccordionItem,
-  AccordionPanel,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  ExpandablePanel,
+  SegmentedControl,
+  SliderDetents,
+  type SegmentedOption,
+} from "@/components/interior";
+import { HeroFallbackSvg, type HeroModel } from "@/components/HeroViewport3D";
 
 export const Route = createFileRoute("/_marketing/")({
   staticData: { surface: "marketing" },
@@ -24,19 +30,32 @@ export const Route = createFileRoute("/_marketing/")({
 });
 
 /**
- * Landing page at `/` (v2.1.0 commercial layer, _Swiss Metrology_ world):
- * editorial engineering hero with live technical badges, the interactive
- * 3-model showcase (1-click launch into `/geometry?template=…`), the
- * 6-card capabilities grid, the 3-tier pricing with 1-click offline
- * activation and the engineering FAQ. Designed with the impeccable skill
- * + DESIGN.md: #F8FAFC canvas, #FFFFFF panels, 1px #E2E8F0 hairlines,
- * #1D4ED8 Deep Cobalt accent, Inter + JetBrains Mono tabular-nums, zero
- * drop shadows on docked cards, zero dark-mode classes.
- *
- * Telemetry (Masse kg / Profilés) is precomputed from the exact
- * `quickStartProject` seeds and the EN 10365 catalog areas of this
- * repository (A × 7 850 kg/m³) — no invented figures.
+ * Landing page at `/` (v2.1.2 flagship commercial layer): the interactive
+ * Three.js 3D Hero (lazy-loaded single-context R3F stage with a live load
+ * slider 20 → 120 kN driving the thermal stress colors and the rolling
+ * tabular readouts), the 4-metric technical proof strip, the asymmetric
+ * 12-column _Swiss Metrology_ Bento Grid showcasing EVERY real engine
+ * capability beside its Stitch illustration, the interactive 3-model
+ * showcase (1-click launch into `/geometry?template=…`), the 4-tier
+ * pricing (Découverte / Pass Projet 48 h / Pro / Équipe) and the
+ * engineering FAQ on ExpandablePanels. Designed to DESIGN.md: #F8FAFC
+ * canvas, #FFFFFF panels, 1px #E2E8F0 hairlines, #1D4ED8 Deep Cobalt,
+ * Inter + JetBrains Mono tabular-nums, zero dark classes.
  */
+
+// Lazy single-context R3F hero (instant SVG skeleton = sub-200 ms LCP).
+const HeroViewport3D = lazy(() =>
+  import("@/components/HeroViewport3D").then((m) => ({ default: m.HeroViewport3D })),
+);
+
+/** Hero telemetry (illustrative, derived from the load slider): η crosses
+ * 1.00 at ≈ 96 kN on the governing member and δ grows linearly with q. */
+function heroEta(loadKN: number): number {
+  return 0.31 + (loadKN - 20) * 0.0093;
+}
+function heroDeflectionMm(loadKN: number): number {
+  return 1.8 + (loadKN - 20) * 0.078;
+}
 
 function buildShowcase() {
   return [
@@ -175,51 +194,95 @@ function buildShowcase() {
   ] as const;
 }
 
-function buildCapabilities() {
+type BentoCard = {
+  icon: React.ComponentType<{ size?: number }>;
+  metric: string;
+  metricLabel: string;
+  title: string;
+  body: string;
+  formula?: string;
+  /** Asymmetric 12-column span (lg) — static classes for Tailwind JIT. */
+  spanClass: "md:col-span-4" | "md:col-span-5" | "md:col-span-7" | "md:col-span-8";
+  illustration?: string;
+  tags?: readonly string[];
+};
+
+function buildBento(): BentoCard[] {
   return [
     {
-      icon: Cpu,
+      icon: VolumetricMesh,
       metric: "< 20 ms",
       metricLabel: t`solveur par pas de temps`,
-      title: t`Solveur Timoshenko 3D`,
-      body: t`Poutres 3D 6 DDL en Rust/WASM : cisaillement Timoshenko, P-Δ second ordre, analyse modale et flambement linéaire — résolu localement dans votre navigateur.`,
+      title: t`Solveur Timoshenko 3D + P-Δ + flambement`,
+      body: t`Poutres 3D 6 DDL en Rust/WASM (Cholesky creuse faer) : cisaillement Timoshenko, second ordre géométrique P-Δ et flambement linéaire global λcr — résolus localement dans votre navigateur.`,
+      formula: "[Ke + Kg(N)]·u = F · λcr",
+      spanClass: "md:col-span-7",
+      illustration: "/illustrations/bento-solver-pdelta.png",
     },
     {
-      icon: FileCheck2,
+      icon: SectionCut,
       metric: "6.61 / 6.62 + C1",
       metricLabel: t`vérifications EC3`,
-      title: t`EC3 complet + CalcTrace`,
-      body: t`Sections classes 1–4, χy/χz/χLT, Nb,Rd, Mc,Rd et formules KaTeX traçables : chaque étape de calcul est documentée pour le vérificateur.`,
+      title: t`EC3 complet + CalcTrace traçable`,
+      body: t`Sections classes 1–4, χy / χz / χLT, Nb,Rd, Mc,Rd : chaque clause s'ouvre en formule KaTeX pas-à-pas, vérifiable par le contresignateur, avec empreinte SHA-256 du modèle.`,
+      illustration: "/illustrations/bento-ec3-calctrace.png",
+      spanClass: "md:col-span-5",
     },
     {
-      icon: Ruler,
+      icon: ConcreteBeamIcon,
       metric: "EC2 · EC5 · EC8 · EC9",
       metricLabel: t`multi-matériaux`,
-      title: t`Béton, bois, alu, mixte`,
-      body: t`Profilés EN 10365 / 10210 / 10056 et matériaux EN 1992 / 1995 / 1998 / 1999 : kmod, kdef et catégories de service intégrés au même modèle.`,
+      title: t`Acier, inox, alu, bois, béton, boulons, feu`,
+      body: t`Un même modèle traverse les matériaux : profils EN 10365 / 10210 / 10056, S235–S460, inox 304L, alu 6061/6082-T6 (EN 1999), lamellé-collé GL24h (EN 1995), béton armé (EN 1992), assemblages boulonnés (EC3-1-8) et feu R30–R120 (EC3-1-2).`,
+      illustration: "/illustrations/bento-multimaterial.png",
+      tags: [
+        t`Acier S235–S460`,
+        t`Inox 304L`,
+        t`Alu EN 1999`,
+        t`Bois GL24h`,
+        t`Béton EN 1992`,
+        t`Feu R30–R120`,
+      ],
+      spanClass: "md:col-span-4",
     },
     {
-      icon: Workflow,
-      metric: "5 étapes",
-      metricLabel: t`flux CAD verrouillé`,
-      title: t`CAO 3D interactive + optimiseur`,
-      body: t`Accrochage magnétique 10/50/100 mm, subdivisions, extrusion, optimiseur EC3 1-clic avec retour arrière ⌘Z — la géométrie reste la source de vérité.`,
+      icon: DynamicAcceleration,
+      metric: "(ax, ay, az) × g",
+      metricLabel: t`actions navales & levage`,
+      title: t`Naval, levage & dynamique`,
+      body: t`Champs d'accélération 3D roulis / tangage / levage, analyse modale f₁..f₆, combinaisons CQC / SRSS (EN 1998-1) et charges mobiles EN 1991-2 LM1 — l'atelier couvre les structures qui bougent.`,
+      illustration: "/illustrations/bento-naval-dynamic.png",
+      tags: [t`Modal f₁..f₆`, t`CQC / SRSS`, t`EN 1991-2 LM1`],
+      spanClass: "md:col-span-4",
     },
     {
-      icon: HardDriveDownload,
+      icon: MagneticSnap,
+      metric: "⌘Z",
+      metricLabel: t`optimiseur 1-clic`,
+      title: t`CAO 3D interactive + optimiseur EC3`,
+      body: t`Accrochage magnétique 10/50/100 mm, import DXF / STEP / IGES, sections personnalisées PRS / RHS / CHS et optimiseur Pareto EC3 en un clic — annulable instantanément.`,
+      illustration: "/illustrations/bento-cad-optimizer.png",
+      tags: [t`DXF / STEP / IGES`, t`PRS / RHS / CHS`, t`Pareto EC3`],
+      spanClass: "md:col-span-4",
+    },
+    {
+      icon: SteelJointIcon,
       metric: "A4 · .docx · IFC4",
       metricLabel: t`exports vectoriels`,
-      body: t`Note de calcul A4 PDF vectorielle (polices embarquées), .docx structuré et BIM IFC4 / SAF — plus l'export HTML 3D autonome.`,
-      title: t`PDF vectoriel, .docx & BIM`,
+      title: t`Note de calcul vectorielle & BIM`,
+      body: t`PDF A4 vectoriel Takumi (polices embarquées), .docx structuré, BIM IFC4 / SAF / OpenSees / glTF et maquette 3D HTML autonome — la note de calcul sort prête à signer.`,
+      illustration: "/illustrations/bento-report-bim.png",
+      spanClass: "md:col-span-8",
     },
     {
       icon: Lock,
-      metric: "0 serveur",
-      metricLabel: t`zéro télémétrie`,
+      metric: "0 octet",
+      metricLabel: t`zéro cloud`,
       title: t`Local-first, RGPD par conception`,
       body: t`Projets chiffrés dans IndexedDB, partage par URL compressée, service worker hors-ligne : aucune donnée d'ingénierie ne quitte votre poste.`,
+      spanClass: "md:col-span-4",
     },
-  ] as const;
+  ];
 }
 
 function buildFaq() {
@@ -244,111 +307,155 @@ function buildFaq() {
       q: t`Puis-je importer mes plans DXF ou STEP ?`,
       a: t`Oui — glissez-déposez un .dxf, .step ou .igs dans l'atelier : la géométrie filaire devient nœuds et poutres, prête à être profilée et chargée. L'export .rdm est canonique et réimportable à l'identique.`,
     },
+    {
+      q: t`À quoi sert le Pass Projet 48 h ?`,
+      a: t`C'est une journée de plein droit pour un besoin ponctuel : toutes les fonctions Pro (branding, multi-matériaux, BIM, exports) actives 48 h sur votre poste, sans abonnement ni compte. Idéal pour livrer une note de calcul signée ce week-end.`,
+    },
   ] as const;
 }
 
-function HeroArt() {
-  // Geometry SVG only (crisp vector linework — never an illustration):
-  // a front-elevation portal frame whose girder carries a distributed
-  // load line with red point arrows landing cleanly ON the top flange,
-  // a subtle My bending-moment envelope under the girder and clean
-  // fixed (encastrement) / pinned (articulation) support symbols.
-  const loadXs = [110, 148, 186, 224, 262, 300];
+const HERO_MODELS: { value: HeroModel; label: string; template: string }[] = [
+  { value: "portique", label: t`Portique 18 m`, template: "portique" },
+  { value: "warren", label: t`Treillis Warren 24 m`, template: "warren" },
+  { value: "travees", label: t`Poutre 3 travées`, template: "travees" },
+];
+
+/** 3D Hero: lazy R3F stage + SegmentedControl model switcher + live load
+ * slider + rolling tabular readouts + 1-click studio launch. */
+function HeroStage(): React.ReactElement {
+  const [model, setModel] = useState<HeroModel>("portique");
+  const [loadKN, setLoadKN] = useState(60);
+  const reduced = useReducedMotion();
+  const options = useMemo<SegmentedOption[]>(
+    () => HERO_MODELS.map((m) => ({ value: m.value, label: m.label })),
+    [],
+  );
+  const massKg = model === "portique" ? 1183 : model === "warren" ? 877 : 268;
+  const eta = heroEta(loadKN);
+  const deflection = heroDeflectionMm(loadKN);
+  const template = HERO_MODELS.find((m) => m.value === model)?.template ?? "portique";
   return (
-    <svg
-      viewBox="0 0 420 260"
-      className="h-full w-full"
-      role="img"
-      aria-label={t`Schéma structurel d'un portique chargé`}
+    <div
+      className="overflow-hidden rounded-[8px] border border-hairline bg-canvas"
+      data-testid="hero-3d-panel"
     >
-      <g stroke="#E2E8F0" strokeWidth="1">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <line key={`v${i}`} x1={40 + i * 85} y1="30" x2={40 + i * 85} y2="230" />
-        ))}
-        {[0, 1, 2, 3].map((i) => (
-          <line key={`h${i}`} x1="30" y1={50 + i * 60} x2="390" y2={50 + i * 60} />
-        ))}
-      </g>
-      {/* Subtle My bending-moment envelope under the girder (analytical
-          overlay — cobalt linework, light fill, no interface palette). */}
-      <path
-        d="M110 86 C 152 126, 258 126, 300 86 L300 88 C 256 134, 154 134, 110 88 Z"
-        fill="#1D4ED8"
-        opacity="0.08"
-      />
-      <path
-        d="M110 86 C 152 126, 258 126, 300 86"
-        fill="none"
-        stroke="#1D4ED8"
-        strokeWidth="1.2"
-        strokeDasharray="4 3"
-        opacity="0.55"
-      />
-      <text x="152" y="146" fontSize="10" fill="#1D4ED8" className="font-data" opacity="0.8">
-        My
-      </text>
-      {/* Portal frame: two columns + the girder (top flange line). */}
-      <g stroke="#1D4ED8" strokeWidth="3" fill="none" strokeLinecap="round">
-        <path d="M110 210 V80 H300 V210" />
-      </g>
-      {/* Distributed load line with the 6 red arrows landing on the
-          top flange (arrowheads touch y = 78, flange crown at 80). */}
-      <g stroke="#DC2626" strokeWidth="1.5" fill="none">
-        <line x1="106" y1="54" x2="304" y2="54" />
-        {loadXs.map((x) => (
-          <g key={x}>
-            <line x1={x} y1="54" x2={x} y2="76" />
-            <path d={`M${x - 4} 70 L${x} 78 L${x + 4} 70`} strokeLinejoin="round" />
-          </g>
-        ))}
-        <text x="316" y="50" fontSize="10" fill="#DC2626" stroke="none" className="font-data">
-          q
-        </text>
-      </g>
-      {/* Point load Fz at midspan, landing on the top flange too. */}
-      <g stroke="#DC2626" strokeWidth="1.5" fill="none">
-        <path d="M205 30 V44 M201 38 L205 44 L209 38" strokeLinejoin="round" />
-      </g>
-      <text x="219" y="40" fontSize="10" fill="#DC2626" className="font-data">
-        Fz
-      </text>
-      {/* Joint nodes (haunches + bases). */}
-      <g fill="#0F172A">
-        <circle cx="110" cy="80" r="4" />
-        <circle cx="300" cy="80" r="4" />
-        <circle cx="110" cy="210" r="3.5" />
-        <circle cx="300" cy="210" r="3.5" />
-      </g>
-      {/* Left support: encastrément (base plate + ground hatching). */}
-      <g>
-        <rect x="94" y="212" width="32" height="4" rx="1" fill="#1D4ED8" />
-        <g stroke="#94A3B8" strokeWidth="1">
-          <line x1="86" y1="222" x2="134" y2="222" />
-          {[88, 96, 104, 112, 120, 128].map((x) => (
-            <line key={x} x1={x} y1="222" x2={x - 5} y2="228" />
-          ))}
-        </g>
-      </g>
-      {/* Right support: articulation (pin triangle + ground hatching). */}
-      <g>
-        <path d="M292 220 L308 220 L300 212 Z" fill="#1D4ED8" />
-        <circle cx="300" cy="212" r="1.8" fill="#F8FAFC" />
-        <g stroke="#94A3B8" strokeWidth="1">
-          <line x1="286" y1="222" x2="314" y2="222" />
-          {[288, 296, 304, 312].map((x) => (
-            <line key={x} x1={x} y1="222" x2={x - 5} y2="228" />
-          ))}
-        </g>
-      </g>
-      <text x="110" y="244" textAnchor="middle" fontSize="10" fill="#94A3B8" className="font-data">
-        18,0 m
-      </text>
-    </svg>
+      {/* Model switcher (shared-layoutId spring pill, zero layout jump). */}
+      <div className="flex items-center justify-between gap-2 border-b border-hairline bg-panel px-3 py-2">
+        <SegmentedControl
+          size="sm"
+          options={options}
+          label={t`Modèle du hero`}
+          value={model}
+          onValueChange={(next) => setModel(next as HeroModel)}
+          className="min-w-0 max-w-full"
+        />
+        <span className="font-data hidden shrink-0 text-[10px] text-ink-muted xl:inline">
+          {t`Scène temps réel · WebGL`}
+        </span>
+      </div>
+      {/* The lazy 3D stage — instant SVG skeleton until the chunk lands. */}
+      <div className="h-[280px] sm:h-[320px]">
+        <Suspense fallback={<HeroFallbackSvg model={model} loadKN={loadKN} />}>
+          <HeroViewport3D model={model} loadKN={loadKN} />
+        </Suspense>
+      </div>
+      {/* Live HUD: load slider + rolling tabular readouts + launch CTA. */}
+      <div className="space-y-3 border-t border-hairline bg-panel p-3">
+        <div className="flex items-center gap-3">
+          <span className="font-data shrink-0 text-[11px] text-ink-secondary">
+            {t`Charge q`} · {loadKN} kN
+          </span>
+          <SliderDetents
+            label={t`Charge répartie (kN)`}
+            min={20}
+            max={120}
+            step={1}
+            detents={[20, 60, 120]}
+            value={loadKN}
+            onValueChange={(v) => setLoadKN(Math.round(v))}
+            formatValue={(v) => `${Math.round(v)} kN`}
+            className="min-w-0 flex-1"
+          />
+        </div>
+        <dl className="font-data grid grid-cols-3 gap-2 text-[11px]">
+          <div>
+            <dt className="text-ink-muted">{t`Masse`}</dt>
+            <dd className="text-[15px] font-medium text-ink-primary">
+              <NumberFlowValue value={massKg} format={{ maximumFractionDigits: 0 }} />
+              <span className="text-[11px] text-ink-secondary"> kg</span>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ink-muted">{t`Taux EC3 η`}</dt>
+            <dd
+              className={`text-[15px] font-medium ${eta > 1 ? "text-fail-text" : "text-pass-text"}`}
+              data-testid="hero-eta"
+            >
+              <NumberFlowValue
+                value={eta}
+                format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+              />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ink-muted">{t`Flèche δ`}</dt>
+            <dd className="text-[15px] font-medium text-ink-primary">
+              <NumberFlowValue
+                value={deflection}
+                format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+              />
+              <span className="text-[11px] text-ink-secondary"> mm</span>
+            </dd>
+          </div>
+        </dl>
+        <Link
+          to="/geometry"
+          search={{ template: template as "portique" }}
+          data-testid="hero-launch"
+          className={`flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white transition-colors ${reduced ? "" : "hover:bg-accent-strong"}`}
+        >
+          <Trans>Ouvrir dans l'atelier →</Trans>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/** Reveal-on-scroll wrapper (transform/opacity only, viewport once). */
+function Reveal({
+  children,
+  className,
+  delay = 0,
+  testId,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+  testId?: string;
+}) {
+  const reduced = useReducedMotion();
+  if (reduced) {
+    return (
+      <div className={className} data-testid={testId}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <motion.div
+      className={className}
+      data-testid={testId}
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
 function LandingPage() {
-  const [activeShowcase, setActiveShowcase] = useState(0);
   // v2.1.1: hash navigation arriving from /legal (or a cold `/` load with
   // #fonctionnalites / #tarifs) must land on the section — TanStack's
   // hashScrollIntoView covers in-app Link clicks; this effect covers the
@@ -369,14 +476,15 @@ function LandingPage() {
   // Built at render time so every Lingui literal resolves in the active
   // locale (module-level t`` would freeze the source strings).
   const showcaseItems = buildShowcase();
-  const capabilities = buildCapabilities();
-  const faq = buildFaq();
+  const bento = useMemo(() => buildBento(), []);
+  const faq = useMemo(() => buildFaq(), []);
+  const [activeShowcase, setActiveShowcase] = useState(0);
   const showcase = showcaseItems[activeShowcase] ?? showcaseItems[0];
   return (
     <div className="flex flex-col">
-      {/* Hero — editorial left column + geometric linework. */}
+      {/* Hero — editorial left column + the interactive 3D stage. */}
       <section className="border-b border-hairline bg-panel">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-20">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[1.05fr_0.95fr] md:items-start md:py-20">
           <div>
             <h1 className="text-balance text-[clamp(1.9rem,4.5vw,3rem)] font-semibold leading-[1.15] tracking-tight text-ink-primary">
               <Trans>Le calcul de structures 3D aux Eurocodes, entièrement sur votre poste.</Trans>
@@ -392,7 +500,7 @@ function LandingPage() {
               <Link
                 to="/geometry"
                 data-testid="hero-cta"
-                className="flex items-center gap-1.5 rounded bg-accent px-4 py-2 text-[14px] font-semibold text-white hover:bg-accent-hover"
+                className="flex items-center gap-1.5 rounded bg-accent px-4 py-2 text-[14px] font-semibold text-white hover:bg-accent-strong"
               >
                 <Trans>Ouvrir l'atelier 3D</Trans>
                 <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
@@ -422,9 +530,30 @@ function LandingPage() {
               ))}
             </ul>
           </div>
-          <div className="min-h-[240px] rounded-[8px] border border-hairline bg-canvas p-4">
-            <HeroArt />
-          </div>
+          <HeroStage />
+        </div>
+      </section>
+
+      {/* 4-metric technical proof strip. */}
+      <section
+        className="border-b border-hairline bg-panel-subtle/60"
+        data-testid="proof-strip"
+        aria-label={t`Preuves techniques`}
+      >
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden sm:grid-cols-4 lg:grid-cols-4">
+          {(
+            [
+              [t`41 / 41`, t`benchmarks analytiques`],
+              [t`< 20 ms`, t`solveur Cholesky WASM`],
+              [t`EN 1990 → 1999`, t`multi-matériaux`],
+              [t`0 octet cloud`, t`100 % local-first`],
+            ] as const
+          ).map(([metric, label]) => (
+            <div key={metric} className="flex flex-col gap-0.5 bg-panel px-4 py-4">
+              <span className="font-data text-[15px] font-medium text-ink-primary">{metric}</span>
+              <span className="text-[12px] text-ink-secondary">{label}</span>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -446,22 +575,31 @@ function LandingPage() {
             role="tablist"
             aria-label={t`Modèles d'ouverture`}
           >
-            {showcaseItems.map((model, index) => (
-              <button
-                key={model.kind}
-                role="tab"
-                aria-selected={index === activeShowcase}
-                data-testid={`showcase-${model.kind}`}
-                onClick={() => setActiveShowcase(index)}
-                className={`min-w-[190px] rounded-[4px] border px-3 py-2.5 text-left text-[13px] font-medium transition-colors ${
-                  index === activeShowcase
-                    ? "border-accent bg-accent-tint text-accent"
-                    : "border-hairline bg-panel text-ink-secondary hover:border-border-strong hover:text-ink-primary"
-                }`}
-              >
-                {model.name}
-              </button>
-            ))}
+            {showcaseItems.map((model, index) => {
+              const Icon =
+                model.kind === "portique"
+                  ? PortalFrameIcon
+                  : model.kind === "warren"
+                    ? WarrenTrussIcon
+                    : ContinuousBeamIcon;
+              return (
+                <button
+                  key={model.kind}
+                  role="tab"
+                  aria-selected={index === activeShowcase}
+                  data-testid={`showcase-${model.kind}`}
+                  onClick={() => setActiveShowcase(index)}
+                  className={`flex min-w-[190px] items-center gap-2 rounded-[4px] border px-3 py-2.5 text-left text-[13px] font-medium transition-colors ${
+                    index === activeShowcase
+                      ? "border-accent bg-accent-tint text-accent"
+                      : "border-hairline bg-panel text-ink-secondary hover:border-border-subtle hover:text-ink-primary"
+                  }`}
+                >
+                  <Icon size={22} />
+                  {model.name}
+                </button>
+              );
+            })}
           </div>
           {/* Active model: architectural linework + telemetry. */}
           <div className="grid gap-0 overflow-hidden rounded-[8px] border border-hairline bg-panel md:grid-cols-[1fr_220px]">
@@ -498,7 +636,7 @@ function LandingPage() {
                 to="/geometry"
                 search={{ template: showcase.kind }}
                 data-testid={`launch-${showcase.kind}`}
-                className="mt-4 flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white hover:bg-accent-hover"
+                className="mt-4 flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white hover:bg-accent-strong"
               >
                 <Trans>Ouvrir dans l'atelier</Trans>
                 <ArrowRight size={14} strokeWidth={1.5} aria-hidden />
@@ -508,46 +646,80 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Capabilities grid — 6 hairline cells, JetBrains Mono metrics. */}
+      {/* Asymmetric 12-column Swiss Metrology Bento Grid. */}
       <section id="fonctionnalites" className="border-y border-hairline bg-panel">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
           <h2 className="text-balance text-[24px] font-semibold leading-8 tracking-tight text-ink-primary">
             <Trans>Un bureau d'études complet, du modèle à la note de calcul.</Trans>
           </h2>
-          <div className="mt-8 grid gap-px overflow-hidden rounded-[8px] border border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
-            {capabilities.map((cap) => (
-              <article key={cap.title} className="bg-panel p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-accent-tint text-accent">
-                    <cap.icon size={18} strokeWidth={1.5} aria-hidden />
-                  </span>
-                  <span className="font-data text-right text-[12px] leading-4 text-ink-secondary">
-                    <span className="block text-[13px] font-medium text-ink-primary">
-                      {cap.metric}
-                    </span>
-                    {cap.metricLabel}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-[15px] font-semibold text-ink-primary">{cap.title}</h3>
-                <p className="mt-1.5 text-[13px] leading-5 text-ink-secondary">{cap.body}</p>
-              </article>
-            ))}
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-12">
+            {bento.map((cap, index) => {
+              const Icon = cap.icon;
+              return (
+                <Reveal key={cap.title} className={cap.spanClass} delay={index * 0.05}>
+                  <article
+                    className="flex h-full flex-col rounded-[8px] border border-hairline bg-panel p-5"
+                    data-testid={`bento-${index}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-accent-tint text-accent">
+                        <Icon size={22} />
+                      </span>
+                      <span className="font-data text-right text-[12px] leading-4 text-ink-secondary">
+                        <span className="block text-[13px] font-medium text-ink-primary">
+                          {cap.metric}
+                        </span>
+                        {cap.metricLabel}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-[15px] font-semibold text-ink-primary">{cap.title}</h3>
+                    <p className="mt-1.5 text-[13px] leading-5 text-ink-secondary">{cap.body}</p>
+                    {cap.formula !== undefined ? (
+                      <p className="font-data mt-2 rounded-[4px] border border-hairline bg-canvas px-2 py-1 text-[11px] text-accent">
+                        {cap.formula}
+                      </p>
+                    ) : null}
+                    {cap.tags !== undefined ? (
+                      <ul className="mt-2 flex flex-wrap gap-1">
+                        {cap.tags.map((tag) => (
+                          <li
+                            key={tag}
+                            className="font-data rounded-[2px] border border-hairline bg-panel-subtle px-1.5 py-0.5 text-[10px] text-ink-secondary"
+                          >
+                            {tag}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {cap.illustration !== undefined ? (
+                      <img
+                        src={cap.illustration}
+                        alt=""
+                        loading="lazy"
+                        className="mt-3 h-44 w-full border border-hairline rounded-[4px] bg-canvas object-contain p-2"
+                      />
+                    ) : null}
+                  </article>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Pricing — 3 tiers with 1-click offline activation. */}
+      {/* Pricing — 4 tiers with 1-click offline activation. */}
       <section id="tarifs" className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <h2 className="text-balance text-[24px] font-semibold leading-8 tracking-tight text-ink-primary">
           <Trans>Tarifs & éditions</Trans>
         </h2>
         <p className="mt-2 max-w-2xl text-[14px] leading-6 text-ink-secondary">
           <Trans>
-            L'édition Découverte est complète pour apprendre et calculer. L'édition Pro ajoute le
-            branding du bureau d'études et le multi-matériaux — activation hors-ligne, sans compte.
+            L'édition Découverte est complète pour apprendre et calculer. Le Pass Projet 48 h
+            débloque tout pour un livrable ponctuel, l'édition Pro ajoute le branding du bureau
+            d'études et le multi-matériaux — activation hors-ligne, sans compte.
           </Trans>
         </p>
-        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <article
             className="rounded-[8px] border border-hairline bg-panel p-5"
             data-testid="pricing-free"
@@ -579,6 +751,40 @@ function LandingPage() {
             </Link>
           </article>
           <article
+            className="rounded-[8px] border border-hairline bg-panel p-5"
+            data-testid="pricing-pass"
+          >
+            <h3 className="text-[15px] font-semibold text-ink-primary">
+              <Trans>Pass Projet 48 h</Trans>
+            </h3>
+            <p className="font-data mt-1 text-[22px] font-medium text-ink-primary">
+              19 €<span className="text-[13px] text-ink-muted"> HT</span>
+            </p>
+            <p className="mt-0.5 text-[12px] text-ink-muted">
+              <Trans>48 h de plein droit, sans abonnement</Trans>
+            </p>
+            <ul className="mt-4 space-y-1.5 text-[13px] text-ink-secondary">
+              {[
+                t`Toutes les fonctions Pro pendant 48 h`,
+                t`Idéal pour un livrable signé ce week-end`,
+                t`Activation 1 clic, hors-ligne`,
+              ].map((point) => (
+                <li key={point} className="flex gap-2">
+                  <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-accent" aria-hidden />
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              data-testid="pricing-pass-cta"
+              onClick={() => window.dispatchEvent(new Event("rdm-open-license"))}
+              className="mt-5 flex w-full items-center justify-center rounded border border-accent px-3 py-2 text-[13px] font-semibold text-accent hover:bg-accent-tint"
+            >
+              <Trans>Démarrer le pass 48 h</Trans>
+            </button>
+          </article>
+          <article
             className="rounded-[8px] border border-accent bg-panel p-5"
             data-testid="pricing-pro"
           >
@@ -591,7 +797,7 @@ function LandingPage() {
               </span>
             </div>
             <p className="font-data mt-1 text-[22px] font-medium text-ink-primary">
-              49 €<span className="text-[13px] text-ink-muted"> /mois</span>
+              49 €<span className="text-[13px] text-ink-muted"> HT/mois</span>
             </p>
             <p className="mt-0.5 text-[12px] text-ink-muted">
               <Trans>ou licence perpétuelle — hors-ligne</Trans>
@@ -612,7 +818,7 @@ function LandingPage() {
               type="button"
               data-testid="pricing-pro-cta"
               onClick={() => window.dispatchEvent(new Event("rdm-open-license"))}
-              className="mt-5 flex w-full items-center justify-center rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white hover:bg-accent-hover"
+              className="mt-5 flex w-full items-center justify-center rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white hover:bg-accent-strong"
             >
               <Trans>Activer une démonstration Pro</Trans>
             </button>
@@ -622,7 +828,7 @@ function LandingPage() {
             data-testid="pricing-team"
           >
             <h3 className="text-[15px] font-semibold text-ink-primary">
-              <Trans>Équipe / Entreprise</Trans>
+              <Trans>Équipe / Intranet</Trans>
             </h3>
             <p className="font-data mt-1 text-[22px] font-medium text-ink-primary">
               <Trans>Sur devis</Trans>
@@ -654,28 +860,22 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* Engineering FAQ. */}
+      {/* Engineering FAQ — ExpandablePanels (smooth height + opacity). */}
       <section className="border-t border-hairline bg-panel">
         <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
           <h2 className="text-balance text-[24px] font-semibold leading-8 tracking-tight text-ink-primary">
             <Trans>Questions d'ingénieurs</Trans>
           </h2>
-          <Accordion className="mt-6">
-            {faq.map((item, index) => (
-              <AccordionItem
+          <div className="mt-6 divide-y divide-hairline border-t border-hairline">
+            {faq.map((item) => (
+              <ExpandablePanel
                 key={item.q}
-                value={`faq-${index}`}
-                className="border-b border-hairline"
+                title={<span className="text-[14px] font-medium text-ink-primary">{item.q}</span>}
               >
-                <AccordionTrigger className="py-3 text-left text-[14px] font-medium text-ink-primary">
-                  {item.q}
-                </AccordionTrigger>
-                <AccordionPanel className="pb-4 text-[13px] leading-6 text-ink-secondary">
-                  {item.a}
-                </AccordionPanel>
-              </AccordionItem>
+                <p className="text-[13px] leading-6 text-ink-secondary">{item.a}</p>
+              </ExpandablePanel>
             ))}
-          </Accordion>
+          </div>
         </div>
       </section>
     </div>

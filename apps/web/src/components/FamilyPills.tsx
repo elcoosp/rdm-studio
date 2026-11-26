@@ -33,10 +33,15 @@ export function familyOfDesignation(designation: string): FamilyName {
 
 export function FamilyPills({
   onPick,
+  /** v2.1.0: controlled active family (URL-backed via the `family`
+   * search param). Uncontrolled default "Tous" when omitted. */
+  active: controlledActive,
 }: {
   onPick: (family: (typeof FAMILY_NAMES)[number]) => void;
+  active?: (typeof FAMILY_NAMES)[number];
 }): ReactElement {
-  const [active, setActive] = useState<(typeof FAMILY_NAMES)[number]>("Tous");
+  const [internalActive, setActive] = useState<(typeof FAMILY_NAMES)[number]>("Tous");
+  const active = controlledActive ?? internalActive;
   return (
     <div className="mb-3 flex flex-wrap gap-1" role="group" aria-label={t`Familles de sections`}>
       {FAMILY_NAMES.map((family) => (

@@ -11,7 +11,9 @@ import { expect, test, type Page } from "@playwright/test";
 /** Opens the project gallery and inserts one template by kind. */
 async function insertTemplate(page: Page, kind: string): Promise<void> {
   await page.goto("/geometry");
-  await page.getByRole("button", { name: "Galerie de projets" }).click();
+  // v2.1.1: the inspector also carries a `Galerie de projets` button —
+  // target the header chevron explicitly (first match in DOM order).
+  await page.locator("button[aria-label='Galerie de projets']").first().click();
   const card = page.getByTestId(`gallery-${kind}`);
   await expect(card).toBeVisible({ timeout: 10_000 });
   await card.click();
@@ -62,17 +64,30 @@ test("industrial portal frame: wind + snow + P-Δ + EC3 optimizer apply + ⌘Z u
   await page.waitForTimeout(800);
   const taux = page.getByTestId("kpi-utilization");
   await expect(taux).toBeVisible({ timeout: 20_000 });
-  // v2.0.2: the KPI re-solve is async — poll until the optimized profile
-  // lands (eta <= 1.0) or the assertion fails with the settled value.
+  // v2.1.1: the percentage is read from the VALUE element only
+  // (`kpi-utilization-value`) — the card label "Taux max EC3" used to
+  // concatenate its "3" with the value ("3" + "31.0" → "331"!). The
+  // number-flow digits live in a shadow root, so textContent falls back
+  // to `data-value`; the `/(\d+(?:[.,]\d+)?)\s*%/` match ignores unit
+  // text and η must be ≤ 100.
   await expect
     .poll(
       async () => {
-        const text = (await taux.textContent()) ?? "";
-        return Number(text.replace(/[^-\d,.]/g, "").replace(",", "."));
+        const etaText = await page.getByTestId("kpi-utilization-value").evaluate((el) => {
+          const direct = el.textContent ?? "";
+          if (/\d/.test(direct)) return direct;
+          const flow = el.querySelector("number-flow-react");
+          const shadow = flow?.shadowRoot?.textContent ?? "";
+          return /\d/.test(shadow) ? shadow : (el.getAttribute("data-value") ?? direct);
+        });
+        const match = etaText.match(/(\d+(?:[.,]\d+)?)\s*%/);
+        return match === null
+          ? Number(etaText.replace(",", "."))
+          : Number(match[1].replace(",", "."));
       },
       { timeout: 20_000 },
     )
-    .toBeLessThanOrEqual(1.0);
+    .toBeLessThanOrEqual(100);
   await page.keyboard.press("Control+z");
 });
 
@@ -86,6 +101,8 @@ test("Warren truss 24 m: articulated diagonals + linear buckling λcr modes", as
 
   await solveOnResults(page);
   // Linear buckling analysis renders λcr modes in the advanced panels.
+  // v2.1.1: the rail splits into 2 tabs — open `Analyses avancées` first.
+  await page.getByTestId("rail-tab-advanced").click();
   await page.getByRole("tab", { name: /Flambement global λcr/ }).click();
   await expect(page.getByText(/λcr/).first()).toBeVisible({ timeout: 15_000 });
 });
@@ -121,10 +138,12 @@ test("unstable mechanism: clear all supports and get a pedagogical fault, no cra
   await page.getByRole("link", { name: /Étape 4/ }).click();
   await page.getByRole("button", { name: /Calculer/ }).click({ force: true, timeout: 20_000 });
   // The solver reports the mechanism without crashing the worker or UI.
-  // The solver fault surfaces in the Step 4 fault banner (kind + message).
-  await expect(page.getByText(/mechanism|mécanisme|instable|invalid|appui/i).first()).toBeVisible({
-    timeout: 20_000,
-  });
+  // v2.1.1: wait CLEANLY on the dedicated fault banner testid instead of
+  // a loose text regex that raced the auto-solve on Firefox.
+  await expect(page.getByTestId("solve-fault")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("solve-fault")).toContainText(
+    /mechanism|mécanisme|instable|invalid|appui/i,
+  );
   await expect(
     page.getByTestId("combination-selector").or(page.getByTestId("kpi-utilization")).first(),
   )
@@ -207,7 +226,8 @@ test("legacy .rdm v1 migration + .docx / IFC4 / .rdm export suite", async ({ pag
 
   // .docx + IFC4 + .rdm exports produce valid non-empty downloads.
   const docx = page.waitForEvent("download", { timeout: 20_000 });
-  await page.getByRole("button", { name: /Télécharger .docx/ }).click();
+  // v2.1.1: the rail-top `Word (.docx)` button (secondary outline).
+  await page.getByTestId("export-docx").click();
   const docxDownload = await docx;
   expect((await docxDownload.path()) !== null).toBe(true);
 

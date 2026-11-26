@@ -1,6 +1,8 @@
-//! BIM interop (v1.9.0): pure-Rust exporters/importers — IFC4
+//! BIM interop (v1.9.0, v2.0.0 clippy-tuned): pure-Rust exporters/importers — IFC4
 //! Structural (STEP text), SAF JSON, OpenSees TCL, plain solver JSON
 //! and minimal glTF — shared with the wasm bridge.
+
+use std::fmt::Write as _;
 
 use rdm_model::{LoadCase, MemberBehavior, ProjectFile, Structure};
 
@@ -22,34 +24,39 @@ pub fn export_ifc4_structural(project: &ProjectFile) -> String {
     out.push_str(".ifc','2026-11-25T00:00:00',('RDM Studio'),('z.ai'),'RDM Studio','RDM Studio','');\nENDSEC;\nDATA;\n");
     let mut id = 1usize;
     let project_id = id;
-    out.push_str(&format!(
-        "#{id}=IFCPROJECT('GUID-{id}',#0,'{}',$,$,$,$,$,$);\n",
+    let _ = writeln!(
+        out,
+        "#{id}=IFCPROJECT('GUID-{id}',#0,'{}',$,$,$,$,$,$);",
         project.name
-    ));
+    );
     id += 2;
     let site_id = id;
-    out.push_str(&format!(
-        "#{id}=IFCSITE('GUID-{id}',#{},{},'Site',$,$,$,$,$,0.,$,$,$,$,$);\n",
+    let _ = writeln!(
+        out,
+        "#{id}=IFCSITE('GUID-{id}',#{},{},'Site',$,$,$,$,$,0.,$,$,$,$,$);",
         project_id, project.name
-    ));
+    );
     id += 1;
     let building_id = id;
-    out.push_str(&format!(
-        "#{id}=IFCBUILDING('GUID-{id}',#{},{},'Building',$,$,$,$,$,$,$);\n",
+    let _ = writeln!(
+        out,
+        "#{id}=IFCBUILDING('GUID-{id}',#{},{},'Building',$,$,$,$,$,$,$);",
         site_id, project.name
-    ));
+    );
     id += 1;
     let storey_id = id;
-    out.push_str(&format!(
-        "#{id}=IFCBUILDINGSTOREY('GUID-{id}',#{},{},'Storey 0',$,$,$,$,$,0.,$,$);\n",
+    let _ = writeln!(
+        out,
+        "#{id}=IFCBUILDINGSTOREY('GUID-{id}',#{},{},'Storey 0',$,$,$,$,$,0.,$,$);",
         building_id, project.name
-    ));
+    );
     id += 1;
     for node in &s.nodes {
-        out.push_str(&format!(
-            "#{id}=IFCBUILDINGELEMENTPROXY('GUID-N{}',#{},'N{}',$,$,$,$,$,$);\n",
+        let _ = writeln!(
+            out,
+            "#{id}=IFCBUILDINGELEMENTPROXY('GUID-N{}',#{},'N{}',$,$,$,$,$,$);",
             node.id, storey_id, node.id
-        ));
+        );
         id += 1;
     }
     for beam in &s.beams {
@@ -59,18 +66,19 @@ pub fn export_ifc4_structural(project: &ProjectFile) -> String {
         } else {
             "IFCCOLUMN"
         };
-        out.push_str(&format!(
-            "#{id}={role}('GUID-B{}',#{},'B{}',$,$,$,$,$,$);\n",
+        let _ = writeln!(
+            out,
+            "#{id}={role}('GUID-B{}',#{},'B{}',$,$,$,$,$,$);",
             beam.id, storey_id, beam.id
-        ));
+        );
         id += 1;
     }
     for load in &s.loads {
         let case = load.case.code();
-        out.push_str(&format!(
-            "#{id}=IFCANNOTATION('GUID-L{}',#{},'Load {} {}',$,$,$,$);\n",
-            id, storey_id, case, id
-        ));
+        let _ = writeln!(
+            out,
+            "#{id}=IFCANNOTATION('GUID-L{id}',#{storey_id},'Load {case} {id}',$,$,$,$);"
+        );
         id += 1;
     }
     out.push_str("ENDSEC;\nEND-ISO-10303-21;\n");
@@ -203,10 +211,11 @@ pub fn export_opensees_tcl(project: &ProjectFile) -> String {
     let s = &project.structure;
     let mut out = String::from("# RDM Studio -> OpenSees (v1.9.0)\nmodel basic -ndm 3 -ndf 6\n");
     for node in &s.nodes {
-        out.push_str(&format!(
-            "node {} {:.6} {:.6} {:.6}\n",
+        let _ = writeln!(
+            out,
+            "node {} {:.6} {:.6} {:.6}",
             node.id, node.x, node.y, node.z
-        ));
+        );
     }
     let mut supports = String::new();
     for support in &s.supports {
@@ -218,25 +227,27 @@ pub fn export_opensees_tcl(project: &ProjectFile) -> String {
             .map(|(i, _)| i.to_string())
             .collect();
         if !flags.is_empty() {
-            supports.push_str(&format!("fix {} {}\n", support.node_id, flags.join(" ")));
+            let _ = writeln!(supports, "fix {} {}", support.node_id, flags.join(" "));
         }
     }
     out.push_str(&supports);
     for beam in &s.beams {
-        out.push_str(&format!(
-            "element elasticBeamColumn {} {} {} 1.0 1.0 1.0 1\n",
+        let _ = writeln!(
+            out,
+            "element elasticBeamColumn {} {} {} 1.0 1.0 1.0 1",
             beam.id, beam.n1, beam.n2
-        ));
+        );
     }
     for load in &s.loads {
         if load.case != LoadCase::Permanent {
             continue;
         }
         if let rdm_model::LoadKind::Nodal { node_id, forces } = load.kind {
-            out.push_str(&format!(
-                "load {} {:.4} {:.4} {:.4} {:.4} {:.4} {:.4}\n",
+            let _ = writeln!(
+                out,
+                "load {} {:.4} {:.4} {:.4} {:.4} {:.4} {:.4}",
                 node_id, forces.fx, forces.fy, forces.fz, forces.mx, forces.my, forces.mz
-            ));
+            );
         }
     }
     out.push_str("system BandGeneral\nconstraints Plain\nnumberer RCM\nalgorithm Linear\nintegrator LoadControl 1.0\nanalysis Static\nanalyze 1\n");
@@ -307,8 +318,8 @@ pub fn export_gltf(project: &ProjectFile) -> Result<String, serde_json::Error> {
                 "componentType": 5130,
                 "count": s.nodes.len(),
                 "type": "VEC3",
-                "max": [positions.iter().cloned().fold(f64::NEG_INFINITY, f64::max)],
-                "min": [positions.iter().cloned().fold(f64::INFINITY, f64::min)],
+                "max": [positions.iter().copied().fold(f64::NEG_INFINITY, f64::max)],
+                "min": [positions.iter().copied().fold(f64::INFINITY, f64::min)],
             },
             {
                 "bufferView": 1,

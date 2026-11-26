@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Trans } from "@lingui/react/macro";
-import { t } from "@lingui/core/macro";
+import { useEffect, useState } from "react";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { SlidersHorizontal } from "lucide-react";
 import { useProjectStore, type ModelSettingsData } from "../state/projectStore";
 
 /**
@@ -24,6 +24,9 @@ export const DEFAULT_SETTINGS: ModelSettingsData = {
 };
 
 export function SettingsPopover(): React.ReactElement {
+  // v2.1.1: the macro `t` comes from the SUBSCRIBING useLingui() hook so
+  // the aria-label re-translates the moment FR / EN flips in place.
+  const { t } = useLingui();
   const nationalAnnex = useProjectStore(
     (st) => st.project.structure.settings?.national_annex ?? DEFAULT_SETTINGS.national_annex,
   );
@@ -43,6 +46,13 @@ export function SettingsPopover(): React.ReactElement {
   const updateSettings = useProjectStore((st) => st.updateSettings);
   const [open, setOpen] = useState(false);
 
+  // v2.1.1: the ⌘K palette opens the normative settings via event.
+  useEffect(() => {
+    const openSettings = () => setOpen(true);
+    window.addEventListener("rdm-open-settings", openSettings);
+    return () => window.removeEventListener("rdm-open-settings", openSettings);
+  }, []);
+
   const annexes: ModelSettingsData["national_annex"][] = ["FR", "BE", "DE", "UK", "EN"];
 
   return (
@@ -51,10 +61,14 @@ export function SettingsPopover(): React.ReactElement {
         type="button"
         aria-expanded={open}
         aria-haspopup="true"
+        aria-label={t`Réglages`}
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md border border-hairline px-3 py-1.5 text-sm font-medium hover:bg-panel-subtle  "
+        className="flex items-center gap-1 rounded-md border border-hairline px-1.5 py-1 text-[12px] font-medium text-ink-secondary hover:bg-panel-subtle xl:px-3 xl:py-1.5 xl:text-sm"
       >
-        <Trans>Réglages</Trans>
+        <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
+        <span className="hidden xl:inline">
+          <Trans>Réglages</Trans>
+        </span>
       </button>
       {open ? (
         <div

@@ -29,13 +29,39 @@ function MarketingHeader() {
           className="hidden items-center gap-5 text-[13px] text-ink-secondary md:flex"
           aria-label="principale"
         >
-          <a href="#fonctionnalites" className="hover:text-ink-primary">
+          {/* v2.1.1: TanStack `Link` with hash — clicking Fonctionnalités /
+              Tarifs from /legal navigates cleanly back to `/` and scrolls
+              to the section, and the active link gets the Cobalt tint
+              pill via `activeProps`. */}
+          <Link
+            to="/"
+            hash="fonctionnalites"
+            hashScrollIntoView={true}
+            activeProps={{
+              className: "rounded bg-accent-tint px-2 py-1 font-semibold text-accent",
+            }}
+            className="hover:text-ink-primary"
+          >
             <Trans>Fonctionnalités</Trans>
-          </a>
-          <a href="#tarifs" className="hover:text-ink-primary">
+          </Link>
+          <Link
+            to="/"
+            hash="tarifs"
+            hashScrollIntoView={true}
+            activeProps={{
+              className: "rounded bg-accent-tint px-2 py-1 font-semibold text-accent",
+            }}
+            className="hover:text-ink-primary"
+          >
             <Trans>Tarifs</Trans>
-          </a>
-          <Link to="/legal" className="hover:text-ink-primary">
+          </Link>
+          <Link
+            to="/legal"
+            activeProps={{
+              className: "rounded bg-accent-tint px-2 py-1 font-semibold text-accent",
+            }}
+            className="hover:text-ink-primary"
+          >
             <Trans>Légal</Trans>
           </Link>
           <a
@@ -87,15 +113,22 @@ function MarketingFooter() {
           <p className="font-data mb-1.5 text-[11px] text-ink-muted">
             <Trans>Produit</Trans>
           </p>
-          <a
-            href="#fonctionnalites"
+          <Link
+            to="/"
+            hash="fonctionnalites"
+            hashScrollIntoView={true}
             className="block py-0.5 text-ink-secondary hover:text-ink-primary"
           >
             <Trans>Fonctionnalités</Trans>
-          </a>
-          <a href="#tarifs" className="block py-0.5 text-ink-secondary hover:text-ink-primary">
+          </Link>
+          <Link
+            to="/"
+            hash="tarifs"
+            hashScrollIntoView={true}
+            className="block py-0.5 text-ink-secondary hover:text-ink-primary"
+          >
             <Trans>Tarifs</Trans>
-          </a>
+          </Link>
           <Link to="/geometry" className="block py-0.5 text-ink-secondary hover:text-ink-primary">
             <Trans>Ouvrir l'atelier 3D</Trans>
           </Link>

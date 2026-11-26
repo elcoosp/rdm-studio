@@ -170,7 +170,7 @@ export function buildTemplate(kind: string): ProjectData {
   }
 }
 
-import { ENGINEERING_TEMPLATES } from "../lib/engineeringTemplates";
+import { ENGINEERING_TEMPLATES, canonicalSupports } from "../lib/engineeringTemplates";
 
 /** v1.6.0 parametric templates (Rust-generated). */
 const PARAMETRIC_TEMPLATES = [
@@ -430,12 +430,9 @@ export function ProjectGalleryModal({
             })}
             {/* v2.0.0: the 12 validated engineering templates with "Pourquoi ce modèle" notes. */}
             {ENGINEERING_TEMPLATES.map((template) => (
-              <div
-                key={template.id}
-                className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-              >
+              <div key={template.id} className="rounded-lg border border-hairline p-3 ">
                 <p className="text-sm font-semibold">{template.name}</p>
-                <p className="mt-1 text-xs italic text-slate-600 dark:text-slate-300">
+                <p className="mt-1 text-xs italic text-ink-secondary ">
                   « Pourquoi ce modèle » — {template.why}
                 </p>
                 <button
@@ -451,7 +448,12 @@ export function ProjectGalleryModal({
                         k_buckling_y: 1.0,
                         k_buckling_z: 1.0,
                       })),
-                      supports: [],
+                      // v2.0.2: canonical per-template restraints (stable,
+                      // solvable models straight from the gallery).
+                      supports: canonicalSupports(template).map((sup) => ({
+                        ...sup,
+                        spring_stiffness: [0, 0, 0, 0, 0, 0] as number[],
+                      })),
                       loads: template.loads.map((load) => ({
                         case: load.case,
                         kind: load.kind,
@@ -469,7 +471,7 @@ export function ProjectGalleryModal({
                     };
                     loadProject({ version: 2, name: template.name, structure });
                   }}
-                  className="mt-2 w-full rounded bg-blue-600 py-1 text-xs font-semibold text-white"
+                  className="mt-2 w-full rounded bg-accent py-1 text-xs font-semibold text-white"
                 >
                   Charger
                 </button>

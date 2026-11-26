@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useProjectStore } from "@/state/projectStore";
+import { useSelectedIds } from "@/hooks/useStudioQuery";
 import { CAD_COMMANDS, parseUnitValue, snapCandidates, snapPolar } from "@/modeling/cadTools";
 import type { CadModel } from "@/modeling/cadTools";
 
@@ -54,8 +55,10 @@ const SECONDARY: { id: string; label: string; icon: typeof Repeat }[] = [
 export function CadToolbar(): ReactElement {
   const project = useProjectStore((st) => st.project);
   const loadProject = useProjectStore((st) => st.loadProject);
-  const selectedNodeId = useProjectStore((st) => st.selection.nodeId);
-  const selectedBeamIds = useProjectStore((st) => st.selection.selectedBeamIds);
+  // v2.1.0: the single node selection is URL-backed; the multi-beam
+  // batch selection stays in the project store.
+  const { nodeId: selectedNodeId } = useSelectedIds();
+  const selectedBeamIds = useProjectStore((st) => st.batch.selectedBeamIds);
   const [cheatOpen, setCheatOpen] = useState(false);
   const [input, setInput] = useState("4m");
   const [feedback, setFeedback] = useState<string | null>(null);

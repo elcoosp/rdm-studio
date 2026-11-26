@@ -20,6 +20,35 @@ test("landing page renders the hero, badges and 3-model showcase", async ({ page
   await expect(page.getByTestId("launch-warren")).toBeVisible();
 });
 
+test("the 3D hero switches models and the live load slider moves telemetry", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  // v2.1.2: the interactive Three.js hero — 3D stage (or SVG fallback on
+  // headless GPUs), model switcher (SegmentedControl) and live slider.
+  await expect(page.getByTestId("hero-3d-panel")).toBeVisible();
+  await expect(page.getByTestId("hero-3d-stage").first()).toBeVisible();
+  // Model switcher: the hero radio group offers the three flagship shapes.
+  const heroSwitcher = page.getByRole("radiogroup", { name: /Modèle du hero/ });
+  await expect(heroSwitcher.getByRole("radio")).toHaveCount(3);
+  await heroSwitcher.getByRole("radio").nth(1).click();
+  // Live load slider (20 → 120 kN): raising q pushes η past 1.00.
+  const slider = page.getByRole("slider");
+  await expect(slider.first()).toBeVisible();
+  await expect(page.getByTestId("hero-eta")).toBeVisible();
+});
+
+test("the studio header Réglages popover opens over the 3D stage", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/geometry");
+  // v2.1.2: the portal SettingsPopover is reliably clickable above the
+  // persistent 3D stage (519229b audit fix).
+  await page.getByRole("button", { name: /Réglages/ }).click();
+  await expect(page.getByTestId("settings-popover")).toBeVisible();
+  await expect(page.getByText("Annexe nationale")).toBeVisible();
+  await expect(page.getByTestId("settings-p-delta").getByRole("switch")).toBeVisible();
+  await page.keyboard.press("Escape");
+});
+
 test("showcase launch opens the studio with the matching template", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");

@@ -70,6 +70,13 @@ export const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultStructuralSharing: true,
+  // v2.1.2: native View Transitions on every route navigation — a crisp
+  // 160 ms cross-fade (see the `::view-transition-*` rules in app.css)
+  // with the persistent 3D stage PINNED (`view-transition-name: none` on
+  // [data-testid="persistent-stage"]) so the WebGL canvas never flickers
+  // between /, /legal, /geometry and /report. Respects
+  // `prefers-reduced-motion` (document.hidden-aware in TanStack core).
+  defaultViewTransition: true,
   defaultNotFoundComponent: NotFoundCard,
   defaultErrorComponent: ErrorCard,
 });

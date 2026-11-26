@@ -68,9 +68,12 @@ export function NumberFlowValue({
   }
   return (
     <span className={className} data-testid={testId}>
+      {/* fr-FR locale: DESIGN.md §3 mandates French decimal commas +
+          non-breaking-space grouping on every numeric readout. */}
       <NumberFlow
         value={Number.isFinite(value) ? value : 0}
         format={formatObj}
+        locales="fr-FR"
         className="font-data [font-variant-numeric:tabular-nums]"
         style={{ fontFamily: "var(--font-mono)" }}
       />

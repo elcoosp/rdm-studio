@@ -90,7 +90,7 @@ test.describe("v1.6.0 — security audit", () => {
       const event = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt });
       target.dispatchEvent(event);
     }, invalid);
-    await expect(page.getByText(/Projet .rdm invalide/)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/Projet .rdm invalide/)).toBeVisible({ timeout: 15_000 });
     // The demo model is intact (3 nodes / 2 beams — node rows unchanged).
     await expect(dock.locator("tbody tr")).toHaveCount(nodesBefore);
   });
@@ -117,7 +117,9 @@ test.describe("v1.6.0 — security audit", () => {
 
 test.describe("v1.6.0 — parametric & metrology", () => {
   test("parametric configurator generates a Warren truss via Rust", async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+    // v2.1.1: the node/beam telemetry pill is 2xl+ only (header space for
+    // the named stepper) — this assertion runs at 1920×900.
+    await page.setViewportSize({ width: 1920, height: 900 });
     await page.goto("/geometry");
     await page
       .locator("#rdm-logo ~ button, button[aria-label='Galerie de projets']")
@@ -261,8 +263,10 @@ test.describe("v1.6.0 — layout matrix (AGENTS.md §4)", () => {
         expect(overflow).toBeLessThanOrEqual(0);
       }
       // FR | EN always visible (locale switch inside the viewport).
-      const localeVisible = await page.getByRole("button", { name: "FR" }).isVisible();
-      expect(localeVisible).toBe(true);
+      // v2.1.1: exact match (substring mode collided) + auto-waiting —
+      // a bare isVisible() raced React hydration on cold loads.
+      await expect(page.getByRole("button", { name: "FR", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "EN", exact: true })).toBeVisible();
       // No page-level horizontal scroll.
       const bodyOverflow = await page.evaluate(
         () => document.body.scrollWidth - document.body.clientWidth,

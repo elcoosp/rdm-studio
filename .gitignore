@@ -36,8 +36,6 @@ playwright-report/
 core
 docs/launch
 
-# v2.0.2 handoff artifacts (tracked intentionally)
-!ship.toml
-!.github/pr-body.md
+# v2.1.1 handoff artifacts (strictly gitignored)
 ship.toml
 .github/pr-body.md

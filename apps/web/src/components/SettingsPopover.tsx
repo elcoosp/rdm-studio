@@ -5,15 +5,41 @@ import { useProjectStore, type ModelSettingsData } from "../state/projectStore";
 
 /**
  * Header settings popover (v1.7.0/v1.8.0): National Annex, EN 1990
- * combination method, Timoshenko shear and 2D plane-frame mode — all
- * schema-v2 fields of the `.rdm` settings block.
+ * combination method, Timoshenko shear, 2D plane-frame mode and the
+ * v2.0.1 P-Δ second-order toggle — all schema-v2 fields of the `.rdm`
+ * settings block.
  */
 
+/**
+ * Module-level default settings (v2.0.1): stable object identity shared by
+ * every selector fallback. A fresh object literal inside a zustand selector
+ * loops `useSyncExternalStore` on every route render (React #185).
+ */
+export const DEFAULT_SETTINGS: ModelSettingsData = {
+  national_annex: "FR",
+  combination_method: "Eq610",
+  shear_deformation: true,
+  plane_frame_2d: false,
+  p_delta: false,
+};
+
 export function SettingsPopover(): React.ReactElement {
-  const nationalAnnex = useProjectStore((st) => st.project.structure.settings?.national_annex ?? "FR");
-  const combinationMethod = useProjectStore((st) => st.project.structure.settings?.combination_method ?? "Eq610");
-  const shearDeformation = useProjectStore((st) => st.project.structure.settings?.shear_deformation ?? true);
-  const planeFrame2d = useProjectStore((st) => st.project.structure.settings?.plane_frame_2d ?? false);
+  const nationalAnnex = useProjectStore(
+    (st) => st.project.structure.settings?.national_annex ?? DEFAULT_SETTINGS.national_annex,
+  );
+  const combinationMethod = useProjectStore(
+    (st) =>
+      st.project.structure.settings?.combination_method ?? DEFAULT_SETTINGS.combination_method,
+  );
+  const shearDeformation = useProjectStore(
+    (st) => st.project.structure.settings?.shear_deformation ?? DEFAULT_SETTINGS.shear_deformation,
+  );
+  const planeFrame2d = useProjectStore(
+    (st) => st.project.structure.settings?.plane_frame_2d ?? DEFAULT_SETTINGS.plane_frame_2d,
+  );
+  const pDelta = useProjectStore(
+    (st) => st.project.structure.settings?.p_delta ?? DEFAULT_SETTINGS.p_delta,
+  );
   const updateSettings = useProjectStore((st) => st.updateSettings);
   const [open, setOpen] = useState(false);
 
@@ -90,12 +116,23 @@ export function SettingsPopover(): React.ReactElement {
               onChange={(e) => updateSettings({ shear_deformation: e.target.checked })}
             />
           </label>
-          <label className="flex items-center justify-between text-sm">
+          <label className="mb-2 flex items-center justify-between text-sm">
             <Trans>Plan 2D (Uy/Rx/Rz bloqués)</Trans>
             <input
               type="checkbox"
               checked={planeFrame2d}
               onChange={(e) => updateSettings({ plane_frame_2d: e.target.checked })}
+            />
+          </label>
+          <label
+            className="flex items-center justify-between text-sm"
+            data-testid="settings-p-delta"
+          >
+            <Trans>P-Δ (second ordre)</Trans>
+            <input
+              type="checkbox"
+              checked={pDelta}
+              onChange={(e) => updateSettings({ p_delta: e.target.checked })}
             />
           </label>
         </div>

@@ -1,7 +1,3 @@
-{
-  /* v2.0.0: EN 1991 generators + thermal action, wired to generate_env_loads_json. */
-}
-<EnvLoadGenerators />;
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
@@ -286,6 +282,10 @@ function LoadsPage() {
           </button>
         ))}
       </div>
+
+      {/* v2.0.1: EN 1991 generators + thermal action, wired to
+          generate_env_loads_json — docked below the EN 1990 case tabs. */}
+      <EnvLoadGenerators />
 
       {/* g-acceleration quick scenarios (RDM 7 parity). */}
       <section className="border-t border-hairline pt-3" data-testid="accel-field">

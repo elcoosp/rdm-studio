@@ -25,6 +25,31 @@ const COMPONENT_LABELS: Record<DiagramComponent, string> = {
   t: "T (N·m)",
 };
 
+/**
+ * v2.0.1: null-safe envelope payload normalization — the worker may answer
+ * with a fault object, an id-keyed map or a plain array depending on the
+ * solve outcome; every shape collapses to a beam_id-sorted array or null.
+ */
+function normalizeEnvelopes(payload: unknown): BeamEnvelopeDto[] | null {
+  if (Array.isArray(payload)) {
+    return (payload as BeamEnvelopeDto[])
+      .filter((e) => e !== null && typeof e === "object" && "beam_id" in e)
+      .sort((a, b) => a.beam_id - b.beam_id);
+  }
+  if (payload !== null && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    if (typeof record.kind === "string") {
+      return null;
+    }
+    const values = Object.values(record).filter(
+      (v): v is BeamEnvelopeDto =>
+        v !== null && typeof v === "object" && "beam_id" in (v as object),
+    );
+    return values.length > 0 ? values.sort((a, b) => a.beam_id - b.beam_id) : null;
+  }
+  return null;
+}
+
 export function ForceDiagrams3D(): ReactElement {
   const project = useProjectStore((st) => st.project);
   const [envelopes, setEnvelopes] = useState<BeamEnvelopeDto[] | null>(null);
@@ -36,12 +61,11 @@ export function ForceDiagrams3D(): ReactElement {
     void feaClient
       .engineCall("compute_envelopes_json", project)
       .then((payload) => {
-        if (Array.isArray(payload)) {
-          setEnvelopes(payload as BeamEnvelopeDto[]);
-        } else {
-          console.error("compute_envelopes_json returned non-array:", payload);
-          setEnvelopes(null);
+        const normalized = normalizeEnvelopes(payload);
+        if (normalized === null) {
+          console.error("compute_envelopes_json returned a non-array payload:", payload);
         }
+        setEnvelopes(normalized);
       })
       .catch(() => setEnvelopes(null));
     return undefined;

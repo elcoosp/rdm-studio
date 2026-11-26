@@ -5,6 +5,15 @@ import { X } from "lucide-react";
 import { deleteSnapshot, listSnapshots, loadSnapshot, saveSnapshot } from "../state/snapshots";
 import { useProjectStore, type ProjectData } from "../state/projectStore";
 import { computeModelMassKg } from "../lib/resultsMath";
+import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * Scenario Comparator (v2.0.0): side-by-side named snapshots with the
@@ -72,37 +81,33 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
   );
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t`Comparateur de scénarios`}
-      className="fixed inset-0 z-[85] flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-panel p-6 shadow-2xl "
-        onClick={(e) => e.stopPropagation()}
+    <DialogRoot open onOpenChange={(next) => (next ? undefined : onClose())}>
+      <DialogContent
+        className="max-h-[85vh] w-[min(92vw,768px)] overflow-auto"
+        data-testid="scenario-compare-modal"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">
-            <Trans>Comparateur de scénarios</Trans>
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t`Fermer`}
-            className="flex h-8 w-8 items-center justify-center rounded border border-hairline text-ink-secondary hover:border-accent hover:text-accent "
-          >
-            <X size={16} strokeWidth={1.5} aria-hidden />
-          </button>
-        </div>
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              <Trans>Comparateur de scénarios</Trans>
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t`Fermer`}
+              className="flex h-8 w-8 items-center justify-center rounded border border-hairline text-ink-secondary hover:border-accent hover:text-accent"
+            >
+              <X size={16} strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
+        </DialogHeader>
         <div className="mb-4 flex flex-wrap gap-2">
-          <input
+          <Input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t`Nom du scénario`}
             aria-label={t`Nom du scénario`}
-            className="rounded border border-hairline bg-transparent px-2 py-1 text-sm "
+            className="h-8"
           />
           <button
             type="button"
@@ -129,25 +134,34 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
           ).map(([slot, value, setter]) => (
             <div key={slot} className="rounded-lg border border-hairline p-3 ">
               <p className="mb-1 text-xs font-bold text-ink-muted">{slot}</p>
-              <select
+              {/* v2.1.2: scenario picker as a Base UI Select (zero raw selects). */}
+              <SelectRoot
                 value={value?.name ?? ""}
-                onChange={(e) => {
-                  void loadSnapshot(e.target.value).then((loaded) => {
+                onValueChange={(next) => {
+                  if (next === null || next === "") return;
+                  void loadSnapshot(next).then((loaded) => {
                     if (loaded !== null) {
-                      setter({ name: e.target.value, project: loaded, meta: computeMeta(loaded) });
+                      setter({ name: next, project: loaded, meta: computeMeta(loaded) });
                     }
                   });
                 }}
-                aria-label={t`Scénario ${slot}`}
-                className="w-full rounded border border-hairline bg-transparent px-2 py-1 text-sm "
               >
-                <option value="">—</option>
-                {names.map((n) => (
-                  <option key={n.name} value={n.name}>
-                    {n.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger
+                  aria-label={t`Scénario ${slot}`}
+                  className="h-8 text-sm"
+                  data-testid={`scenario-slot-${slot}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">—</SelectItem>
+                  {names.map((n) => (
+                    <SelectItem key={n.name} value={n.name}>
+                      {n.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
               {value !== null ? (
                 <ul className="mt-2 text-xs text-ink-secondary ">
                   <li>
@@ -186,7 +200,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
             {chip(t`Δ δ`, deltas.deflection * 1000, "mm")}
           </div>
         ) : null}
-      </div>
-    </div>
+      </DialogContent>
+    </DialogRoot>
   );
 }

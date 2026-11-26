@@ -52,6 +52,14 @@ msgstr "€49/month · perpetual licence"
 msgid "Accrochage magnétique 10/50/100 mm, subdivisions, extrusion, optimiseur EC3 1-clic avec retour arrière ⌘Z — la géométrie reste la source de vérité."
 msgstr "10/50/100 mm magnetic snapping, subdivisions, extrusion and the 1-click EC3 optimizer with ⌘Z undo — geometry stays the single source of truth."
 
+#: src/components/CommandPalette.tsx
+msgid "Accueil"
+msgstr "Home"
+
+#: src/routes/_studio/report.tsx
+msgid "Acier"
+msgstr "Steel"
+
 #: src/components/LicenseModal.tsx
 msgid "Actif"
 msgstr "Active"
@@ -93,7 +101,12 @@ msgstr "Add nodes, connect them with N1 → N2 members, import a DXF drawing or 
 msgid "Amplitude"
 msgstr "Amplitude"
 
+#: src/components/CommandPalette.tsx
+msgid "Analyses & Normes"
+msgstr "Analyses & Standards"
+
 #: src/components/AdvancedPanels.tsx
+#: src/routes/_studio/results.tsx
 msgid "Analyses avancées"
 msgstr "Advanced analyses"
 
@@ -117,6 +130,10 @@ msgstr "Apply the springs to N{nodeId}"
 #: src/routes/_studio/loads.tsx
 msgid "Appliqués aux charges nodales et ponctuelles de travée du cas <0>{0}</0>."
 msgstr "Applied to the nodal and point-on-span loads of case <0>{0}</0>."
+
+#: src/routes/_studio/report.tsx
+msgid "Appui"
+msgstr "Support"
 
 #: src/routes/_studio/supports.tsx
 msgid "Appuis actifs"
@@ -166,6 +183,10 @@ msgstr "No data is ever sent to a server. Your models, sections, loads, results 
 msgid "Barre de treillis (articuler N1/N2)"
 msgstr "Truss member (pin-joint N1/N2)"
 
+#: src/components/CommandPalette.tsx
+msgid "Basculer FR / EN"
+msgstr "Switch FR / EN"
+
 #: src/components/ValidationModal.tsx
 msgid "Benchmark"
 msgstr "Benchmark"
@@ -202,6 +223,10 @@ msgstr "Computed"
 #: src/routes/_studio/results.tsx
 msgid "Calculer"
 msgstr "Calculate"
+
+#: src/components/CommandPalette.tsx
+msgid "Calculer 3D & Eurocode 3"
+msgstr "Run 3D & Eurocode 3 analysis"
 
 #: src/routes/_marketing/index.tsx
 msgid "CAO 3D interactive + optimiseur"
@@ -307,6 +332,7 @@ msgstr "Tick the DOFs locked by each support. Free rotations let bending pass (p
 msgid "Combinaisons EN 1990"
 msgstr "EN 1990 combinations"
 
+#: src/components/CommandPalette.tsx
 #: src/components/ScenarioCompareModal.tsx
 msgid "Comparateur de scénarios"
 msgstr "Scenario comparator"
@@ -340,6 +366,10 @@ msgstr "Copied!"
 msgid "Copier l'URL de partage"
 msgstr "Copy share URL"
 
+#: src/routes/_studio/report.tsx
+msgid "Copier TSV"
+msgstr "Copy TSV"
+
 #: src/viewport3d/LayerToolbar.tsx
 msgid "Cotes"
 msgstr "Dimensions"
@@ -357,8 +387,8 @@ msgid "Créer une poutre"
 msgstr "Create a member"
 
 #: src/routes/_studio/report.tsx
-msgid "CSV Excel"
-msgstr "CSV Excel"
+#~ msgid "CSV Excel"
+#~ msgstr "CSV Excel"
 
 #: src/routes/_marketing/index.tsx
 msgid "Dans IndexedDB, sur votre poste uniquement. Aucune base de données distante, aucun compte obligatoire. Le partage se fait par une URL contenant le modèle compressé (lz-string) revalidé par Valibot à la relecture, ou par fichier .rdm."
@@ -373,6 +403,10 @@ msgstr "Discovery"
 #~ msgid "Déformée & exploitation (ELU)"
 #~ msgstr "Deformed shape & ULS utilization"
 
+#: src/routes/_studio/report.tsx
+msgid "Déformée ELS"
+msgstr "SLS deflected shape"
+
 #: src/routes/_studio/geometry.tsx
 msgid "Déjà reliés"
 msgstr "Already linked"
@@ -385,6 +419,10 @@ msgstr "Pro demonstration activated"
 msgid "DÉPASSÉ"
 msgstr "EXCEEDED"
 
+#: src/routes/_studio/report.tsx
+msgid "Déplacements extrêmes ELS"
+msgstr "Extreme SLS displacements"
+
 #: src/routes/_studio/results.tsx
 msgid "Déplacements nodaux"
 msgstr "Nodal displacements"
@@ -396,6 +434,10 @@ msgstr "Nodal displacements"
 #: src/routes/results.tsx
 #~ msgid "Déplacements nodaux (Q)"
 #~ msgstr "Nodal displacements (Q)"
+
+#: src/components/CommandPalette.tsx
+msgid "Déplacer"
+msgstr "Move"
 
 #: src/routes/_marketing/legal.tsx
 msgid "Dernière mise à jour : novembre 2026 — v2.1.0."
@@ -416,8 +458,8 @@ msgid "Diagrammes d'efforts 3D"
 msgstr "3D force diagrams"
 
 #: src/routes/_studio/results.tsx
-msgid "Diagrammes d'efforts 3D (enveloppes)"
-msgstr "3D force diagrams (envelopes)"
+#~ msgid "Diagrammes d'efforts 3D (enveloppes)"
+#~ msgstr "3D force diagrams (envelopes)"
 
 #: src/viewport3d/ForceDiagrams3D.tsx
 #~ msgid "Diagrammes N/V/T/M (envelopes)"
@@ -463,6 +505,10 @@ msgstr "Full EC3 + CalcTrace"
 msgid "Édition Découverte"
 msgstr "Discovery edition"
 
+#: src/routes/_studio/report.tsx
+msgid "Édition Découverte — Évaluation non contractuelle"
+msgstr "Discovery Edition — Non-contractual evaluation"
+
 #: src/components/LicenseBadge.tsx
 msgid "Édition Pro"
 msgstr "Pro edition"
@@ -495,14 +541,18 @@ msgstr "Save branding"
 msgid "Enregistrer le projet courant"
 msgstr "Save the current project"
 
+#: src/routes/_studio/results.tsx
+msgid "Enveloppes 3D"
+msgstr "3D envelopes"
+
 #: src/routes/_marketing/index.tsx
 msgid "Équipe / Entreprise"
 msgstr "Team / Enterprise"
 
 #. placeholder {0}: step.stepOrder
 #: src/routes/_studio.tsx
-msgid "Étape {0}"
-msgstr "Step {0}"
+#~ msgid "Étape {0}"
+#~ msgstr "Step {0}"
 
 #: src/components/ValidationModal.tsx
 msgid "Exécution en cours…"
@@ -516,10 +566,21 @@ msgstr "Running…"
 msgid "Export PDF / CSV / .rdm"
 msgstr "PDF / CSV / .rdm export"
 
+#: src/components/CommandPalette.tsx
+msgid "Exporter .docx"
+msgstr "Export .docx"
+
+#: src/components/CommandPalette.tsx
+msgid "Exporter .rdm"
+msgstr "Export .rdm"
+
 #: src/components/ProjectGalleryModal.tsx
-#: src/routes/_studio/report.tsx
 msgid "Exporter (.rdm)"
 msgstr "Export (.rdm)"
+
+#: src/components/CommandPalette.tsx
+msgid "Exporter IFC4"
+msgstr "Export IFC4"
 
 #: src/routes/_studio/report.tsx
 msgid "Exports (étape 5)"
@@ -528,6 +589,14 @@ msgstr "Exports (step 5)"
 #: src/routes/_marketing/index.tsx
 msgid "exports vectoriels"
 msgstr "vector exports"
+
+#: src/components/CommandPalette.tsx
+msgid "Extruder"
+msgstr "Extrude"
+
+#: src/routes/_studio/report.tsx
+msgid "f (Hz)"
+msgstr "f (Hz)"
 
 #: src/components/FamilyPills.tsx
 msgid "Familles de sections"
@@ -566,6 +635,10 @@ msgstr "Global buckling λcr"
 msgid "Flèche max"
 msgstr "Max deflection"
 
+#: src/routes/_studio/report.tsx
+msgid "Flèches ELS (mm)"
+msgstr "SLS deflections (mm)"
+
 #: src/routes/_marketing/index.tsx
 msgid "flux CAD verrouillé"
 msgstr "locked CAD workflow"
@@ -578,9 +651,17 @@ msgstr "Features"
 msgid "fonctionne entièrement sur votre poste."
 msgstr "runs entirely on your machine."
 
+#: src/routes/_studio/report.tsx
+msgid "Fréquences propres (Hz)"
+msgstr "Natural frequencies (Hz)"
+
 #: src/components/OptimizerModal.tsx
 msgid "Frontière de Pareto (masse vs taux de travail)"
 msgstr "Pareto frontier (mass vs utilization)"
+
+#: src/components/CommandPalette.tsx
+msgid "Fusionner doublons"
+msgstr "Merge duplicates"
 
 #: src/routes/loads.tsx
 #~ msgid "Fz (kN, négatif vers le bas)"
@@ -589,6 +670,14 @@ msgstr "Pareto frontier (mass vs utilization)"
 #: src/components/ProjectGalleryModal.tsx
 msgid "Gabarit"
 msgstr "Template"
+
+#: src/components/CommandPalette.tsx
+msgid "Galerie — 12 modèles"
+msgstr "Gallery — 12 models"
+
+#: src/routes/_studio/geometry.tsx
+msgid "Galerie de projets"
+msgstr "Project gallery"
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Générateur paramétrique (Rust)"
@@ -608,6 +697,10 @@ msgstr "Rendering…"
 msgid "Générer la structure"
 msgstr "Generate the structure"
 
+#: src/routes/_studio/report.tsx
+msgid "Grandeur"
+msgstr "Quantity"
+
 #: src/routes/_marketing.tsx
 msgid "Guides & tutoriels <0>↗</0>"
 msgstr "Guides & tutorials <0>↗</0>"
@@ -617,8 +710,8 @@ msgid "Hauteur H (m)"
 msgstr "Height H (m)"
 
 #: src/routes/_studio/report.tsx
-msgid "HTML 3D"
-msgstr "3D HTML"
+#~ msgid "HTML 3D"
+#~ msgstr "3D HTML"
 
 #: src/routes/_studio/geometry.tsx
 msgid "Importer CAO"
@@ -665,12 +758,16 @@ msgid "La licence Pro expire-t-elle hors-ligne ?"
 msgstr "Does the Pro licence expire offline?"
 
 #: src/components/CommandPalette.tsx
-msgid "Lancer le calcul 3D & Eurocode 3"
-msgstr "Run the 3D & Eurocode 3 calculation"
+#~ msgid "Lancer le calcul 3D & Eurocode 3"
+#~ msgstr "Run the 3D & Eurocode 3 calculation"
 
 #: src/routes/_studio/loads.tsx
 msgid "Lancer le calcul 3D & Eurocode 3 →"
 msgstr "Run the 3D & Eurocode 3 calculation →"
+
+#: src/components/CommandPalette.tsx
+msgid "Lancer le guide interactif"
+msgstr "Start the interactive guide"
 
 #: src/routes/_studio/results.tsx
 msgid "Lancer un calcul pour afficher les résultats."
@@ -704,6 +801,7 @@ msgstr "Connections (RDM 7)"
 #~ msgid "Libre"
 #~ msgstr "Free"
 
+#: src/components/CommandPalette.tsx
 #: src/components/LicenseModal.tsx
 msgid "Licence & branding"
 msgstr "Licence & branding"
@@ -756,10 +854,22 @@ msgstr "6-DOF support matrix"
 msgid "Membre"
 msgstr "Member"
 
+#: src/components/CommandPalette.tsx
+msgid "Mentions légales"
+msgstr "Legal notice"
+
 #: src/routes/_marketing.tsx
 #: src/routes/_marketing/legal.tsx
 msgid "Mentions légales (LCEN)"
 msgstr "Legal notice (LCEN)"
+
+#: src/components/CommandPalette.tsx
+msgid "Miroir"
+msgstr "Mirror"
+
+#: src/routes/_studio/report.tsx
+msgid "Mode"
+msgstr "Mode"
 
 #. placeholder {0}: mode.mode_index
 #: src/components/AdvancedPanels.tsx
@@ -774,6 +884,10 @@ msgstr ".rdm model exported"
 #: src/routes/_studio/geometry.tsx
 msgid "Modèle vide — commencez par poser un nœud."
 msgstr "Empty model — start by placing a node."
+
+#: src/components/CommandPalette.tsx
+msgid "Modèles & Exports"
+msgstr "Models & Exports"
 
 #: src/routes/_marketing/index.tsx
 msgid "Modèles d'ouverture"
@@ -806,9 +920,9 @@ msgstr "Multi-material / joints / fire"
 msgid "Nœud"
 msgstr "Node"
 
-#: src/routes/geometry.tsx
-#~ msgid "Nœuds"
-#~ msgstr "Nodes"
+#: src/routes/_studio/report.tsx
+msgid "Nœuds"
+msgstr "Nodes"
 
 #: src/routes/_studio/report.tsx
 msgid "Nœuds / Poutres / Appuis / Charges"
@@ -839,12 +953,16 @@ msgid "Normes"
 msgstr "Standards"
 
 #: src/components/CommandPalette.tsx
-msgid "Note de calcul A4 / PDF"
-msgstr "A4 / PDF calculation note"
+#~ msgid "Note de calcul A4 / PDF"
+#~ msgstr "A4 / PDF calculation note"
 
 #: src/routes/_marketing/index.tsx
 msgid "Note de calcul A4 PDF vectorielle (polices embarquées), .docx structuré et BIM IFC4 / SAF — plus l'export HTML 3D autonome."
 msgstr "Vector A4 PDF calculation note (embedded fonts), structured .docx and IFC4 / SAF BIM — plus the self-contained 3D HTML export."
+
+#: src/components/CommandPalette.tsx
+msgid "Note de calcul PDF / A4"
+msgstr "PDF / A4 calculation note"
 
 #: src/components/CalcTraceTree.tsx
 msgid "OK"
@@ -853,6 +971,10 @@ msgstr "OK"
 #: src/components/OptimizerModal.tsx
 msgid "Optimiseur de sections"
 msgstr "Section optimizer"
+
+#: src/components/CommandPalette.tsx
+msgid "Optimiseur EC3"
+msgstr "EC3 optimizer"
 
 #: src/components/OptimizerModal.tsx
 msgid "Optimiseur EC3 — profil le plus léger"
@@ -873,6 +995,10 @@ msgstr "Yes — drop a .dxf, .step or .igs file into the workshop: the wireframe
 #: src/routes/_marketing/index.tsx
 msgid "Oui. L'application est une PWA : le solveur Rust compilé en WASM, les catalogues de profilés et les polices d'impression sont mis en cache par le service worker. Une fois chargée, elle démarre et calcule sans aucune connexion — en bureau, en atelier comme sur site."
 msgstr "Yes. The app is a PWA: the Rust solver compiled to WASM, the profile catalogues and the print fonts are cached by the service worker. Once loaded it starts and solves without any connection — in the office, in the workshop and on site."
+
+#: src/components/CommandPalette.tsx
+msgid "Outil CAD activé"
+msgstr "CAD tool activated"
 
 #: src/components/CadToolbar.tsx
 msgid "Outils"
@@ -972,6 +1098,10 @@ msgstr "Polar 15°"
 msgid "Politique de Confidentialité RGPD"
 msgstr "GDPR Privacy Policy"
 
+#: src/components/CommandPalette.tsx
+msgid "Polyligne"
+msgstr "Polyline"
+
 #: src/components/ProjectGalleryModal.tsx
 msgid "Portée L (m)"
 msgstr "Span L (m)"
@@ -993,6 +1123,7 @@ msgid "Pourquoi ça échoue ? — 3 remèdes 1-clic"
 msgstr "Why does it fail? — 3 one-click fixes"
 
 #: src/routes/_studio/loads.tsx
+#: src/routes/_studio/report.tsx
 msgid "Poutre"
 msgstr "Beam"
 
@@ -1020,6 +1151,10 @@ msgstr "3D 6-DOF beam elements in Rust/WASM: Timoshenko shear, second-order P-Δ
 msgid "Pré-remplit la couverture A4 / .docx de l'étape 5 (cabinet, ingénieur, vérificateur)."
 msgstr "Pre-fills the Step 5 A4 / .docx cover (firm, engineer, checker)."
 
+#: src/components/CommandPalette.tsx
+msgid "Préférences & Aide"
+msgstr "Preferences & Help"
+
 #: src/routes/_studio/supports.tsx
 msgid "Presets d'appui"
 msgstr "Support presets"
@@ -1028,9 +1163,9 @@ msgstr "Support presets"
 msgid "Produit"
 msgstr "Product"
 
-#: src/routes/geometry.tsx
-#~ msgid "Profil"
-#~ msgstr "Profile"
+#: src/routes/_studio/report.tsx
+msgid "Profil"
+msgstr "Profile"
 
 #: src/routes/_studio/geometry.tsx
 msgid "Profil (EN 10365)"
@@ -1105,6 +1240,10 @@ msgstr "PDF report"
 #~ msgid "Rapport PDF (takumi)"
 #~ msgstr "PDF report (takumi)"
 
+#: src/routes/_studio/report.tsx
+msgid "RDM Studio — Rapport de calcul"
+msgstr "RDM Studio — Calculation report"
+
 #: src/components/LicenseModal.tsx
 msgid "RDM Studio est local-first : l'activation s'effectue hors-ligne, aucune donnée n'est envoyée sur un serveur."
 msgstr "RDM Studio is local-first: activation happens offline, no data is sent to any server."
@@ -1129,6 +1268,10 @@ msgstr "RDM Studio brings together the 3D Timoshenko beam solver, interactive CA
 msgid "Réactions"
 msgstr "Reactions"
 
+#: src/routes/_studio/report.tsx
+msgid "Réactions d'appuis ELU (kN)"
+msgstr "ULS support reactions (kN)"
+
 #: src/components/UpdatePrompt.tsx
 msgid "Recharger"
 msgstr "Reload"
@@ -1145,9 +1288,9 @@ msgstr "Shorten the span or add a support"
 msgid "Réglages"
 msgstr "Settings"
 
-#: src/components/SettingsPopover.tsx
-#~ msgid "Réglages normatifs"
-#~ msgstr "Normative settings"
+#: src/components/CommandPalette.tsx
+msgid "Réglages normatifs"
+msgstr "Normative settings"
 
 #: src/components/LicenseModal.tsx
 msgid "Réinitialiser"
@@ -1156,6 +1299,11 @@ msgstr "Reset"
 #: src/routes/_studio/geometry.tsx
 msgid "Relâchements N1 / N2"
 msgstr "End releases N1 / N2"
+
+#. placeholder {0}: targets.length
+#: src/components/CommandPalette.tsx
+msgid "Relâchements N1/N2 basculés sur {0} poutre(s)"
+msgstr "N1/N2 releases toggled on {0} beam(s)"
 
 #: src/components/CommandPalette.tsx
 msgid "Relâcher les moments N1/N2"
@@ -1172,6 +1320,10 @@ msgstr "Upgrade the profile (1 click)"
 #: src/viewport3d/LayerToolbar.tsx
 msgid "Repères N/P"
 msgstr "N/P labels"
+
+#: src/components/CommandPalette.tsx
+msgid "Répétition linéaire"
+msgstr "Linear array"
 
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Résoudre le modèle pour afficher les enveloppes."
@@ -1202,6 +1354,10 @@ msgstr "Calculation results"
 msgid "Retour à l'édition Découverte"
 msgstr "Back to the Discovery edition"
 
+#: src/components/CommandPalette.tsx
+msgid "Rotation"
+msgstr "Rotate"
+
 #: src/routes/_studio/geometry.tsx
 msgid "Roulis θx (°)"
 msgstr "Roll angle θx (°)"
@@ -1215,8 +1371,12 @@ msgid "Scénario {slot}"
 msgstr "Scénario {slot}"
 
 #: src/routes/_marketing/index.tsx
-msgid "Schéma isométrique d'un portique en profilés IPE"
-msgstr "Isometric diagram of a portal frame in IPE sections"
+#~ msgid "Schéma isométrique d'un portique en profilés IPE"
+#~ msgstr "Isometric diagram of a portal frame in IPE sections"
+
+#: src/routes/_marketing/index.tsx
+msgid "Schéma structurel d'un portique chargé"
+msgstr "Structural diagram of a loaded portal frame"
 
 #: src/routes/_marketing/index.tsx
 msgid "Sections classes 1–4, χy/χz/χLT, Nb,Rd, Mc,Rd et formules KaTeX traçables : chaque étape de calcul est documentée pour le vérificateur."
@@ -1263,6 +1423,7 @@ msgid "Spectre élastique"
 msgstr "Elastic spectrum"
 
 #: src/components/ValidationModal.tsx
+#: src/routes/_studio/report.tsx
 msgid "Statut"
 msgstr "Status"
 
@@ -1305,6 +1466,10 @@ msgstr "On this page"
 #: src/routes/_marketing/index.tsx
 msgid "Sur devis"
 msgstr "On quotation"
+
+#: src/routes/_studio/report.tsx
+msgid "T (s)"
+msgstr "T (s)"
 
 #: src/routes/_marketing.tsx
 msgid "Tarifs"
@@ -1386,6 +1551,7 @@ msgstr "Value"
 msgid "Valeur unitaire"
 msgstr "Unit value"
 
+#: src/components/CommandPalette.tsx
 #: src/components/ValidationModal.tsx
 msgid "Validation — 41 benchmarks analytiques"
 msgstr "Validation — 41 analytical benchmarks"
@@ -1406,11 +1572,23 @@ msgstr "Checker"
 msgid "Vérification croisée. Les 41 benchmarks analytiques embarqués vérifient le solveur à chaque version, et chaque note de calcul porte l'empreinte SHA-256 du modèle calculé. L'éditeur ne saurait être tenu responsable d'une utilisation hors du périmètre normatif, de données d'entrée erronées ou de l'omission des vérifications incombant au concepteur."
 msgstr "Cross-verification. The 41 built-in analytical benchmarks verify the solver with every release, and every calculation note carries the SHA-256 fingerprint of the solved model. The publisher cannot be held liable for use outside the normative scope, for erroneous input data or for the omission of the checks incumbent on the designer."
 
+#: src/routes/_studio/results.tsx
+msgid "Vérification EC3"
+msgstr "EC3 verification"
+
 #. placeholder {0}: uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id
 #. placeholder {1}: (maxUls * 100).toFixed(1).replace(".", ",")
 #: src/routes/results.tsx
 #~ msgid "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
 #~ msgstr "EC3 check exceeded — governing member: P{0} (η ={1} %). A 1-click reinforcement is offered."
+
+#: src/routes/_studio/report.tsx
+msgid "Vérification ELU"
+msgstr "ULS verification"
+
+#: src/routes/_studio/report.tsx
+msgid "Vérification Eurocode 3"
+msgstr "Eurocode 3 verification"
 
 #: src/routes/_marketing/index.tsx
 msgid "vérifications EC3"
@@ -1443,6 +1621,10 @@ msgstr "3D view of the model"
 #: src/viewport3d/ViewportCanvas.tsx
 msgid "Vue 3D indisponible (WebGL) — édition et calculs actifs."
 msgstr "3D view unavailable (WebGL) — editing and calculations stay active."
+
+#: src/routes/_studio/report.tsx
+msgid "Word (.docx)"
+msgstr "Word (.docx)"
 
 #: src/routes/_marketing/index.tsx
 msgid "zéro télémétrie"

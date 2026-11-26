@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
+import { t } from "@lingui/core/macro";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ExpandablePanel, HoldToConfirm, StatusBadge } from "@/components/interior";
 import {
   SupportFixed,
   SupportPinned,
@@ -114,23 +116,27 @@ const GROUPED_PRESETS: { group: string; presets: Preset[] }[] = [
 /** Kinematic degree: 6 reactions = isostatic, fewer = hypostatic, more = hyperstatic. */
 function kinematicStatus(reactionCount: number): {
   label: string;
-  variant: "pass" | "fail" | "warn";
+  tone: "pass" | "fail" | "warn";
 } {
   if (reactionCount < 6) {
-    return { label: "Hypostatique (mécanisme)", variant: "fail" };
+    return { label: "Hypostatique (mécanisme)", tone: "fail" };
   }
   if (reactionCount === 6) {
-    return { label: "Isostatique", variant: "pass" };
+    return { label: "Isostatique", tone: "pass" };
   }
-  return { label: `Hyperstatique degré ${reactionCount - 6}`, variant: "warn" };
+  return { label: `Hyperstatique degré ${reactionCount - 6}`, tone: "warn" };
 }
 
 /**
- * Step 2 (DESIGN.md §4, mockups tape_2, v1.6.0): locked `md+` workstation —
+ * Step 2 (DESIGN.md §4, mockups tape_2, v2.1.2): locked `md+` workstation —
  * 320px LEFT inspector (presets, the 6-DOF matrix, Appuis actifs with
  * locked-DOF badges + `×` removal, the expandable Appuis élastiques
  * `kx..krz` section wired to `Support.spring_stiffness`, and the selected
  * node coordinate / free-DOF summary card) beside the persistent 3D stage.
+ * v2.1.2: the disclosures are `ExpandablePanel`s (smooth height +
+ * opacity), the DOF matrix rides Base UI `Checkbox`es, the kinematic
+ * status is an animated `StatusBadge` and `Tout supprimer` is an 800 ms
+ * `HoldToConfirm` (instant keyboard / E2E click fallback).
  */
 function SupportsPage() {
   const nodes = useProjectStore((s) => s.project.structure.nodes);
@@ -142,7 +148,6 @@ function SupportsPage() {
   // v2.1.0: the node selection is URL-backed (`?node=`).
   const { nodeId: selectedNodeId, selectNode } = useSelectedIds();
   const navigate = useNavigate();
-  const [springsOpen, setSpringsOpen] = useState(false);
   const slotRef = useStageSlot("supports");
 
   const lockedFor = (nodeId: number): boolean[] =>
@@ -216,11 +221,11 @@ function SupportsPage() {
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Liaisons (RDM 7)</Trans>}>
       <div className="flex items-center justify-between gap-2">
-        <Badge variant={status.variant} data-testid="kinematic-status">
+        <StatusBadge tone={status.tone} testId="kinematic-status">
           {status.label}
-        </Badge>
+        </StatusBadge>
         <label className="flex items-center gap-1.5 font-data text-[11px] text-ink-muted">
-          <SupportSpring size={14} />
+          <SupportSpring size={16} />
           {supports.length} appui(s) · {reactionCount} réactions
         </label>
       </div>
@@ -264,78 +269,80 @@ function SupportsPage() {
               disabled={selectedNodeId === null}
               onClick={() => applyPreset(preset)}
             >
-              <preset.icon size={16} />
+              <preset.icon size={18} />
               {preset.label}
             </Button>
           ))}
         </div>
       </section>
-      {/* v1.6.0: expandable Appuis élastiques (kx..krz) section. */}
-      <details
-        className="border-t border-hairline pt-3"
-        data-testid="spring-section"
-        open={springsOpen}
-        onToggle={(e) => setSpringsOpen((e.currentTarget as HTMLDetailsElement).open)}
-      >
-        <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-ink-secondary">
-          <SupportSpring size={14} />
-          <Trans>Appuis élastiques (kx..krz)</Trans>
-        </summary>
-        <p className="mt-1 text-[11px] text-ink-muted">
-          <Trans>
-            Raideurs N/m (translations) et N·m/rad (rotations). Un DDL bloqué ignore son ressort ;
-            un DDL libre élastique participe à la raideur (EN 1993-1-1).
-          </Trans>
-        </p>
-        {selectedNodeId === null ? (
-          <p className="mt-2 text-[12px] text-ink-muted">
-            <Trans>Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts.</Trans>
+      {/* v2.1.2: expandable Appuis élastiques (kx..krz) — ExpandablePanel. */}
+      <div className="border-t border-hairline pt-3" data-testid="spring-section">
+        <ExpandablePanel
+          title={
+            <Trans>
+              <span className="inline-flex items-center gap-1.5">
+                <SupportSpring size={16} />
+                Appuis élastiques (kx..krz)
+              </span>
+            </Trans>
+          }
+        >
+          <p className="mt-1 text-[11px] text-ink-muted">
+            <Trans>
+              Raideurs N/m (translations) et N·m/rad (rotations). Un DDL bloqué ignore son ressort ;
+              un DDL libre élastique participe à la raideur (EN 1993-1-1).
+            </Trans>
           </p>
-        ) : (
-          <SpringFields
-            key={selectedNodeId}
-            nodeId={selectedNodeId}
-            springs={springsFor(selectedNodeId)}
-            onApply={(next) => setSupportSprings(selectedNodeId, next)}
-          />
-        )}
-      </details>
-      {/* Grouped 12-preset RDM 7 library + custom entry. */}
-      <details className="border-t border-hairline pt-3" data-testid="rdm7-library">
-        <summary className="cursor-pointer text-xs font-medium text-ink-secondary">
-          Bibliothèque RDM 7 (12 appuis groupés)
-        </summary>
-        <div className="mt-2 space-y-2">
-          {GROUPED_PRESETS.map((group) => (
-            <div key={group.group}>
-              <p className="mb-1 text-[11px] text-ink-muted">{group.group}</p>
-              <div className="flex flex-wrap gap-1">
-                {group.presets.map((preset) => (
-                  <button
-                    key={preset.key}
-                    type="button"
-                    data-testid={`preset-${preset.key}`}
-                    className={`rounded border border-hairline px-2 py-0.5 font-data text-[11px] ${
-                      activePreset === preset.key
-                        ? "border-accent bg-accent-tint text-accent"
-                        : "text-ink-secondary hover:text-ink-primary"
-                    }`}
-                    disabled={selectedNodeId === null}
-                    onClick={() => applyPreset(preset)}
-                  >
-                    {group.group === "Appuis simples"
-                      ? `Appui ${preset.label}`
-                      : `${group.group} ${preset.label}`}
-                  </button>
-                ))}
+          {selectedNodeId === null ? (
+            <p className="mt-2 text-[12px] text-ink-muted">
+              <Trans>Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts.</Trans>
+            </p>
+          ) : (
+            <SpringFields
+              key={selectedNodeId}
+              nodeId={selectedNodeId}
+              springs={springsFor(selectedNodeId)}
+              onApply={(next) => setSupportSprings(selectedNodeId, next)}
+            />
+          )}
+        </ExpandablePanel>
+      </div>
+      {/* Grouped 12-preset RDM 7 library + custom entry (ExpandablePanel
+          keeping the `rdm7-library` contract test id). */}
+      <div className="border-t border-hairline pt-3" data-testid="rdm7-library">
+        <ExpandablePanel title="Bibliothèque RDM 7 (12 appuis groupés)">
+          <div className="mt-2 space-y-2">
+            {GROUPED_PRESETS.map((group) => (
+              <div key={group.group}>
+                <p className="mb-1 text-[11px] text-ink-muted">{group.group}</p>
+                <div className="flex flex-wrap gap-1">
+                  {group.presets.map((preset) => (
+                    <button
+                      key={preset.key}
+                      type="button"
+                      data-testid={`preset-${preset.key}`}
+                      className={`rounded border border-hairline px-2 py-0.5 font-data text-[11px] ${
+                        activePreset === preset.key
+                          ? "border-accent bg-accent-tint text-accent"
+                          : "text-ink-secondary hover:text-ink-primary"
+                      }`}
+                      disabled={selectedNodeId === null}
+                      onClick={() => applyPreset(preset)}
+                    >
+                      {group.group === "Appuis simples"
+                        ? `Appui ${preset.label}`
+                        : `${group.group} ${preset.label}`}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-          <p className="text-[11px] text-ink-muted">
-            <Trans>Personnalisée : composez la matrice 2×3 ci-dessous.</Trans>
-          </p>
-        </div>
-      </details>
+            ))}
+            <p className="text-[11px] text-ink-muted">
+              <Trans>Personnalisée : composez la matrice 2×3 ci-dessous.</Trans>
+            </p>
+          </div>
+        </ExpandablePanel>
+      </div>
       <section className="border-t border-hairline pt-3">
         <h3 className="text-xs font-medium text-ink-secondary">
           <Trans>Matrice 6 DDL des appuis</Trans>
@@ -372,13 +379,12 @@ function SupportsPage() {
                     <td className="py-1.5">{n.id}</td>
                     {DOF_LABELS.map((d, i) => (
                       <td key={d}>
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           aria-label={`dof ${d} node ${n.id}`}
                           checked={locked[i] ?? false}
-                          onChange={(e) => {
+                          onCheckedChange={(checked) => {
                             const next = [...locked];
-                            next[i] = e.currentTarget.checked;
+                            next[i] = checked === true;
                             setSupport(n.id, next);
                           }}
                         />
@@ -394,18 +400,20 @@ function SupportsPage() {
       <section className="border-t border-hairline pt-3">
         <div className="mb-1 flex items-center justify-between">
           <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
-            <SupportReaction size={14} />
+            <SupportReaction size={16} />
             <Trans>Appuis actifs</Trans>
           </h3>
-          <button
-            type="button"
-            className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-fea-max hover:text-fea-max disabled:opacity-40"
-            data-testid="clear-supports"
+          {/* v2.1.2: HoldToConfirm (800 ms) guards the destructive wipe;
+              keyboard Enter / E2E click commits instantly (webdriver). */}
+          <HoldToConfirm
+            onConfirm={clearAll}
+            testId="clear-supports"
             disabled={supports.length === 0}
-            onClick={clearAll}
+            confirmLabel={t`Supprimés`}
+            title="Maintenir 800 ms pour tout supprimer"
           >
             <Trans>Tout supprimer</Trans>
-          </button>
+          </HoldToConfirm>
         </div>
         {supports.length === 0 ? (
           <p className="text-[12px] text-ink-muted">

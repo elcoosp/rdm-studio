@@ -12,14 +12,23 @@ test("duplicate-beam guard disables the connector with 'Déjà reliés'", async 
   // nodes — the pair we are about to link.
   await page.getByTestId("add-node").click();
   await page.getByTestId("add-node").click();
-  const n1 = await page.getByLabel("N1").inputValue();
-  const n2 = await page.getByLabel("N2").inputValue();
+  // v2.1.2: N1 / N2 are searchable Base UI Comboboxes — the closed input
+  // still exposes the selected node string ("N5" …) via inputValue().
+  const n1Input = page.getByLabel("N1", { exact: true });
+  const n2Input = page.getByLabel("N2", { exact: true });
+  const n1 = (await n1Input.inputValue()).trim();
+  const n2 = (await n2Input.inputValue()).trim();
   const connect = page.getByTestId("connect-beam");
   await expect(connect).toBeEnabled();
   await connect.click();
-  // Re-selecting the exact same (already linked) pair trips the guard.
-  await page.getByLabel("N1").selectOption(n1);
-  await page.getByLabel("N2").selectOption(n2);
+  // Re-selecting the exact same (already linked) pair trips the guard —
+  // drive the Base UI Combobox popup (fill filters, click the option).
+  await n1Input.click();
+  await n1Input.fill(n1);
+  await page.getByRole("option", { name: n1 }).first().click();
+  await n2Input.click();
+  await n2Input.fill(n2);
+  await page.getByRole("option", { name: n2 }).first().click();
   await expect(connect).toBeDisabled();
   await expect(connect).toContainText("Déjà reliés");
   // Node placement walks past the last point: X = maxX + 2 m.
@@ -50,8 +59,8 @@ test("step 2 exposes the grouped RDM 7 library and clear-all", async ({ page }) 
     await expect(page.getByTestId(`preset-${key}`)).toBeVisible();
   }
   // The grouped library opens with its 12 presets + custom note
-  // (scoped: the Appuis élastiques details now precedes it).
-  await page.locator('[data-testid="rdm7-library"] summary').click();
+  // (v2.1.2: the disclosure is an ExpandablePanel — click its trigger).
+  await page.locator('[data-testid="rdm7-library"] button').first().click();
   for (const key of [
     "simple-xy",
     "simple-xz",
@@ -108,13 +117,14 @@ test("step 4 offers six eigenmodes and the three thermal scales", async ({ page 
       .toContainText(/MODE|Mode propre|1\.35G/, { timeout: 20_000 })
       .catch(() => undefined);
   }
-  const modeCount = await combo
-    .locator("option")
-    .evaluateAll(
-      (options) =>
-        options.map((o) => (o as HTMLOptionElement).value).filter((v) => v.startsWith("MODE:"))
-          .length,
-    );
+  // v2.1.2: eigenmodes live in the Base UI Select popup.
+  await combo.click();
+  const popup = page.getByRole("listbox");
+  const modeCount = await popup
+    .getByRole("option")
+    .filter({ hasText: /Mode propre/ })
+    .count();
+  await page.keyboard.press("Escape");
   expect(modeCount).toBeGreaterThanOrEqual(1);
   for (const scale of ["ec3", "svm", "auto"]) {
     await expect(page.getByTestId(`scale-${scale}`)).toBeVisible();

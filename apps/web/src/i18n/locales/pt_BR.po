@@ -342,6 +342,10 @@ msgstr ""
 msgid "Flèche max"
 msgstr ""
 
+#: src/components/OptimizerModal.tsx
+msgid "Frontière de Pareto (masse vs taux de travail)"
+msgstr ""
+
 #: src/routes/loads.tsx
 #~ msgid "Fz (kN, négatif vers le bas)"
 #~ msgstr "Fz (kN, negative downward)"

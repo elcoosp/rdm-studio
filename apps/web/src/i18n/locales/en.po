@@ -342,6 +342,10 @@ msgstr "Global buckling λcr"
 msgid "Flèche max"
 msgstr "Max deflection"
 
+#: src/components/OptimizerModal.tsx
+msgid "Frontière de Pareto (masse vs taux de travail)"
+msgstr "Pareto frontier (mass vs utilization)"
+
 #: src/routes/loads.tsx
 #~ msgid "Fz (kN, négatif vers le bas)"
 #~ msgstr "Fz (kN, negative downward)"

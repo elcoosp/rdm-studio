@@ -342,6 +342,10 @@ msgstr "Flambement global λcr"
 msgid "Flèche max"
 msgstr "Flèche max"
 
+#: src/components/OptimizerModal.tsx
+msgid "Frontière de Pareto (masse vs taux de travail)"
+msgstr "Frontière de Pareto (masse vs taux de travail)"
+
 #: src/routes/loads.tsx
 #~ msgid "Fz (kN, négatif vers le bas)"
 #~ msgstr "Fz (kN, négatif vers le bas)"

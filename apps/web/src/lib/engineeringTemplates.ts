@@ -19,6 +19,9 @@ export interface TemplateSeed {
     q_start?: number;
     q_end?: number;
     fz?: number;
+    /** v2.1.0: horizontal nodal actions (wind push on R+2 frames). */
+    fx?: number;
+    fy?: number;
     direction?: { x: number; y: number; z: number };
   }[];
   /** v2.0.2: canonical DOF-restraint set (locked_dofs per support node). */
@@ -62,7 +65,10 @@ const b = (id: number, n1: number, n2: number, s: string): TemplateSeed["beams"]
   section_id: s,
   material_id: S235,
 });
-const gravity = { x: 0, y: -1, z: 0 };
+// v2.1.0 (22fd9fa audit): RDM Studio's canonical frame is Z-up (X-Z plane,
+// gravity -Z) — every template now lives in the solver's own vertical axis
+// so all 12 gallery models solve under vertical gravity out of the box.
+const gravity = { x: 0, y: 0, z: -1 };
 
 /** The canonical gallery, in pedagogical order. */
 export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
@@ -107,8 +113,8 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     why: "Portique encastré-articulé : le nœud rigide poutre-poteau illustre la transmission M/N — idéal pour tester les entretoisements.",
     nodes: [
       { id: 1, x: 0, y: 0, z: 0 },
-      { id: 2, x: 0, y: 4, z: 0 },
-      { id: 3, x: 8, y: 4, z: 0 },
+      { id: 2, x: 0, y: 0, z: 4 },
+      { id: 3, x: 8, y: 0, z: 4 },
       { id: 4, x: 8, y: 0, z: 0 },
     ],
     beams: [b(1, 1, 2, "HEA 200"), b(2, 2, 3, "IPE 240"), b(3, 3, 4, "HEA 200")],
@@ -130,8 +136,8 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     nodes: [1, 2, 3, 4, 5].map((id, i) => ({
       id,
       x: i * 4,
-      y: i === 2 ? 6 : i === 1 || i === 3 ? 4 : 0,
-      z: 0,
+      y: 0,
+      z: i === 2 ? 6 : i === 1 || i === 3 ? 4 : 0,
     })),
     beams: [
       b(1, 1, 2, "IPE 240"),
@@ -153,7 +159,7 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     name: "Treillis Warren 24 m",
     why: "Diagonales alternées sans montants : effort nul dans certains barreaux selon le chargement — activer « Barre articulée » et comparer.",
     nodes: [1, 2, 3, 4, 5].flatMap((id, i) => [
-      { id, x: i * 6, y: 4, z: 0 },
+      { id, x: i * 6, y: 0, z: 4 },
       { id: id + 5, x: i * 6, y: 0, z: 0 },
     ]),
     beams: [
@@ -184,7 +190,7 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     name: "Treillis Pratt",
     why: "Diagonales tendues vers le centre : les montants travaillent en compression — lecture directe du signe N dans le diagramme.",
     nodes: [1, 2, 3, 4, 5].flatMap((id, i) => [
-      { id, x: i * 6, y: 4, z: 0 },
+      { id, x: i * 6, y: 0, z: 4 },
       { id: id + 5, x: i * 6, y: 0, z: 0 },
     ]),
     beams: [
@@ -209,7 +215,7 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     name: "Treillis Howe",
     why: "Contrefiguration du Pratt : diagonales comprimées, montants tendus — comparer les taux de flambement χ avec le Pratt.",
     nodes: [1, 2, 3, 4, 5].flatMap((id, i) => [
-      { id, x: i * 6, y: 4, z: 0 },
+      { id, x: i * 6, y: 0, z: 4 },
       { id: id + 5, x: i * 6, y: 0, z: 0 },
     ]),
     beams: [
@@ -245,8 +251,8 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     name: "Ossature R+2 contreventée",
     why: "Trois niveaux + croix de Saint-André : répartition des cisaillements d'étage et effet de soulèvement sur les poteaux d'angle.",
     nodes: [0, 1, 2, 3].flatMap((lvl) => [
-      { id: lvl * 2 + 1, x: 0, y: lvl * 3, z: 0 },
-      { id: lvl * 2 + 2, x: 6, y: lvl * 3, z: 0 },
+      { id: lvl * 2 + 1, x: 0, y: 0, z: lvl * 3 },
+      { id: lvl * 2 + 2, x: 6, y: 0, z: lvl * 3 },
     ]),
     beams: [
       b(1, 1, 2, "HEA 240"),
@@ -263,7 +269,7 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     ],
     loads: [
       { case: "Variable", kind: "Nodal", node_id: 4, fz: -20000 },
-      { case: "Wind", kind: "Nodal", node_id: 6, fz: 0 },
+      { case: "Wind", kind: "Nodal", node_id: 6, fx: 12000, fy: 0, fz: 0 },
     ],
   },
   {
@@ -272,8 +278,8 @@ export const ENGINEERING_TEMPLATES: TemplateSeed[] = [
     why: "Console avalant le vent : moment en pied de poteau et flèche libre en bout — le cas d'école du SLS δ ≤ L/150.",
     nodes: [
       { id: 1, x: 0, y: 0, z: 0 },
-      { id: 2, x: 0, y: 3, z: 0 },
-      { id: 3, x: 4, y: 3, z: 0 },
+      { id: 2, x: 0, y: 0, z: 3 },
+      { id: 3, x: 4, y: 0, z: 3 },
     ],
     beams: [b(1, 1, 2, "HEA 200"), b(2, 2, 3, "IPE 200")],
     loads: [

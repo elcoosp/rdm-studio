@@ -6,8 +6,9 @@ import {
   useLocation,
   useMatches,
 } from "@tanstack/react-router";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { BadgeCheck, ChevronDown, Redo2, Undo2 } from "lucide-react";
 import { retainSearchParams } from "@tanstack/react-router";
 import { getStudioSteps } from "@/router";
@@ -17,23 +18,21 @@ import { ValidationModal } from "@/components/ValidationModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { LicenseBadge } from "@/components/LicenseBadge";
+import { SegmentedControl, Tooltip, TooltipGroup } from "@/components/interior";
 import { openProjectOrCadFile } from "@/hooks/useFileOpening";
-import { redoModel, undoModel } from "@/state/projectStore";
+import { redoModel, undoModel, useProjectStore } from "@/state/projectStore";
 import { parseProject } from "@/lib/urlShare";
-import {
-  quickStartProject,
-  rehydrateProject,
-  useProjectStore,
-  type QuickStartKind,
-} from "@/state/projectStore";
+import { quickStartProject, rehydrateProject, type QuickStartKind } from "@/state/projectStore";
 import { PersistentStage } from "@/viewport3d/PersistentStage";
 import { KeycapHint } from "@/components/KeycapHints";
 import { StudioBaseSearchSchema, type StudioBaseSearch } from "@/schemas/searchParams.schema";
 
 /**
- * `_studio` pathless layout (v2.1.0): the locked `100dvh` CAD workstation
- * — header, 5-step workflow bar (derived from `getStudioSteps()`), the ONE
- * persistent 3D stage and the phone tab bar live here, NOT in `__root`.
+ * `_studio` pathless layout (v2.1.2): the locked `100dvh` CAD workstation
+ * — the redesigned 48px Swiss Metrology header (h-12, uniform 28px h-7
+ * controls, grouped hairline dividers), the 5-step workflow bar (derived
+ * from `getStudioSteps()`), the ONE persistent 3D stage and the phone tab
+ * bar live here, NOT in `__root`.
  *
  * URL entry contracts handled by `beforeLoad`:
  * - `?p=<lz-string>` — compressed `.rdm` share link, Valibot-validated,
@@ -93,30 +92,31 @@ function useProjectLocale(): "fr" | "en" {
   );
 }
 
+/**
+ * v2.1.2 header locale switch: the interior.dev `SegmentedControl`
+ * (shared `layoutId` spring pill, zero layout jump) at the uniform h-7
+ * height — the FR / EN buttons keep their exact accessible names for the
+ * v1.6.0 layout matrix.
+ */
 export function LocaleSwitch() {
   const current = useProjectLocale();
+  const { t } = useLingui();
   const switchLocale = async (locale: "fr" | "en") => {
     const { activateLocale } = await import("@/i18n/i18n");
     await activateLocale(locale);
   };
   return (
-    <div className="flex shrink-0 gap-1 text-[11px]">
-      {(["fr", "en"] as const).map((locale) => (
-        <button
-          key={locale}
-          type="button"
-          aria-pressed={current === locale}
-          className={`rounded px-2 py-0.5 font-data transition-colors ${
-            current === locale
-              ? "bg-accent-tint text-accent ring-1 ring-accent-ring"
-              : "border border-hairline text-ink-secondary hover:text-ink-primary"
-          }`}
-          onClick={() => void switchLocale(locale)}
-        >
-          {locale.toUpperCase()}
-        </button>
-      ))}
-    </div>
+    <SegmentedControl
+      size="sm"
+      className="shrink-0"
+      label={t`Langue de l'interface`}
+      value={current}
+      onValueChange={(next) => void switchLocale(next === "en" ? "en" : "fr")}
+      options={[
+        { value: "fr", label: "FR" },
+        { value: "en", label: "EN" },
+      ]}
+    />
   );
 }
 
@@ -143,6 +143,62 @@ function OfflinePill() {
     <span className="rounded border border-fea-warn/50 bg-fea-warn/10 px-1.5 py-0.5 font-data text-[11px] text-ink-secondary">
       Mode hors-ligne actif
     </span>
+  );
+}
+
+/**
+ * v2.1.2 inline-editable project title: click to edit, `Enter` saves
+ * (`setName`), `Escape` cancels, blur commits the draft unchanged.
+ */
+function ProjectTitle({ name }: { name: string }) {
+  const setName = useProjectStore((s) => s.setName);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.select();
+    }
+  }, [editing]);
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        title="Renommer le projet"
+        className="hidden min-w-0 max-w-[220px] truncate rounded px-1 py-0.5 text-left text-[12px] font-medium text-ink-primary hover:bg-panel-subtle md:block"
+        data-testid="project-title"
+        onClick={() => {
+          setDraft(name);
+          setEditing(true);
+        }}
+      >
+        {name}
+      </button>
+    );
+  }
+  return (
+    <input
+      ref={inputRef}
+      value={draft}
+      aria-label="Nom du projet"
+      data-testid="project-title-input"
+      onChange={(e) => setDraft(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          const trimmed = draft.trim();
+          if (trimmed.length > 0) setName(trimmed);
+          setEditing(false);
+        }
+        if (e.key === "Escape") {
+          setDraft(name);
+          setEditing(false);
+        }
+      }}
+      onBlur={() => {
+        setEditing(false);
+      }}
+      className="font-data h-7 w-44 rounded-[4px] border border-accent-ring bg-panel px-1.5 text-[12px] text-ink-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-ring"
+    />
   );
 }
 
@@ -181,12 +237,14 @@ function StudioLayout() {
 
   return (
     <div className="flex h-[100dvh] flex-col">
-      {/* v2.1.1: no `overflow-hidden` on the header itself — the Settings
-          popover must never be clipped; every zone shrinks via min-w-0 /
-          truncate instead so 1440 / 860 / 390 px stay overflow-free. */}
-      <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-hairline bg-panel pl-3 pr-2 sm:gap-3 sm:pl-4 sm:pr-3">
-        {/* Left zone: brand + project switcher (name truncates first). */}
-        <div className="flex min-w-0 shrink items-center gap-1.5">
+      {/* v2.1.2 — the redesigned 48px header: no `overflow-hidden` on the
+          header itself (the portal Settings popover can never clip); every
+          zone shrinks via min-w-0 / truncate, and the uniform h-7 (28px)
+          controls sit between grouped vertical hairlines. Zero overflow
+          verified at 1440×900, 860×900 and 390×844. */}
+      <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-hairline bg-panel pl-3 pr-2 sm:gap-3 sm:pl-4 sm:pr-3">
+        {/* Left zone: brand + inline project title + gallery trigger. */}
+        <div className="flex min-w-0 shrink items-center gap-1">
           <Link
             to="/geometry"
             id="rdm-logo"
@@ -195,27 +253,30 @@ function StudioLayout() {
             <img src="/logo-rdm-studio.svg" alt="RDM Studio" className="h-6 w-6 shrink-0" />
             <span className="hidden font-semibold tracking-tight xl:inline">RDM Studio</span>
           </Link>
-          <button
-            type="button"
-            aria-label="Galerie de projets"
-            title="Galerie de projets"
-            className="hidden shrink-0 rounded px-1 py-0.5 text-[12px] text-ink-muted hover:text-accent md:inline"
-            onClick={() => setGalleryOpen(true)}
-          >
-            <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
-          </button>
-          <span className="hidden min-w-0 truncate text-[12px] text-ink-muted md:inline">
-            / {project.name}
+          {/* The gallery trigger stays a DIRECT sibling of #rdm-logo (the
+              `#rdm-logo ~ button` selector contract). */}
+          <Tooltip label={<Trans>Galerie de projets</Trans>} side="bottom">
+            <button
+              type="button"
+              aria-label="Galerie de projets"
+              title="Galerie de projets"
+              className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-[4px] text-ink-muted hover:bg-panel-subtle hover:text-accent md:flex"
+              onClick={() => setGalleryOpen(true)}
+            >
+              <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
+            </button>
+          </Tooltip>
+          <span className="hidden font-data text-ink-muted md:inline">/</span>
+          <ProjectTitle name={project.name} />
+          <span className="font-data hidden shrink-0 text-[11px] text-ink-muted 2xl:inline">
+            {nodeCount} nœuds · {beamCount} poutres
           </span>
         </div>
-        {/* Center zone: the derived 5-step flow with the shared gliding
-            underline and the v2.1.1 named labels. The active step gets the
-            Cobalt pill highlight (bg-accent-tint + ring) so the current
-            page is unmistakable; `whitespace-nowrap` + `min-w-0` keep the
-            named stepper inside the header at 1440 / 860 / 390 px. */}
+        {/* Center zone: the unified hairline SEGMENTED workflow rail —
+            crisp white active card + Cobalt text + 2px underline. */}
         <nav
           id="rdm-steps"
-          className="mx-auto hidden min-w-0 items-center gap-0.5 overflow-hidden md:flex"
+          className="mx-auto hidden min-w-0 items-center overflow-hidden rounded-[6px] border border-hairline bg-panel-subtle/70 p-0.5 md:flex"
           aria-label="workflow"
         >
           {steps.map((step) => {
@@ -227,10 +288,10 @@ function StudioLayout() {
                 aria-label={`Étape ${step.stepOrder}`}
                 aria-current={active ? "page" : undefined}
                 title={step.label}
-                className={`relative flex min-h-11 shrink-0 items-center gap-1 rounded px-1.5 py-1.5 text-[12px] ${
+                className={`relative flex h-9 shrink-0 items-center gap-1 rounded-[4px] px-1.5 text-[12px] ${
                   active
-                    ? "bg-accent-tint font-semibold text-accent ring-1 ring-accent-ring"
-                    : "text-ink-secondary hover:bg-canvas"
+                    ? "bg-panel font-semibold text-accent shadow-[0_0_0_1px_var(--color-hairline)]"
+                    : "text-ink-secondary hover:bg-panel/60"
                 }`}
               >
                 {step.icon !== undefined ? (
@@ -244,43 +305,49 @@ function StudioLayout() {
                 {active ? (
                   <motion.span
                     layoutId="stepper-underline"
-                    className="absolute inset-x-1 -bottom-px h-[2px] bg-accent"
+                    className="absolute inset-x-1.5 -bottom-px h-[2px] bg-accent"
                   />
                 ) : null}
               </Link>
             );
           })}
         </nav>
-        {/* Right zone: ONE consolidated flex group (v2.1.1) — undo/redo,
-            ⌘K, offline/license telemetry (2xl+), help, normative settings,
-            the Validation icon button and the FR | EN switch. Secondary
-            pills hide below 2xl so the named stepper never overflows. */}
+        {/* Right zone: uniform h-7 action groups separated by vertical
+            hairlines — Undo | Redo, ⌘K, offline/license telemetry (2xl+),
+            Réglages, 41/41 validation, ?, FR | EN. Secondary pills hide
+            below 2xl so the named stepper never overflows. */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
-          <span className="font-data hidden text-[11px] text-ink-muted 2xl:inline">
-            {nodeCount} nœuds · {beamCount} poutres
-          </span>
-          <button
-            type="button"
-            aria-label="Annuler la dernière action"
-            title="Annuler (⌘Z)"
-            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary xl:flex"
-            onClick={() => undoModel()}
-          >
-            <Undo2 size={14} strokeWidth={1.5} aria-hidden />
-          </button>
-          <button
-            type="button"
-            aria-label="Rétablir l'action suivante"
-            title="Rétablir (⇧⌘Z)"
-            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary xl:flex"
-            onClick={() => redoModel()}
-          >
-            <Redo2 size={14} strokeWidth={1.5} aria-hidden />
-          </button>
+          <TooltipGroup className="hidden xl:inline-flex xl:items-center xl:gap-1.5">
+            <div className="flex items-center rounded-[4px] border border-hairline bg-panel p-0.5">
+              <Tooltip label="Annuler (⌘Z)">
+                <button
+                  type="button"
+                  aria-label="Annuler la dernière action"
+                  title="Annuler (⌘Z)"
+                  className="flex h-7 w-7 items-center justify-center rounded-[3px] text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
+                  onClick={() => undoModel()}
+                >
+                  <Undo2 size={14} strokeWidth={1.5} aria-hidden />
+                </button>
+              </Tooltip>
+              <span className="h-5 w-px bg-hairline" aria-hidden />
+              <Tooltip label="Rétablir (⇧⌘Z)">
+                <button
+                  type="button"
+                  aria-label="Rétablir l'action suivante"
+                  title="Rétablir (⇧⌘Z)"
+                  className="flex h-7 w-7 items-center justify-center rounded-[3px] text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
+                  onClick={() => redoModel()}
+                >
+                  <Redo2 size={14} strokeWidth={1.5} aria-hidden />
+                </button>
+              </Tooltip>
+            </div>
+          </TooltipGroup>
           <button
             type="button"
             id="rdm-cmdk"
-            className="relative hidden shrink-0 rounded border border-hairline px-2 py-1 font-data text-[11px] text-ink-secondary md:inline"
+            className="font-data relative hidden h-7 shrink-0 items-center rounded-[4px] border border-hairline bg-panel px-2 text-[11px] text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary md:flex"
             onClick={() => window.dispatchEvent(new Event("rdm-open-palette"))}
           >
             ⌘K
@@ -288,25 +355,29 @@ function StudioLayout() {
           </button>
           <OfflinePill />
           <LicenseBadge />
-          <button
-            type="button"
-            aria-label="Aide"
-            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary md:flex"
-            onClick={() => window.dispatchEvent(new Event("rdm-start-tour"))}
-          >
-            ?
-          </button>
+          <span className="h-5 w-px bg-hairline max-md:hidden" aria-hidden />
           <SettingsPopover />
           <button
             type="button"
             onClick={() => setValidationOpen(true)}
             aria-label="Validation — 41 benchmarks analytiques"
             title="Validation — 41 benchmarks analytiques"
-            className="flex shrink-0 items-center justify-center rounded-md border border-hairline px-1.5 py-1 text-xs font-medium text-ink-secondary hover:bg-panel-subtle"
+            className="flex h-7 shrink-0 items-center justify-center gap-1 rounded-[4px] border border-hairline bg-panel px-1.5 text-[12px] font-medium text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
           >
-            <BadgeCheck size={14} strokeWidth={1.5} aria-hidden />
-            <span className="hidden 2xl:inline">&nbsp;Validation</span>
+            <BadgeCheck size={14} strokeWidth={1.5} className="text-pass-text" aria-hidden />
+            <span className="hidden 2xl:inline font-data">41 / 41</span>
           </button>
+          <Tooltip label={<Trans>Visite guidée illustrée</Trans>} side="bottom">
+            <button
+              type="button"
+              aria-label="Aide"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-hairline bg-panel text-[12px] text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
+              onClick={() => window.dispatchEvent(new Event("rdm-start-tour"))}
+            >
+              ?
+            </button>
+          </Tooltip>
+          <span className="h-5 w-px bg-hairline max-md:hidden" aria-hidden />
           <LocaleSwitch />
         </div>
       </header>

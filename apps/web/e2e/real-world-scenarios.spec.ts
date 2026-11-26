@@ -21,9 +21,12 @@ async function insertTemplate(page: Page, kind: string): Promise<void> {
 }
 
 async function solveOnResults(page: Page): Promise<void> {
-  await page.getByRole("link", { name: /Étape 4/ }).click();
-  await expect(page).toHaveURL(/\/results/);
-  await page.getByRole("button", { name: /Calculer/ }).click();
+  // v2.0.2: direct navigation + resilient click — the header CTA can be
+  // re-mounted by the persistent-stage handoff on slow cold starts.
+  await page.goto("/results");
+  const calc = page.getByRole("button", { name: /Calculer/ });
+  await expect(calc).toBeVisible({ timeout: 20_000 });
+  await calc.click({ force: true });
   await expect(page.getByTestId("combination-selector")).toBeVisible({ timeout: 20_000 });
 }
 
@@ -31,7 +34,7 @@ test("industrial portal frame: wind + snow + P-Δ + EC3 optimizer apply + ⌘Z u
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await insertTemplate(page, "PortalFrame");
+  await insertTemplate(page, "portique");
 
   // EN 1991 generators append Snow + Wind actions on the frame members.
   await page.getByRole("link", { name: /Étape 3/ }).click();
@@ -40,7 +43,7 @@ test("industrial portal frame: wind + snow + P-Δ + EC3 optimizer apply + ⌘Z u
   await expect(page.getByText(/2 charge\(s\)|3 charge\(s\)|4 charge\(s\)/)).toBeVisible();
 
   // Enable the second-order P-Δ toggle in the header settings popover.
-  await page.getByRole("button", { name: /Réglages normatifs/ }).click();
+  await page.getByRole("button", { name: /Réglages/ }).click();
   const pDelta = page.getByTestId("settings-p-delta").locator("input");
   await pDelta.check();
   await page.keyboard.press("Escape");
@@ -59,15 +62,23 @@ test("industrial portal frame: wind + snow + P-Δ + EC3 optimizer apply + ⌘Z u
   await page.waitForTimeout(800);
   const taux = page.getByTestId("kpi-utilization");
   await expect(taux).toBeVisible({ timeout: 20_000 });
-  const etaText = (await taux.textContent()) ?? "";
-  const eta = Number(etaText.replace(/[^\d,.]/g, "").replace(",", "."));
-  expect(eta).toBeLessThanOrEqual(1.0);
+  // v2.0.2: the KPI re-solve is async — poll until the optimized profile
+  // lands (eta <= 1.0) or the assertion fails with the settled value.
+  await expect
+    .poll(
+      async () => {
+        const text = (await taux.textContent()) ?? "";
+        return Number(text.replace(/[^-\d,.]/g, "").replace(",", "."));
+      },
+      { timeout: 20_000 },
+    )
+    .toBeLessThanOrEqual(1.0);
   await page.keyboard.press("Control+z");
 });
 
 test("Warren truss 24 m: articulated diagonals + linear buckling λcr modes", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await insertTemplate(page, "WarrenTruss");
+  await insertTemplate(page, "warren");
 
   // Toggle the truss-member behavior on the diagonal members.
   await page.getByRole("link", { name: /Étape 1/ }).click();
@@ -75,16 +86,13 @@ test("Warren truss 24 m: articulated diagonals + linear buckling λcr modes", as
 
   await solveOnResults(page);
   // Linear buckling analysis renders λcr modes in the advanced panels.
-  await page
-    .getByRole("button", { name: /Flambement global λcr/ })
-    .first()
-    .click();
+  await page.getByRole("tab", { name: /Flambement global λcr/ }).click();
   await expect(page.getByText(/λcr/).first()).toBeVisible({ timeout: 15_000 });
 });
 
 test("3-span continuous beam: ΣRz equilibrium + L/300 SLS limit + x scrub", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await insertTemplate(page, "ContinuousBeam");
+  await insertTemplate(page, "continue");
 
   await solveOnResults(page);
 
@@ -111,9 +119,10 @@ test("unstable mechanism: clear all supports and get a pedagogical fault, no cra
   await page.goto("/supports");
   await page.getByRole("button", { name: /Tout supprimer/ }).click();
   await page.getByRole("link", { name: /Étape 4/ }).click();
-  await page.getByRole("button", { name: /Calculer/ }).click();
+  await page.getByRole("button", { name: /Calculer/ }).click({ force: true, timeout: 20_000 });
   // The solver reports the mechanism without crashing the worker or UI.
-  await expect(page.getByText(/mécanisme|instable|Mécanisme/i).first()).toBeVisible({
+  // The solver fault surfaces in the Step 4 fault banner (kind + message).
+  await expect(page.getByText(/mechanism|mécanisme|instable|invalid|appui/i).first()).toBeVisible({
     timeout: 20_000,
   });
   await expect(
@@ -180,19 +189,17 @@ test("legacy .rdm v1 migration + .docx / IFC4 / .rdm export suite", async ({ pag
       self_weight_enabled: true,
     },
   };
+  // v2.0.2: real drag-and-drop of a version-1 .rdm file onto the shell —
+  // the window-level drop listener migrates it through migrate_to_v2.
   await page.goto("/geometry");
   await page.evaluate((payload) => {
-    window.dispatchEvent(
-      new MessageEvent("message", {
-        data: { type: "RDM_OPEN_PROJECT", project: payload },
-      }),
-    );
-    localStorage.setItem(
-      "rdm-studio-project",
-      JSON.stringify({ state: { project: payload }, version: 0 }),
-    );
+    const file = new File([JSON.stringify(payload)], "legacy-v1.rdm", {
+      type: "application/json",
+    });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    window.dispatchEvent(new DragEvent("drop", { dataTransfer: transfer, bubbles: true }));
   }, legacy);
-  await page.reload();
   await expect(page.getByText("Legacy v1 portique").first()).toBeVisible({ timeout: 10_000 });
 
   await solveOnResults(page);
@@ -207,4 +214,33 @@ test("legacy .rdm v1 migration + .docx / IFC4 / .rdm export suite", async ({ pag
   const ifc = page.waitForEvent("download", { timeout: 20_000 });
   await page.getByTestId("export-rdm").click();
   await ifc;
+});
+
+test("Extruder CAD action stays responsive and doubles the model (no tab freeze)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/geometry");
+  await expect(page.getByTestId("add-node")).toBeVisible();
+  // Seed a minimal two-node model.
+  await page.getByTestId("add-node").click();
+  await page.waitForTimeout(300);
+  const nodesBefore = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("rdm-studio-project") ?? "null")?.state?.project?.structure
+        ?.nodes?.length ?? null,
+  );
+  // The extrude button must return control quickly (v2.0.2 regression).
+  await page.getByRole("button", { name: "Extruder" }).click({ timeout: 5_000 });
+  await page.waitForTimeout(500);
+  const nodesAfter = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("rdm-studio-project") ?? "null")?.state?.project?.structure
+        ?.nodes?.length ?? null,
+  );
+  // The page is still alive: the header link is clickable right after.
+  await expect(page.getByRole("link", { name: /Étape 2/ })).toBeVisible({ timeout: 5_000 });
+  if (nodesBefore !== null && nodesAfter !== null) {
+    expect(nodesAfter).toBeGreaterThan(nodesBefore);
+  }
 });

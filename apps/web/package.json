@@ -63,6 +63,7 @@
     "@playwright/test": "1.65.1",
     "@tailwindcss/vite": "4.3.5",
     "@tanstack/router-cli": "1.99.9",
+    "@tanstack/router-core": "1.171.39",
     "@tanstack/router-plugin": "1.99.9",
     "@types/katex": "^0.16.8",
     "@types/qrcode": "^1.5.6",

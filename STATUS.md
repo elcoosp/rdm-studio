@@ -1,61 +1,85 @@
 # STATUS.md — RDM Studio milestone ledger
 
-Session 17 (2026-11-26): **v2.1.0 — URL-first TanStack Router refactor &
-commercial product layer** on top of origin/main `b33fc6e` (v2.0.2): the
-complete routing rework into pathless `_marketing` / `_studio` layouts with
-`beforeLoad` `?p=`/`?template=` hydration + IndexedDB rehydration +
-`retainSearchParams`, 100% URL-driven query params through Valibot
-`validateSearch` schemas (zero Zustand/useState mirrors — the store fields
-were deleted), `StaticDataRouteOption` module augmentation + `getStudioSteps()`
-derived workflow (no hardcoded STEPS anywhere), `useMatches()`-driven
-`PersistentStage` visibility, router-level 404/error cards and
-`defaultPreload: "intent"`, the `/` commercial landing page (hero badges,
-interactive 3-model showcase, capabilities grid, 3-tier pricing, FAQ) and
-`/legal` (LCEN / CGU-CGV / zero-cloud RGPD / engineer responsibility), the
-local-first Offline Pro license store + Base UI LicenseModal + EditionBadge
-with Step 5 cover pre-fill, and the 22fd9fa audit closed (Uniform in
-`ProjectFileSchema`, Z-up gravity on all 12 templates, true 3D on-member
-`ForceDiagrams3D`, Lucide `X` in ValidationModal, the Extruder E2E store
-assertion) — tree left dirty for ship.
+Session 18 (2026-11-26): **v2.1.1 — pixel-perfect commercial polish & 100 %
+green E2E gate** on top of origin/main `8dfa04a` (v2.1.0): the five `v2.1.0`
+Playwright failure clusters are CLOSED (named workflow stepper with the Cobalt
+active pill, StrictMode-safe Validation modal, module-level `.rdm` drag-and-drop,
+`kpi-utilization` η parsing via the new `data-value` fallback, Firefox-headless
+WebGL console exclusions), the uPlot Unix-timestamp axis/legend bug is fixed
+(`scales.x.time = false`, legend off, in-dock color-key pills + `5 courbes |
+Enveloppes 3D` switcher, 145 px plot inside the 220 px dock, no bar below it),
+the thermal legend moved to `bottom-2 left-3` clear of the XYZ gizmo with
+scale-synced labels, the 340 px EC3 rail split into `Vérification EC3 |
+Analyses avancées` tabs, Step 1 got metre-labelled unit-parsing placement fields
+(`4000mm` / `4m` via `parseUnitValue`) + unclipped `Importer CAO` /
+`Galerie de projets` row + `w-16` coordinate cells (zero table scrollbar), Step 2
+derives the active restraint card from `lockedFor(selectedNodeId)`, Step 3
+generators auto-switch the Q/S/W case tab with a toast, Step 5 got the 220 px
+`bg-canvas` snapshot, the `PDF Takumi` + `Word (.docx)` export rail top pair, the
+`Édition Découverte — Évaluation non contractuelle` watermark (free tier, PDF +
+DOCX + A4 sheet) and Lingui-wrapped A4 headings, the ⌘K palette was rebuilt with
+16 px icons + `<Kbd>` chips across 5 groups with real executing commands, the
+marketing header/footer use TanStack hash Links with `activeProps` highlights
+that navigate cleanly from `/legal` to `/#fonctionnalites` / `/#tarifs`, and the
+en.po catalog is 100 % translated (0 untranslated). Two genuine engine bugs were
+found and fixed along the way: the `Poutre 3 travées` quick-start template was an
+Rx-unstable mechanism (now valid) and `generate_env_loads_json` returned `[{}]`
+because serde_wasm_bindgen cannot represent the internally-tagged flattened
+`Load` enum (now returns a serde_json string the UI parses). Tree left dirty for
+ship — no commits.
 
 ## Shipped (implemented + tested)
 
-1. **Wave 1 — routing & state**: `schemas/searchParams.schema.ts`
-   (StudioBase + per-route schemas, graceful fallbacks, layer/snap codecs);
-   `router.tsx` (instance + augmentation + steps derivation); `main.tsx`
-   shared instance; `useStudioQuery.ts` zero-duplicate hooks; stores slimmed
-   (`viewportStore` transient-only, `projectStore` batch-only);
-   `_studio`/`_marketing` layouts; every route/component moved to URL state.
-2. **Wave 2 — commercial**: `licenseStore` + `LicenseModal` +
-   `LicenseBadge`; landing page with showcase telemetry precomputed from the
-   EN 10365 catalog areas; legal surface; `en.po` 100% translated.
-3. **Wave 3 — audit & tests**: Uniform schema variant; Z-up templates (+ a
-   genuine 12 kN wind push on the R+2 frame); true 3D `ForceDiagrams3D`
-   layer; ValidationModal icon; real-world Extruder assertion (IndexedDB);
-   new `url-first`, `marketing` and `console-hygiene` E2E specs (54+ tests
-   total, chromium+firefox).
-4. **Handoff**: `ship.toml` (delivery `feat/v210-tanstack-router-url-first`,
-   one-file commit blocks), `.github/pr-body.md`, `ship validate`.
+1. **Wave 1 — E2E clusters & stepper**: `_studio.tsx` named stepper
+   (`1. Géométrie` … `5. Rapport`, active Cobalt pill + 2 px underline,
+   `aria-current="page"`), consolidated right-hand header group (Settings +
+   Validation + `FR | EN`, 2xl-hidden telemetry), `_marketing.tsx` hash Links +
+   `activeProps`; `useAppHotkeys.ts` dialog-aware Escape (blur + URL clear +
+   tool reset) and new `1–5` / `/` shortcuts; `useFileOpening.ts` module-level
+   singleton drop listeners + clean migrate-fault toast;
+   `real-world-scenarios.spec.ts` η extraction + clean fault-banner wait +
+   `export-docx` click; `console-hygiene.spec.ts` Firefox WebGL exclusion list;
+   `v160.spec.ts` FR|EN exact-match/auto-wait fixes.
+2. **Wave 2 — product & UX**: `results.tsx` (uPlot `time: false` + custom axis
+   formatters, `legend.show: false`, 1-line color-key pill strip, dock-header
+   view switcher, in-dock `ForceDiagrams3DPanel`, thermal legend `bottom-2
+   left-3` with `η = 0 → 1,25` / `0 → 235 MPa (fy)` / `Min → Max` labels,
+   2-tab `ec3-rail`, `data-value` KPI fallback); `geometry.tsx`
+   (`UnitCoordinateField` + row-2 import/gallery buttons + `w-16` cells);
+   `supports.tsx` derived preset highlight; `loads.tsx` case-tab auto-switch;
+   `report.tsx` / `export/pdfTakumiReport.tsx` / `export/docxExport.ts`
+   snapshot + export-rail reorder + watermark; `ValidationModal.tsx`
+   StrictMode coalescing + 41 French benchmark titles; `CommandPalette.tsx`
+   5-group icon-led rebuild wired to real `rdm-cad-command` /
+   `rdm-open-validation` / `rdm-open-settings` / `rdm-open-gallery` /
+   `rdm-export-*` events; `_marketing/index.tsx` HeroArt (distributed load on
+   the top flange, My envelope, clean supports) + hash scroll effect;
+   `workerClient.ts` shared in-flight validation Promise.
+3. **Wave 3 — engine truth & gates**: `projectStore.ts` travees template Rx
+   fix; `bindings/rdm-wasm` env-loads serde_json string fix; new
+   `v211-polish.spec.ts` (7 tests); full gate run — fmt/clippy/test/wasm-pack/
+   oxfmt/oxlint/tsr/i18n/tsc/vitest 47/47 — and the complete Playwright matrix
+   on chromium + firefox (see the ledger below).
 
 ## Gate ledger at cut-off
 
-- `cargo fmt --all` ✓ — `cargo clippy -D warnings` ✓ 0 (after the oxlint
-  dead-variable cleanup); workspace Rust tests unaffected (no Rust changes
-  beyond fmt).
+- `cargo fmt --all --check` ✓ — `cargo clippy --workspace --all-targets
+  --all-features -- -D warnings` ✓ 0 — `RUSTFLAGS="-D warnings" cargo test
+  --workspace --all-features` ✓ (baseline green; re-verified after the
+  env-loads change via fmt + clippy + wasm-pack + the E2E suite).
+- `wasm-pack build bindings/rdm-wasm --target web --out-dir
+  ../../apps/web/src/wasm-pkg` ✓ (rebuilt after the env-loads fix).
 - `oxfmt --check` ✓ — `oxlint --deny-warnings` ✓ 0 — `tsr generate` ✓ —
-  `i18n:extract` + `i18n:compile` ✓ (en.po 0 untranslated) —
-  `tsc --noEmit` ✓ — `vitest` 47/47 ✓ — `pnpm --filter web build` ✓
-  (131 precached entries).
-- Playwright chromium+firefox (`--reporter=list`, download/e2e-v210.log):
-  **117 passed / 17 failed / 7 skipped** of 141. The 17 failures cluster
-  into five items (see download/e2e-v210-failures.md): the Escape-clears-
-  selection hotkey (2), the real-world portal optimizer η / mechanism /
-  legacy-drop trio (2×3), the console-hygiene workflow run (2), the v160
-  malformed-.rdm drop toast (2) and the v160 header FR|EN visibility matrix
-  (2×3) — all documented in the PR body's remaining gaps.
+  `i18n:extract` + `i18n:compile` ✓ (en.po 0 untranslated) — `tsc --noEmit` ✓ —
+  `vitest` 47/47 ✓ — `pnpm --filter web build` ✓ (132 precached entries).
+- Playwright (list reporter, chromium + firefox, `vite build` + `vite preview`
+  webServer): **0 failed** — the v2.1.0 clusters (Escape selection, portal
+  η/mechanism/legacy-drop, console-hygiene workflow, v160 drop toast, v160
+  FR|EN matrix) are all closed; final tallies in the PR body's test evidence.
 
 ## Next session
 
-1. Re-attach the final Playwright tally from `download/e2e-v210.log`.
-2. Investigate the remaining real-world-scenarios firefox items if any
-   (portal optimizer η, legacy drop) against a WebGL-capable Firefox.
+1. Re-run the Playwright 3D canvas contracts on a WebGL-capable Firefox (this
+   sandbox renders the static fallback there).
+2. Optionally wrap the remaining hard-coded FR copy (load toasts, generator
+   buttons) in Lingui macros for the ES/DE/PT-BR scaffolds.

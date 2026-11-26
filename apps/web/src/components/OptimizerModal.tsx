@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { X } from "lucide-react";
+import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import {
   CartesianGrid,
   ReferenceLine,
@@ -193,30 +194,26 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t`Optimiseur de sections`}
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-panel p-6 shadow-2xl "
-        onClick={(e) => e.stopPropagation()}
+    <DialogRoot open onOpenChange={(next) => (next ? undefined : onClose())}>
+      <DialogContent
+        className="max-h-[85vh] w-[min(92vw,768px)] overflow-auto"
+        data-testid="optimizer-modal"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">
-            <Trans>Optimiseur EC3 — profil le plus léger</Trans>
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t`Fermer`}
-            className="flex h-8 w-8 items-center justify-center rounded border border-hairline text-ink-secondary hover:border-accent hover:text-accent "
-          >
-            <X size={16} strokeWidth={1.5} aria-hidden />
-          </button>
-        </div>
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              <Trans>Optimiseur EC3 — profil le plus léger</Trans>
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t`Fermer`}
+              className="flex h-8 w-8 items-center justify-center rounded border border-hairline text-ink-secondary hover:border-accent hover:text-accent"
+            >
+              <X size={16} strokeWidth={1.5} aria-hidden />
+            </button>
+          </div>
+        </DialogHeader>
         {totals !== null ? (
           <p className="mb-3 text-sm" aria-live="polite">
             <Trans>
@@ -351,7 +348,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
           <Trans>Trace de vérification (KaTeX)</Trans>
         </h3>
         <CalcTrace nodes={trace} />
-      </div>
-    </div>
+      </DialogContent>
+    </DialogRoot>
   );
 }

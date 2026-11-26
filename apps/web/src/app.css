@@ -203,3 +203,30 @@ body.rdm-dragging::after {
 *::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/*
+ * v2.1.2 — Native View Transitions (router.tsx `defaultViewTransition`).
+ * A crisp 160 ms cross-fade on the critically damped precision curve,
+ * `prefers-reduced-motion` collapses it to an instant swap, and the
+ * persistent 3D stage is PINNED (`view-transition-name: none`) so the
+ * WebGL canvas never flickers across Steps 1–4 and /, /legal, /report.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: normal;
+}
+
+/* Keep the WebGL canvas out of the snapshot pipeline entirely: no name,
+   no capture, no flicker while the routes cross-fade around it. */
+[data-testid="persistent-stage"] {
+  view-transition-name: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+  }
+}

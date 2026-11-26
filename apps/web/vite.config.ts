@@ -55,7 +55,7 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // Obligatoire pour occt-import-js & takumi .wasm
-        globPatterns: ["**/*.{js,css,html,wasm,svg,woff2,ttf}"],
+        globPatterns: ["**/*.{js,css,html,wasm,svg,png,woff2,ttf}"],
         runtimeCaching: [
           {
             urlPattern: /\.rdm$/,

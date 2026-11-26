@@ -142,7 +142,6 @@ function SupportsPage() {
   // v2.1.0: the node selection is URL-backed (`?node=`).
   const { nodeId: selectedNodeId, selectNode } = useSelectedIds();
   const navigate = useNavigate();
-  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [springsOpen, setSpringsOpen] = useState(false);
   const slotRef = useStageSlot("supports");
 
@@ -156,6 +155,31 @@ function SupportsPage() {
       false,
     ];
 
+  // v2.1.1: the active preset highlight is DERIVED from the selected
+  // node's actual locked DOFs — clicking any node in 3D (or the DOF
+  // matrix) illuminates its matching restraint card automatically; the
+  // primary cards win over the grouped RDM 7 library on ties.
+  const deriveActivePreset = (nodeId: number | null): string | null => {
+    if (nodeId === null) {
+      return null;
+    }
+    const locked = lockedFor(nodeId);
+    const matches = (preset: { locked: boolean[] }): boolean =>
+      preset.locked.every((v, i) => v === (locked[i] ?? false));
+    const primary = PRIMARY_PRESETS.find((p) => matches(p));
+    if (primary !== undefined) {
+      return primary.key;
+    }
+    for (const group of GROUPED_PRESETS) {
+      const found = group.presets.find((p) => matches(p));
+      if (found !== undefined) {
+        return found.key;
+      }
+    }
+    return null;
+  };
+  const activePreset = deriveActivePreset(selectedNodeId);
+
   const springsFor = (nodeId: number): number[] =>
     supports.find((s) => s.node_id === nodeId)?.spring_stiffness ?? [0, 0, 0, 0, 0, 0];
 
@@ -167,7 +191,6 @@ function SupportsPage() {
       return;
     }
     setSupport(selectedNodeId, [...preset.locked]);
-    setActivePreset(preset.key);
   };
 
   const clearAll = () => {
@@ -357,7 +380,6 @@ function SupportsPage() {
                             const next = [...locked];
                             next[i] = e.currentTarget.checked;
                             setSupport(n.id, next);
-                            setActivePreset(null);
                           }}
                         />
                       </td>

@@ -1,6 +1,7 @@
-// 32 custom engineering icons (DESIGN.md section 5), ported verbatim from
-// mockups/icons-sheet.html: 24x24 optical grid, 1.5px stroke, cobalt accents
-// bound to the token palette. The `accent` prop recolors currentColor paths.
+// 44 custom engineering icons (DESIGN.md section 5), ported verbatim from
+// mockups/icons-sheet.html (32) and mockups/icons-sheet-v2.html (12):
+// 24x24 optical grid, 1.5px stroke, cobalt accents bound to the token
+// palette. The `accent` prop recolors currentColor paths.
 
 type IconProps = { size?: number };
 
@@ -386,6 +387,187 @@ export function ModalVibration({ size = 22 }: IconProps) {
     <Svg size={size}>
       <line x1="4" y1="12" x2="20" y2="12" stroke="var(--color-ink-muted)" strokeDasharray="2 2" />
       <path d="M4 12C6.5 5 9.5 5 12 12C14.5 19 17.5 19 20 12" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// v2 icons (12) — ported verbatim from mockups/icons-sheet-v2.html: same
+// 24×24 optical grid, 1.5px stroke, `#1D4ED8` accent paths rebound to
+// `var(--color-accent)` and `#94A3B8` guides to `var(--color-ink-muted)`.
+// ---------------------------------------------------------------------------
+
+/** Segment de poutre bi-appuyée (v2). */
+export function BeamSegment({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <circle cx="5.5" cy="17.5" r="2.25" />
+      <circle cx="18.5" cy="6.5" r="2.25" />
+      <line x1="7.2" y1="16.05" x2="16.8" y2="7.95" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Nœud pivot articulé (v2). */
+export function NodePin({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <line x1="12" y1="4.5" x2="12" y2="7.5" stroke="var(--color-ink-muted)" />
+      <line x1="12" y1="16.5" x2="12" y2="19.5" stroke="var(--color-ink-muted)" />
+      <line x1="4.5" y1="12" x2="7.5" y2="12" stroke="var(--color-ink-muted)" />
+      <line x1="16.5" y1="12" x2="19.5" y2="12" stroke="var(--color-ink-muted)" />
+      <circle cx="12" cy="12" r="2.25" fill="var(--color-accent)" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Portique encastré-articulé (v2). */
+export function PortalFrameIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <polyline points="5.5,17 5.5,6.5 18.5,6.5 18.5,17" stroke="var(--color-accent)" />
+      <circle cx="5.5" cy="6.5" r="1.5" fill="currentColor" />
+      <circle cx="18.5" cy="6.5" r="1.5" fill="currentColor" />
+      <line x1="3" y1="17" x2="8" y2="17" />
+      <line x1="4" y1="19.5" x2="6" y2="17" />
+      <line x1="6.5" y1="19.5" x2="8.5" y2="17" />
+      <polygon points="18.5,17 16,20.5 21,20.5" />
+    </Svg>
+  );
+}
+
+/** Treillis Warren à diagonales alternées (v2). */
+export function WarrenTrussIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <line x1="4" y1="7.5" x2="20" y2="7.5" />
+      <line x1="6" y1="16.5" x2="18" y2="16.5" />
+      <polyline
+        points="4,7.5 7.2,16.5 10.4,7.5 13.6,16.5 16.8,7.5 20,16.5"
+        stroke="var(--color-accent)"
+      />
+      <circle cx="4" cy="7.5" r="1.25" fill="currentColor" />
+      <circle cx="20" cy="7.5" r="1.25" fill="currentColor" />
+    </Svg>
+  );
+}
+
+/** Poutre continue multi-travées (v2). */
+export function ContinuousBeamIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <line x1="4" y1="10" x2="20" y2="10" stroke="var(--color-accent)" />
+      <polygon points="5.5,10 3.5,14.5 7.5,14.5" />
+      <polygon points="12,10 10,14.5 14,14.5" />
+      <polygon points="18.5,10 16.5,14.5 20.5,14.5" />
+      <line x1="3" y1="17" x2="21" y2="17" />
+    </Svg>
+  );
+}
+
+/** Charge de vent (pression latérale, v2). */
+export function WindLoadIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <line x1="18.5" y1="4.5" x2="18.5" y2="19.5" />
+      <line x1="4.5" y1="7.5" x2="15" y2="7.5" stroke="var(--color-accent)" />
+      <polyline points="12.75,5.25 15,7.5 12.75,9.75" stroke="var(--color-accent)" />
+      <line x1="6" y1="12" x2="15" y2="12" stroke="var(--color-accent)" />
+      <polyline points="12.75,9.75 15,12 12.75,14.25" stroke="var(--color-accent)" />
+      <line x1="4.5" y1="16.5" x2="15" y2="16.5" stroke="var(--color-accent)" />
+      <polyline points="12.75,14.25 15,16.5 12.75,18.75" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Charge de neige (givre + ligne de toit, v2). */
+export function SnowLoadIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <line x1="12" y1="4" x2="12" y2="15.5" stroke="var(--color-accent)" />
+      <line x1="7" y1="6.85" x2="17" y2="12.65" stroke="var(--color-accent)" />
+      <line x1="17" y1="6.85" x2="7" y2="12.65" stroke="var(--color-accent)" />
+      <polyline points="10.25,5.5 12,7 13.75,5.5" stroke="var(--color-accent)" />
+      <polyline points="10.25,14 12,12.5 13.75,14" stroke="var(--color-accent)" />
+      <line x1="4" y1="18.5" x2="20" y2="18.5" />
+    </Svg>
+  );
+}
+
+/** Action thermique ΔT (dilatation, v2). */
+export function ThermalLoadIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <path d="M8.5 13.2V6a1.75 1.75 0 1 1 3.5 0v7.2a3 3 0 1 1-3.5 0Z" />
+      <circle
+        cx="10.25"
+        cy="15.5"
+        r="1.25"
+        fill="var(--color-accent)"
+        stroke="var(--color-accent)"
+      />
+      <line x1="10.25" y1="8.5" x2="10.25" y2="14.25" stroke="var(--color-accent)" />
+      <line x1="15" y1="8.5" x2="19.5" y2="8.5" stroke="var(--color-accent)" />
+      <polyline points="17.5,6.5 19.5,8.5 17.5,10.5" stroke="var(--color-accent)" />
+      <line x1="15" y1="14.5" x2="19.5" y2="14.5" stroke="var(--color-accent)" />
+      <polyline points="17.5,12.5 19.5,14.5 17.5,16.5" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Poids propre / masse gravitaire (v2). */
+export function MassWeightIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <circle cx="12" cy="5.75" r="1.75" stroke="var(--color-accent)" />
+      <path d="M6.5 8.5h11l1.25 10.5H5.25L6.5 8.5Z" />
+      <line x1="9" y1="14" x2="15" y2="14" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Poutre béton armé (ferraillage, v2). */
+export function ConcreteBeamIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <rect x="6" y="4.5" width="12" height="15" rx="0.75" />
+      <rect
+        x="8.25"
+        y="6.75"
+        width="7.5"
+        height="10.5"
+        stroke="var(--color-accent)"
+        strokeDasharray="2 2"
+      />
+      <circle cx="9" cy="16.75" r="1.25" fill="var(--color-accent)" stroke="var(--color-accent)" />
+      <circle cx="12" cy="16.75" r="1.25" fill="var(--color-accent)" stroke="var(--color-accent)" />
+      <circle cx="15" cy="16.75" r="1.25" fill="var(--color-accent)" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Poutre bois lamellé-collé (lits, v2). */
+export function TimberBeamIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <rect x="6" y="4.5" width="12" height="15" rx="0.75" />
+      <line x1="6" y1="8.25" x2="18" y2="8.25" stroke="var(--color-accent)" />
+      <line x1="6" y1="12" x2="18" y2="12" stroke="var(--color-accent)" />
+      <line x1="6" y1="15.75" x2="18" y2="15.75" stroke="var(--color-accent)" />
+    </Svg>
+  );
+}
+
+/** Assemblage acier (boulons + gousset, v2). */
+export function SteelJointIcon({ size = 22 }: IconProps) {
+  return (
+    <Svg size={size}>
+      <line x1="7.5" y1="4.5" x2="7.5" y2="19.5" />
+      <line x1="10.5" y1="6" x2="10.5" y2="18" stroke="var(--color-accent)" />
+      <line x1="10.5" y1="9" x2="19.5" y2="9" />
+      <line x1="10.5" y1="15" x2="19.5" y2="15" />
+      <line x1="5.5" y1="8" x2="12.5" y2="8" stroke="var(--color-accent)" />
+      <line x1="5.5" y1="16" x2="12.5" y2="16" stroke="var(--color-accent)" />
     </Svg>
   );
 }

@@ -11,155 +11,234 @@
 // Import Routes
 
 import { Route as rootRoute } from "./routes/__root";
-import { Route as SupportsImport } from "./routes/supports";
-import { Route as ResultsImport } from "./routes/results";
-import { Route as ReportImport } from "./routes/report";
-import { Route as LoadsImport } from "./routes/loads";
-import { Route as GeometryImport } from "./routes/geometry";
-import { Route as IndexImport } from "./routes/index";
+import { Route as StudioImport } from "./routes/_studio";
+import { Route as MarketingImport } from "./routes/_marketing";
+import { Route as MarketingIndexImport } from "./routes/_marketing/index";
+import { Route as StudioSupportsImport } from "./routes/_studio/supports";
+import { Route as StudioResultsImport } from "./routes/_studio/results";
+import { Route as StudioReportImport } from "./routes/_studio/report";
+import { Route as StudioLoadsImport } from "./routes/_studio/loads";
+import { Route as StudioGeometryImport } from "./routes/_studio/geometry";
+import { Route as MarketingLegalImport } from "./routes/_marketing/legal";
 
 // Create/Update Routes
 
-const SupportsRoute = SupportsImport.update({
-  id: "/supports",
-  path: "/supports",
+const StudioRoute = StudioImport.update({
+  id: "/_studio",
   getParentRoute: () => rootRoute,
 } as any);
 
-const ResultsRoute = ResultsImport.update({
-  id: "/results",
-  path: "/results",
+const MarketingRoute = MarketingImport.update({
+  id: "/_marketing",
   getParentRoute: () => rootRoute,
 } as any);
 
-const ReportRoute = ReportImport.update({
-  id: "/report",
-  path: "/report",
-  getParentRoute: () => rootRoute,
-} as any);
-
-const LoadsRoute = LoadsImport.update({
-  id: "/loads",
-  path: "/loads",
-  getParentRoute: () => rootRoute,
-} as any);
-
-const GeometryRoute = GeometryImport.update({
-  id: "/geometry",
-  path: "/geometry",
-  getParentRoute: () => rootRoute,
-} as any);
-
-const IndexRoute = IndexImport.update({
+const MarketingIndexRoute = MarketingIndexImport.update({
   id: "/",
   path: "/",
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => MarketingRoute,
+} as any);
+
+const StudioSupportsRoute = StudioSupportsImport.update({
+  id: "/supports",
+  path: "/supports",
+  getParentRoute: () => StudioRoute,
+} as any);
+
+const StudioResultsRoute = StudioResultsImport.update({
+  id: "/results",
+  path: "/results",
+  getParentRoute: () => StudioRoute,
+} as any);
+
+const StudioReportRoute = StudioReportImport.update({
+  id: "/report",
+  path: "/report",
+  getParentRoute: () => StudioRoute,
+} as any);
+
+const StudioLoadsRoute = StudioLoadsImport.update({
+  id: "/loads",
+  path: "/loads",
+  getParentRoute: () => StudioRoute,
+} as any);
+
+const StudioGeometryRoute = StudioGeometryImport.update({
+  id: "/geometry",
+  path: "/geometry",
+  getParentRoute: () => StudioRoute,
+} as any);
+
+const MarketingLegalRoute = MarketingLegalImport.update({
+  id: "/legal",
+  path: "/legal",
+  getParentRoute: () => MarketingRoute,
 } as any);
 
 // Populate the FileRoutesByPath interface
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexImport;
+    "/_marketing": {
+      id: "/_marketing";
+      path: "";
+      fullPath: "";
+      preLoaderRoute: typeof MarketingImport;
       parentRoute: typeof rootRoute;
     };
-    "/geometry": {
-      id: "/geometry";
+    "/_studio": {
+      id: "/_studio";
+      path: "";
+      fullPath: "";
+      preLoaderRoute: typeof StudioImport;
+      parentRoute: typeof rootRoute;
+    };
+    "/_marketing/legal": {
+      id: "/_marketing/legal";
+      path: "/legal";
+      fullPath: "/legal";
+      preLoaderRoute: typeof MarketingLegalImport;
+      parentRoute: typeof MarketingImport;
+    };
+    "/_studio/geometry": {
+      id: "/_studio/geometry";
       path: "/geometry";
       fullPath: "/geometry";
-      preLoaderRoute: typeof GeometryImport;
-      parentRoute: typeof rootRoute;
+      preLoaderRoute: typeof StudioGeometryImport;
+      parentRoute: typeof StudioImport;
     };
-    "/loads": {
-      id: "/loads";
+    "/_studio/loads": {
+      id: "/_studio/loads";
       path: "/loads";
       fullPath: "/loads";
-      preLoaderRoute: typeof LoadsImport;
-      parentRoute: typeof rootRoute;
+      preLoaderRoute: typeof StudioLoadsImport;
+      parentRoute: typeof StudioImport;
     };
-    "/report": {
-      id: "/report";
+    "/_studio/report": {
+      id: "/_studio/report";
       path: "/report";
       fullPath: "/report";
-      preLoaderRoute: typeof ReportImport;
-      parentRoute: typeof rootRoute;
+      preLoaderRoute: typeof StudioReportImport;
+      parentRoute: typeof StudioImport;
     };
-    "/results": {
-      id: "/results";
+    "/_studio/results": {
+      id: "/_studio/results";
       path: "/results";
       fullPath: "/results";
-      preLoaderRoute: typeof ResultsImport;
-      parentRoute: typeof rootRoute;
+      preLoaderRoute: typeof StudioResultsImport;
+      parentRoute: typeof StudioImport;
     };
-    "/supports": {
-      id: "/supports";
+    "/_studio/supports": {
+      id: "/_studio/supports";
       path: "/supports";
       fullPath: "/supports";
-      preLoaderRoute: typeof SupportsImport;
-      parentRoute: typeof rootRoute;
+      preLoaderRoute: typeof StudioSupportsImport;
+      parentRoute: typeof StudioImport;
+    };
+    "/_marketing/": {
+      id: "/_marketing/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof MarketingIndexImport;
+      parentRoute: typeof MarketingImport;
     };
   }
 }
 
 // Create and export the route tree
 
+interface MarketingRouteChildren {
+  MarketingLegalRoute: typeof MarketingLegalRoute;
+  MarketingIndexRoute: typeof MarketingIndexRoute;
+}
+
+const MarketingRouteChildren: MarketingRouteChildren = {
+  MarketingLegalRoute: MarketingLegalRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
+};
+
+const MarketingRouteWithChildren = MarketingRoute._addFileChildren(MarketingRouteChildren);
+
+interface StudioRouteChildren {
+  StudioGeometryRoute: typeof StudioGeometryRoute;
+  StudioLoadsRoute: typeof StudioLoadsRoute;
+  StudioReportRoute: typeof StudioReportRoute;
+  StudioResultsRoute: typeof StudioResultsRoute;
+  StudioSupportsRoute: typeof StudioSupportsRoute;
+}
+
+const StudioRouteChildren: StudioRouteChildren = {
+  StudioGeometryRoute: StudioGeometryRoute,
+  StudioLoadsRoute: StudioLoadsRoute,
+  StudioReportRoute: StudioReportRoute,
+  StudioResultsRoute: StudioResultsRoute,
+  StudioSupportsRoute: StudioSupportsRoute,
+};
+
+const StudioRouteWithChildren = StudioRoute._addFileChildren(StudioRouteChildren);
+
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/geometry": typeof GeometryRoute;
-  "/loads": typeof LoadsRoute;
-  "/report": typeof ReportRoute;
-  "/results": typeof ResultsRoute;
-  "/supports": typeof SupportsRoute;
+  "": typeof StudioRouteWithChildren;
+  "/legal": typeof MarketingLegalRoute;
+  "/geometry": typeof StudioGeometryRoute;
+  "/loads": typeof StudioLoadsRoute;
+  "/report": typeof StudioReportRoute;
+  "/results": typeof StudioResultsRoute;
+  "/supports": typeof StudioSupportsRoute;
+  "/": typeof MarketingIndexRoute;
 }
 
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/geometry": typeof GeometryRoute;
-  "/loads": typeof LoadsRoute;
-  "/report": typeof ReportRoute;
-  "/results": typeof ResultsRoute;
-  "/supports": typeof SupportsRoute;
+  "": typeof StudioRouteWithChildren;
+  "/legal": typeof MarketingLegalRoute;
+  "/geometry": typeof StudioGeometryRoute;
+  "/loads": typeof StudioLoadsRoute;
+  "/report": typeof StudioReportRoute;
+  "/results": typeof StudioResultsRoute;
+  "/supports": typeof StudioSupportsRoute;
+  "/": typeof MarketingIndexRoute;
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute;
-  "/": typeof IndexRoute;
-  "/geometry": typeof GeometryRoute;
-  "/loads": typeof LoadsRoute;
-  "/report": typeof ReportRoute;
-  "/results": typeof ResultsRoute;
-  "/supports": typeof SupportsRoute;
+  "/_marketing": typeof MarketingRouteWithChildren;
+  "/_studio": typeof StudioRouteWithChildren;
+  "/_marketing/legal": typeof MarketingLegalRoute;
+  "/_studio/geometry": typeof StudioGeometryRoute;
+  "/_studio/loads": typeof StudioLoadsRoute;
+  "/_studio/report": typeof StudioReportRoute;
+  "/_studio/results": typeof StudioResultsRoute;
+  "/_studio/supports": typeof StudioSupportsRoute;
+  "/_marketing/": typeof MarketingIndexRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/geometry" | "/loads" | "/report" | "/results" | "/supports";
+  fullPaths: "" | "/legal" | "/geometry" | "/loads" | "/report" | "/results" | "/supports" | "/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/geometry" | "/loads" | "/report" | "/results" | "/supports";
-  id: "__root__" | "/" | "/geometry" | "/loads" | "/report" | "/results" | "/supports";
+  to: "" | "/legal" | "/geometry" | "/loads" | "/report" | "/results" | "/supports" | "/";
+  id:
+    | "__root__"
+    | "/_marketing"
+    | "/_studio"
+    | "/_marketing/legal"
+    | "/_studio/geometry"
+    | "/_studio/loads"
+    | "/_studio/report"
+    | "/_studio/results"
+    | "/_studio/supports"
+    | "/_marketing/";
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  GeometryRoute: typeof GeometryRoute;
-  LoadsRoute: typeof LoadsRoute;
-  ReportRoute: typeof ReportRoute;
-  ResultsRoute: typeof ResultsRoute;
-  SupportsRoute: typeof SupportsRoute;
+  MarketingRoute: typeof MarketingRouteWithChildren;
+  StudioRoute: typeof StudioRouteWithChildren;
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  GeometryRoute: GeometryRoute,
-  LoadsRoute: LoadsRoute,
-  ReportRoute: ReportRoute,
-  ResultsRoute: ResultsRoute,
-  SupportsRoute: SupportsRoute,
+  MarketingRoute: MarketingRouteWithChildren,
+  StudioRoute: StudioRouteWithChildren,
 };
 
 export const routeTree = rootRoute
@@ -172,31 +251,54 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
-        "/geometry",
-        "/loads",
-        "/report",
-        "/results",
-        "/supports"
+        "/_marketing",
+        "/_studio"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/_marketing": {
+      "filePath": "_marketing.tsx",
+      "children": [
+        "/_marketing/legal",
+        "/_marketing/"
+      ]
     },
-    "/geometry": {
-      "filePath": "geometry.tsx"
+    "/_studio": {
+      "filePath": "_studio.tsx",
+      "children": [
+        "/_studio/geometry",
+        "/_studio/loads",
+        "/_studio/report",
+        "/_studio/results",
+        "/_studio/supports"
+      ]
     },
-    "/loads": {
-      "filePath": "loads.tsx"
+    "/_marketing/legal": {
+      "filePath": "_marketing/legal.tsx",
+      "parent": "/_marketing"
     },
-    "/report": {
-      "filePath": "report.tsx"
+    "/_studio/geometry": {
+      "filePath": "_studio/geometry.tsx",
+      "parent": "/_studio"
     },
-    "/results": {
-      "filePath": "results.tsx"
+    "/_studio/loads": {
+      "filePath": "_studio/loads.tsx",
+      "parent": "/_studio"
     },
-    "/supports": {
-      "filePath": "supports.tsx"
+    "/_studio/report": {
+      "filePath": "_studio/report.tsx",
+      "parent": "/_studio"
+    },
+    "/_studio/results": {
+      "filePath": "_studio/results.tsx",
+      "parent": "/_studio"
+    },
+    "/_studio/supports": {
+      "filePath": "_studio/supports.tsx",
+      "parent": "/_studio"
+    },
+    "/_marketing/": {
+      "filePath": "_marketing/index.tsx",
+      "parent": "/_marketing"
     }
   }
 }

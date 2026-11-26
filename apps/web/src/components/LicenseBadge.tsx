@@ -13,7 +13,7 @@ export function LicenseBadge(): React.ReactElement {
       type="button"
       data-testid="license-badge"
       onClick={() => window.dispatchEvent(new Event("rdm-open-license"))}
-      className={`font-data hidden shrink-0 rounded-[2px] border px-1.5 py-0.5 text-[11px] xl:inline ${
+      className={`font-data hidden shrink-0 rounded-[2px] border px-1.5 py-0.5 text-[11px] 2xl:inline ${
         tier === "pro"
           ? "border-accent bg-accent-tint text-accent"
           : "border-hairline text-ink-muted hover:text-ink-secondary"

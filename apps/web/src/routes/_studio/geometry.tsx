@@ -21,6 +21,7 @@ import { CadToolbar } from "@/components/CadToolbar";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { quickStartProject } from "@/state/projectStore";
+import { parseUnitValue } from "@/modeling/cadTools";
 import {
   ProfileAngle,
   ProfileChs,
@@ -224,9 +225,12 @@ function GeometryPage() {
 
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
-      {/* Flat action row — nested card borders stay out of the inspector.
-          v1.6.0: 3 compact X/Y/Z NumberFields (mm → m) beside `+ Nœud`. */}
-      <div className="flex items-end gap-2" data-testid="node-placement">
+      {/* Flat action rows — nested card borders stay out of the inspector.
+          v2.1.1 row 1: `+ Nœud` beside the X/Y/Z placement fields with
+          EXPLICIT metre labels and unit-suffixed parsing (`4000mm`,
+          `4m` — parseUnitValue). v2.1.1 row 2: full-width `Importer CAO`
+          + `Galerie de projets` side-by-side so nothing truncates. */}
+      <div className="flex flex-wrap items-end gap-2" data-testid="node-placement">
         <button
           type="button"
           className="flex items-center gap-1 rounded bg-accent px-2.5 py-1.5 text-[13px] text-white"
@@ -243,25 +247,29 @@ function GeometryPage() {
             ["Z", nodeZ, setNodeZ],
           ] as const
         ).map(([axis, value, setter]) => (
-          <NumberFieldRoot key={axis} value={value} step={0.05} onValueChange={(v) => setter(v)}>
-            <NumberFieldInput
-              className="font-data h-6 w-16 px-1 py-0 text-[12px]"
-              aria-label={`Placement ${axis} (m)`}
-              placeholder={axis}
-            />
-          </NumberFieldRoot>
+          <UnitCoordinateField key={axis} axis={axis} value={value} onValue={setter} />
         ))}
+        {cadError !== null ? (
+          <span className="self-center text-[12px] text-fea-max">{cadError}</span>
+        ) : null}
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <button
           type="button"
-          className="rounded border border-hairline px-2.5 py-1.5 text-[13px] text-ink-secondary"
+          className="min-w-0 whitespace-nowrap rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary"
           data-testid="open-cad-import"
           onClick={() => setCadOpen(true)}
         >
           <Trans>Importer CAO</Trans>
         </button>
-        {cadError !== null ? (
-          <span className="self-center text-[12px] text-fea-max">{cadError}</span>
-        ) : null}
+        <button
+          type="button"
+          className="min-w-0 whitespace-nowrap rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary"
+          data-testid="open-gallery"
+          onClick={() => setGalleryOpen(true)}
+        >
+          <Trans>Galerie de projets</Trans>
+        </button>
       </div>
 
       {/* 2-column key-value property grid (craft-floor: flat hairlines). */}
@@ -677,7 +685,8 @@ function DataDock({
   );
 }
 
-/** Coordinate cell editor (Base UI NumberField, inline in the data dock). */
+/** Coordinate cell editor (Base UI NumberField, inline in the data dock).
+ *  v2.1.1: `w-16` keeps the Nœuds table free of any horizontal scrollbar. */
 function CoordinateCell({
   node,
   axis,
@@ -704,10 +713,45 @@ function CoordinateCell({
       }}
     >
       <NumberFieldInput
-        className="h-7 w-20 px-1 py-0 text-[12px]"
+        className="h-7 w-16 px-1 py-0 text-[12px]"
         aria-label={`Nœud ${node.id} · coordonnée ${axis}`}
       />
     </NumberFieldRoot>
+  );
+}
+
+/**
+ * v2.1.1 unit-aware placement field: an explicit `X (m)` metre label plus
+ * unit-suffixed parsing through `parseUnitValue` — `4000mm` and `4m` both
+ * land as 4 m, plain numbers stay metres, invalid drafts clear the value.
+ */
+function UnitCoordinateField({
+  axis,
+  value,
+  onValue,
+}: {
+  axis: "X" | "Y" | "Z";
+  value: number | null;
+  onValue: (v: number | null) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <label className="flex items-center gap-1 text-[11px] text-ink-muted">
+      <span className="font-data shrink-0">{axis} (m)</span>
+      <input
+        inputMode="decimal"
+        aria-label={`Placement ${axis} (m)`}
+        placeholder={axis}
+        value={draft ?? (value === null ? "" : String(value))}
+        onChange={(e) => {
+          const raw = e.currentTarget.value;
+          setDraft(raw);
+          onValue(parseUnitValue(raw));
+        }}
+        onBlur={() => setDraft(null)}
+        className="font-data h-6 w-16 rounded border border-hairline bg-panel px-1 text-[12px] text-ink-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-ring"
+      />
+    </label>
   );
 }
 

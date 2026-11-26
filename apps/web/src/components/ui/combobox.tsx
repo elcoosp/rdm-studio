@@ -36,7 +36,7 @@ export function ComboboxTrigger({ className, ...props }: ComboboxPrimitive.Trigg
   );
 }
 
-export function ComboboxContent({
+export function ComboboxContent<T>({
   className,
   children,
   renderItem,
@@ -44,7 +44,7 @@ export function ComboboxContent({
 }: Omit<ComboboxPrimitive.Popup.Props, "children"> & {
   /** Static nodes OR the items render function (Root needs `items`). */
   children?: ReactNode;
-  renderItem?: (item: string) => ReactNode;
+  renderItem?: (item: T) => ReactNode;
 }) {
   return (
     <ComboboxPrimitive.Portal>

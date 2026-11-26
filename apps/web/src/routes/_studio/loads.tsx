@@ -192,6 +192,13 @@ function LoadsPage() {
     addAccelerationField({ loadCase: "Acceleration", axG: ax, ayG: ay, azG: az });
   };
 
+  // v2.1.1: an EN 1991 generator flips the active case tab (Q / S / W)
+  // and confirms with a concise toast.
+  const switchCaseForGenerator = (next: LoadCaseId, label: string) => {
+    setCaseId(next);
+    toast(`Cas ${label} activé`, { duration: 2_500 });
+  };
+
   const add = () => {
     const moments = { mx: mx * 1000, my: my * 1000, mz: mz * 1000 };
     if (tab === "nodal") {
@@ -311,8 +318,10 @@ function LoadsPage() {
       </div>
 
       {/* v2.0.1: EN 1991 generators + thermal action, wired to
-          generate_env_loads_json — docked below the EN 1990 case tabs. */}
-      <EnvLoadGenerators />
+          generate_env_loads_json — docked below the EN 1990 case tabs.
+          v2.1.1: clicking Imposée / Neige sk / Vent vb auto-switches the
+          active case tab (Q / S / W) with a concise confirmation toast. */}
+      <EnvLoadGenerators onCaseSwitch={switchCaseForGenerator} />
 
       {/* g-acceleration quick scenarios (RDM 7 parity). */}
       <section className="border-t border-hairline pt-3" data-testid="accel-field">
@@ -785,7 +794,11 @@ function LoadsPage() {
  * snow (sk, altitude 15 m proxy), wind (vb) and a Thermal ΔT action —
  * all appended through the wasm `generate_env_loads_json` lane.
  */
-function EnvLoadGenerators(): React.ReactElement {
+function EnvLoadGenerators({
+  onCaseSwitch,
+}: {
+  onCaseSwitch: (caseId: LoadCaseId, label: string) => void;
+}): React.ReactElement {
   const project = useProjectStore((st) => st.project);
   const loadProject = useProjectStore((st) => st.loadProject);
   const beams = project.structure.beams;
@@ -797,7 +810,13 @@ function EnvLoadGenerators(): React.ReactElement {
   const [windVb] = useState(26);
   const [dt, setDt] = useState(30);
 
-  const append = (kind: string, numeric: number, thermal: boolean): void => {
+  const append = (
+    kind: string,
+    numeric: number,
+    thermal: boolean,
+    caseTarget?: LoadCaseId,
+    caseLabel?: string,
+  ): void => {
     if (thermal) {
       loadProject({
         ...project,
@@ -821,11 +840,17 @@ function EnvLoadGenerators(): React.ReactElement {
     void feaClient
       .engineCall("generate_env_loads_json", kind, beamId, numeric, 3.0)
       .then((payload: unknown) => {
-        const loads = payload as LoadDataRow[];
+        // v2.1.1: the wasm lane returns a serde_json STRING (the internally
+        // tagged `Load` enum cannot cross serde_wasm_bindgen).
+        const loads = typeof payload === "string" ? (JSON.parse(payload) as LoadDataRow[]) : [];
         loadProject({
           ...project,
           structure: { ...project.structure, loads: [...project.structure.loads, ...loads] },
         });
+        // v2.1.1: the matching EN 1990 case tab lights up + a toast.
+        if (caseTarget !== undefined && caseLabel !== undefined) {
+          onCaseSwitch(caseTarget, caseLabel);
+        }
       })
       .catch(() => undefined);
   };
@@ -851,7 +876,7 @@ function EnvLoadGenerators(): React.ReactElement {
         </select>
         <button
           type="button"
-          onClick={() => append("imposed", imposedCat, false)}
+          onClick={() => append("imposed", imposedCat, false, "Variable", "Q")}
           className="rounded bg-panel-subtle px-2 py-1 hover:bg-accent-tint hover:text-accent"
           data-testid="env-imposed"
         >
@@ -860,7 +885,7 @@ function EnvLoadGenerators(): React.ReactElement {
         </button>
         <button
           type="button"
-          onClick={() => append("snow", snowSk, false)}
+          onClick={() => append("snow", snowSk, false, "Snow", "S")}
           className="rounded bg-panel-subtle px-2 py-1 hover:bg-accent-tint hover:text-accent"
           data-testid="env-snow"
         >
@@ -868,7 +893,7 @@ function EnvLoadGenerators(): React.ReactElement {
         </button>
         <button
           type="button"
-          onClick={() => append("wind", windVb, false)}
+          onClick={() => append("wind", windVb, false, "Wind", "W")}
           className="rounded bg-panel-subtle px-2 py-1 hover:bg-accent-tint hover:text-accent"
           data-testid="env-wind"
         >

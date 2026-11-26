@@ -142,17 +142,20 @@ export interface ProjectData {
   };
 }
 
-export interface Selection {
-  /** Multi-beam selection (v1.4.0 batch inspector); synced with beamId. */
+/**
+ * v2.1.0 URL-first refactor: the SINGLE selection (`nodeId` / `beamId`)
+ * lives in the URL (`?node=` / `?beam=`, read through `useSelectedIds()`)
+ * and is NOT mirrored here. This store keeps only the multi-beam batch
+ * selection (shift-click) which is a transient editing affordance.
+ */
+export interface BatchSelection {
+  /** Multi-beam selection (v1.4.0 batch inspector). */
   selectedBeamIds: number[];
-  nodeId: number | null;
-  beamId: number | null;
-  sectionId: string | null;
 }
 
 interface ProjectState {
   project: ProjectData;
-  selection: Selection;
+  batch: BatchSelection;
   setName: (name: string) => void;
   /** v1.7.0: updates the solver/standard settings (schema v2). */
   updateSettings: (patch: Partial<ModelSettingsData>) => void;
@@ -194,12 +197,10 @@ interface ProjectState {
     forces?: GlobalForcesData;
     positionRatio?: number;
   }) => void;
-  selectBeam: (id: number | null) => void;
   toggleBeamSelection: (id: number) => void;
   selectAllBeams: () => void;
   invertBeamSelection: () => void;
   clearBeamSelection: () => void;
-  selectNode: (id: number | null) => void;
   setSupport: (nodeId: number, lockedDofs: boolean[]) => void;
   /**
    * v1.6.0: elastic spring stiffnesses `[kx..krz]` (N/m, N·m/rad) of one
@@ -474,7 +475,7 @@ export const useProjectStore = create<ProjectState>()(
   temporal(
     (set, get) => ({
       project: demoProject(),
-      selection: { nodeId: null, beamId: null, sectionId: null, selectedBeamIds: [] },
+      batch: { selectedBeamIds: [] },
       setName: (name) => set((st) => ({ project: { ...st.project, name } })),
       updateSettings: (patch) =>
         set((st) => ({
@@ -503,7 +504,6 @@ export const useProjectStore = create<ProjectState>()(
               nodes: [...st.project.structure.nodes, { id, x, y, z }],
             },
           },
-          selection: { ...st.selection, nodeId: id },
         }));
         return id;
       },
@@ -556,7 +556,6 @@ export const useProjectStore = create<ProjectState>()(
               ],
             },
           },
-          selection: { ...st.selection, beamId: id },
         }));
         return id;
       },
@@ -647,50 +646,27 @@ export const useProjectStore = create<ProjectState>()(
             },
           },
         })),
-      selectBeam: (id) =>
-        set((st) => ({
-          selection: {
-            ...st.selection,
-            beamId: id,
-            // Single pick syncs the batch set to just that member.
-            selectedBeamIds: id === null ? [] : [id],
-          },
-        })),
       /** Shift+Click / batch inspector multi-select (v1.4.0). */
       toggleBeamSelection: (id) =>
         set((st) => {
-          const ids = st.selection.selectedBeamIds.includes(id)
-            ? st.selection.selectedBeamIds.filter((b) => b !== id)
-            : [...st.selection.selectedBeamIds, id];
-          return {
-            selection: {
-              ...st.selection,
-              selectedBeamIds: ids,
-              beamId: ids[ids.length - 1] ?? st.selection.beamId,
-            },
-          };
+          const ids = st.batch.selectedBeamIds.includes(id)
+            ? st.batch.selectedBeamIds.filter((b) => b !== id)
+            : [...st.batch.selectedBeamIds, id];
+          return { batch: { selectedBeamIds: ids } };
         }),
       selectAllBeams: () =>
         set((st) => ({
-          selection: {
-            ...st.selection,
-            selectedBeamIds: st.project.structure.beams.map((b) => b.id),
-          },
+          batch: { selectedBeamIds: st.project.structure.beams.map((b) => b.id) },
         })),
       invertBeamSelection: () =>
         set((st) => ({
-          selection: {
-            ...st.selection,
+          batch: {
             selectedBeamIds: st.project.structure.beams
               .map((b) => b.id)
-              .filter((id) => !st.selection.selectedBeamIds.includes(id)),
+              .filter((id) => !st.batch.selectedBeamIds.includes(id)),
           },
         })),
-      clearBeamSelection: () =>
-        set((st) => ({
-          selection: { ...st.selection, selectedBeamIds: [], beamId: null },
-        })),
-      selectNode: (id) => set((st) => ({ selection: { ...st.selection, nodeId: id } })),
+      clearBeamSelection: () => set((st) => ({ batch: { ...st.batch, selectedBeamIds: [] } })),
       clearSupports: () =>
         set((st) => ({
           project: {
@@ -894,7 +870,6 @@ export const useProjectStore = create<ProjectState>()(
                 loads: remappedLoads,
               },
             },
-            selection: { ...st.selection, beamId: segments2[0]?.id ?? st.selection.beamId },
           };
         }),
       removeLoad: (index) =>

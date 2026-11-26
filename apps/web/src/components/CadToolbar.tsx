@@ -22,6 +22,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Kbd } from "@/components/ui/kbd";
+import { Input } from "@/components/ui/input";
+import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipGroup } from "@/components/interior";
 import { useProjectStore } from "@/state/projectStore";
 import { useSelectedIds } from "@/hooks/useStudioQuery";
 import { CAD_COMMANDS, parseUnitValue, snapCandidates, snapPolar } from "@/modeling/cadTools";
@@ -143,20 +147,28 @@ export function CadToolbar(): ReactElement {
       role="toolbar"
       aria-label={t`Outils CAD`}
     >
-      {/* Left segmented group: 5 primary actions + the Outils ▾ menu. */}
-      <div className="inline-flex min-w-0 items-center rounded-[4px] border border-hairline bg-panel-subtle/60">
+      {/* Left segmented group: 5 primary actions + the Outils ▾ menu.
+          v2.1.2: the strip is a TooltipGroup — the first hover waits
+          300 ms, then every sibling tooltip opens INSTANTLY (warm). */}
+      <TooltipGroup className="inline-flex min-w-0 items-center rounded-[4px] border border-hairline bg-panel-subtle/60">
+        {/* v2.1.2: TooltipGroup — the first hover waits 300 ms, then every
+            sibling tooltip opens INSTANTLY (warm group). */}
         {PRIMARY.map((tool) => (
-          <button
+          <Tooltip
             key={tool.id}
-            type="button"
-            title={`${tool.label} (${CAD_COMMANDS.find((c) => c.id === tool.id)?.shortcut ?? ""})`}
-            aria-label={tool.label}
-            onClick={() => runCommand(tool.id)}
-            className="flex shrink-0 items-center gap-1.5 border-r border-hairline px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary last:border-r-0 hover:bg-accent-tint hover:text-accent"
+            label={`${tool.label} (${CAD_COMMANDS.find((c) => c.id === tool.id)?.shortcut ?? ""})`}
+            side="bottom"
           >
-            <tool.icon size={16} strokeWidth={1.5} aria-hidden />
-            <span className="hidden lg:inline">{tool.label}</span>
-          </button>
+            <button
+              type="button"
+              aria-label={tool.label}
+              onClick={() => runCommand(tool.id)}
+              className="flex shrink-0 items-center gap-1.5 border-r border-hairline px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary last:border-r-0 hover:bg-accent-tint hover:text-accent"
+            >
+              <tool.icon size={16} strokeWidth={1.5} aria-hidden />
+              <span className="hidden lg:inline">{tool.label}</span>
+            </button>
+          </Tooltip>
         ))}
         <DropdownMenuRoot>
           <DropdownMenuTrigger
@@ -183,7 +195,7 @@ export function CadToolbar(): ReactElement {
             ))}
           </DropdownMenuContent>
         </DropdownMenuRoot>
-      </div>
+      </TooltipGroup>
 
       {/* Right compact parameter & help group. */}
       <div className="flex shrink-0 items-center gap-2">
@@ -191,11 +203,11 @@ export function CadToolbar(): ReactElement {
           <span className="hidden sm:inline">
             <Trans>Valeur</Trans>
           </span>
-          <input
+          <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             aria-label={t`Valeur unitaire`}
-            className="font-data h-7 w-16 rounded-[4px] border border-hairline bg-panel px-1.5 text-[12px] text-ink-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-ring"
+            className="h-7 w-16 px-1.5 text-[12px]"
           />
         </label>
         <span
@@ -214,47 +226,37 @@ export function CadToolbar(): ReactElement {
           ?
         </button>
       </div>
-      {cheatOpen ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={t`Aide-mémoire des raccourcis`}
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-ink-primary/40 p-4"
-          onClick={() => setCheatOpen(false)}
-        >
-          <div
-            className="max-h-[80vh] w-full max-w-md overflow-auto rounded-panel border border-hairline bg-panel p-5 shadow-[0_8px_24px_rgba(15,23,42,0.12)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-3 text-lg font-bold text-ink-primary">
+      {/* v2.1.2: keyboard cheat sheet as a Base UI Dialog with <Kbd> chips. */}
+      <DialogRoot open={cheatOpen} onOpenChange={setCheatOpen}>
+        <DialogContent className="w-[min(92vw,448px)]" data-testid="cad-shortcuts-dialog">
+          <DialogHeader>
+            <DialogTitle>
               <Trans>Raccourcis CAD</Trans>
-            </h2>
-            <ul className="space-y-1 text-sm text-ink-secondary">
-              {CAD_COMMANDS.map((c) => (
-                <li key={c.id} className="flex justify-between">
-                  <span>{c.label}</span>
-                  <kbd className="font-data rounded border border-hairline bg-panel-subtle px-2 text-xs text-ink-primary">
-                    {c.shortcut}
-                  </kbd>
-                </li>
-              ))}
-              <li className="flex justify-between">
-                <span>{t`Polar 15°`}</span>
-                <kbd className="font-data rounded border border-hairline bg-panel-subtle px-2 text-xs text-ink-primary">
-                  {`${snapPolar({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }).x.toFixed(0)}°`}
-                </kbd>
+            </DialogTitle>
+          </DialogHeader>
+          <ul className="space-y-1 text-sm text-ink-secondary">
+            {CAD_COMMANDS.map((c) => (
+              <li key={c.id} className="flex justify-between">
+                <span>{c.label}</span>
+                <Kbd className="px-2 text-xs">{c.shortcut}</Kbd>
               </li>
-            </ul>
-            <button
-              type="button"
-              onClick={() => setCheatOpen(false)}
-              className="mt-4 w-full rounded bg-accent py-1.5 text-sm font-semibold text-white hover:bg-accent/90"
-            >
-              <Trans>Fermer</Trans>
-            </button>
-          </div>
-        </div>
-      ) : null}
+            ))}
+            <li className="flex justify-between">
+              <span>{t`Polar 15°`}</span>
+              <Kbd className="px-2 text-xs">
+                {`${snapPolar({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }).x.toFixed(0)}°`}
+              </Kbd>
+            </li>
+          </ul>
+          <button
+            type="button"
+            onClick={() => setCheatOpen(false)}
+            className="mt-4 w-full rounded bg-accent py-1.5 text-sm font-semibold text-white hover:bg-accent-strong"
+          >
+            <Trans>Fermer</Trans>
+          </button>
+        </DialogContent>
+      </DialogRoot>
     </div>
   );
 }

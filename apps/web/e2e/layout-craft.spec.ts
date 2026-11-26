@@ -138,6 +138,9 @@ test.describe("mobile 390×844", () => {
 
   test("drawer + bottom nav never clip interactive buttons", async ({ page }) => {
     await page.goto("/geometry");
+    // v2.0.1: the drawer is closed by default — the handle click opens it.
+    await page.getByTestId("inspector-sheet-handle").click();
+    await expect(page.getByTestId("sheet-close")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("inspector-sheet")).toBeVisible();
     // The h-14 tab bar exists only on mobile.
     const nav = page.locator('nav[aria-label="workflow mobile"]');

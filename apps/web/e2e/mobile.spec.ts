@@ -41,7 +41,9 @@ test.describe("iPhone 13 viewport", () => {
   }) => {
     await page.goto("/geometry");
     await expect(page.getByTestId("viewport-canvas")).toBeVisible();
-    await expect(page.getByTestId("inspector-sheet")).toBeVisible();
+    // v2.0.1: the drawer is closed by default — the handle click opens it.
+    await page.getByTestId("inspector-sheet-handle").click();
+    await expect(page.getByTestId("sheet-close")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("sheet-drag-handle")).toBeVisible();
 
     await closeSheet(page, browserName);

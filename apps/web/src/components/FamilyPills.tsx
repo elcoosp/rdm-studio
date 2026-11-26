@@ -5,7 +5,10 @@ import { t } from "@lingui/core/macro";
 /** Section family filter pills (v1.8.0 Step 1): Tous | IPE | HEA | UPN | CHS | RHS | L | Perso. */
 export const FAMILY_NAMES = ["Tous", "IPE", "HEA", "UPN", "CHS", "RHS", "L", "Perso"] as const;
 
-export function familyOfDesignation(designation: string): (typeof FAMILY_NAMES)[number] {
+/** One section family name (v2.0.1: exported for the inspector filter). */
+export type FamilyName = (typeof FAMILY_NAMES)[number];
+
+export function familyOfDesignation(designation: string): FamilyName {
   const upper = designation.toUpperCase();
   if (upper.startsWith("IPE")) {
     return "IPE";

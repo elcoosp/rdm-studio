@@ -1,6 +1,6 @@
 import { Html, Line } from "@react-three/drei";
 import { useMemo } from "react";
-import { useViewportStore } from "@/state/viewportStore";
+import { useViewportParams } from "@/hooks/useStudioQuery";
 import type { BeamData, NodeData } from "@/state/projectStore";
 
 /**
@@ -75,7 +75,9 @@ export function DimensionLines({
   beams: BeamData[];
   pathname: string;
 }) {
-  const dimsOn = useViewportStore((s) => s.layers.dims);
+  // v2.1.0: the dimension-line layer is URL-backed (`?layers=`).
+  const { layers } = useViewportParams();
+  const dimsOn = layers.dims;
   const lines = useMemo(() => {
     if (dimsOn === false || pathname === "/report") {
       return [];

@@ -3,15 +3,17 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Trans } from "@lingui/react/macro";
 import { useProjectStore } from "@/state/projectStore";
+import { getStudioSteps } from "@/router";
+import { useIsStudio, useSelectedIds } from "@/hooks/useStudioQuery";
 
 /**
  * Keyboard-first command palette (DESIGN.md §6, `cmdk` 1.1.1): instant
  * access to the 5 steps, profile presets and exports. Opens with ⌘K / Ctrl+K.
  *
- * v1.5.0: the palette is CONTEXT-AWARE — while members are selected it
- * surfaces the active-selection commands (`⌥R` end-moment releases,
- * `⇧⌘I` invert selection), plus the two workflow power actions
- * (`⌘Entrée` solve, `⌘P` A4/PDF note) regardless of context.
+ * v2.1.0: the steps group is DERIVED from the router's `staticData` via
+ * `getStudioSteps()` (zero hardcoded STEPS array), and every navigation
+ * passes `search: true` so the active URL state survives the jump — the
+ * `⌘Entrée` / `⌘P` power actions included.
  */
 export function CommandPalette({
   open,
@@ -21,27 +23,26 @@ export function CommandPalette({
   onOpenChange: (v: boolean) => void;
 }) {
   const navigate = useNavigate();
-  const selectedBeamIds = useProjectStore((s) => s.selection.selectedBeamIds);
-  const beamId = useProjectStore((s) => s.selection.beamId);
+  const steps = getStudioSteps();
+  const selectedBeamIds = useProjectStore((s) => s.batch.selectedBeamIds);
+  const { beamId } = useSelectedIds();
+  const isStudio = useIsStudio();
   const hasSelection = selectedBeamIds.length > 0 || beamId !== null;
 
   if (!open) {
     return null;
   }
+  /** v2.1.0: `search: true` preserves the active studio query params. */
   const go = (to: string) => {
     onOpenChange(false);
-    void navigate({ to });
+    void navigate({ to, search: true });
   };
   /** Toggles N1/N2 end-moment releases on the active selection (⌥R path). */
   const releaseMoments = () => {
     onOpenChange(false);
-    const { project, selection, updateBeam } = useProjectStore.getState();
+    const { project, batch, updateBeam } = useProjectStore.getState();
     const targets =
-      selection.selectedBeamIds.length > 0
-        ? selection.selectedBeamIds
-        : selection.beamId === null
-          ? []
-          : [selection.beamId];
+      batch.selectedBeamIds.length > 0 ? batch.selectedBeamIds : beamId === null ? [] : [beamId];
     for (const id of targets) {
       const beam = project.structure.beams.find((b) => b.id === id);
       if (beam === undefined) {
@@ -79,7 +80,7 @@ export function CommandPalette({
             <Command.Empty className="p-3 text-[12px] text-ink-muted">
               <Trans>Aucun résultat.</Trans>
             </Command.Empty>
-            {hasSelection ? (
+            {isStudio && hasSelection ? (
               <Command.Group heading="Sélection active" className="p-2 text-[13px]">
                 <Command.Item
                   value="Relâcher les moments N1/N2"
@@ -121,20 +122,14 @@ export function CommandPalette({
               </Command.Item>
             </Command.Group>
             <Command.Group heading="Étapes" className="p-2 text-[13px]">
-              {[
-                { to: "/geometry", label: "Géométrie & Profilés" },
-                { to: "/supports", label: "Liaisons (RDM 7)" },
-                { to: "/loads", label: "Charges & Combinaisons" },
-                { to: "/results", label: "Calcul 3D & Eurocode 3" },
-                { to: "/report", label: "Rapport" },
-              ].map((item) => (
+              {steps.map((step) => (
                 <Command.Item
-                  key={item.to}
-                  value={item.label}
-                  onSelect={() => go(item.to)}
+                  key={step.path}
+                  value={`${step.stepOrder} ${step.label}`}
+                  onSelect={() => go(step.path)}
                   className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
                 >
-                  {item.label}
+                  {step.label}
                 </Command.Item>
               ))}
             </Command.Group>
@@ -145,7 +140,7 @@ export function CommandPalette({
                   value={p}
                   onSelect={() => {
                     onOpenChange(false);
-                    void navigate({ to: "/geometry" });
+                    void navigate({ to: "/geometry", search: true });
                   }}
                   className="font-data flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 data-[selected=true]:bg-accent-tint"
                 >

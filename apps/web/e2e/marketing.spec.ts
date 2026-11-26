@@ -42,7 +42,8 @@ test("pricing section opens the licence modal and activates the demo Pro", async
 });
 
 test("licence modal validates the RDM-PRO- key prefix", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
+  // v2.1.1: the license badge is a 2xl+ header pill — open it at 1920×900.
+  await page.setViewportSize({ width: 1920, height: 900 });
   await page.goto("/geometry");
   await page.getByTestId("license-badge").click();
   await expect(page.getByTestId("license-modal")).toBeVisible();

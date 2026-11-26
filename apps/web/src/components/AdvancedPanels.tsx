@@ -12,6 +12,21 @@ import {
 } from "recharts";
 import { useProjectStore } from "../state/projectStore";
 import { feaClient, type BucklingReportDto } from "../wasmBridge/workerClient";
+import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ConcreteBeamIcon,
+  SteelJointIcon,
+  ThermalLoadIcon,
+  TimberBeamIcon,
+  MassWeightIcon,
+} from "@/components/icons/EngineeringIcons";
 
 /**
  * Step 4 advanced-analysis tabs (v2.0.0): Global Buckling (λcr modes
@@ -24,6 +39,22 @@ type Tab = "buckling" | "seismic" | "materials";
 
 const GROUNDS = ["A", "B", "C", "D", "E"] as const;
 const GROUND_TYPES = GROUNDS as readonly string[];
+
+/** Icon + label for the multi-material verification trigger (per kind). */
+const MATERIAL_CHECK_LABELS: Record<string, string> = {
+  ec2_beam: "EC2 béton — flexure + effort tranchant",
+  ec5_timber: "EC5 bois GL24h — flexion kmod",
+  ec3_joint: "EC3-1-8 assemblage — boulons + soudure",
+  ec3_fire: "EC3-1-2 feu — θa,cr / R60",
+  ec9_aluminium: "EC9 aluminium 6082-T6",
+};
+
+function MaterialCheckIcon({ kind }: { kind: string }): ReactElement {
+  if (kind === "ec2_beam") return <ConcreteBeamIcon size={16} />;
+  if (kind === "ec5_timber") return <TimberBeamIcon size={16} />;
+  if (kind === "ec3_fire") return <ThermalLoadIcon size={16} />;
+  return <SteelJointIcon size={16} />;
+}
 
 export function AdvancedPanels(): ReactElement {
   const project = useProjectStore((st) => st.project);
@@ -133,31 +164,41 @@ export function AdvancedPanels(): ReactElement {
       {tab === "seismic" ? (
         <div className="text-sm">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-            <label>
-              ag/g:{" "}
-              <input
-                type="number"
+            <label className="flex items-center gap-1">
+              ag/g:
+              <NumberFieldRoot
+                value={agG}
                 min={0.02}
                 max={0.8}
                 step={0.05}
-                value={agG}
-                onChange={(e) => setAgG(Number(e.target.value))}
-                className="w-16 rounded border border-hairline bg-transparent px-1 "
-              />
-            </label>
-            <label>
-              Sol:{" "}
-              <select
-                value={ground}
-                onChange={(e) => setGround(e.target.value as (typeof GROUNDS)[number])}
-                className="rounded border border-hairline bg-transparent "
+                onValueChange={(v) => {
+                  if (v !== null) setAgG(v);
+                }}
               >
-                {GROUND_TYPES.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
+                <NumberFieldInput
+                  aria-label="ag/g"
+                  className="font-data h-7 w-16 px-1 text-[12px]"
+                />
+              </NumberFieldRoot>
+            </label>
+            {/* v2.1.2: ground profile A..E as a Base UI Select. */}
+            <label className="flex items-center gap-1">
+              Sol:
+              <SelectRoot
+                value={ground}
+                onValueChange={(next) => setGround(next as (typeof GROUNDS)[number])}
+              >
+                <SelectTrigger aria-label={t`Sol`} className="h-7 w-auto gap-1 text-[12px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GROUND_TYPES.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
             </label>
             <button
               type="button"
@@ -239,18 +280,59 @@ export function AdvancedPanels(): ReactElement {
 
       {tab === "materials" ? (
         <div className="text-sm">
-          <select
+          {/* v2.1.2: verification type as a Base UI Select with the
+              engineering iconography (béton / bois / joint / feu / alu). */}
+          <SelectRoot
             value={materialKind}
-            onChange={(e) => setMaterialKind(e.target.value)}
-            aria-label={t`Type de vérification`}
-            className="mb-2 rounded border border-hairline bg-transparent px-2 py-1 text-xs "
+            onValueChange={(next) => {
+              if (next !== null) setMaterialKind(next);
+            }}
           >
-            <option value="ec2_beam">EC2 béton — flexure + effort tranchant</option>
-            <option value="ec5_timber">EC5 bois GL24h — flexion kmod</option>
-            <option value="ec3_joint">EC3-1-8 assemblage — boulons + soudure</option>
-            <option value="ec3_fire">EC3-1-2 feu — θa,cr / R60</option>
-            <option value="ec9_aluminium">EC9 aluminium 6082-T6</option>
-          </select>
+            <SelectTrigger
+              aria-label={t`Type de vérification`}
+              className="mb-2 h-8 w-full gap-1.5 text-xs"
+              data-testid="material-check-select"
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <MaterialCheckIcon kind={materialKind} />
+                <span className="min-w-0 truncate">
+                  {MATERIAL_CHECK_LABELS[materialKind] ?? materialKind}
+                </span>
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ec2_beam">
+                <span className="flex items-center gap-1.5">
+                  <ConcreteBeamIcon size={16} />
+                  EC2 béton — flexure + effort tranchant
+                </span>
+              </SelectItem>
+              <SelectItem value="ec5_timber">
+                <span className="flex items-center gap-1.5">
+                  <TimberBeamIcon size={16} />
+                  EC5 bois GL24h — flexion kmod
+                </span>
+              </SelectItem>
+              <SelectItem value="ec3_joint">
+                <span className="flex items-center gap-1.5">
+                  <SteelJointIcon size={16} />
+                  EC3-1-8 assemblage — boulons + soudure
+                </span>
+              </SelectItem>
+              <SelectItem value="ec3_fire">
+                <span className="flex items-center gap-1.5">
+                  <ThermalLoadIcon size={16} />
+                  EC3-1-2 feu — θa,cr / R60
+                </span>
+              </SelectItem>
+              <SelectItem value="ec9_aluminium">
+                <span className="flex items-center gap-1.5">
+                  <MassWeightIcon size={16} />
+                  EC9 aluminium 6082-T6
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </SelectRoot>
           <ul className="space-y-1">
             {materialTrace?.map((node, i) => (
               <li key={i} className="flex justify-between text-xs">

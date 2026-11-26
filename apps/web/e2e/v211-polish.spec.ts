@@ -55,8 +55,10 @@ for (const viewport of [
     // Active step: Cobalt pill highlight + aria-current="page".
     const active = nav.locator('a[aria-current="page"]');
     await expect(active).toHaveCount(1);
-    await expect(active).toHaveClass(/bg-accent-tint/);
-    await expect(active).toHaveClass(/ring-accent-ring/);
+    // v2.1.2: the active step is a crisp white card + Cobalt text on the
+    // segmented rail (2px underline glides via layoutId).
+    await expect(active).toHaveClass(/bg-panel/);
+    await expect(active).toHaveClass(/text-accent/);
     // Zero horizontal overflow on the stepper and FR | EN visible.
     const overflow = await page.evaluate(() => {
       const el = document.getElementById("rdm-steps");
@@ -65,8 +67,8 @@ for (const viewport of [
     });
     expect(overflow).not.toBeNull();
     expect(overflow as number).toBeLessThanOrEqual(1);
-    await expect(page.getByRole("button", { name: "FR", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "EN", exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "FR", exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "EN", exact: true })).toBeVisible();
     const bodyOverflow = await page.evaluate(
       () => document.body.scrollWidth - document.body.clientWidth,
     );
@@ -80,7 +82,7 @@ test("Validation modal under FR shows 41/41 with French titles and no in-flight 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/geometry");
   await page.getByRole("button", { name: /Validation — 41 benchmarks/ }).click();
-  const dialog = page.locator('[role="dialog"][aria-modal="true"]');
+  const dialog = page.getByTestId('validation-modal');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText(/41\/41 benchmarks passent/)).toBeVisible({
     timeout: 15_000,
@@ -121,17 +123,17 @@ test("⌘K palette renders icons + Kbd chips and executes CAD, modal and locale 
     .getByTestId("command-palette")
     .getByText("Validation — 41 benchmarks analytiques", { exact: true })
     .click();
-  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toBeVisible({
+  await expect(page.getByTestId("validation-modal")).toBeVisible({
     timeout: 15_000,
   });
   await page.getByRole("button", { name: "Fermer" }).click();
-  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toBeHidden();
+  await expect(page.getByTestId("validation-modal")).toBeHidden();
 
   // Locale command: Basculer FR / EN flips the active catalog in place.
   await openPalette(page);
   await page.getByTestId("command-palette").getByText("Basculer FR / EN", { exact: true }).click();
-  await expect(page.getByRole("button", { name: "EN", exact: true })).toHaveAttribute(
-    "aria-pressed",
+  await expect(page.getByRole("radio", { name: "EN", exact: true })).toHaveAttribute(
+    "aria-checked",
     "true",
     {
       timeout: 10_000,
@@ -139,9 +141,9 @@ test("⌘K palette renders icons + Kbd chips and executes CAD, modal and locale 
   );
   await expect(page.getByRole("button", { name: "Settings", exact: true })).toBeVisible();
   // Restore FR for the remaining assertions.
-  await page.getByRole("button", { name: "FR", exact: true }).click();
-  await expect(page.getByRole("button", { name: "FR", exact: true })).toHaveAttribute(
-    "aria-pressed",
+  await page.getByRole("radio", { name: "FR", exact: true }).click();
+  await expect(page.getByRole("radio", { name: "FR", exact: true })).toHaveAttribute(
+    "aria-checked",
     "true",
   );
 });
@@ -197,14 +199,14 @@ test("switching FR → EN translates header Settings, Step 4 advanced tab and St
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/geometry");
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await page.getByRole("radio", { name: "EN", exact: true }).click();
   await expect(page.getByRole("button", { name: "Settings", exact: true })).toBeVisible({
     timeout: 10_000,
   });
 
   await page.goto("/results");
   await expect(page.getByTestId("ec3-rail")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByRole("tab", { name: "Advanced analyses" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Advanced analyses" })).toBeVisible();
 
   await page.goto("/report");
   await expect(page.getByText("RDM Studio — Calculation report").first()).toBeVisible({

@@ -43,6 +43,8 @@ fn ipe200_bending_report_snapshot() {
         section: &props,
         material: &mat,
         forces: (150_000.0, 45_000.0, 0.0, 20_000.0, 0.0),
+        moment_ratio_psi: 1.0,
+        national_annex: rdm_model::NationalAnnex::FR,
         combination: "ULS 1.35G + 1.50Q".to_owned(),
     })
     .unwrap();
@@ -64,6 +66,8 @@ fn hea200_column_report_snapshot() {
         section: &props,
         material: &mat,
         forces: (-500_000.0, 0.0, 0.0, 0.0, 0.0),
+        moment_ratio_psi: 1.0,
+        national_annex: rdm_model::NationalAnnex::FR,
         combination: "ULS 1.35G".to_owned(),
     })
     .unwrap();

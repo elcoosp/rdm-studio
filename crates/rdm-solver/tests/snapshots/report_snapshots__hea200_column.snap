@@ -1,5 +1,6 @@
 ---
 source: crates/rdm-solver/tests/report_snapshots.rs
+assertion_line: 76
 expression: rounded
 ---
 {
@@ -45,6 +46,10 @@ expression: rounded
     [
       "Vpl,Rd",
       0.0
+    ],
+    [
+      "6.61/6.62",
+      0.568568
     ],
     [
       "Von Mises",

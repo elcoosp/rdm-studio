@@ -86,19 +86,35 @@ pub enum SolveError {
 ///
 /// Returns [`SolveError`] on assembly, factorization or solve failure.
 pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
+    solve_model_with_diagnostics(structure).map(|(model, _)| model)
+}
+
+/// v2.0.0: `solve_model` plus the last P-Δ pass report when the
+/// second-order loop ran (`settings.p_delta`).
+///
+/// # Errors
+///
+/// Returns [`SolveError`] on any assembly/factorization failure.
+pub fn solve_model_with_diagnostics(
+    structure: &Structure,
+) -> Result<(SolvedModel, Option<crate::p_delta::PDeltaReport>), SolveError> {
     // v1.7.0: tension-only / compression-only members require an outer
     // iteration — deactivate misbehaving members and re-assemble.
     // Every member starts ACTIVE; the behavior iteration deactivates the
     // ones whose axial force violates their tension/compression-only rule.
     let mut active: Vec<bool> = vec![true; structure.beams.len()];
+    let mut p_delta_report: Option<crate::p_delta::PDeltaReport> = None;
     for _iteration in 0..12 {
-        let (cases, deactivated) = solve_once(structure, &active)?;
+        let (cases, deactivated) = solve_once(structure, &active, &mut p_delta_report)?;
         if deactivated.is_empty() {
-            return Ok(SolvedModel {
-                n_nodes: structure.nodes.len(),
-                n_beams: structure.beams.len(),
-                cases,
-            });
+            return Ok((
+                SolvedModel {
+                    n_nodes: structure.nodes.len(),
+                    n_beams: structure.beams.len(),
+                    cases,
+                },
+                p_delta_report,
+            ));
         }
         for (index, beam) in structure.beams.iter().enumerate() {
             if deactivated.contains(&beam.id) {
@@ -108,12 +124,15 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
     }
     // Budget exhausted: return the last pass (validator-style convergence
     // note surfaces through the envelopes instead of an error).
-    let (cases, _) = solve_once(structure, &active)?;
-    Ok(SolvedModel {
-        n_nodes: structure.nodes.len(),
-        n_beams: structure.beams.len(),
-        cases,
-    })
+    let (cases, _) = solve_once(structure, &active, &mut p_delta_report)?;
+    Ok((
+        SolvedModel {
+            n_nodes: structure.nodes.len(),
+            n_beams: structure.beams.len(),
+            cases,
+        },
+        p_delta_report,
+    ))
 }
 
 /// One solve pass: `(case solutions, members whose axial behavior was
@@ -121,7 +140,11 @@ pub fn solve_model(structure: &Structure) -> Result<SolvedModel, SolveError> {
 pub type SolvePass = (Vec<(LoadCase, CaseSolution)>, Vec<u32>);
 
 /// One full assembly + factorization + solve pass.
-fn solve_once(structure: &Structure, active: &[bool]) -> Result<SolvePass, SolveError> {
+fn solve_once(
+    structure: &Structure,
+    active: &[bool],
+    p_delta_report: &mut Option<crate::p_delta::PDeltaReport>,
+) -> Result<SolvePass, SolveError> {
     let elements = build_elements(structure)?;
     let ndof = 6 * structure.nodes.len();
 
@@ -363,6 +386,40 @@ fn solve_once(structure: &Structure, active: &[bool]) -> Result<SolvePass, Solve
             }
         }
 
+        // v2.0.0: second-order P-Δ tangent loop when enabled — refines the
+        // free-DOF displacements with `Kg(N)` from the current axial map.
+        if structure.settings.p_delta && !free.is_empty() {
+            // Upper-triangle map → dense symmetric Ke on the free DOFs.
+            let mut ke_dense = nalgebra::DMatrix::<f64>::zeros(n_free, n_free);
+            for (&(i, j), &v) in &stiffness {
+                if i > j || locked[i] || locked[j] {
+                    continue;
+                }
+                let (fi, fj) = (free_index[i], free_index[j]);
+                let (ri, rj) = if fi <= fj { (fi, fj) } else { (fj, fi) };
+                ke_dense[(ri, rj)] += v;
+                if ri != rj {
+                    ke_dense[(rj, ri)] += v;
+                }
+            }
+            let mut u_linear = nalgebra::DVector::<f64>::zeros(n_free);
+            let mut f_reduced = nalgebra::DVector::<f64>::zeros(n_free);
+            for (slot, &dof) in free.iter().enumerate() {
+                u_linear[slot] = displacements[dof];
+                f_reduced[slot] = rhs[dof] - settle[dof];
+            }
+            let (u_refined, report) = crate::p_delta::refine_with_geometric(
+                structure, &ke_dense, &f_reduced, &u_linear, 8, 1e-9,
+            )
+            .map_err(|e| SolveError::UnstableMechanism {
+                message: e.to_string(),
+            })?;
+            *p_delta_report = Some(report);
+            for (slot, &dof) in free.iter().enumerate() {
+                displacements[dof] = u_refined[slot];
+            }
+        }
+
         // Reactions on constrained DOFs: R = K u − F. The map holds both
         // (i, j) and (j, i); walk the upper triangle once so each row term
         // is accumulated exactly once.
@@ -552,6 +609,15 @@ fn diagnose_mechanism(
     }
 }
 
+/// P-Δ second-order analysis errors (v2.0.0).
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+pub enum PDeltaError {
+    /// The tangent stiffness lost positive definiteness or the loop hit
+    /// an assembly failure (context string).
+    #[error("p-delta diverged: {0}")]
+    Diverged(String),
+}
+
 /// Linear buckling analysis errors (v1.9.0).
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum BucklingError {
@@ -627,7 +693,12 @@ pub(crate) fn zero_load() -> SMatrix<f64, ELEMENT_DOFS, 1> {
     SMatrix::zeros()
 }
 
-fn locked_dofs(structure: &Structure) -> Result<Vec<bool>, SolveError> {
+/// Locked-DOF flags per global DOF from the support conditions.
+///
+/// # Errors
+///
+/// Returns [`SolveError::Load`] when the model cannot be resolved.
+pub fn locked_dofs(structure: &Structure) -> Result<Vec<bool>, SolveError> {
     let ndof = 6 * structure.nodes.len();
     let mut locked = vec![false; ndof];
     for support in &structure.supports {

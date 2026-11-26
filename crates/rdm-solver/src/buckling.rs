@@ -116,10 +116,24 @@ pub type BucklingMatrices = (DMatrix<f64>, DMatrix<f64>, Vec<usize>);
 /// Returns [`BucklingError::Assembly`] when the model cannot be built or
 /// the axial map cannot be recovered.
 pub fn assemble_geometric(structure: &Structure) -> Result<BucklingMatrices, BucklingError> {
-    let elements = build_elements(structure).map_err(BucklingError::from)?;
-    let ndof = 6 * structure.nodes.len();
     let axial = crate::static_sparse::permanent_axial_forces(structure)
         .map_err(|e| BucklingError::Assembly(e.to_string()))?;
+    assemble_geometric_with_axials(structure, &axial)
+}
+
+/// Assembles `(Ke, Kg(N), free)` from a caller-supplied axial map —
+/// the P-Δ tangent loop calls this every pass with the current
+/// second-order axial forces (v2.0.0).
+///
+/// # Errors
+///
+/// Returns [`BucklingError::Assembly`] when the model cannot be built.
+pub fn assemble_geometric_with_axials(
+    structure: &Structure,
+    axial: &[f64],
+) -> Result<BucklingMatrices, BucklingError> {
+    let elements = build_elements(structure).map_err(BucklingError::from)?;
+    let ndof = 6 * structure.nodes.len();
     // Reuse the modal K assembly for the elastic part.
     let modal = crate::modal::assemble_reduced_k(structure)
         .map_err(|e| BucklingError::Assembly(e.to_string()))?;

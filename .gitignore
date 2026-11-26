@@ -42,3 +42,6 @@ ship.toml
 **/.astro/
 apps/docs/dist/
 **/.oxide/
+apps/site/dist/
+changed.txt
+wr.sh

@@ -80,6 +80,17 @@ const LoadSchema = v.variant("kind", [
   }),
   v.object({
     case: LoadCase,
+    // v2.0.2: EN 1991 generators emit Uniform beam loads (snow / wind /
+    // imposed) with q_start = q_end and a declared direction — the
+    // round-trip `.rdm` import must accept them (22fd9fa audit item).
+    kind: v.literal("Uniform"),
+    beam_id: v.pipe(v.number(), v.integer()),
+    q_start: v.number(),
+    q_end: v.number(),
+    direction: v.object({ x: v.number(), y: v.number(), z: v.number() }),
+  }),
+  v.object({
+    case: LoadCase,
     // v2.0.0 schema v2: thermal action — uniform ΔT plus the linear
     // gradients (K); the solver builds the axial + fixed-end moment pairs.
     kind: v.literal("Thermal"),

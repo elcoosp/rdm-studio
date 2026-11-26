@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { toast } from "sonner";
-import { CheckCircle2, KeyRound, RotateCcw, Sparkles, X } from "lucide-react";
+import { CheckCircle2, Clock3, KeyRound, RotateCcw, Sparkles, X } from "lucide-react";
 import {
   DialogContent,
   DialogDescription,
@@ -10,6 +10,8 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { LoadingButton, StatusBadge } from "@/components/interior";
 import { useLicenseStore } from "@/state/licenseStore";
 
 /**
@@ -45,6 +47,17 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
         t`Solveur Timoshenko + EC3`,
         t`Projets IndexedDB locaux`,
         t`Export PDF / CSV / .rdm`,
+      ],
+    },
+    {
+      id: "pass",
+      name: t`Pass Projet 48 h`,
+      price: t`19 € HT · 48 h de plein droit`,
+      points: [
+        t`Toutes les fonctions Pro pendant 48 h`,
+        t`Idéal pour un livrable signé ce week-end`,
+        t`Sans abonnement ni compte`,
+        t`Activation 1 clic, hors-ligne`,
       ],
     },
     {
@@ -97,7 +110,8 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
         {/* Plan limits side by side (flat hairline columns, no nested cards). */}
         <div className="grid gap-3 sm:grid-cols-2">
           {plans.map((plan) => {
-            const active = plan.id === "pro" ? tier === "pro" : tier === "free";
+            const active =
+              plan.id === "pro" || plan.id === "pass" ? tier === "pro" : tier === "free";
             return (
               <section
                 key={plan.id}
@@ -107,9 +121,9 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-[14px] font-semibold text-ink-primary">{plan.name}</h3>
                   {active ? (
-                    <span className="font-data rounded-[2px] border border-accent bg-accent-tint px-1.5 py-0.5 text-[10px] text-accent">
+                    <StatusBadge tone="accent" mono>
                       <Trans>Actif</Trans>
-                    </span>
+                    </StatusBadge>
                   ) : null}
                 </div>
                 <p className="font-data mt-0.5 text-[12px] text-ink-secondary">{plan.price}</p>
@@ -141,21 +155,22 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
               <Trans>Clé de licence</Trans>
               <div className="flex items-center gap-1.5">
                 <KeyRound size={14} strokeWidth={1.5} className="text-ink-muted" aria-hidden />
-                <input
+                <Input
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
                   placeholder="RDM-PRO-…"
                   spellCheck={false}
                   data-testid="license-key-input"
-                  className="font-data h-8 w-full rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
+                  className="h-8 text-[13px]"
                 />
               </div>
             </label>
-            <button
-              type="button"
-              data-testid="license-activate"
-              className="h-8 rounded bg-accent px-3 text-[13px] font-semibold text-white hover:bg-accent-hover"
-              onClick={() => {
+            {/* v2.1.2: interior.dev LoadingButton — locked width, smooth
+                idle → pending → success label swap on activation. */}
+            <LoadingButton
+              testId="license-activate"
+              className="h-8"
+              onAction={() => {
                 const result = activateKey(keyInput);
                 if (result.ok) {
                   toast(t`Licence Pro activée (hors-ligne)`);
@@ -164,11 +179,15 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
                   toast.error(t`Clé refusée`, {
                     description: t`Une clé valide commence par RDM-PRO-.`,
                   });
+                  throw new Error("invalid key");
                 }
               }}
+              pendingLabel={t`Vérification…`}
+              successLabel={t`Activée`}
+              errorLabel={t`Refusée`}
             >
-              <Trans>Activer</Trans>
-            </button>
+              Activer
+            </LoadingButton>
             <button
               type="button"
               data-testid="license-demo"
@@ -182,6 +201,21 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
             >
               <Sparkles size={14} strokeWidth={1.5} aria-hidden />
               <Trans>Activer une démonstration Pro</Trans>
+            </button>
+            {/* v2.1.2: 1-click Pass Projet 48 h demo activation. */}
+            <button
+              type="button"
+              data-testid="license-pass"
+              className="flex h-8 items-center gap-1.5 rounded border border-hairline px-3 text-[13px] font-semibold text-ink-secondary hover:border-accent hover:text-accent"
+              onClick={() => {
+                activateDemoPro();
+                toast(t`Pass Projet 48 h démarré`, {
+                  description: t`19 € HT — toutes les fonctions Pro actives 48 h sur ce poste (démonstration hors-ligne).`,
+                });
+              }}
+            >
+              <Clock3 size={14} strokeWidth={1.5} aria-hidden />
+              <Trans>Démarrer le pass 48 h</Trans>
             </button>
             {tier === "pro" ? (
               <button
@@ -220,11 +254,11 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
             ).map(([label, value, setter, fallback]) => (
               <label key={label} className="grid gap-1 text-[12px] text-ink-secondary">
                 {label}
-                <input
+                <Input
                   value={value}
                   onChange={(e) => setter(e.target.value)}
                   placeholder={fallback}
-                  className="h-8 rounded-[4px] border border-hairline bg-panel px-2 text-[13px]"
+                  className="h-8 text-[13px]"
                 />
               </label>
             ))}

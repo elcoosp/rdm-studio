@@ -1,5 +1,9 @@
 packages:
   - apps/web
+  - apps/site
+  - apps/docs
+  - vendor/oxide-fw/*
+
 
 allowBuilds:
   '@swc/core': true
@@ -13,6 +17,13 @@ minimumReleaseAgeExclude:
 
 overrides:
   "@tanstack/router-generator": 1.99.9
+  # Oxide v0.18.0 is distributed as GitHub release binaries + repo packages,
+  # not yet on the npm registry: the prebuilt TS packages are vendored under
+  # vendor/oxide-fw/ (built once with tsdown from github.com/elcoosp/oxide
+  # v0.18.0) and resolved via overrides so `^0.18.0` specifiers link locally.
+  "@oxide-fw/core": "link:vendor/oxide-fw/core"
+  "@oxide-fw/react": "link:vendor/oxide-fw/react"
+  "@oxide-fw/tailwind": "link:vendor/oxide-fw/tailwind"
 
 patchedDependencies:
   vaul@1.1.2: patches/vaul@1.1.2.patch

@@ -37,7 +37,19 @@ export async function openProjectOrCadFile(file: File): Promise<boolean> {
       // `migrate_to_v2` pass before the v2 schema gate.
       if (raw !== null && typeof raw === "object" && (raw as { version?: unknown }).version === 1) {
         const migrated = await feaClient.migrateProjectJson(text);
-        raw = JSON.parse(migrated) as unknown;
+        // v2.1.1: the Rust migrate rejects malformed v1 payloads with a
+        // `{ kind: "Fault" }` OBJECT — surface the clean invalid-model
+        // toast instead of letting JSON.parse throw a cryptic TypeError.
+        if (typeof migrated !== "string") {
+          toast.error(`Projet .rdm invalide : ${file.name}`);
+          return false;
+        }
+        try {
+          raw = JSON.parse(migrated) as unknown;
+        } catch {
+          toast.error(`Fichier .rdm illisible (JSON invalide) : ${file.name}`);
+          return false;
+        }
       }
       const parsed = v.safeParse(ProjectFileSchema, raw);
       if (!parsed.success) {
@@ -68,6 +80,49 @@ export async function openProjectOrCadFile(file: File): Promise<boolean> {
   }
 }
 
+/**
+ * v2.1.1: the window-level `dragover` / `dragleave` / `drop` listeners are
+ * attached ONCE at module load (singleton flag) instead of inside the
+ * React effect. A `DragEvent("drop")` dispatched immediately after
+ * `page.goto("/geometry")` used to race the effect mount (StrictMode
+ * remounts included) and silently miss the payload — module scope removes
+ * the race entirely.
+ */
+const isOurFile = (event: DragEvent): boolean =>
+  Array.from(event.dataTransfer?.files ?? []).some((file) =>
+    /\.(rdm|dxf|step|stp|igs|iges)$/i.test(file.name),
+  );
+const onDragOver = (event: DragEvent) => {
+  if (isOurFile(event)) {
+    event.preventDefault();
+    document.body.classList.add("rdm-dragging");
+  }
+};
+const onDragLeave = () => {
+  document.body.classList.remove("rdm-dragging");
+};
+const onDrop = (event: DragEvent) => {
+  if (!isOurFile(event)) {
+    return;
+  }
+  event.preventDefault();
+  document.body.classList.remove("rdm-dragging");
+  for (const file of event.dataTransfer?.files ?? []) {
+    void openProjectOrCadFile(file);
+  }
+};
+let shellDropListenersAttached = false;
+function attachShellDropListeners(): void {
+  if (shellDropListenersAttached) {
+    return;
+  }
+  shellDropListenersAttached = true;
+  window.addEventListener("dragover", onDragOver);
+  window.addEventListener("dragleave", onDragLeave);
+  window.addEventListener("drop", onDrop);
+}
+attachShellDropListeners();
+
 export function useFileOpening(): void {
   useEffect(() => {
     // PWA file handler (double-click an .rdm in the OS).
@@ -85,38 +140,7 @@ export function useFileOpening(): void {
         }
       });
     }
-
-    // Shell-level drag-and-drop (highlight handled by the CSS class).
-    const isOurFile = (event: DragEvent): boolean =>
-      Array.from(event.dataTransfer?.files ?? []).some((file) =>
-        /\.(rdm|dxf|step|stp|igs|iges)$/i.test(file.name),
-      );
-    const onDragOver = (event: DragEvent) => {
-      if (isOurFile(event)) {
-        event.preventDefault();
-        document.body.classList.add("rdm-dragging");
-      }
-    };
-    const onDragLeave = () => {
-      document.body.classList.remove("rdm-dragging");
-    };
-    const onDrop = (event: DragEvent) => {
-      if (!isOurFile(event)) {
-        return;
-      }
-      event.preventDefault();
-      document.body.classList.remove("rdm-dragging");
-      for (const file of event.dataTransfer?.files ?? []) {
-        void openProjectOrCadFile(file);
-      }
-    };
-    window.addEventListener("dragover", onDragOver);
-    window.addEventListener("dragleave", onDragLeave);
-    window.addEventListener("drop", onDrop);
-    return () => {
-      window.removeEventListener("dragover", onDragOver);
-      window.removeEventListener("dragleave", onDragLeave);
-      window.removeEventListener("drop", onDrop);
-    };
+    // Shell-level drag-and-drop lives at module scope (singleton above);
+    // the highlight class is handled by the CSS `rdm-dragging` rule.
   }, []);
 }

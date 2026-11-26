@@ -35,13 +35,32 @@ export function ForceDiagrams3D(): ReactElement {
   useEffect(() => {
     void feaClient
       .engineCall("compute_envelopes_json", project)
-      .then((payload) => setEnvelopes(payload as BeamEnvelopeDto[]))
+      .then((payload) => {
+        // The engine may answer a fault object or an id-keyed map —
+        // normalize to a flat array before the diagram renders.
+        const value = payload as
+          | BeamEnvelopeDto[]
+          | { kind?: string }
+          | Record<string, BeamEnvelopeDto>;
+        if (value === null || typeof value !== "object") {
+          setEnvelopes(null);
+          return;
+        }
+        if ("kind" in value && typeof value.kind === "string") {
+          setEnvelopes(null);
+          return;
+        }
+        const list = Array.isArray(value)
+          ? value
+          : Object.values(value as Record<string, BeamEnvelopeDto>);
+        setEnvelopes(list.length > 0 ? list : null);
+      })
       .catch(() => setEnvelopes(null));
     return undefined;
   }, [project]);
 
   const scale = useMemo(() => {
-    if (envelopes === null) {
+    if (envelopes === null || !Array.isArray(envelopes) || envelopes.length === 0) {
       return 1;
     }
     return envelopes.reduce((acc, e) => {
@@ -93,7 +112,7 @@ export function ForceDiagrams3D(): ReactElement {
           <option value="cividis">cividis</option>
         </select>
       </div>
-      {envelopes === null ? (
+      {envelopes === null || !Array.isArray(envelopes) || envelopes.length === 0 ? (
         <p className="text-xs text-slate-500">{t`Résoudre le modèle pour afficher les enveloppes.`}</p>
       ) : (
         <svg viewBox="0 0 640 120" role="img" className="h-28 w-full">

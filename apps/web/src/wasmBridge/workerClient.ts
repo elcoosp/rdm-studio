@@ -193,7 +193,9 @@ export type EngineFn =
   | "optimize_sections_json"
   | "buckling_analysis_json"
   | "seismic_spectrum_json"
-  | "export_bim";
+  | "export_bim"
+  | "multi_material_check_json"
+  | "moving_loads_envelope_json";
 
 interface LanePending {
   resolve: (value: unknown) => void;

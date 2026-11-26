@@ -15,6 +15,8 @@ import init, {
   import_cad,
   import_dxf,
   member_calc_trace,
+  multi_material_check_json,
+  moving_loads_envelope_json,
   modal_analysis,
   optimize_sections_json,
   project_fingerprint,
@@ -134,7 +136,9 @@ export interface EngineCallRequest {
     | "optimize_sections_json"
     | "buckling_analysis_json"
     | "seismic_spectrum_json"
-    | "export_bim";
+    | "export_bim"
+    | "multi_material_check_json"
+    | "moving_loads_envelope_json";
   args: unknown[];
 }
 
@@ -335,6 +339,16 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           break;
         case "export_bim":
           result = export_bim(JSON.stringify(args[0]), args[1] as string);
+          break;
+        case "multi_material_check_json":
+          result = multi_material_check_json(args[0] as string, JSON.stringify(args[1]));
+          break;
+        case "moving_loads_envelope_json":
+          result = moving_loads_envelope_json(
+            JSON.stringify(args[0]),
+            args[1] as number,
+            args[2] as number,
+          );
           break;
         default:
           result = { kind: "Fault", message: "unrouted engine call" };

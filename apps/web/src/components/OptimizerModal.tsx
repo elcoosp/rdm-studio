@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { useProjectStore } from "../state/projectStore";
+import { toast } from "sonner";
 import { feaClient, type GroupOptimizationDto } from "../wasmBridge/workerClient";
 import { CalcTrace } from "./CalcTraceTree";
 import type { CalcTraceNodeDto } from "../wasmBridge/workerClient";
@@ -97,6 +98,7 @@ export function whyDoesThisFail(utilization: number): { label: string; impact: s
 
 export function OptimizerModal({ onClose }: { onClose: () => void }): ReactElement {
   const project = useProjectStore((st) => st.project);
+  const loadProject = useProjectStore((st) => st.loadProject);
   const [rows, setRows] = useState<OptimizerRow[] | null>(null);
   const [trace, setTrace] = useState<CalcTraceNodeDto[] | null>(null);
   const [totals, setTotals] = useState<{
@@ -142,6 +144,17 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
       ),
     0,
   );
+
+  const applyOptimized = (): void => {
+    if (rows === null) {
+      return;
+    }
+    const beams = project.structure.beams.map((beam, index) => {
+      const chosen = rows[index]?.chosen;
+      return chosen === undefined || chosen === null ? beam : { ...beam, section_id: chosen };
+    });
+    loadProject({ ...project, structure: { ...project.structure, beams } });
+  };
 
   return (
     <div
@@ -219,6 +232,17 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
             </ul>
           </div>
         ) : null}
+        <button
+          type="button"
+          onClick={() => {
+            applyOptimized();
+            toast.success("Profilés optimisés appliqués (⌘Z pour annuler)");
+            onClose();
+          }}
+          className="mb-3 w-full rounded bg-emerald-600 py-2 text-sm font-bold text-white hover:bg-emerald-700"
+        >
+          Appliquer les profilés optimisés (⌘Z)
+        </button>
         <h3 className="mb-2 text-sm font-bold">
           <Trans>Trace de vérification (KaTeX)</Trans>
         </h3>

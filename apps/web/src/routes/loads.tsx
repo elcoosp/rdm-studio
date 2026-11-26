@@ -1,3 +1,7 @@
+{
+  /* v2.0.0: EN 1991 generators + thermal action, wired to generate_env_loads_json. */
+}
+<EnvLoadGenerators />;
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
@@ -18,6 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { StageContent, useStageSlot } from "@/state/stageStore";
+import { feaClient } from "@/wasmBridge/workerClient";
+import type { LoadData as LoadDataRow } from "@/state/projectStore";
 import {
   useProjectStore,
   type LoadCaseId,
@@ -147,6 +153,9 @@ function LoadsPage() {
             continue;
           }
           total += (material.rho ?? 0) * (section.a ?? 0) * 9.80665 * length;
+        }
+        if (l.kind !== "AccelerationField") {
+          continue;
         }
         fxSum += total * l.ax_g;
         fySum += total * l.ay_g;
@@ -711,7 +720,9 @@ function LoadsPage() {
                       ? `${(l.q_start / 1000).toFixed(2)} → ${(l.q_end / 1000).toFixed(2)} kN/m`
                       : l.kind === "AccelerationField"
                         ? `(${l.ax_g} ; ${l.ay_g} ; ${l.az_g}) ×g`
-                        : `${(l.forces.fz / 1000).toFixed(2)} kN`}
+                        : l.kind === "Thermal"
+                          ? `ΔT = ${l.dt.toFixed(1)} K`
+                          : `${(l.forces.fz / 1000).toFixed(2)} kN`}
                   </td>
                   <td className="text-right">
                     <button
@@ -740,4 +751,109 @@ function LoadsPage() {
   );
 
   return <DesktopSplit inspector={inspector} main={main} />;
+}
+
+/**
+ * EN 1991 action generators (v2.0.0): imposed (categories A-E),
+ * snow (sk, altitude 15 m proxy), wind (vb) and a Thermal ΔT action —
+ * all appended through the wasm `generate_env_loads_json` lane.
+ */
+function EnvLoadGenerators(): React.ReactElement {
+  const project = useProjectStore((st) => st.project);
+  const loadProject = useProjectStore((st) => st.loadProject);
+  const beams = project.structure.beams;
+  const [beamId, setBeamId] = useState(beams[0]?.id ?? 0);
+  const [value] = useState(3);
+  const [dt, setDt] = useState(30);
+
+  const append = (kind: string, numeric: number, thermal: boolean): void => {
+    if (thermal) {
+      loadProject({
+        ...project,
+        structure: {
+          ...project.structure,
+          loads: [
+            ...project.structure.loads,
+            {
+              case: "Permanent" as const,
+              kind: "Thermal" as const,
+              beam_id: beamId,
+              dt,
+              dt_y: 0,
+              dt_z: 0,
+            },
+          ],
+        },
+      });
+      return;
+    }
+    void feaClient
+      .engineCall("generate_env_loads_json", kind, beamId, numeric, 3.0)
+      .then((payload: unknown) => {
+        const loads = payload as LoadDataRow[];
+        loadProject({
+          ...project,
+          structure: { ...project.structure, loads: [...project.structure.loads, ...loads] },
+        });
+      })
+      .catch(() => undefined);
+  };
+
+  return (
+    <div
+      className="mb-3 rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-700"
+      aria-label="Générateurs EN 1991"
+    >
+      <p className="mb-2 font-semibold">Générateurs EN 1991 & thermique</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={beamId}
+          onChange={(e) => setBeamId(Number(e.target.value))}
+          aria-label="Membre cible"
+          className="rounded border border-slate-300 bg-transparent px-1 dark:border-slate-600"
+        >
+          {beams.map((b) => (
+            <option key={b.id} value={b.id}>
+              B{b.id}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => append("imposed", value, false)}
+          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+        >
+          Imposée cat. {Math.max(1, Math.min(5, Math.round(value)))}
+        </button>
+        <button
+          type="button"
+          onClick={() => append("snow", value, false)}
+          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+        >
+          Neige sk = {value.toFixed(1)} kN/m²
+        </button>
+        <button
+          type="button"
+          onClick={() => append("wind", value, false)}
+          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+        >
+          Vent vb = {value.toFixed(0)} m/s
+        </button>
+        <input
+          type="number"
+          value={dt}
+          onChange={(e) => setDt(Number(e.target.value))}
+          aria-label="ΔT"
+          className="w-16 rounded border border-slate-300 bg-transparent px-1 dark:border-slate-600"
+        />
+        <button
+          type="button"
+          onClick={() => append("thermal", dt, true)}
+          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+        >
+          ΔT {dt} K
+        </button>
+      </div>
+    </div>
+  );
 }

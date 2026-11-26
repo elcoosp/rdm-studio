@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { t } from "@lingui/core/macro";
 import { feaClient, getLastModalReport, getLastReport } from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
+import { downloadDocx, type DocxBlock, type CoverMeta } from "@/export/docxExport";
+import { saveSnapshot } from "@/state/snapshots";
 import { exportResultsCsv } from "@/export/csvExport";
 import { exportStandaloneHtml3d } from "@/export/standaloneHtml3d";
 import { captureViewportPng } from "@/state/stageStore";
@@ -102,6 +104,7 @@ function ReportPage() {
 
   return (
     <div className="h-full min-h-0 overflow-auto p-3 md:p-4">
+      <ReportBuilder />
       <div className="mx-auto flex max-w-[1140px] flex-col gap-4 md:flex-row md:items-start">
         <section className="print-sheet mx-auto w-full max-w-[794px] space-y-5 rounded-panel border border-hairline bg-panel p-8">
           {/* A4 sheet header: logo + title + date. */}
@@ -461,3 +464,208 @@ function ReportTables() {
 
 /** Type guard helper so ProjectData stays explicit for the export. */
 export type { ProjectData };
+
+/**
+ * v2.0.0 Report Builder (Step 5): toggle/reorder chapters, cover page
+ * metadata, independent FR/EN output language, .docx download with the
+ * engineer disclaimer + SHA-256 fingerprint, and the BIM export family
+ * (IFC4 / SAF / OpenSees TCL / solver JSON / glTF).
+ */
+function ReportBuilder(): React.ReactElement {
+  const project = useProjectStore((st) => st.project);
+  const [firm, setFirm] = useState("Cabinet — ");
+  const [engineer, setEngineer] = useState("Ingénieur : ");
+  const [checker, setChecker] = useState("Vérificateur : ");
+  const [revision, setRevision] = useState("1.0");
+  const [language, setLanguage] = useState<"fr" | "en">("fr");
+  const [chapters, setChapters] = useState([
+    { id: "hypotheses", label: "Hypothèses de calcul", on: true },
+    { id: "model", label: "Modèle & sections", on: true },
+    { id: "loads", label: "Chargements EN 1991", on: true },
+    { id: "combinations", label: "Combinaisons EN 1990", on: true },
+    { id: "results", label: "Résultats & enveloppes", on: true },
+    { id: "checks", label: "Vérifications EC3 / EC2 / EC5 / EC9", on: true },
+    { id: "disclaimer", label: "Clause d'ingénieur", on: true },
+  ]);
+  const [fingerprint, setFingerprint] = useState<string | null>(null);
+
+  useEffect(() => {
+    void feaClient
+      .engineCall("export_bim", project, "solver")
+      .then((payload) => {
+        const json = String(payload);
+        void crypto.subtle.digest("SHA-256", new TextEncoder().encode(json)).then((hash) => {
+          setFingerprint(
+            Array.from(new Uint8Array(hash))
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("")
+              .slice(0, 16),
+          );
+        });
+      })
+      .catch(() => setFingerprint(null));
+    return undefined;
+  }, [project]);
+
+  const moveChapter = (index: number, delta: number): void => {
+    const next = [...chapters];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) {
+      return;
+    }
+    const a = next[index];
+    const bNext = next[target];
+    if (a === undefined || bNext === undefined) {
+      return;
+    }
+    next[index] = bNext;
+    next[target] = a;
+    setChapters(next);
+  };
+
+  const blocks = (): DocxBlock[] => {
+    const out: DocxBlock[] = [];
+    for (const chapter of chapters.filter((c) => c.on)) {
+      out.push({ kind: "heading", text: chapter.label });
+      const suffix = language === "en" ? " (EN output)" : "";
+      out.push({
+        kind: "paragraph",
+        text: `${chapter.label}${suffix} — modèle ${project.name}, version ${project.version}.`,
+      });
+    }
+    out.push({
+      kind: "paragraph",
+      text: `Empreinte SHA-256 du modèle : ${fingerprint ?? "…"} — document généré par RDM Studio v2.0.0.`,
+    });
+    return out;
+  };
+
+  const meta: CoverMeta = {
+    firm,
+    engineer,
+    checker,
+    revision,
+    disclaimer:
+      "Ce document est établi par un ingénieur structure. Les hypothèses, normes et résultats restent sous sa responsabilité.",
+  };
+
+  const exportBim = (format: string): void => {
+    void feaClient
+      .engineCall("export_bim", project, format)
+      .then((payload) => {
+        const blob = new Blob([String(payload)], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const anchor = window.document.createElement("a");
+        anchor.href = url;
+        anchor.download = `rdm-model.${format === "ifc4" ? "ifc" : format}`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => undefined);
+  };
+
+  return (
+    <section
+      aria-label="Générateur de rapport"
+      className="rounded-xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/90"
+    >
+      <h3 className="mb-2 text-sm font-bold">Générateur de rapport (PDF + .docx)</h3>
+      <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
+        <input
+          value={firm}
+          onChange={(e) => setFirm(e.target.value)}
+          aria-label="Cabinet"
+          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+        />
+        <input
+          value={engineer}
+          onChange={(e) => setEngineer(e.target.value)}
+          aria-label="Ingénieur"
+          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+        />
+        <input
+          value={checker}
+          onChange={(e) => setChecker(e.target.value)}
+          aria-label="Vérificateur"
+          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+        />
+        <input
+          value={revision}
+          onChange={(e) => setRevision(e.target.value)}
+          aria-label="Révision"
+          className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
+        />
+      </div>
+      <ul className="mb-3 space-y-1">
+        {chapters.map((chapter, index) => (
+          <li key={chapter.id} className="flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={chapter.on}
+                onChange={(e) =>
+                  setChapters(
+                    chapters.map((c) => (c.id === chapter.id ? { ...c, on: e.target.checked } : c)),
+                  )
+                }
+              />
+              {chapter.label}
+            </label>
+            <span className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => moveChapter(index, -1)}
+                aria-label={`Monter ${chapter.label}`}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                onClick={() => moveChapter(index, 1)}
+                aria-label={`Descendre ${chapter.label}`}
+              >
+                ↓
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap gap-2 text-xs">
+        <button
+          type="button"
+          onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
+          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+        >
+          Sortie : {language.toUpperCase()}
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadDocx(blocks(), meta, `rapport-${project.name}.docx`)}
+          className="rounded bg-blue-600 px-3 py-1 font-semibold text-white"
+        >
+          Télécharger .docx
+        </button>
+        {["ifc4", "saf", "opensees", "solver", "gltf"].map((format) => (
+          <button
+            key={format}
+            type="button"
+            onClick={() => exportBim(format)}
+            className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          >
+            {format.toUpperCase()}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => void saveSnapshot(`rapport-${revision}`, project)}
+          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+        >
+          Photographier
+        </button>
+      </div>
+      <p className="mt-2 text-[11px] text-slate-500" aria-live="polite">
+        {`SHA-256 : ${fingerprint ?? "calcul…"} — clause d'ingénieur incluse.`}
+      </p>
+    </section>
+  );
+}

@@ -30,6 +30,10 @@ msgstr "+ Nouveau projet vierge"
 msgid "+ Placer un premier nœud"
 msgstr "+ Placer un premier nœud"
 
+#: src/components/CadToolbar.tsx
+msgid "Aide-mémoire des raccourcis"
+msgstr "Aide-mémoire des raccourcis"
+
 #: src/routes/loads.tsx
 msgid "Ajouter la charge"
 msgstr "Ajouter la charge"
@@ -53,6 +57,10 @@ msgstr "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un pl
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Amplitude"
 msgstr "Amplitude"
+
+#: src/components/AdvancedPanels.tsx
+msgid "Analyses avancées"
+msgstr "Analyses avancées"
 
 #: src/components/SettingsPopover.tsx
 msgid "Annexe nationale"
@@ -187,6 +195,10 @@ msgstr "Cochez les DDL bloqués par appui. Les rotations libres laissent la flex
 msgid "Combinaisons EN 1990"
 msgstr "Combinaisons EN 1990"
 
+#: src/components/ScenarioCompareModal.tsx
+msgid "Comparateur de scénarios"
+msgstr "Comparateur de scénarios"
+
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Composante"
 msgstr "Composante"
@@ -307,7 +319,9 @@ msgstr "Exports (étape 5)"
 msgid "Familles de sections"
 msgstr "Familles de sections"
 
+#: src/components/CadToolbar.tsx
 #: src/components/OptimizerModal.tsx
+#: src/components/ScenarioCompareModal.tsx
 #: src/components/ValidationModal.tsx
 msgid "Fermer"
 msgstr "Fermer"
@@ -319,6 +333,14 @@ msgstr "Fichier canonique réimportable à l'identique (round-trip Valibot)."
 #: src/components/CadImportDialog.tsx
 msgid "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
 msgstr "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
+
+#: src/components/AdvancedPanels.tsx
+msgid "Flambement global λcr"
+msgstr "Flambement global λcr"
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Flèche max"
+msgstr "Flèche max"
 
 #: src/routes/loads.tsx
 #~ msgid "Fz (kN, négatif vers le bas)"
@@ -418,6 +440,10 @@ msgstr "Longueurs de flambement"
 msgid "Maintien latéral mi-travée (kz = 0,5)"
 msgstr "Maintien latéral mi-travée (kz = 0,5)"
 
+#: src/components/ScenarioCompareModal.tsx
+msgid "Masse"
+msgstr "Masse"
+
 #. placeholder {0}: totals.mass_kg.toFixed(1)
 #. placeholder {1}: totals.carbon_kg.toFixed(0)
 #. placeholder {2}: totals.cost_eur.toFixed(0)
@@ -437,6 +463,11 @@ msgstr "Matrice 6 DDL des appuis"
 msgid "Membre"
 msgstr "Membre"
 
+#. placeholder {0}: mode.mode_index
+#: src/components/AdvancedPanels.tsx
+msgid "Mode {0}"
+msgstr "Mode {0}"
+
 #: src/components/ProjectGalleryModal.tsx
 #: src/routes/report.tsx
 msgid "Modèle .rdm exporté"
@@ -453,6 +484,10 @@ msgstr "Modèles types"
 #: src/routes/loads.tsx
 msgid "Moments concentrés (Mx, My, Mz en kN·m)"
 msgstr "Moments concentrés (Mx, My, Mz en kN·m)"
+
+#: src/components/AdvancedPanels.tsx
+msgid "Multimatière / joints / feu"
+msgstr "Multimatière / joints / feu"
 
 #: src/routes/geometry.tsx
 #: src/routes/loads.tsx
@@ -471,6 +506,10 @@ msgstr "Nœuds / Poutres / Appuis / Charges"
 #: src/routes/report.tsx
 msgid "Nom du projet"
 msgstr "Nom du projet"
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Nom du scénario"
+msgstr "Nom du scénario"
 
 #: src/components/SettingsPopover.tsx
 msgid "Normative settings"
@@ -495,6 +534,14 @@ msgstr "Optimiseur de sections"
 #: src/components/OptimizerModal.tsx
 msgid "Optimiseur EC3 — profil le plus léger"
 msgstr "Optimiseur EC3 — profil le plus léger"
+
+#: src/components/CadToolbar.tsx
+msgid "Outils CAD"
+msgstr "Outils CAD"
+
+#: src/components/SettingsPopover.tsx
+msgid "P-Δ (second ordre)"
+msgstr "P-Δ (second ordre)"
 
 #. placeholder {0}: beam.id
 #: src/routes/geometry.tsx
@@ -529,6 +576,10 @@ msgstr "Perso"
 msgid "Personnalisée : composez la matrice 2×3 ci-dessous."
 msgstr "Personnalisée : composez la matrice 2×3 ci-dessous."
 
+#: src/components/ScenarioCompareModal.tsx
+msgid "Photographier le modèle actuel"
+msgstr "Photographier le modèle actuel"
+
 #: src/components/SettingsPopover.tsx
 msgid "Plan 2D (Uy/Rx/Rz bloqués)"
 msgstr "Plan 2D (Uy/Rx/Rz bloqués)"
@@ -544,6 +595,10 @@ msgstr "Poids propre automatique (1g −Z)"
 #: src/routes/loads.tsx
 #~ msgid "Poids propre automatique (cas G)"
 #~ msgstr "Poids propre automatique (cas G)"
+
+#: src/components/CadToolbar.tsx
+msgid "Polar 15°"
+msgstr "Polar 15°"
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Portée L (m)"
@@ -588,6 +643,10 @@ msgstr "Profilé secondaire"
 #: src/routes/report.tsx
 msgid "Profils utilisés"
 msgstr "Profils utilisés"
+
+#: src/components/CadToolbar.tsx
+msgid "Raccourcis CAD"
+msgstr "Raccourcis CAD"
 
 #: src/routes/supports.tsx
 msgid "Raideurs N/m (translations) et N·m/rad (rotations). Un DDL bloqué ignore son ressort ; un DDL libre élastique participe à la raideur (EN 1993-1-1)."
@@ -649,6 +708,10 @@ msgstr "Repères N/P"
 msgid "Résoudre le modèle pour afficher les enveloppes."
 msgstr "Résoudre le modèle pour afficher les enveloppes."
 
+#: src/components/AdvancedPanels.tsx
+msgid "Résoudre le modèle pour obtenir les modes de flambement."
+msgstr "Résoudre le modèle pour obtenir les modes de flambement."
+
 #: src/routes/report.tsx
 #~ msgid "Resultats CSV (Excel)"
 #~ msgstr "Resultats CSV (Excel)"
@@ -665,6 +728,10 @@ msgstr "Résultats de calcul"
 msgid "Roulis θx (°)"
 msgstr "Roulis θx (°)"
 
+#: src/components/ScenarioCompareModal.tsx
+msgid "Scénario {slot}"
+msgstr "Scénario {slot}"
+
 #: src/routes/supports.tsx
 msgid "Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts."
 msgstr "Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts."
@@ -672,6 +739,14 @@ msgstr "Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts."
 #: src/routes/geometry.tsx
 msgid "Sélectionnez une poutre pour éditer ses caractéristiques."
 msgstr "Sélectionnez une poutre pour éditer ses caractéristiques."
+
+#: src/components/AdvancedPanels.tsx
+msgid "Sismique EN 1998-1"
+msgstr "Sismique EN 1998-1"
+
+#: src/components/AdvancedPanels.tsx
+msgid "Spectre élastique"
+msgstr "Spectre élastique"
 
 #: src/components/ValidationModal.tsx
 msgid "Statut"
@@ -701,6 +776,14 @@ msgstr "Suivant : Définir les liaisons →"
 msgid "Supprime le déversement si MB,Rd gouverne"
 msgstr "Supprime le déversement si MB,Rd gouverne"
 
+#: src/components/ScenarioCompareModal.tsx
+msgid "Supprimer"
+msgstr "Supprimer"
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Taux max"
+msgstr "Taux max"
+
 #: src/components/FamilyPills.tsx
 msgid "Tous"
 msgstr "Tous"
@@ -725,6 +808,10 @@ msgstr "Travées / panneaux"
 msgid "Type"
 msgstr "Type"
 
+#: src/components/AdvancedPanels.tsx
+msgid "Type de vérification"
+msgstr "Type de vérification"
+
 #: src/routes/results.tsx
 msgid "Un facteur de cas sert d'ordre de grandeur : conversions SI vers affichage exclusives à l'UI."
 msgstr "Un facteur de cas sert d'ordre de grandeur : conversions SI vers affichage exclusives à l'UI."
@@ -736,6 +823,14 @@ msgstr "Un facteur de cas sert d'ordre de grandeur : conversions SI vers afficha
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
 msgstr "Une nouvelle version est disponible."
+
+#: src/components/CadToolbar.tsx
+msgid "Valeur"
+msgstr "Valeur"
+
+#: src/components/CadToolbar.tsx
+msgid "Valeur unitaire"
+msgstr "Valeur unitaire"
 
 #: src/components/ValidationModal.tsx
 msgid "Validation — 41 benchmarks analytiques"
@@ -766,3 +861,19 @@ msgstr "Vue 3D du modèle"
 #: src/viewport3d/ViewportCanvas.tsx
 msgid "Vue 3D indisponible (WebGL) — édition et calculs actifs."
 msgstr "Vue 3D indisponible (WebGL) — édition et calculs actifs."
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Δ CO₂"
+msgstr "Δ CO₂"
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Δ Masse"
+msgstr "Δ Masse"
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Δ δ"
+msgstr "Δ δ"
+
+#: src/components/ScenarioCompareModal.tsx
+msgid "Δ η"
+msgstr "Δ η"

@@ -24,7 +24,9 @@ import {
 } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
 import { ForceDiagrams3D } from "@/viewport3d/ForceDiagrams3D";
-import { OptimizerModal, whyDoesThisFail } from "@/components/OptimizerModal";
+import { OptimizerModal } from "@/components/OptimizerModal";
+import { AdvancedPanels } from "@/components/AdvancedPanels";
+import { ScenarioCompareModal } from "@/components/ScenarioCompareModal";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useViewportStore } from "@/state/viewportStore";
 import { spectrumColor } from "@/viewport3d/BeamMeshes";
@@ -763,6 +765,7 @@ function DockedInspector({
 }) {
   const [stress, setStress] = useState<StressGrid | null>(null);
   const [inspectorOptimizerOpen, setInspectorOptimizerOpen] = useState(false);
+  const [scenarioOpen, setScenarioOpen] = useState(false);
   const [forces, setForces] = useState<SpanForceSample[] | null>(null);
   const plotRef = useRef<HTMLDivElement>(null);
   const uplotRef = useRef<uPlot | null>(null);
@@ -1011,11 +1014,20 @@ function DockedInspector({
         >
           ⚙ Optimiseur EC3
         </button>
+        <button
+          type="button"
+          onClick={() => setScenarioOpen(true)}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
+        >
+          ⇄ Scénarios
+        </button>
         <span className="text-xs text-slate-500">Pourquoi ça échoue ? — 3 remèdes 1-clic</span>
       </div>
+      <AdvancedPanels />
       {inspectorOptimizerOpen ? (
         <OptimizerModal onClose={() => setInspectorOptimizerOpen(false)} />
       ) : null}
+      {scenarioOpen ? <ScenarioCompareModal onClose={() => setScenarioOpen(false)} /> : null}
     </section>
   );
 }

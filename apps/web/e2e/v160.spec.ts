@@ -277,7 +277,7 @@ test.describe("v1.6.0 — layout matrix (AGENTS.md §4)", () => {
     // The inspector becomes the Vaul drawer below 768px: trigger it via
     // the handle tap (guarded to chromium per the AGENTS.md touch note).
     const handle = page.getByTestId("inspector-sheet-handle");
-    await handle.tap();
+    await handle.click();
     await expect(page.getByTestId("sheet-close")).toBeVisible({ timeout: 15_000 });
     // The old bulky "Fermer" button is gone.
     await expect(page.getByRole("button", { name: "Fermer", exact: true })).toHaveCount(0);

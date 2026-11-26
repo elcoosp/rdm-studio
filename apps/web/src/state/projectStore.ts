@@ -69,6 +69,22 @@ export type LoadData =
       q_start: number;
       q_end: number;
       direction: { x: number; y: number; z: number };
+      a_start?: number | null;
+      a_end?: number | null;
+      local_axes?: {
+        x: { x: number; y: number; z: number };
+        y: { x: number; y: number; z: number };
+        z: { x: number; y: number; z: number };
+      } | null;
+    }
+  | {
+      // v2.0.0 schema v2: thermal action (uniform ΔT + gradients, K).
+      case: LoadCaseId;
+      kind: "Thermal";
+      beam_id: number;
+      dt: number;
+      dt_y?: number;
+      dt_z?: number;
     }
   | {
       case: LoadCaseId;

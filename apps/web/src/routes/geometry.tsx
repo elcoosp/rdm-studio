@@ -12,6 +12,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
+import { FamilyPills } from "@/components/FamilyPills";
+import { CadToolbar } from "@/components/CadToolbar";
 import { useViewportStore } from "@/state/viewportStore";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -397,6 +399,20 @@ function GeometryPage() {
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
       {/* v1.6.0: the persistent stage slot — the ONE canvas in __root.tsx
           overlays this pane, so orbit/zoom survive every step switch. */}
+      {/* v2.0.0: CAD toolbar + family pills overlay the stage (zero flow impact). */}
+      <div className="absolute inset-x-2 top-2 z-20 flex flex-col gap-1">
+        <CadToolbar />
+        <FamilyPills
+          onPick={(family: string) => {
+            // Family filter feeds the profile combobox search string.
+            const search = window.document.querySelector<HTMLInputElement>("[data-profile-search]");
+            if (search !== null && family !== "Tous") {
+              search.value = family === "Perso" ? "" : family;
+              search.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          }}
+        />
+      </div>
       <div
         ref={slotRef}
         className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"

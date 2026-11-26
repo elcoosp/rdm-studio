@@ -170,7 +170,10 @@ export function buildTemplate(kind: string): ProjectData {
   }
 }
 
-const TEMPLATES = [
+import { ENGINEERING_TEMPLATES } from "../lib/engineeringTemplates";
+
+/** v1.6.0 parametric templates (Rust-generated). */
+const PARAMETRIC_TEMPLATES = [
   { kind: "warren", label: "Treillis Warren 24 m" },
   { kind: "portique", label: "Portique industriel" },
   { kind: "potence", label: "Potence encastrée" },
@@ -393,7 +396,7 @@ export function ProjectGalleryModal({
             </button>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            {TEMPLATES.map((t) => {
+            {PARAMETRIC_TEMPLATES.map((t) => {
               // v1.4.0: rich metadata cards (node/beam counts, span, tags).
               const preview = buildTemplate(t.kind);
               const nodeCount = preview.structure.nodes.length;
@@ -422,6 +425,53 @@ export function ProjectGalleryModal({
                 </button>
               );
             })}
+            {/* v2.0.0: the 12 validated engineering templates with "Pourquoi ce modèle" notes. */}
+            {ENGINEERING_TEMPLATES.map((template) => (
+              <div
+                key={template.id}
+                className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+              >
+                <p className="text-sm font-semibold">{template.name}</p>
+                <p className="mt-1 text-xs italic text-slate-600 dark:text-slate-300">
+                  « Pourquoi ce modèle » — {template.why}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const structure = {
+                      nodes: template.nodes,
+                      beams: template.beams.map((beam) => ({
+                        ...beam,
+                        roll_angle_rad: 0,
+                        releases_start: [false, false, false, false, false, false],
+                        releases_end: [false, false, false, false, false, false],
+                        k_buckling_y: 1.0,
+                        k_buckling_z: 1.0,
+                      })),
+                      supports: [],
+                      loads: template.loads.map((load) => ({
+                        case: load.case,
+                        kind: load.kind,
+                        beam_id: load.beam_id ?? 0,
+                        node_id: load.node_id ?? 0,
+                        position_ratio: load.position_ratio ?? 0.5,
+                        q_start: load.q_start ?? 0,
+                        q_end: load.q_end ?? 0,
+                        forces: { fx: 0, fy: 0, fz: load.fz ?? 0, mx: 0, my: 0, mz: 0 },
+                        direction: load.direction ?? { x: 0, y: -1, z: 0 },
+                      })),
+                      sections: {},
+                      materials: {},
+                      self_weight_enabled: false,
+                    };
+                    loadProject({ version: 2, name: template.name, structure });
+                  }}
+                  className="mt-2 w-full rounded bg-blue-600 py-1 text-xs font-semibold text-white"
+                >
+                  Charger
+                </button>
+              </div>
+            ))}
           </div>
           {/* v1.4.0: direct file import (.rdm / CAD). */}
           <label className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded border border-hairline px-2 py-1 text-[11px] text-ink-secondary hover:border-accent hover:text-accent">

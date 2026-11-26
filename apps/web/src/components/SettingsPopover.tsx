@@ -8,16 +8,18 @@ import { useProjectStore, type ModelSettingsData } from "../state/projectStore";
  * combination method, Timoshenko shear and 2D plane-frame mode — all
  * schema-v2 fields of the `.rdm` settings block.
  */
+/** Module-level default — a fresh literal inside the selector would
+ * return a new reference every render and loop useSyncExternalStore. */
+const DEFAULT_SETTINGS: ModelSettingsData = {
+  national_annex: "FR",
+  combination_method: "Eq610",
+  p_delta: false,
+  shear_deformation: true,
+  plane_frame_2d: false,
+};
+
 export function SettingsPopover(): React.ReactElement {
-  const settings = useProjectStore(
-    (st) =>
-      st.project.structure.settings ?? {
-        national_annex: "FR" as const,
-        combination_method: "Eq610" as const,
-        shear_deformation: true,
-        plane_frame_2d: false,
-      },
-  );
+  const settings = useProjectStore((st) => st.project.structure.settings ?? DEFAULT_SETTINGS);
   const updateSettings = useProjectStore((st) => st.updateSettings);
   const [open, setOpen] = useState(false);
 
@@ -30,9 +32,12 @@ export function SettingsPopover(): React.ReactElement {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
+        className="rounded-md border border-slate-300 px-2 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
       >
-        <Trans>Réglages normatifs</Trans>
+        ⚙<span className="hidden sm:inline">&nbsp;Réglages</span>
+        <span className="sr-only">
+          <Trans>Réglages normatifs</Trans>
+        </span>
       </button>
       {open ? (
         <div
@@ -86,6 +91,14 @@ export function SettingsPopover(): React.ReactElement {
               6.10a/b
             </button>
           </div>
+          <label className="mb-2 flex items-center justify-between text-sm">
+            <Trans>P-Δ (second ordre)</Trans>
+            <input
+              type="checkbox"
+              checked={settings.p_delta ?? false}
+              onChange={(e) => updateSettings({ p_delta: e.target.checked })}
+            />
+          </label>
           <label className="mb-2 flex items-center justify-between text-sm">
             <Trans>Cisaillement Timoshenko</Trans>
             <input

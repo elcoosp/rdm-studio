@@ -212,16 +212,17 @@ function RootLayout() {
           </button>
           <LocaleSwitch />
         </div>
-        {/* v1.8.0: normative settings + validation modal. */}
+        {/* v1.8.0: normative settings + validation modal (compact on mobile). */}
         <div className="flex shrink-0 items-center gap-1">
           <SettingsPopover />
           <button
             type="button"
             onClick={() => setValidationOpen(true)}
+            aria-label="Validation — 41 benchmarks analytiques"
             className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
             title="Validation — 41 benchmarks analytiques"
           >
-            ✓ Validation
+            ✓<span className="hidden sm:inline">&nbsp;Validation</span>
           </button>
         </div>
       </header>

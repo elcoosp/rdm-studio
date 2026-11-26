@@ -5,7 +5,7 @@ import { formatter } from "@lingui/format-po";
 // string; the catalog layout is exactly ARCHITECTURE.md section 19.2.
 export default defineConfig({
   sourceLocale: "fr",
-  locales: ["fr", "en"],
+  locales: ["fr", "en", "es", "de", "pt_BR"],
   catalogs: [
     {
       path: "<rootDir>/src/i18n/locales/{locale}",

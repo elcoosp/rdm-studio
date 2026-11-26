@@ -1,0 +1,93 @@
+---
+title: Vérification EC3 et optimiseur
+description: La chaîne de vérification EN 1993-1-1 complète — interactions 6.61/6.62, déversement χLT, classes, clauses CalcTrace en KaTeX — et l'optimiseur Pareto de sections en un clic avec annulation.
+sidebar:
+  order: 5
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+La chaîne de vérification Eurocode 3 transforme les efforts du solveur en décision de
+conformité par barreau et par combinaison. Chaque chiffre remonte à sa clause via
+CalcTrace.
+
+<DocMedia
+  id="ec3-calctrace"
+  type="screenshot"
+/>
+
+## Classement des sections
+
+Pour chaque barreau et chaque signe de combinaison, la chaîne classe la section
+(EN 1993-1-1 Tableau 5.2) à partir de l'élancement de l'âme et des semelles et de
+ε = √(235/fy) :
+
+```text
+classe 1 : rotule plastique atteinte            → Wpl
+classe 2 : moment plastique atteint             → Wpl
+classe 3 : limite élastique en fibre extrême    → Wel
+classe 4 : voilement local                      → Weff (§4.4)
+```
+
+Le benchmark `E11` épingle la borne ρ du calcul de largeur efficace de classe 4, et
+`E04` épingle ε lui-même.
+
+## Éléments uniformes en compression et flexion — 6.61 / 6.62
+
+L'interaction biaxiale suit les équations du §6.3.3 avec les facteurs d'interaction de
+l'Annexe B :
+
+```text
+6.61 : NEd/(χy·NRk) + kyy·MyEd/(χLT·MyRk) + kyz·MzEd/MzRk ≤ 1,00
+6.62 : NEd/(χz·NRk) + kzy·MyEd/(χLT·MyRk) + kzz·MzEd/MzRk ≤ 1,00
+```
+
+La vérification conserve l'équation dimensionnante, et CalcTrace déplie chaque
+facteur : les facteurs d'équivalence Cmy,C0, les coefficients ψ des diagrammes de
+moment et les valeurs kyy/kyz des Tableaux B.1–B.3 de l'Annexe B.
+
+<DocMedia
+  id="ec3-ltb-chi"
+  type="screenshot"
+/>
+
+## Déversement χLT
+
+Pour les barreaux sans bridage latéral continu, la chaîne calcule le moment critique
+élastique Mcr (avec la contribution de torsion St-Venant + Wagner certifiée par le
+benchmark `E10`), puis :
+
+```text
+λ̄LT = √(Wpl,y·fy / Mcr)
+χLT  = 1 / [ΦLT + √(ΦLT² − β·λ̄LT²)]  ≤ 1,0  (§6.3.2.2 / §6.3.2.3)
+```
+
+La méthode des laminés (Tableaux 6.5/6.6 avec correction kc) ou le cas général de
+l'Annexe F est sélectionnée automatiquement selon le type de section.
+
+## CalcTrace — chaque clause est ouvrable
+
+Cliquez n'importe quel badge de taux pour ouvrir l'arbre CalcTrace : la clause se rend
+en KaTeX avec les valeurs d'entrée exactes, les résultats intermédiaires et la source
+normative (`EN 1993-1-1 §6.3.3 eq. 6.61`, notes de l'Annexe Nationale française le cas
+échéant). Un contresignateur peut auditer toute la chaîne sans quitter la page. KaTeX
+se rend avec `trust: false` — aucun HTML embarqué ne peut fuiter à travers une formule.
+
+## L'optimiseur Pareto en un clic
+
+Quand un barreau dépasse η = 1,00 (ou que vous voulez simplement de l'acier plus
+léger), ouvrez l'optimiseur : il balaye les sections compatibles du catalogue, évalue
+la chaîne EC3 complète pour chaque candidat et trace la masse contre le taux. Le front
+de Pareto met en évidence les candidats non dominés ; en choisir un applique la
+substitution avec le toast What-If instantané —
+`Masse : +8,3 kg · Taux EC3 : 124,8 % → 68,4 %` — et un `Annuler (⌘Z)` de 5 secondes.
+
+<DocMedia
+  id="cad-optimizer-pareto"
+  type="screenshot"
+/>
+
+## Pour aller plus loin
+
+- Les limites de flèche derrière les badges ELS : [Résultats et coupe de section](/fr/guides/results-and-section-cut/).
+- Les formules derrière chaque clause : [Référence des formules Eurocode](/fr/reference/eurocode-formulas/).

@@ -1,0 +1,88 @@
+---
+title: Premier portique 3D en 5 minutes
+description: Parcours complet pour débutants — ouvrir RDM Studio, charger le modèle rapide portique, lancer le solveur, lire les taux EC3 et exporter la note A4. Aucune expérience préalable en éléments finis requise.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Ce tutoriel vous mène d'un onglet vide à un **portique résolu, vérifié EC3 et livré
+avec sa note de calcul A4 prête à signer** en environ cinq minutes. Tout s'exécute
+localement : le solveur Rust compilé en WebAssembly tourne dans votre onglet, et
+aucune donnée du projet ne quitte votre machine.
+
+<DocMedia
+  id="getting-started-workspace"
+  type="screenshot"
+/>
+
+## Étape 1 — Ouvrir l'atelier et charger un modèle
+
+Ouvrez l'atelier sur `rdm-studio-app.vercel.app`. L'application est une PWA : le
+premier chargement met en cache le solveur, les catalogues EN 10365 / EN 10210 /
+EN 10056 et les polices d'impression, de sorte que tous les démarrages suivants
+fonctionnent hors-ligne. Depuis la galerie (icône dans l'en-tête 48 px) ou le bouton
+du hero, choisissez le modèle **Portique 18 m**. Le modèle s'ouvre avec deux poteaux
+HEA 200, une traverse IPE 300, un appui encastré-articulé et un cas de charge
+gravitaire déjà rattaché à une combinaison EN 1990.
+
+Pour partir d'une toile vierge, ignorez la galerie et dessinez avec l'outil
+`Créer une poutre` : cliquez deux points de la grille (l'accrochage magnétique tire
+vers la grille 50 mm par défaut), puis choisissez une section du catalogue IPE dans
+l'inspecteur.
+
+## Étape 2 — Inspecter la géométrie et les sections
+
+À l'étape **Géométrie**, l'inspecteur de gauche liste chaque barreau avec son profil,
+sa longueur et sa masse. Cliquez sur la traverse et passez-la en `IPE 330` pour sentir
+le recalcul instantané : la masse du modèle, le badge de taux EC3 et la silhouette 3D
+se mettent à jour sans rechargement. Les lignes de propriétés utilisent des chiffres
+tabulaires JetBrains Mono : les valeurs restent alignées pendant la comparaison des
+candidats.
+
+## Étape 3 — Vérifier appuis et charges
+
+Passez aux étapes **Liaisons** et **Charges**. Le modèle d'ouverture embarque un pied
+poteau articulé et un encastré (avec l'anti-roulis — tout portique suivant X verrouille
+`Rx` sur au moins un appui). Le cas de charge est uniforme gravitaire
+`{ x: 0, y: 0, z: -1 }` sur la traverse, agrégé dans la combinaison `1,35·G + 1,50·Q`
+selon l'EN 1990 6.10. Ouvrez le sélecteur de combinaisons pour lire la recette ; le
+passage en `6.10a/b` repondère les actions avec les ψ recommandés.
+
+## Étape 4 — Lancer le solveur et lire les résultats
+
+Appuyez sur **Calculer**. La factorisation Cholesky LDLᵀ résout le système 6 DDL par
+nœud en moins de 20 ms pour cette taille de modèle, et l'étape **Calcul** rend la
+déformée avec le spectre thermique 5 niveaux, les diagrammes `My / Vz / N` en uPlot et
+les taux de vérification EC3 par barreau. Balayez le plan de coupe de `0` à `1,00 L`
+pour voir la coupe 2D Von Mises synchronisée à chaque position.
+
+<DocMedia
+  id="results-deformed-3d"
+  type="screenshot"
+/>
+
+## Étape 5 — Exporter la note de calcul
+
+À l'étape **Rapport**, la note s'assemble : couverture avec branding du bureau
+(édition Pro), tableau des réactions, synthèse des vérifications Eurocode, contrôles
+de flèche contre `L/250` et `L/300`, et empreinte SHA-256 du modèle exact qui a été
+résolu. Générez le PDF A4 vectoriel (rendeur Takumi à polices embarquées) ou le
+`.docx` structuré, ou copiez n'importe quel tableau en TSV pour un tableur.
+
+## Ce que vous avez appris
+
+- Le flux en 5 étapes porte un modèle de la géométrie jusqu'à la note prête à signer.
+- Les modèles d'ouverture s'ouvrent entièrement chargés — appuis, charges et
+  combinaisons inclus.
+- Le solveur tourne localement en millisecondes ; le spectre thermique et les
+  diagrammes uPlot rendent les résultats lisibles d'un coup d'œil.
+- Chaque chiffre de la note remonte à une clause normative via CalcTrace.
+
+## Pour aller plus loin
+
+- Modéliser des relâchements réels : [Appuis et relâchements](/fr/guides/supports-and-releases/).
+- Construire des combinaisons réglementaires : [Charges et combinaisons](/fr/guides/loads-and-combinations/).
+- Approfondir la vérification EC3 et l'optimiseur :
+  [Vérification EC3 et optimiseur](/fr/guides/ec3-check-and-optimizer/).

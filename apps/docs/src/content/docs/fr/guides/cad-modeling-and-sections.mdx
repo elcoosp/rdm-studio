@@ -1,0 +1,77 @@
+---
+title: CAO 3D et sections personnalisées
+description: Dessiner et modifier des modèles 3D avec l'accrochage magnétique, importer des filaires DXF/STEP/IGES et définir des sections PRS/RHS/CHS personnalisées. Tous les outils CAO de l'éditeur 3D RDM Studio avec leurs raccourcis.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+L'atelier embarque une vraie CAO 3D, pas un constructeur de modèle par formulaire. Ce
+guide couvre les outils de dessin, le système d'accrochage magnétique, la chaîne
+d'import et l'éditeur de sections personnalisées.
+
+<DocMedia
+  id="cad-modeling-snap"
+  type="screenshot"
+/>
+
+## Outils de dessin et de modification
+
+La barre à outils CAO (bord gauche de la fenêtre 3D) expose les outils de barreaux :
+poutres rectilignes, grilles rectangulaires, duplication (`Ctrl+D`), subdivision
+(clic droit sur un barreau → `Subdiviser en 4 tronçons`) et fusion de nœuds (glisser
+un nœud sur un autre, ou clic droit → `Fusionner les nœuds`). Chaque action passe par
+la pile d'annulation (`⌘Z`), y compris les actions destructives comme
+`Tout supprimer`, qui utilise un bouton à maintien confirmé plutôt qu'un simple clic
+fragile.
+
+| Outil | Action | Raccourci / entrée |
+| --- | --- | --- |
+| Poutre | Dessiner un barreau entre deux points accrochés | `B` ou barre à outils |
+| Dupliquer | Copier la sélection avec un décalage | `Ctrl+D` |
+| Subdiviser | Couper un barreau en n tronçons | clic droit → Subdiviser |
+| Fusionner | Fusionner les nœuds confondus (tolérance 1 mm) | glisser ou clic droit |
+| Articuler | Insérer une rotule interne sur une extrémité | clic droit → Articuler N1/N2 |
+| Encastrer | Fixer les 6 DDL d'un nœud | clic droit → Encastrer le nœud |
+
+## Accrochage magnétique et réticules
+
+Le système d'accrochage projette un réticule 3D au curseur : un **carré cobalt** sur
+les nœuds existants, un **triangle cyan** sur les milieux de barreaux et une croix
+ardoise sur les intersections de la grille métrique. Le pas de grille bascule entre
+10 / 50 / 100 mm dans la barre d'état, et `Shift` projette un guide orthogonal en
+pointillés depuis le dernier point. Sur écran tactile, chaque accrochage déclenche une
+vibration haptique de 8 ms pour sentir le magnétisme sans regarder.
+
+## Import DXF / STEP / IGES
+
+Déposez un fichier `.dxf`, `.step` ou `.igs` n'importe où sur la fenêtre 3D.
+L'importateur conserve les entités ligne et arc comme candidats filaires, fusionne
+les extrémités dans la tolérance et propose les arêtes obtenues comme fibre neutre des
+barreaux — vous affectez ensuite les sections par sélection. L'import est local : le
+fichier est analysé dans le bac à sable WASM et n'est jamais téléversé.
+
+## Sections PRS / RHS / CHS personnalisées
+
+Quand les catalogues EN 10365 / EN 10210 / EN 10056 ne suffisent pas, ouvrez l'éditeur
+de sections et définissez un profil personnalisé. Pour les sections creuses, les
+propriétés géométriques se calculent des dimensions enveloppes et de l'épaisseur :
+
+```text
+RHS h×b×t  (style EN 10210, rayon d'angle r = t)
+A   = 2·(h + b − 2t)·t
+Iy  ≈ [b·h³ − (b − 2t)(h − 2t)³] / 12
+Wel = Iy / (h/2)
+Wpl = [b·h² − (b − 2t)(h − 2t)²] / (4h)
+```
+
+L'éditeur affiche A, Iy/iz, Wel/Wel, Wpl/Wpl, la constante de torsion IT et la
+constante de gauchissement IW, et signale la classe EN 1993-1-1 de la section pour
+l'acier saisi — l'alerte de classe 4 apparaît au moment du dessin, pas à l'étape de
+vérification.
+
+## Pour aller plus loin
+
+- Soutenir le modèle que vous venez de dessiner : [Appuis et relâchements](/fr/guides/supports-and-releases/).
+- Le charger : [Charges et combinaisons](/fr/guides/loads-and-combinations/).

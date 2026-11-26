@@ -1,0 +1,88 @@
+---
+title: Raccourcis clavier & formats de fichiers
+description: La carte complète des raccourcis (palette ⌘K, touches CAO, presets de vue), le système d'unités et le schéma JSON canonique .rdm avec ses garanties aller-retour.
+sidebar:
+  order: 3
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+<DocMedia
+  id="reference-command-palette"
+  type="screenshot"
+/>
+
+## Palette de commandes ⌘K
+
+`⌘K` (Windows/Linux : `Ctrl+K`) ouvre la palette : tapez pour filtrer projets, étapes,
+vues et actions — lancez le solveur, basculez les calques, changez FR/EN, ouvrez les
+réglages ou la fenêtre de validation sans toucher la souris. `Esc` ferme ; `Enter`
+exécute l'élément sélectionné.
+
+## Raccourcis par surface
+
+| Contexte | Touche | Action |
+| --- | --- | --- |
+| Global | `⌘K` / `Ctrl+K` | Palette de commandes |
+| Global | `⌘Z` | Annuler (substitutions de l'optimiseur comprises) |
+| Global | `?` | Visite d'accueil (9 étapes illustrées) |
+| Vue 3D | `F` | Cadrer l'étendue (sur tout le modèle) |
+| Vue 3D | `I` | Preset isométrique |
+| Vue 3D | `1` / `2` / `3` | Presets Dessus XY / Face XZ / Côté YZ |
+| Vue 3D | `Espace` | Lecture/pause de l'animation modale |
+| CAO | `B` | Outil poutre |
+| CAO | `Shift` (maintenu) | Guide orthogonal des axes |
+| CAO | `Alt` (maintenu) | Indices clavier `[X] [Y] [Z]` de blocage d'axes |
+| CAO | `Ctrl+D` | Dupliquer la sélection |
+| Étapes | `⌘S` | Enregistrer le projet (IndexedDB, local) |
+
+## Unités et formatage
+
+La couche modèle est en SI strict (`m`, `N`, `Pa`, `rad`, `kg/m³`). La couche
+d'affichage convertit pour la lisibilité et formate selon les règles fr-FR : virgule
+décimale, espace insécable avant les unités (`235 MPa`, `4,82 mm`), et
+`font-variant-numeric: tabular-nums` pour que les colonnes de nombres s'alignent
+chiffre par chiffre. La locale EN conserve les unités SI avec la même discipline
+tabulaire.
+
+## Le format canonique .rdm
+
+`.rdm` est le format de sauvegarde canonique — un document JSON à schéma fixe :
+
+```json
+{
+  "schema": "rdm/project@1",
+  "meta": { "name": "Portique 18 m", "created": "2026-11-26T09:00:00Z" },
+  "units": { "length": "m", "force": "N", "stress": "Pa" },
+  "nodes": [ { "id": 1, "x": 0.0, "y": 0.0, "z": 0.0 } ],
+  "beams": [ { "id": 1, "n1": 1, "n2": 2, "section": "IPE 300", "material": "S235JR" } ],
+  "sections": [ { "catalog": "en10365", "designation": "IPE 300" } ],
+  "materials": [ { "catalog": "en10025", "designation": "S235JR" } ],
+  "loads": [ { "kind": "uniform", "beam": 1, "q": [0, 0, -15000] } ],
+  "supports": [ { "node": 1, "locked_dofs": [true, true, true, true, false, false] } ],
+  "settings": { "plane_frame_2d": false, "pdelta": true, "annexe": "FR" }
+}
+```
+
+Les objets de charge sont des unions étiquetées (`kind: "point" | "uniform" |
+"trapezoid" | "moment" | "mass" | "acc_field"`) — notez que la frontière WASM les
+sérialise via des chaînes JSON, jamais en valeurs `serde_wasm_bindgen` directes, pour
+que l'étiquette survive au pont.
+
+## Garanties aller-retour
+
+- `export .rdm → import .rdm` est exact : l'importateur revalide chaque champ avec
+  Valibot contre le même schéma que l'exportateur a écrit.
+- L'URL de partage `?p=` embarque le modèle compressé lz-string ; sa lecture exécute la
+  même validation Valibot, donc un lien tronqué ou altéré est rejeté plutôt que réparé
+  en silence.
+- L'empreinte SHA-256 de la note de calcul est calculée sur la sérialisation canonique
+  `.rdm` — deux modèles de même empreinte ont résolu la même physique.
+
+## Politique de versionnage
+
+Le schéma porte `rdm/project@N` ; les lecteurs acceptent `N` et `N-1`, et un schéma
+inconnu s'arrête avec un diagnostic explicite au lieu de deviner. Les catalogues de
+profils et de matériaux sont référencés par les paires `{catalog, designation}`, de
+sorte qu'un fichier n'embarque jamais des propriétés susceptibles de dériver des
+normes EN qu'il cite.

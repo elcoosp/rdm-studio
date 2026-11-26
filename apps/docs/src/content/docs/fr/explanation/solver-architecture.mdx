@@ -1,0 +1,108 @@
+---
+title: Architecture du solveur
+description: Pourquoi le moteur RDM Studio est construit ainsi — la matrice de rigidité Timoshenko 12 DDL, la factorisation Cholesky LDLᵀ, la raideur géométrique P-Δ, le solveur aux valeurs propres Arnoldi/Lanczos et l'engagement 100 % local-first Rust/WASM.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Cette page explique la conception du moteur — le modèle physique, les choix
+numériques et la raison pour laquelle tout tourne dans votre navigateur. C'est la page
+à lire avant de faire confiance aux chiffres ou de contester un résultat.
+
+<DocMedia
+  id="solver-architecture-wasm"
+  type="screenshot"
+/>
+
+## L'élément : poutres 3D Timoshenko, 12 DDL
+
+Chaque barreau est un élément de poutre 3D avec **6 DDL par nœud** —
+`(Ux, Uy, Uz, Rx, Ry, Rz)` dans le repère global Z-up, soit 12 DDL par élément. La
+matrice de rigidité est la rigidité Timoshenko standard : flexion Euler–Bernoulli
+augmentée des termes de déformation de cisaillement `Φ = 12EI/(kGA·L²)`. Quand la
+déformation de cisaillement est désactivée (un réglage par calcul), la matrice dégénère
+exactement en forme Euler–Bernoulli, ce que les benchmarks `R01`–`R06` épinent.
+L'ordonnancement des DDL est lui-même un benchmark (`R25`) : une indexation cohérente
+est ce qui rend l'assemblage déterministe.
+
+## Le calcul : Cholesky creuse LDLᵀ
+
+L'assemblage produit un système symétrique défini positif (après appuis et ressorts)
+`[Ke]·u = F`. Le solveur le factorise en **Cholesky creuse LDLᵀ** (crate `faer`,
+compilée en WASM avec `default-features = false` pour que rayon/rand ne cassent pas la
+cible `wasm32-unknown-unknown`). Pourquoi Cholesky plutôt qu'un solveur itératif :
+
+- les systèmes SPD issus de l'assemblage structural sont exactement le cas de
+  Cholesky — aucune décision de pivot à justifier en contexte métrologique ;
+- une factorisation se réutilise sur tous les cas de charge : une factorisation, N
+  calculs de combinaisons. Avec 6 combinaisons, c'est un gain de ×6 sur les montages
+  itératifs par cas ;
+- déterministe : la même matrice produit les mêmes facteurs bit par bit sur chaque
+  plateforme — ce dont dépend l'empreinte SHA-256 du modèle.
+
+Pour les tailles phares (des centaines de barreaux), toute la chaîne — assemblage,
+factorisation, calculs de toutes les combinaisons, récupération des efforts — se
+termine en **moins de 20 ms** dans un onglet d'un ordinateur portable, ce que la page
+d'accueil annonce et que la trace de performance montre.
+
+## P-Δ : la raideur géométrique
+
+Les effets du second ordre entrent comme raideur géométrique `[Kg(N)]` construite à
+partir des efforts normaux d'un calcul précédent : le système devient
+`[Ke + Kg(N)]·u = F`, résolu à nouveau jusqu'à convergence de la distribution
+d'efforts. Le calcul de flambement linéaire global résout le problème aux valeurs
+propres généralisé `[Ke]·φ = λcr·[Kg]`, dont λcr double comme facteur de sensibilité
+`αcr` de l'EN 1993-1-1 §5.2.1. La théorie est ancrée par les benchmarks : `R06`
+(moment d'extrémité de la poutre bi-encastrée) et le panneau de flambement maintiennent
+le chemin P-Δ honnête.
+
+## Problèmes aux valeurs propres : Arnoldi / Lanczos
+
+L'analyse modale et le flambement exigent les paires propres extrémales de grandes
+matrices creuses. Le solveur exécute des itérations Arnoldi/Lanczos sur l'opérateur
+décalé plutôt que de former ou factoriser des décompositions denses :
+
+- Lanczos sur la matrice SPD `[Ke]` (avec la masse `[M]` pour les fréquences) rend les
+  premières fréquences `f₁…f₆` avec les masses modales effectives ;
+- Arnoldi décalé sur `[Ke]⁻¹·[Kg]` rend le plus petit λcr — le mode de flambement
+  physiquement intéressant — sans inverser quoi que ce soit explicitement.
+
+La combinaison modale CQC/SRSS de l'EN 1998-1 s'exécute ensuite sur les modes extraits ;
+les coefficients de corrélation suivent la formulation de l'annexe.
+
+## Zéro panique, erreurs typées
+
+Le cœur Rust ne panique jamais dans les chemins du solveur : aucun `.unwrap()`,
+`.expect()`, `todo!()` ni `panic!()` sous `crates/rdm-solver`, `crates/rdm-cad` ou
+`bindings/rdm-wasm`. Tout se propage en erreurs de domaine `thiserror` typées,
+présentées par l'interface sous forme de carte pédagogique (avec le correctif en un clic
+`Activer Plan 2D & recalculer` pour le mécanisme classique du portique plan). Une
+matrice singulière est un *rapport*, pas un crash — le modèle non déformé reste visible
+dans la scène 3D pendant que vous corrigez l'appui.
+
+## Local-first par architecture, pas par promesse
+
+Tout ce qui précède s'exécute dans l'onglet : le cœur Rust est un module WASM, les
+catalogues sont des JSON récupérés une fois et mis en cache par le service worker, les
+projets vivent dans IndexedDB, et le rendeur PDF embarque ses propres polices. Il n'y
+a aucun backend à qui faire confiance :
+
+- aucune télémétrie, aucun traceur, aucune requête tierce — vérifiable dans l'onglet
+  réseau ;
+- le lien de partage `?p=` embarque le modèle compressé lui-même, partager ne téléverse
+  donc jamais rien ;
+- le mode PWA hors-ligne calcule à l'identique sans connectivité.
+
+L'engagement de confidentialité n'est pas une promesse de comportement — c'est une
+conséquence de l'architecture : **il n'existe aucun composant serveur auquel envoyer
+des données**.
+
+## Où vivent les normes
+
+Toutes les dimensions de profils (EN 10365, EN 10210, EN 10056) et les propriétés de
+matériaux (EN 1993-1-1, EN 1993-1-4, EN 1999-1-1) vivent en données JSON sous
+`crates/rdm-eurocode/data/` — rien n'est codé en dur dans la logique du solveur. La
+référence des formules ([EN 1990 → EN 1999](/fr/reference/eurocode-formulas/)) fait
+correspondre chaque formule implémentée à sa clause et à son benchmark de certification.

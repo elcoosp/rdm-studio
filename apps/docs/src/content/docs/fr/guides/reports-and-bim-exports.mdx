@@ -1,0 +1,71 @@
+---
+title: Notes de calcul et exports BIM
+description: Produire la note de calcul PDF A4 vectorielle, le .docx structuré, l'empreinte SHA-256 et les liens de partage ?p= — puis exporter IFC4, SAF, OpenSees TCL, glTF, .rdm et CSV pour les outils aval.
+sidebar:
+  order: 7
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+L'étape Rapport transforme le modèle en livrable. Tout se génère localement — le
+rendeur PDF, le rédacteur .docx et chaque exportateur BIM tournent dans l'onglet.
+
+<DocMedia
+  id="report-pdf-a4"
+  type="screenshot"
+/>
+
+## La note PDF A4 vectorielle
+
+La note utilise le rendeur vectoriel Takumi (pas une capture raster) : texte
+sélectionnable, polices Inter et JetBrains Mono embarquées, et tableaux à filets fins
+qui s'impriment proprement sur n'importe quelle imprimante. La couverture porte les
+champs de branding du bureau de l'édition Pro — raison sociale, adresse, logo —
+suivis de la synthèse du modèle, du tableau des combinaisons, des réactions, du
+tableau de vérification EC3 et des contrôles de flèche. Les sauts de page respectent
+`break-inside: avoid` sur les tableaux et les figures de section.
+
+## Empreinte SHA-256 et partage ?p=
+
+Chaque note embarque l'empreinte SHA-256 de l'état sérialisé exact du modèle qui a été
+résolu — le contresignateur peut la recalculer depuis le `.rdm` attaché et vérifier la
+correspondance. Le bouton de partage compresse le modèle dans l'URL elle-même
+(`?p=…`, lz-string, revalidé par Valibot à la relecture) : le lien contient tout le
+projet et ne transite par aucun serveur.
+
+<DocMedia
+  id="report-exports-bim"
+  type="screenshot"
+/>
+
+## .docx structuré
+
+L'export Word est structuré, pas un déversoir de texte : niveaux de titres, vrais
+tableaux et emplacements de figures survivent à l'édition aller-retour pour que la
+note puisse être prolongée dans le gabarit d'un bureau d'études.
+
+## La matrice d'exports
+
+| Export | Cible | Contenu |
+| --- | --- | --- |
+| `.rdm` | JSON canonique | nœuds, barreaux, sections, charges, réglages — réimportable à l'identique |
+| IFC4 | BIM | entités IfcBeam/IfcColumn avec géométrie de profils |
+| SAF | analyse de structures EN 1993-1-1 | barreaux, sections, matériaux, cas de charge |
+| OpenSees TCL | workflows de recherche | nœuds, éléments, commandes de sections élastiques |
+| glTF | visionneuse 3D web | géométrie maillée avec couleurs par barreau |
+| CSV | tableurs | réactions, vérifications, flèches |
+
+L'export HTML 3D autonome inline `three.module.js` (three@0.187 livre
+`build/three.module.js` — pas de `three.min.js`) : un relecteur peut faire tourner le
+modèle déformé depuis un unique fichier envoyé par e-mail, hors-ligne.
+
+## Copier pour Excel (TSV)
+
+Chaque tableau de la note expose `Copier pour Excel` : valeurs tabulées à virgule
+française et unités à espace insécable (`235 MPa`, `4,82 mm`), à coller directement
+dans un tableur sans reformatage.
+
+## Pour aller plus loin
+
+- Le contenu des tableaux : [Résultats et coupe de section](/fr/guides/results-and-section-cut/).
+- Vérifier avant de signer : [Vérification EC3 et optimiseur](/fr/guides/ec3-check-and-optimizer/).

@@ -1,0 +1,50 @@
+---
+title: Documentation RDM Studio
+description: Documentation officielle de RDM Studio — l'atelier de calcul de structures 3D aux Eurocodes local-first. Tutoriels, guides pratiques, référence normative et architecture du solveur, en français et en anglais.
+template: splash
+---
+
+import { DiataxisGrid } from '@elcoosp/docs-toolkit/components';
+import DocMedia from '../../../components/DocMedia.astro';
+
+RDM Studio est un **atelier local-first de calcul de structures 3D aux Eurocodes** : un
+solveur de poutres Timoshenko en Rust compilé en WebAssembly, une CAO 3D interactive
+et des vérifications normatives de l'EN 1990 à l'EN 1999 — tout s'exécute dans votre
+onglet avec **zéro octet envoyé à un serveur**. Cette documentation suit le cadre
+[Diátaxis](https://diataxis.fr/) : chaque page a un rôle unique et clair.
+
+<DiataxisGrid />
+
+<DocMedia
+  id="getting-started-workspace"
+  type="screenshot"
+/>
+
+## Par où commencer
+
+- **Nouveau avec les logiciels de calcul de structures ?** Suivez [Premier portique 3D en 5 minutes](/fr/tutorials/getting-started/) — de l'ouverture de l'atelier à un portique résolu et vérifié EC3, sans toucher aux fonctions avancées.
+- **Une vérification précise à livrer ?** Les [guides pratiques](/fr/guides/loads-and-combinations/) couvrent une tâche par page : appuis RDM 7, combinaisons EN 1990, coupes de section, optimisation EC3, champs d'accélération navals, notes de calcul et exports BIM.
+- **Une formule ou un benchmark à retrouver ?** La [référence](/fr/reference/eurocode-formulas/) liste chaque formule normative implémentée de l'EN 1990 à l'EN 1999 et les 41 benchmarks analytiques `R01–R30` / `E01–E11` qui certifient le solveur à chaque version.
+- **Pourquoi le moteur est-il construit ainsi ?** [Architecture du solveur](/fr/explanation/solver-architecture/) explique la matrice de rigidité 12 DDL, la factorisation Cholesky LDLᵀ, la raideur géométrique P-Δ et l'engagement 100 % local-first.
+
+## L'atelier en 5 étapes
+
+L'atelier s'organise autour d'un flux de travail unique en cinq étapes :
+**Géométrie → Liaisons → Charges → Calcul → Rapport**. Chaque guide renvoie à l'étape
+dont il relève, et la palette `⌘K` permet de rejoindre n'importe quelle étape depuis
+n'importe où.
+
+<DocMedia
+  id="getting-started-solve"
+  type="gif"
+/>
+
+## Éditions et licences
+
+L'édition **Découverte** est gratuite pour toujours : solveur complet, vérifications
+EC3 et note A4. Le **Pass Projet 48 h** (19 € HT) débloque toutes les fonctions Pro
+pendant 48 heures — un week-end de travail complet sans compte. **Bureau d'Études
+Pro** (49 € HT/mois ou clé perpétuelle) ajoute le branding du bureau d'études, les
+catalogues multi-matériaux étendus et les exports BIM IFC4/SAF. **Équipe / Intranet**
+couvre les licences flottantes et le déploiement interne. L'activation est hors-ligne :
+la licence est vérifiée localement et ne téléphone jamais.

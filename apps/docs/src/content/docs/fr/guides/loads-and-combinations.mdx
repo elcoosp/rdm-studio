@@ -1,0 +1,93 @@
+---
+title: Charges et combinaisons
+description: Construire les combinaisons EN 1990 (6.10, 6.10a/b) à partir des générateurs EN 1991 vent vb, neige sk, thermique ΔT, des champs d'accélération navals et des charges mobiles LM1 — avec le tableau complet des générateurs et les recettes réglementaires.
+sidebar:
+  order: 3
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Les charges se génèrent à partir de paramètres normatifs, pas à la main. Ce guide
+couvre chaque générateur, les champs d'accélération et les deux recettes de
+combinaisons de l'EN 1990.
+
+<DocMedia
+  id="loads-en1990"
+  type="screenshot"
+/>
+
+## Familles d'actions
+
+L'étape **Charges** organise les actions selon les familles de l'EN 1990. Chaque action
+porte son jeu de facteurs γG/γQ et les valeurs ψ exigées par les recettes de
+combinaisons.
+
+| Famille | Source | Entrées du générateur |
+| --- | --- | --- |
+| G — permanent | poids propre + superstructures | densités du catalogue de matériaux |
+| Q — exploitation | EN 1991-1-1 catégorie | catégorie A…K, qk, Qk |
+| W — vent | EN 1991-1-4 | vb, c/cd, classe de terrain, zones cpe |
+| S — neige | EN 1991-1-3 | sk, formes μ1/μ2, altitude |
+| T — thermique | EN 1991-1-5 | ΔT uniforme, gradient ΔT |
+| Acc — accélération | naval / levage / sismique | (ax, ay, az) × g |
+| LM1 — mobile | EN 1991-2 | essieux TS ×2 + UDL voies |
+
+## Vent : de vb à la pression
+
+Le générateur de vent déduit la pression de pointe de la vitesse de base :
+
+```text
+vb   = vb,0 · cdir · cseason           (EN 1991-1-4 §4.2)
+qp   = (1 + 7·Iv) · ½ · ρ · vm²        (pression de pointe, §4.5)
+we   = qp · cpe                        (pression nette sur une surface, §5.2)
+```
+
+Saisissez `vb,0` de la zone française, la classe de terrain (0…IV) et les coefficients
+cpe par face ; le générateur répartit vent, dépression et soulèvement sur les barreaux
+visés.
+
+## Neige et thermique
+
+Le générateur de neige applique les coefficients de forme μ1/μ2 (monopente, à deux
+pentes, noues) à la valeur caractéristique `sk` du site. Le générateur thermique crée
+des cas de dilatation uniforme (`ΔT` sur tous les barreaux) et de gradient (chauffage de
+tablier) — les benchmarks `R26`/`R27` certifient les états autostatiques obtenus contre
+les solutions analytiques.
+
+## Champs d'accélération (ax, ay, az) × g
+
+Les environnements navals, de levage et adjacents au sismique entrent comme **inertie
+volumique** : chaque composante est une fraction de g appliquée à toute la structure et
+aux masses attachées. Les composantes deviennent des actions indépendantes
+(`Acc-x`, `Acc-y`, `Acc-z`) avec leurs deux gisements générés, de sorte que
+`ELU = G + 1,3·az + 0,4·ay` et sa jumelle inversée apparaissent automatiquement. Le
+tutoriel du berceau naval en donne un exemple complet.
+
+## Charges mobiles LM1
+
+Le générateur EN 1991-2 LM1 place le système de boggies (deux essieux de 300 kN par
+voie) et la charge uniforme de 9 kN/m² par voie, avec nombre de voies et excentricité
+réglables. Les positions des boggies étant pilotées, le solveur balaie le convoi le
+long de la travée et produit l'enveloppe — la position qui maximise `My` et celle qui
+maximise `Vz` sont conservées pour la vérification.
+
+## Les deux recettes EN 1990
+
+Le tableau des combinaisons calcule les deux recettes réglementaires :
+
+```text
+6.10    : Σ γG,j·Gk,j + γQ,1·Qk,1 + Σ γQ,i·ψ0,i·Qk,i
+6.10a   : Σ γG,j·Gk,j + γ0,1·γQ,1·ψ0,1·Qk,1 + Σ γ0,i·γQ,i·ψ0,i·Qk,i
+6.10b   : ξ·Σ γG,j·Gk,j + γQ,1·Qk,1 + Σ γQ,i·ψ0,i·Qk,i
+```
+
+Les valeurs de l'Annexe Nationale française (γG = 1,35, γQ = 1,50, tableaux ψ0,
+ξ = 0,85) sont pré-câblées et certifiées par les benchmarks `E05`–`E07`. Basculez le
+sélecteur de recette pour comparer 6.10 à 6.10a/b côte à côte — l'enveloppe
+dimensionnante est celle qu'utilise l'étape de vérification.
+
+## Pour aller plus loin
+
+- Les bases des appuis : [Appuis et relâchements](/fr/guides/supports-and-releases/).
+- Lire l'enveloppe : [Résultats et coupe de section](/fr/guides/results-and-section-cut/).
+- Spectres sismiques : [Analyses avancées](/fr/guides/advanced-analyses/).

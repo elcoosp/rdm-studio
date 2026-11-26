@@ -1,0 +1,105 @@
+---
+title: Berceau de transport naval & levage sous accélérations (ax, ay, az) × g
+description: Modéliser un berceau de levage et de transport pour un colis de 12 t sous champs d'accélération combinés, vérifier les transverses en S355 puis en aluminium 6082-T6, et exporter la note certifiée. Workflow complet EN 1990 + EN 1993/1999.
+sidebar:
+  order: 2
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Un berceau de transport ou de levage voit la gravité **plus** les accélérations du
+moyen de levage, de la route ou de la mer. Ce tutoriel construit un berceau à deux
+transverses pour un colis de 12 t, applique le champ dynamique
+`(ax, ay, az) × g = (0,4 ; 0,4 ; 1,3) × g` et vérifie les transverses en S355 — puis
+refait la vérification en aluminium 6082-T6 selon l'EN 1999.
+
+<DocMedia
+  id="naval-cradle-model"
+  type="screenshot"
+/>
+
+## Étape 1 — Dessiner le squelette du berceau
+
+Partez d'un projet vierge. Le berceau est deux transverses IPE 200 parallèles
+(`L = 2,40 m`) posées sur des longerons. Dessinez avec l'outil poutre sur la grille
+50 mm, ou importez le filaire depuis un DXF (voir le guide CAO). Réglez le panneau
+d'unités en mètres, conservez le repère Z-up, et dupliquez (`Ctrl+D`) la première
+transverse avec un espacement de 2,00 m.
+
+```text
+N1 (0, 0, 0)      N2 (2.4, 0, 0)   — transverse A
+N5 (0, 2.0, 0)    N6 (2.4, 2.0, 0) — transverse B
+B1..B2 transverses IPE 200 · S355J2
+```
+
+## Étape 2 — Appliquer la masse du colis et le champ d'accélération
+
+Plutôt que de forcer des charges statiques équivalentes, rattachez le colis comme une
+**masse** sur ses quatre points d'appui (1 t chacun, via l'outil masse) et laissez le
+solveur intégrer le champ d'accélération. À l'étape **Charges**, ouvrez
+**Champs d'accélération (g)** et saisissez :
+
+```yaml
+acc_field:
+  ax: 0.4   # traction / freinage (×g)
+  ay: 0.4   # chavirage / roulis (×g)
+  az: 1.3   # amplification dynamique de levage (×g)
+```
+
+Le champ devient un chargement volumique d'inertie sur chaque barreau et chaque masse
+attachée — le poids propre de l'acier du berceau est majoré exactement comme le colis,
+sans charge ponctuelle fictive à maintenir. Chaque composante d'accélération est
+enregistrée comme une action autonome, pour que les combinaisons EN 1990 les pondèrent
+indépendamment.
+
+## Étape 3 — Combiner selon l'EN 1990
+
+Ouvrez le tableau des combinaisons. Les générateurs créent les combinaisons
+fondamentales :
+
+```text
+ELU-1 : G + 1,3·g_z + 0,4·g_y   (levage + roulis)
+ELU-2 : G + 1,3·g_z − 0,4·g_y   (levage + roulis inversé)
+ELS-c : G + 1,0·g_z
+```
+
+L'inversion de signe compte : une accélération de chavirage qui stabilise le colis
+dans une combinaison le déstabilise dans sa jumelle. RDM Studio génère les deux
+gisements automatiquement, et le passage en `6.10a/b` repondère avec les ψ₀ quand vous
+changez le sélecteur de recette.
+
+## Étape 4 — Vérifier les transverses
+
+Lancez le calcul. Le panneau de vérification montre, par barreau et par combinaison, le
+taux de flexion `MEd / Mc,Rd` (EN 1993-1-1 §6.2.5), le taux de cisaillement contre
+`Vpl,Rd` (§6.2.6) et — pour le transverse S355 — la vérification de classe
+`c/t ≤ 33ε` sur la semelle. Pour l'exemple traité, l'ELU dimensionnant donne
+`MEd = 45,9 kN·m` contre `Mc,Rd = 78,3 kN·m` → η = 0,59.
+
+<DocMedia
+  id="ec3-calctrace"
+  type="screenshot"
+/>
+
+## Étape 5 — Basculer en aluminium 6082-T6 et comparer
+
+Dupliquez le projet, changez le matériau des transverses pour **Aluminium 6082-T6**
+(EN 1999-1-1 : `fo = 250 MPa`, `fu = 290 MPa`). Le solveur relance la chaîne EN 1999 —
+y compris les facteurs de zones soudées si vous déclarez des soudures — et le tableau
+comparatif montre le gain de masse face au projet acier. Exportez la note PDF avec les
+deux matériaux côte à côte ; l'empreinte SHA-256 lie la note à l'état exact du modèle.
+
+## Ce que vous avez appris
+
+- Les champs d'accélération convertissent un environnement de transport dynamique en
+  actions EN 1990 sans charges fictives.
+- Les deux gisements de chaque accélération entrent automatiquement dans les
+  combinaisons.
+- La même géométrie se vérifie en acier EN 1993 comme en aluminium EN 1999.
+
+## Pour aller plus loin
+
+- [Charges et combinaisons](/fr/guides/loads-and-combinations/) — tous les générateurs EN 1991.
+- [Analyses avancées](/fr/guides/advanced-analyses/) — fréquences modales et spectres
+  sismiques pour la dynamique de transport.
+- [Notes de calcul et exports BIM](/fr/guides/reports-and-bim-exports/) — livrer la note certifiée.

@@ -1,0 +1,68 @@
+---
+title: Appuis et relâchements
+description: Soutenir les modèles avec la bibliothèque RDM 7 à six DDL, les ressorts élastiques kx…krz et les relâchements d'extrémité N1/N2 — avec les diagnostics de mécanisme qui expliquent tout modèle insuffisamment soutenu.
+sidebar:
+  order: 2
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Un appui supprime des degrés de liberté ; un relâchement supprime de la rigidité.
+L'atelier traite les deux comme des objets du modèle à part entière, avec un éditeur
+visuel et des diagnostics au niveau du solveur.
+
+<DocMedia
+  id="supports-rdm7"
+  type="screenshot"
+/>
+
+## La matrice d'appui à 6 DDL
+
+Chaque appui de nœud est une ligne booléenne des six DDL globaux dans l'ordre Z-up :
+`[Ux, Uy, Uz, Rx, Ry, Rz]`. La bibliothèque de presets reprend le vocabulaire
+classique de la RDM 7 :
+
+| Preset | DDL bloqués | Usage typique |
+| --- | --- | --- |
+| Encastrement | `[true, true, true, true, true, true]` | Pied de poteau fixe |
+| Rotule | `[true, true, true, false, false, false]` | Articulation, appui de treillis |
+| Appui simple (2D) | `[true, true, true, true, false, false]` | Appui planaire avec anti-roulis |
+| Glissière | `[false, true, true, true, false, false]` | Guide coulissant suivant X |
+| Appui élastique | ressorts au lieu de blocages | Raideur de sol / appareil d'appui |
+
+L'éditeur montre la ligne booléenne exacte — pour un portique plan dans le plan XZ, les
+DDL hors plan `Uy`, `Rz` et le roulis `Rx` doivent être soutenus à la frontière : c'est
+le motif `[true, true, true, true, false, false]` du preset *appui simple*, et c'est le
+réglage correct du modèle rapide `travees`.
+
+## Ressorts élastiques
+
+Le preset *appui élastique* remplace les booléens par des raideurs
+`kx, ky, kz, krx, kry, krz` (SI : N/m et N·m/rad). Les ressorts entrent dans la
+matrice globale sur la diagonale exactement comme un appui de valeur finie : un appareil
+d'appui partiellement rigide se modélise donc sans second calcul. Valeurs courantes :
+appareil néoprène `kz = 2×10⁸ N/m`, tête de pieu `kx = ky = 5×10⁷ N/m`.
+
+## Relâchements d'extrémité N1/N2
+
+Sélectionnez un barreau et ouvrez **Relâchements** : chaque extrémité (N1 = nœud
+origine, N2 = nœud extrémité) peut relâcher `N, Vy, Vz, T, My, Mz` individuellement.
+Une membrure de treillis se relâche `My + Mz + T` aux deux bouts (axial seul) ; un
+poteau Vierendeel relâche les moments aux deux bouts tandis que les membrures restent
+rigides. Un moment relâché ne transmet rien : c'est pourquoi les relâchements changent
+instantanément le diagramme de moment d'un cadre type R06.
+
+## Diagnostics de mécanisme
+
+Si le solveur détecte un système singulier (mécanisme), il refuse une réponse
+insensée et signale explicitement les DDL non contraints : quels nœuds, quels DDL, et
+si la cause est une liberté hors plan (`Uy`, `Rx`, `Rz` dans un portique plan). La page
+résultats rend ce diagnostic sous forme de carte pédagogique avec un correctif en un
+clic **Activer Plan 2D & recalculer** qui ajoute les appuis planaires manquants et
+relance le solveur — sans le brut de matrice de 12 000 caractères. La section
+dépliable conserve les détails complets pour revue.
+
+## Pour aller plus loin
+
+- Charger le modèle soutenu : [Charges et combinaisons](/fr/guides/loads-and-combinations/).
+- Lire les efforts internes : [Résultats et coupe de section](/fr/guides/results-and-section-cut/).

@@ -1,0 +1,83 @@
+---
+title: Résultats et coupe de section
+description: Lire la déformée 3D, les diagrammes uPlot N/Vy/Vz/T/My/Mz, la coupe 2D Von Mises et les contrôles de flèche ELS L/200…L/300 — tout ce que l'étape Calcul rend après un calcul.
+sidebar:
+  order: 4
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Après **Calculer**, l'étape Calcul transforme la sortie brute du solveur en lecture
+d'ingénierie. Ce guide parcourt chaque surface et la façon de l'interroger.
+
+<DocMedia
+  id="results-deformed-3d"
+  type="screenshot"
+/>
+
+## Déformée 3D
+
+Le maillage déformé se rend avec le spectre thermique 5 niveaux
+(`#1D4ED8 → #06B6D4 → #10B981 → #F59E0B → #DC2626`) où la couleur encode le taux
+d'utilisation η du barreau, pas une température. Le curseur d'amplification exagère
+les déplacements de ×1 à ×50 ; quel que soit le facteur, la légende conserve les
+valeurs réelles en mm. Le fantôme de la forme non déformée se bascule pour comparer
+les deux états. Quand le solveur ne peut pas s'exécuter, les barreaux 3D restent
+visibles dans leur état non déformé — une panne de solveur ne vide jamais la fenêtre.
+
+## Diagrammes d'efforts internes — N, Vy, Vz, T, My, Mz
+
+Six diagrammes uPlot se docks sous la fenêtre 3D. Ils sont synchronisés avec la scène
+3D : un curseur sur le diagramme `My` déplace le plan de coupe cobalt le long du
+barreau, et les lectures suivent au format fr-FR tabulaire (`235 MPa`, espace
+insécable avant l'unité). Les diagrammes sont exacts — échantillonnés aux points
+d'intégration utilisés par le solveur, y compris les extrémités relâchées où le
+diagramme retombe à zéro.
+
+## Coupe de section 2D Von Mises
+
+À la position du curseur, la coupe de section rend la section du barreau en carte de
+chaleur 2D de `σvM / fy` :
+
+```text
+σvM = √(σ_axial² + 3·(τ Vy + τ Vz)² + 3·τ_T²)   normalisée par fy
+```
+
+La récupération des contraintes utilise les propriétés élastiques de la section plus la
+correction plastique de la chaîne EC3 : la carte de chaleur correspond donc au taux que
+la vérification affiche à la même position. Les crans `0 / 0,25 L / 0,50 L / 0,75 L /
+1,00 L` accrochent le curseur aux stations classiques.
+
+<DocMedia
+  id="results-section-cut"
+  type="screenshot"
+/>
+
+## Contrôles de flèche ELS
+
+Le panneau de serviceabilité compare la flèche sous combinaison caractéristique aux
+limites modifiables :
+
+| Limite | Barreaux par défaut | S'applique à |
+| --- | --- | --- |
+| L/200 | couvertures sans finition sensible | wfin totale |
+| L/250 | planchers / poutres courants | wfin |
+| L/300 | revêtements fragiles, plafonds plâtrés | winst |
+| L/500 | ponts roulants, équipements sensibles | winst |
+
+Pour chaque barreau, le tableau liste `winst`, `wfin`, la limite dimensionnante et le
+rapport `w/limite` avec le badge conforme/dépassement. Les limites se modifient par
+barreau : un pont roulant peut exiger L/800 pendant que la toiture voisine garde
+L/250.
+
+## Lire les résultats multi-combinaisons
+
+Le sélecteur de combinaisons bascule toute la lecture entre les cas ELU et ELS ; la
+vue enveloppe garde la pire valeur par barreau sur tous les cas, en nommant la
+combinaison dimensionnante. Chaque tableau propose un bouton `Copier TSV` qui exporte
+des valeurs tabulées à virgule française prêtes pour un tableur.
+
+## Pour aller plus loin
+
+- Transformer les lectures en décisions : [Vérification EC3 et optimiseur](/fr/guides/ec3-check-and-optimizer/).
+- Fréquences et modes de flambement : [Analyses avancées](/fr/guides/advanced-analyses/).

@@ -1,0 +1,91 @@
+---
+title: Benchmarks de validation (41)
+description: Le catalogue complet des 41 benchmarks analytiques R01–R30 et E01–E11 qui certifient le solveur RDM Studio et ses constantes Eurocode à chaque version, avec les solutions analytiques de référence.
+sidebar:
+  order: 2
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Chaque version de RDM Studio rejoue **41 benchmarks analytiques** : 30 cas de
+mécanique des structures (`R01–R30`) et 11 constantes Eurocode (`E01–E11`). Une
+version ne part qu'à **41 / 41**. Chaque benchmark compare la sortie du solveur à la
+solution analytique exacte, pas à une autre simulation.
+
+<DocMedia
+  id="reference-benchmarks-41"
+  type="screenshot"
+/>
+
+## R01–R17 — mécanique élémentaire des barreaux
+
+| ID | Cas | Référence analytique |
+| --- | --- | --- |
+| `R01` | Poutre isostatique, charge ponctuelle à mi-portée | réaction = P/2 |
+| `R02` | Poutre isostatique, charge uniforme | réaction = qL/2 |
+| `R03` | Poutre isostatique, charge uniforme | résultante R = qL |
+| `R04` | Console, charge ponctuelle en tête | δtip = PL³/3EI |
+| `R05` | Console, moment en tête | θtip = ML/EI |
+| `R06` | Poutre bi-encastrée, charge uniforme | Mend = qL²/12 |
+| `R07` | Barre axiale | δ = NL/EA |
+| `R08` | Barre en torsion | θx = TL/GIT |
+| `R09` | Console Timoshenko (cisaillement activé) | δ = PL³/3EI + P/(kGA)·L |
+| `R10` | ΔT thermique uniforme, libre | δ = α·ΔT·L |
+| `R11` | ΔT thermique uniforme, encastré | N = EA·α·ΔT |
+| `R12` | Tassement d'appui 10 mm | réaction = k·δ |
+| `R13` | Charge uniforme partielle sur une demi-travée | R1 de la résultante trapézoïdale |
+| `R14` | Élément tendu seul sous compression | N = 0 (aucune raideur) |
+| `R15` | Portique plan, charge uniforme symétrique | réaction = qL/2 |
+| `R16` | Console à inertie variable | δ avec intégration en inertie moyenne |
+| `R17` | Console, moment en tête | δ = ML²/2EI |
+
+## R18–R30 — structures, invariants et recettes
+
+| ID | Cas | Référence analytique |
+| --- | --- | --- |
+| `R18` | Charge ponctuelle à a/L = 0,25 | réaction A = 3P/4 |
+| `R19` | Charge ponctuelle à mi-portée (maillage indépendant) | réaction = P/2 |
+| `R20` | Poutre continue à deux travées, charge uniforme | réaction centrale = 1,25·qL |
+| `R21` | Linéarité | δ(3q) = 3·δ(q) |
+| `R22` | Chargement symétrique | R1 = R2 |
+| `R23` | Équilibre global | ΣFz = 0 exactement |
+| `R24` | Poutre isostatique uniforme | Mmid = qL²/8 |
+| `R25` | Agencement des DDL | 6 DDL par nœud, ordonnés (Ux, Uy, Uz, Rx, Ry, Rz) |
+| `R26` | Gradient thermique (sup/inf), extrémités fixes | M = EI·α·ΔT/h |
+| `R27` | Gradient thermique, extrémités libres | ΣR = 0 |
+| `R28` | Élément tendu seul sous tension | δ = NL/EA (actif) |
+| `R29` | Barre comprimée seule | δ suit l'état comprimé |
+| `R30` | Superposition 1,35·G + 1,50·Q | égale à la somme pondérée des deux calculs |
+
+## E01–E11 — constantes Eurocode
+
+| ID | Constante | Valeur de référence |
+| --- | --- | --- |
+| `E01` | Npl,Rd = A·fy/γM0 | produit exact |
+| `E02` | Vpl,Rd = Av·fy/(√3·γM0) | produit exact |
+| `E03` | Mc,Rd = Wpl·fy/γM0 | produit exact |
+| `E04` | ε = √(235/fy) | S235 → 1,000 ; S355 → 0,814 |
+| `E05` | γG de la recette 6.10 | 1,35 (AN française) |
+| `E06` | Nombre de recettes 6.10a/b | 2 recettes générées |
+| `E07` | ψ0(Q) recommandé | 0,70 |
+| `E08` | C1(ψ = 0) Tableau 6.3 | facteur Annexe B |
+| `E09` | γM0 — Annexe Nationale française | 1,00 |
+| `E10` | Ncr,T = torsion St-Venant + Wagner | valeur analytique combinée |
+| `E11` | Borne ρ de classe 4 | ρ ≤ 1,0 |
+
+## Lire la vue de certification
+
+L'en-tête de l'atelier expose le badge 41/41 ; son ouverture rend la hiérarchie de
+certification : l'en-tête exécutif avec le score, la bande récapitulative à 4 colonnes,
+un filtre (`Tous (41) | RDM & Flambement (30) | Eurocode 3 (11)`) avec recherche, et le
+tableau de métrologie groupé avec les lignes `valeur / attendu / écart / tolérance` par
+benchmark et l'export `Copier TSV`. En français, chaque titre de benchmark est
+traduit ; les identifiants restent normatifs.
+
+## Reproduire un benchmark
+
+Chaque benchmark est un modèle ordinaire : les cas ci-dessus se reproduisent dans
+l'atelier en dessinant la géométrie, en saisissant la charge et en lisant la
+réaction/la flèche — la tolérance affichée dans la fenêtre modale est la même borne à
+échelle `1e-12` que la suite de tests Rust utilise
+(`crates/rdm-solver/tests/validation_40.rs` les rejoue en CI à chaque commit).

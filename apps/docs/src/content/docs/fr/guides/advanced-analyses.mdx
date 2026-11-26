@@ -1,0 +1,81 @@
+---
+title: Analyses avancées
+description: Flambement linéaire global λcr, fréquences propres modales f1..f6 avec spectres EN 1998-1 CQC/SRSS et vérification multi-matériaux — béton EC2, bois EC5, aluminium EC9, boulons EC3-1-8 et feu EC3-1-2.
+sidebar:
+  order: 6
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Au-delà de la chaîne statique, l'atelier exécute les vérifications dynamiques et
+multi-matériaux sur le même modèle — sans outil séparé ni ressaisie de la géométrie.
+
+<DocMedia
+  id="advanced-buckling-lambda-cr"
+  type="screenshot"
+/>
+
+## Flambement linéaire global λcr
+
+Le calcul de flambement résout le problème aux valeurs propres généralisé
+`[Ke]·φ = λcr·[Kg]` sur toute la structure, où `[Kg]` est la raideur géométrique issue
+de la distribution d'efforts normaux courante. Le rapport liste λcr par combinaison
+(la plus faible dimensionne) et rend le premier mode amplifié. Selon l'EN 1993-1-1
+§5.2.1, `αcr = λcr ≥ 10` autorise l'analyse du premier ordre ; entre 3 et 10, l'option
+P-Δ — qui ajoute `[Kg(N)]` dans l'assemblage de rigidité — devient le chemin honnête.
+
+<DocMedia
+  id="advanced-modal-frequencies"
+  type="screenshot"
+/>
+
+## Fréquences propres modales f₁…f₆
+
+Le calcul modal extrait les six premières fréquences propres par itération
+Arnoldi/Lanczos sur l'opérateur décalé. Chaque mode se rend en forme animée avec sa
+masse modale effective. Usages types : confort vibratoire des planchers (f₁ au-dessus
+du seuil de 3 Hz), rythme des ponts roulants, définition de la masse sismique.
+
+## Réponse sismique EN 1998-1
+
+Le module sismique combine les résultats modaux avec le spectre de calcul EN 1998-1 :
+
+```text
+Sd(T1)  = ag·S·[ 2,5 + η·(Tc/T1) ]        (palier, §3.2.2.5)
+Vb      = Sd(T1)·m·λ                       (effort tranchant à la base, §4.3.3.2.2)
+Fi      = Vb·si·mi / Σ(sj·mj)              (répartition verticale)
+```
+
+Choisissez le type de spectre (Type 1/2), la classe de sol (A…E) et le facteur de
+comportement q ; la combinaison modale s'exécute en CQC (défaut) ou SRSS, et les
+efforts obtenus entrent dans le tableau des combinaisons comme actions sismiques
+`Acc-x/±` avec les ψ réglementaires.
+
+## Vérification multi-matériaux dans un même modèle
+
+L'étape de vérification s'adapte au matériau de chaque barreau — la géométrie est
+partagée, la chaîne normative ne l'est pas :
+
+| Matériau | Norme | Vérifications dimensionnantes |
+| --- | --- | --- |
+| Acier S235–S460 | EN 1993-1-1 | classes, 6.61/6.62, χLT |
+| Inox 304L | EN 1993-1-4 | propriétés réduites ρ |
+| Aluminium 6061 / 6082-T6 | EN 1999-1-1 | fo/fu, zones soudées, classes |
+| Bois GL24h–GL32h | EN 1995-1-1 | kmod/γM, fm,d, fv,d, fluage kdef |
+| Béton (armé) | EN 1992-1-1 | sections de calcul flexion/axial |
+| Assemblages boulonnés | EN 1993-1-8 | cisaillement/pression/tension par groupe |
+| Feu R30–R120 | EN 1993-1-2 | fy réduit à θa, température critique |
+
+Passer un barreau de S355 en GL28h conserve tous les chemins de charge et toutes les
+combinaisons — seule la chaîne de vérification change, exactement comme doit se
+comporter un berceau mixte bois/acier/alu ou une poutre mixte acier-béton.
+
+<DocMedia
+  id="advanced-multimaterial"
+  type="screenshot"
+/>
+
+## Pour aller plus loin
+
+- La théorie du flambement : [Architecture du solveur](/fr/explanation/solver-architecture/).
+- Livrer la note multi-matériaux : [Notes de calcul et exports BIM](/fr/guides/reports-and-bim-exports/).

@@ -188,10 +188,13 @@ export const CAD_COMMANDS: CadCommand[] = [
       for (const o of offsets) {
         clone.nodes.push({ id: o.id, x: o.x, y: o.y, z: o.z });
       }
-      for (const beam of clone.beams) {
+      // v2.0.2: iterate the ORIGINAL beams — pushing into `clone.beams`
+      // while iterating it re-processed every fresh copy and froze the tab
+      // in an infinite loop.
+      for (const beam of model.beams) {
         clone.beams.push({
           ...beam,
-          id: nextId(clone.beams.map((b) => b.id)) + clone.beams.indexOf(beam),
+          id: nextId(clone.beams.map((b) => b.id)) + model.beams.indexOf(beam),
           n1: offsets.find((o) => o.from === beam.n1)?.id ?? beam.n1,
           n2: offsets.find((o) => o.from === beam.n2)?.id ?? beam.n2,
         });

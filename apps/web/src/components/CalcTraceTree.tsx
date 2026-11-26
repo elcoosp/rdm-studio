@@ -25,14 +25,9 @@ export function CalcTraceTree({
   return (
     <ul className="space-y-3">
       {nodes.map((node, index) => (
-        <li
-          key={`${node.clause}-${index}`}
-          className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-        >
+        <li key={`${node.clause}-${index}`} className="rounded-lg border border-hairline p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {node.clause}
-            </span>
+            <span className="text-xs font-semibold text-ink-muted">{node.clause}</span>
             <span
               className={`text-xs font-bold ${node.passed ? "text-emerald-600" : "text-rose-600"}`}
             >
@@ -56,9 +51,9 @@ export function CalcTraceTree({
           ) : (
             <code className="mt-1 block text-xs">{node.formula_latex}</code>
           )}
-          <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{node.substituted}</p>
+          <p className="mt-1 text-xs text-ink-secondary ">{node.substituted}</p>
           {node.children.length > 0 ? (
-            <div className="mt-2 border-l-2 border-slate-200 pl-3 dark:border-slate-700">
+            <div className="mt-2 border-l-2 border-hairline pl-3 ">
               <CalcTraceTree nodes={node.children} katex={katex} depth={depth + 1} />
             </div>
           ) : null}
@@ -84,11 +79,11 @@ export function CalcTrace({ nodes }: { nodes: CalcTraceNodeDto[] | null }): Reac
   }, []);
   if (nodes === null || nodes.length === 0) {
     return (
-      <p className="text-sm text-slate-500">{t`Lancer une vérification pour afficher la trace.`}</p>
+      <p className="text-sm text-ink-muted">{t`Lancer une vérification pour afficher la trace.`}</p>
     );
   }
   return (
-    <Suspense fallback={<p className="text-sm text-slate-500">{t`Chargement de KaTeX…`}</p>}>
+    <Suspense fallback={<p className="text-sm text-ink-muted">{t`Chargement de KaTeX…`}</p>}>
       <CalcTraceTree nodes={nodes} katex={katex} />
     </Suspense>
   );

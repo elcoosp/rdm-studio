@@ -44,7 +44,7 @@ test("the 8-step tour steps across all five routes", async ({ page }) => {
   });
   await page.goto("/geometry");
   // Launch explicitly (auto-launch waits 400 ms; `?` is deterministic).
-  await page.getByRole("button", { name: "Aide" }).click();
+  await page.getByRole("button", { name: "Aide", exact: true }).click();
   await expect(page.locator(".driver-popover-rdm")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".driver-popover-rdm .driver-popover-title")).toContainText(
     /Projets & Modèles/,

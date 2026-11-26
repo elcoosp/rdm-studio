@@ -221,10 +221,10 @@ function RootLayout() {
             onClick={() => setValidationOpen(true)}
             aria-label="Validation — 41 benchmarks analytiques"
             title="Validation — 41 benchmarks analytiques"
-            className="flex items-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
+            className="flex items-center rounded-md border border-hairline px-2 py-1 text-xs font-medium hover:bg-panel-subtle  "
           >
             <BadgeCheck size={14} strokeWidth={1.5} aria-hidden />
-            <span className="hidden sm:inline">&nbsp;Validation</span>
+            <span className="hidden xl:inline">&nbsp;Validation</span>
           </button>
         </div>
       </header>

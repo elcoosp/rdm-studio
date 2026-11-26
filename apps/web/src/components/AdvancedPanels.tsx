@@ -84,7 +84,7 @@ export function AdvancedPanels(): ReactElement {
   return (
     <section
       aria-label={t`Analyses avancées`}
-      className="rounded-xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/90"
+      className="rounded-xl border border-hairline bg-panel/95 p-4  "
     >
       <div className="mb-3 flex gap-1" role="tablist" aria-label={t`Analyses avancées`}>
         {(
@@ -101,7 +101,7 @@ export function AdvancedPanels(): ReactElement {
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={`rounded px-3 py-1 text-xs font-semibold ${
-              tab === key ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800"
+              tab === key ? "bg-accent text-white" : "bg-panel-subtle"
             }`}
           >
             {label}
@@ -112,7 +112,7 @@ export function AdvancedPanels(): ReactElement {
       {tab === "buckling" ? (
         <div className="text-sm" aria-live="polite">
           {buckling === null ? (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ink-muted">
               <Trans>Résoudre le modèle pour obtenir les modes de flambement.</Trans>
             </p>
           ) : (
@@ -142,7 +142,7 @@ export function AdvancedPanels(): ReactElement {
                 step={0.05}
                 value={agG}
                 onChange={(e) => setAgG(Number(e.target.value))}
-                className="w-16 rounded border border-slate-300 bg-transparent px-1 dark:border-slate-600"
+                className="w-16 rounded border border-hairline bg-transparent px-1 "
               />
             </label>
             <label>
@@ -150,7 +150,7 @@ export function AdvancedPanels(): ReactElement {
               <select
                 value={ground}
                 onChange={(e) => setGround(e.target.value as (typeof GROUNDS)[number])}
-                className="rounded border border-slate-300 bg-transparent dark:border-slate-600"
+                className="rounded border border-hairline bg-transparent "
               >
                 {GROUND_TYPES.map((g) => (
                   <option key={g} value={g}>
@@ -162,7 +162,7 @@ export function AdvancedPanels(): ReactElement {
             <button
               type="button"
               onClick={() => setSpectrumType(spectrumType === "Type1" ? "Type2" : "Type1")}
-              className="rounded bg-slate-100 px-2 py-0.5 dark:bg-slate-800"
+              className="rounded bg-panel-subtle px-2 py-0.5 "
             >
               {spectrumType}
             </button>
@@ -243,7 +243,7 @@ export function AdvancedPanels(): ReactElement {
             value={materialKind}
             onChange={(e) => setMaterialKind(e.target.value)}
             aria-label={t`Type de vérification`}
-            className="mb-2 rounded border border-slate-300 bg-transparent px-2 py-1 text-xs dark:border-slate-600"
+            className="mb-2 rounded border border-hairline bg-transparent px-2 py-1 text-xs "
           >
             <option value="ec2_beam">EC2 béton — flexure + effort tranchant</option>
             <option value="ec5_timber">EC5 bois GL24h — flexion kmod</option>
@@ -259,7 +259,7 @@ export function AdvancedPanels(): ReactElement {
                   {node.value.toFixed(2)} / {node.limit.toFixed(2)} {node.unit}
                 </span>
               </li>
-            )) ?? <li className="text-xs text-slate-500">…</li>}
+            )) ?? <li className="text-xs text-ink-muted">…</li>}
           </ul>
         </div>
       ) : null}

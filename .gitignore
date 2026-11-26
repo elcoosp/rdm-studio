@@ -35,3 +35,9 @@ test-results/
 playwright-report/
 core
 docs/launch
+
+# v2.0.2 handoff artifacts (tracked intentionally)
+!ship.toml
+!.github/pr-body.md
+ship.toml
+.github/pr-body.md

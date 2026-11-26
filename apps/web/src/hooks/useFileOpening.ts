@@ -33,6 +33,12 @@ export async function openProjectOrCadFile(file: File): Promise<boolean> {
         toast.error(`Fichier .rdm illisible (JSON invalide) : ${file.name}`);
         return false;
       }
+      // v2.0.2: legacy version-1 files migrate through the Rust
+      // `migrate_to_v2` pass before the v2 schema gate.
+      if (raw !== null && typeof raw === "object" && (raw as { version?: unknown }).version === 1) {
+        const migrated = await feaClient.migrateProjectJson(text);
+        raw = JSON.parse(migrated) as unknown;
+      }
       const parsed = v.safeParse(ProjectFileSchema, raw);
       if (!parsed.success) {
         const first = parsed.issues[0];

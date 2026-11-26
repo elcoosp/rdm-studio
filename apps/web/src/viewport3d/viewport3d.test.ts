@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { buildBeamGeometry, spectrumColor, nodePositions } from "./BeamMeshes";
 import { prepareBeamBoundsTree, pickBeamAtRay } from "./useBvhPicking";
 import { snapPoint, orthogonalLock } from "./SnapGrid";
+import { CAD_COMMANDS } from "@/modeling/cadTools";
 import type { BeamData, NodeData } from "@/state/projectStore";
 
 /** 10,000 beams on a 100x100 grid of 1 m members (M4 benchmark model). */
@@ -155,5 +156,37 @@ describe("SnapGrid magnetic snapping (section 8.8)", () => {
     expect(locked.y).toBeCloseTo(0.8, 9);
     expect(locked.x).toBeCloseTo(0, 9);
     expect(locked.z).toBeCloseTo(0, 9);
+  });
+});
+
+describe("CAD registry (v2.0.2 extrude freeze regression)", () => {
+  it("extrude doubles nodes and beams without looping", () => {
+    const nodes: NodeData[] = [
+      { id: 1, x: 0, y: 0, z: 0 },
+      { id: 2, x: 4, y: 0, z: 0 },
+    ];
+    const beams: BeamData[] = [
+      {
+        id: 1,
+        n1: 1,
+        n2: 2,
+        section_id: "IPE 200",
+        material_id: "S235JR",
+        roll_angle_rad: 0,
+        releases_start: [false, false, false, false, false, false],
+        releases_end: [false, false, false, false, false, false],
+        k_buckling_y: 1,
+        k_buckling_z: 1,
+      },
+    ];
+    const command = CAD_COMMANDS.find((c) => c.id === "extrude");
+    expect(command).toBeDefined();
+    const start = Date.now();
+    const next = command!.apply({ nodes, beams }, { dx: 0, dy: 0, dz: 3 });
+    // The old push-while-iterating loop never returned.
+    expect(Date.now() - start).toBeLessThan(2_000);
+    expect(next.nodes).toHaveLength(4);
+    expect(next.beams).toHaveLength(2);
+    expect(next.beams.every((b) => b.n1 !== b.n2)).toBe(true);
   });
 });

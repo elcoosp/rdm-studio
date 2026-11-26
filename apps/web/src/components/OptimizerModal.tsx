@@ -201,7 +201,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
       onClick={onClose}
     >
       <div
-        className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+        className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-panel p-6 shadow-2xl "
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -212,7 +212,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
             type="button"
             onClick={onClose}
             aria-label={t`Fermer`}
-            className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-ink-secondary hover:border-accent hover:text-accent dark:border-slate-700"
+            className="flex h-8 w-8 items-center justify-center rounded border border-hairline text-ink-secondary hover:border-accent hover:text-accent "
           >
             <X size={16} strokeWidth={1.5} aria-hidden />
           </button>
@@ -228,7 +228,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
         {/* v2.0.1: interactive Pareto frontier (recharts ScatterChart) —
             mass_per_m (kg/m) vs utilization η with the η = 1.0 limit. */}
         {paretoPoints.length > 0 ? (
-          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+          <div className="mb-4 rounded-lg border border-hairline bg-panel-subtle p-3  ">
             <h3 className="mb-1 text-xs font-semibold">
               <Trans>Frontière de Pareto (masse vs taux de travail)</Trans>
             </h3>
@@ -291,7 +291,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
         <div className="mb-4 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b dark:border-slate-700">
+              <tr className="border-b ">
                 <th className="py-1 pr-2">
                   <Trans>Membre</Trans>
                 </th>
@@ -308,11 +308,11 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
             </thead>
             <tbody>
               {rows?.map((row) => (
-                <tr key={row.beamId} className="border-b border-slate-100 dark:border-slate-800">
+                <tr key={row.beamId} className="border-b border-hairline">
                   <td className="py-1 pr-2 font-mono">B{row.beamId}</td>
                   <td className="py-1 pr-2 font-semibold">{row.chosen ?? "—"}</td>
                   <td className="py-1 pr-2">{row.passes}</td>
-                  <td className="py-1 text-slate-600 dark:text-slate-300">
+                  <td className="py-1 text-ink-secondary ">
                     {row.pareto
                       .map(([name, mass, util]) => `(${name}: ${mass} kg/m, ${util.toFixed(2)})`)
                       .join(" · ")}
@@ -323,11 +323,11 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
           </table>
         </div>
         {worst !== undefined && worst > 1.0 ? (
-          <div className="mb-4 rounded-lg border border-rose-300 bg-rose-50 p-3 dark:border-rose-800 dark:bg-rose-950">
-            <h3 className="mb-2 text-sm font-bold text-rose-700 dark:text-rose-300">
+          <div className="mb-4 rounded-lg border border-fail-border bg-fail-bg p-3">
+            <h3 className="mb-2 text-sm font-bold text-fail-text">
               <Trans>Pourquoi ça échoue ? — 3 remèdes 1-clic</Trans>
             </h3>
-            <ul className="list-inside list-disc text-xs text-slate-700 dark:text-slate-200">
+            <ul className="list-inside list-disc text-xs text-ink-secondary ">
               {whyDoesThisFail(worst).map((item) => (
                 <li key={item.label}>
                   <strong>{item.label}</strong> — {item.impact}
@@ -343,7 +343,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
             toast.success("Profilés optimisés appliqués (⌘Z pour annuler)");
             onClose();
           }}
-          className="mb-3 w-full rounded bg-emerald-600 py-2 text-sm font-bold text-white hover:bg-emerald-700"
+          className="mb-3 w-full rounded bg-accent py-2 text-sm font-bold text-white hover:bg-accent/90"
         >
           Appliquer les profilés optimisés (⌘Z)
         </button>

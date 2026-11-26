@@ -374,8 +374,15 @@ export function ViewportCanvas({
           />
           {/* v1.3.0 defect 5: bottom-right so the top-right view-preset
               bar (3D Iso | Dessus XY | Face XZ | Côté YZ) stays clear. */}
-          <GizmoHelper alignment="bottom-right" margin={[88, 88]}>
-            <GizmoViewport axisColors={["#DC2626", "#10b981", "#1D4ED8"]} labelColor="#0F172A" />
+          {/* v2.0.2: anchored cleanly in the bottom-right corner (44px
+              margins) with a compact 0.75 scale — it no longer floats
+              over the viewport centre or overlaps the legend. */}
+          <GizmoHelper alignment="bottom-right" margin={[44, 44]}>
+            <GizmoViewport
+              scale={0.75}
+              axisColors={["#DC2626", "#10b981", "#1D4ED8"]}
+              labelColor="#0F172A"
+            />
           </GizmoHelper>
         </Canvas>
         {/* Snap reticle + cursor pill (DOM overlay, §8.3/§8.4). */}

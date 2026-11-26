@@ -22,7 +22,7 @@ function Svg({ size, children }: IconProps & { children: React.ReactNode }) {
   );
 }
 
-export function ProfileIpe({ size = 20 }: IconProps) {
+export function ProfileIpe({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <path d="M6 4h12v2.5h-4.75v11H18V20H6v-2.5h4.75v-11H6V4Z" />
@@ -30,7 +30,7 @@ export function ProfileIpe({ size = 20 }: IconProps) {
   );
 }
 
-export function ProfileHea({ size = 20 }: IconProps) {
+export function ProfileHea({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <path d="M4 4h16v3h-6.5v10H20v3H4v-3h6.5V7H4V4Z" />
@@ -38,7 +38,7 @@ export function ProfileHea({ size = 20 }: IconProps) {
   );
 }
 
-export function ProfileUpn({ size = 20 }: IconProps) {
+export function ProfileUpn({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <path d="M7 4h10v2.75H9.75v10.5H17V20H7V4Z" />
@@ -46,7 +46,7 @@ export function ProfileUpn({ size = 20 }: IconProps) {
   );
 }
 
-export function ProfileChs({ size = 20 }: IconProps) {
+export function ProfileChs({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <circle cx="12" cy="12" r="8" />
@@ -55,7 +55,7 @@ export function ProfileChs({ size = 20 }: IconProps) {
   );
 }
 
-export function ProfileRhs({ size = 20 }: IconProps) {
+export function ProfileRhs({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <rect x="4" y="5" width="16" height="14" rx="1" />
@@ -64,7 +64,7 @@ export function ProfileRhs({ size = 20 }: IconProps) {
   );
 }
 
-export function ProfileAngle({ size = 20 }: IconProps) {
+export function ProfileAngle({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <path d="M6 4h3v13h11v3H6V4Z" />
@@ -72,7 +72,7 @@ export function ProfileAngle({ size = 20 }: IconProps) {
   );
 }
 
-export function VolumetricMesh({ size = 20 }: IconProps) {
+export function VolumetricMesh({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <polygon points="4,10 13,5 20,8 20,15 11,20 4,17" />
@@ -82,7 +82,7 @@ export function VolumetricMesh({ size = 20 }: IconProps) {
   );
 }
 
-export function WireframeMesh({ size = 20 }: IconProps) {
+export function WireframeMesh({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <circle cx="5" cy="12" r="2.25" />
@@ -92,7 +92,7 @@ export function WireframeMesh({ size = 20 }: IconProps) {
   );
 }
 
-export function SupportFixed({ size = 20 }: IconProps) {
+export function SupportFixed({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="7" y1="5" x2="7" y2="19" />
@@ -105,7 +105,7 @@ export function SupportFixed({ size = 20 }: IconProps) {
   );
 }
 
-export function SupportPinned({ size = 20 }: IconProps) {
+export function SupportPinned({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <circle cx="12" cy="7" r="1.75" />
@@ -118,7 +118,7 @@ export function SupportPinned({ size = 20 }: IconProps) {
   );
 }
 
-export function SupportRoller({ size = 20 }: IconProps) {
+export function SupportRoller({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <circle cx="12" cy="6.5" r="1.75" />
@@ -130,7 +130,7 @@ export function SupportRoller({ size = 20 }: IconProps) {
   );
 }
 
-export function SupportSlider({ size = 20 }: IconProps) {
+export function SupportSlider({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="7" x2="20" y2="7" />
@@ -140,7 +140,7 @@ export function SupportSlider({ size = 20 }: IconProps) {
   );
 }
 
-export function SupportSpring({ size = 20 }: IconProps) {
+export function SupportSpring({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="7" y1="4" x2="17" y2="4" />
@@ -153,7 +153,7 @@ export function SupportSpring({ size = 20 }: IconProps) {
   );
 }
 
-export function ReleaseHinge({ size = 20 }: IconProps) {
+export function ReleaseHinge({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="12" x2="13.5" y2="12" />
@@ -163,7 +163,7 @@ export function ReleaseHinge({ size = 20 }: IconProps) {
   );
 }
 
-export function SupportReaction({ size = 20 }: IconProps) {
+export function SupportReaction({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="8" x2="20" y2="8" />
@@ -175,7 +175,7 @@ export function SupportReaction({ size = 20 }: IconProps) {
   );
 }
 
-export function LocalAxes({ size = 20 }: IconProps) {
+export function LocalAxes({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="9" y1="15" x2="9" y2="4.5" />
@@ -189,7 +189,7 @@ export function LocalAxes({ size = 20 }: IconProps) {
   );
 }
 
-export function NodalPointLoad({ size = 20 }: IconProps) {
+export function NodalPointLoad({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="12" y1="4" x2="12" y2="14.5" stroke="var(--color-accent)" />
@@ -199,7 +199,7 @@ export function NodalPointLoad({ size = 20 }: IconProps) {
   );
 }
 
-export function UniformBeamLoad({ size = 20 }: IconProps) {
+export function UniformBeamLoad({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="6" x2="20" y2="6" stroke="var(--color-accent)" />
@@ -216,7 +216,7 @@ export function UniformBeamLoad({ size = 20 }: IconProps) {
   );
 }
 
-export function TrapezoidalLoad({ size = 20 }: IconProps) {
+export function TrapezoidalLoad({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="11" x2="20" y2="5" stroke="var(--color-accent)" />
@@ -230,7 +230,7 @@ export function TrapezoidalLoad({ size = 20 }: IconProps) {
   );
 }
 
-export function SpanPointLoad({ size = 20 }: IconProps) {
+export function SpanPointLoad({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="12" y1="4.5" x2="12" y2="14.5" stroke="var(--color-accent)" />
@@ -242,7 +242,7 @@ export function SpanPointLoad({ size = 20 }: IconProps) {
   );
 }
 
-export function TorqueMoment({ size = 20 }: IconProps) {
+export function TorqueMoment({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="12" x2="14" y2="12" />
@@ -252,7 +252,7 @@ export function TorqueMoment({ size = 20 }: IconProps) {
   );
 }
 
-export function SelfWeightGravity({ size = 20 }: IconProps) {
+export function SelfWeightGravity({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <rect x="6" y="4.5" width="12" height="9" rx="1" />
@@ -263,7 +263,7 @@ export function SelfWeightGravity({ size = 20 }: IconProps) {
   );
 }
 
-export function DynamicAcceleration({ size = 20 }: IconProps) {
+export function DynamicAcceleration({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="8.5" x2="9" y2="8.5" />
@@ -275,7 +275,7 @@ export function DynamicAcceleration({ size = 20 }: IconProps) {
   );
 }
 
-export function LoadCombination({ size = 20 }: IconProps) {
+export function LoadCombination({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <polyline points="12,6 5.5,6 10,12 5.5,18 12,18" />
@@ -285,7 +285,7 @@ export function LoadCombination({ size = 20 }: IconProps) {
   );
 }
 
-export function RollAngle({ size = 20 }: IconProps) {
+export function RollAngle({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <path d="M5 6h6v1.5H8.75v9H11V18H5v-1.5h2.25v-9H5V6Z" />
@@ -295,7 +295,7 @@ export function RollAngle({ size = 20 }: IconProps) {
   );
 }
 
-export function MagneticSnap({ size = 20 }: IconProps) {
+export function MagneticSnap({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <path d="M7.5 4.5v5a4.5 4.5 0 0 0 9 0v-5" />
@@ -307,7 +307,7 @@ export function MagneticSnap({ size = 20 }: IconProps) {
   );
 }
 
-export function MergeNodes({ size = 20 }: IconProps) {
+export function MergeNodes({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <circle cx="4.5" cy="12" r="2" />
@@ -319,7 +319,7 @@ export function MergeNodes({ size = 20 }: IconProps) {
   );
 }
 
-export function SectionCut({ size = 20 }: IconProps) {
+export function SectionCut({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <rect x="4" y="9" width="16" height="6" rx="0.75" />
@@ -335,7 +335,7 @@ export function SectionCut({ size = 20 }: IconProps) {
   );
 }
 
-export function FlexuralBuckling({ size = 20 }: IconProps) {
+export function FlexuralBuckling({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line
@@ -352,7 +352,7 @@ export function FlexuralBuckling({ size = 20 }: IconProps) {
   );
 }
 
-export function LateralTorsionalBuckling({ size = 20 }: IconProps) {
+export function LateralTorsionalBuckling({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="6" y1="19" x2="16" y2="19" />
@@ -363,7 +363,7 @@ export function LateralTorsionalBuckling({ size = 20 }: IconProps) {
   );
 }
 
-export function DeflectionLimit({ size = 20 }: IconProps) {
+export function DeflectionLimit({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line
@@ -381,7 +381,7 @@ export function DeflectionLimit({ size = 20 }: IconProps) {
   );
 }
 
-export function ModalVibration({ size = 20 }: IconProps) {
+export function ModalVibration({ size = 22 }: IconProps) {
   return (
     <Svg size={size}>
       <line x1="4" y1="12" x2="20" y2="12" stroke="var(--color-ink-muted)" strokeDasharray="2 2" />

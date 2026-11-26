@@ -21,6 +21,37 @@ export interface TemplateSeed {
     fz?: number;
     direction?: { x: number; y: number; z: number };
   }[];
+  /** v2.0.2: canonical DOF-restraint set (locked_dofs per support node). */
+  supports?: { node_id: number; locked_dofs: boolean[] }[];
+}
+
+/**
+ * v2.0.2: the canonical minimal restraint set of a template, derived from
+ * its ground geometry — encastre when the model touches the ground at a
+ * single node (potence / poteau), otherwise a pin at the first ground
+ * node and a vertical roller at the last one. Deterministic per template
+ * so the gallery always loads stable, solvable models.
+ */
+export function canonicalSupports(
+  seed: TemplateSeed,
+): { node_id: number; locked_dofs: boolean[] }[] {
+  const zMin = Math.min(...seed.nodes.map((n) => n.z));
+  const ground = seed.nodes.filter((n) => Math.abs(n.z - zMin) < 1e-9);
+  const first = ground[0];
+  const last = ground[ground.length - 1];
+  if (first === undefined || last === undefined || seed.nodes.length === 0) {
+    return [];
+  }
+  const pin = ground.reduce((a, n) => (n.x < a.x ? n : a), first);
+  const roller = ground.filter((n) => n.id !== pin.id).reduce((a, n) => (n.x > a.x ? n : a), pin);
+  if (roller.id === pin.id) {
+    // Cantilever / single-base poteau: full encastre.
+    return [{ node_id: pin.id, locked_dofs: [true, true, true, true, true, true] }];
+  }
+  return [
+    { node_id: pin.id, locked_dofs: [true, true, true, true, true, false] },
+    { node_id: roller.id, locked_dofs: [false, false, true, false, false, false] },
+  ];
 }
 
 const S235 = "S235JR";

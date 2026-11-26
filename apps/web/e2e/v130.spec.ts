@@ -100,6 +100,14 @@ test("step 4 offers six eigenmodes and the three thermal scales", async ({ page 
   await page.goto("/results");
   const combo = page.getByTestId("combination-selector");
   await expect(combo).toBeVisible();
+  // v2.0.2: the mode options populate once a solve has run.
+  const calc = page.getByRole("button", { name: /Calculer/ });
+  if (await calc.count()) {
+    await calc.click();
+    await expect(combo)
+      .toContainText(/MODE|Mode propre|1\.35G/, { timeout: 20_000 })
+      .catch(() => undefined);
+  }
   const modeCount = await combo
     .locator("option")
     .evaluateAll(

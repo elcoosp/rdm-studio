@@ -31,7 +31,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
       onClick={onClose}
     >
       <div
-        className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+        className="max-h-[80vh] w-full max-w-3xl overflow-auto rounded-xl bg-panel p-6 shadow-2xl "
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -42,7 +42,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
             ×
           </button>
         </div>
-        <p className="mb-4 text-sm text-slate-600 dark:text-slate-300" aria-live="polite">
+        <p className="mb-4 text-sm text-ink-secondary " aria-live="polite">
           {results === null ? (
             <Trans>Exécution en cours…</Trans>
           ) : fault !== null ? (
@@ -56,7 +56,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b dark:border-slate-700">
+              <tr className="border-b ">
                 <th className="py-1 pr-2">ID</th>
                 <th className="py-1 pr-2">
                   <Trans>Benchmark</Trans>
@@ -75,7 +75,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
             </thead>
             <tbody>
               {results?.map((r) => (
-                <tr key={r.id} className="border-b border-slate-100 dark:border-slate-800">
+                <tr key={r.id} className="border-b border-hairline">
                   <td className="py-1 pr-2 font-mono">{r.id}</td>
                   <td className="py-1 pr-2">{r.title}</td>
                   <td className="py-1 pr-2 text-right font-mono">{r.expected.toPrecision(4)}</td>

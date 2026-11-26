@@ -3,7 +3,7 @@
 
 use rdm_model::LoadCase;
 
-use crate::static_sparse::{SolveError, SolvedModel, superimpose};
+use crate::static_sparse::{SolveError, SolvedModel};
 
 /// Min/max envelope of one member across the superposed combinations
 /// (serialized for the wasm bridge).
@@ -44,23 +44,17 @@ pub fn compute_envelopes(
         let mut vz = (f64::INFINITY, f64::NEG_INFINITY);
         let mut t = (f64::INFINITY, f64::NEG_INFINITY);
         for (_, weights) in combinations {
-            let (_, _, f) = superimpose(solved, weights)?;
-            let base = 12 * index;
+            // v2.0.2: full superposition through `superimposed_beam_state` —
+            // the span reconstruction now carries the weighted Variable /
+            // Wind / Snow distributed loads (the old path sampled only the
+            // Permanent case and re-ran `build_elements` per station).
+            let state =
+                crate::section_cut::superimposed_beam_state(structure, solved, weights, index)?;
             for station in 0..5usize {
-                // Station forces need the span reconstruction; for the
-                // envelope the end-force blocks (5 stations via
-                // beam_forces_at use spans) — sample the end block plus
-                // superposed span reconstruction through station_forces.
-                let end = &f[base..base + 12];
-                let span_state = crate::results::span_loads_local(
-                    structure,
-                    &crate::loads::build_elements(structure)?[index],
-                    rdm_model::LoadCase::Permanent,
-                )?;
                 let forces = crate::internal_forces::station_forces(
-                    end,
-                    &span_state,
-                    member_length(structure, beam),
+                    &state.end_forces,
+                    &state.spans,
+                    state.length,
                     f64::from(station as u32) / 4.0,
                 );
                 n.0 = n.0.min(forces.n_axial);
@@ -85,11 +79,4 @@ pub fn compute_envelopes(
         });
     }
     Ok(out)
-}
-
-fn member_length(structure: &rdm_model::Structure, beam: &rdm_model::Beam) -> f64 {
-    match (structure.node(beam.n1), structure.node(beam.n2)) {
-        (Ok(a), Ok(b)) => ((b.x - a.x).powi(2) + (b.y - a.y).powi(2) + (b.z - a.z).powi(2)).sqrt(),
-        _ => 0.0,
-    }
 }

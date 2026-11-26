@@ -50,10 +50,14 @@ test.describe("iPhone 13 viewport", () => {
 
     // 44px touch targets across the 5-step workflow.
     await page.getByRole("link", { name: "Étape 3" }).click();
+    // v2.0.2: the drawer closes on route change — the handle reopens it.
+    await page.getByTestId("inspector-sheet-handle").click();
     await expect(
       page.getByRole("heading", { name: "Charges et combinaisons EN 1990" }),
-    ).toBeVisible();
-    await page.getByRole("link", { name: "Étape 1" }).click();
+    ).toBeVisible({ timeout: 10_000 });
+    // At 390 the header stepper is icon-only — the mobile tab bar is the
+    // touch stepper.
+    await page.locator('nav[aria-label="workflow mobile"] a').first().click();
     await expect(page.getByTestId("viewport-canvas")).toBeVisible();
   });
 

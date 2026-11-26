@@ -78,6 +78,16 @@ export type LoadData =
       } | null;
     }
   | {
+      // v2.0.2: EN 1991 generators emit Uniform beam loads (snow / wind /
+      // imposed) with q_start = q_end and a declared direction.
+      case: LoadCaseId;
+      kind: "Uniform";
+      beam_id: number;
+      q_start: number;
+      q_end: number;
+      direction: { x: number; y: number; z: number };
+    }
+  | {
       // v2.0.0 schema v2: thermal action (uniform ΔT + gradients, K).
       case: LoadCaseId;
       kind: "Thermal";

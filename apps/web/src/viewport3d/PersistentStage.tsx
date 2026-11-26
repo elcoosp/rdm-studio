@@ -209,6 +209,13 @@ export function PersistentStage(): ReactElement {
           // No slot (Step 5): keep the last geometry, hide from view —
           // the canvas stays alive for captureViewportPng().
           if (lastKey !== "hidden") {
+            // v2.0.2: cache the last live render BEFORE hiding so the
+            // Step 5 A4 sheet and the Takumi PDF embed a populated 3D
+            // snapshot instead of a cleared blank buffer.
+            const png = useStageStore.getState().capture?.() ?? null;
+            if (png !== null) {
+              useStageStore.getState().setLastSnapshot(png);
+            }
             el.style.visibility = "hidden";
             el.style.pointerEvents = "none";
             lastKey = "hidden";
@@ -224,6 +231,13 @@ export function PersistentStage(): ReactElement {
             el.style.width = `${r.width - 2}px`;
             el.style.height = `${r.height - 2}px`;
             lastKey = key;
+            // v2.0.2: refresh the cached snapshot once the pane settles.
+            window.setTimeout(() => {
+              const png = useStageStore.getState().capture?.() ?? null;
+              if (png !== null) {
+                useStageStore.getState().setLastSnapshot(png);
+              }
+            }, 350);
           }
         }
       }

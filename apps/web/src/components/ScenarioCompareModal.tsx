@@ -3,7 +3,8 @@ import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { X } from "lucide-react";
 import { deleteSnapshot, listSnapshots, loadSnapshot, saveSnapshot } from "../state/snapshots";
-import { useProjectStore } from "../state/projectStore";
+import { useProjectStore, type ProjectData } from "../state/projectStore";
+import { computeModelMassKg } from "../lib/resultsMath";
 
 /**
  * Scenario Comparator (v2.0.0): side-by-side named snapshots with the
@@ -22,26 +23,10 @@ interface ScenarioMeta {
 
 function computeMeta(project: unknown): ScenarioMeta {
   const structure = (project as { structure?: { beams?: { section_id?: string }[] } })?.structure;
-  const beams = structure?.beams ?? [];
-  // Mass proxy: section family baseline masses (kg/m) × count — exact
+  // v2.0.2: exact mass via computeModelMassKg (was a family-baseline proxy).
   // masses come from the catalog when a section resolves.
-  const baseline: Record<string, number> = {
-    "IPE 140": 12.9,
-    "IPE 160": 15.8,
-    "IPE 180": 18.8,
-    "IPE 200": 22.4,
-    "IPE 220": 26.2,
-    "IPE 240": 30.7,
-    "IPE 300": 42.2,
-    "HEA 200": 42.3,
-    "HEA 240": 60.8,
-    "HEA 300": 88.3,
-    "UPN 200": 25.7,
-    CHS: 12.0,
-    RHS: 14.0,
-    L: 8.0,
-  };
-  const massKg = beams.reduce((acc, b) => acc + (baseline[b.section_id ?? ""] ?? 20), 0);
+  // v2.0.2: exact mass through the shared KPI helper (ρ·A·L, SI).
+  const massKg = computeModelMassKg(project as ProjectData);
   const utilization = (project as { lastUtilization?: number }).lastUtilization ?? 0.72;
   const deflection = (project as { lastDeflectionM?: number }).lastDeflectionM ?? 0.012;
   return { massKg, maxUtilization: utilization, maxDeflectionM: deflection };
@@ -81,9 +66,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
   const chip = (label: string, value: number, unit: string): ReactElement => (
     <span
       className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-        value > 0
-          ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
-          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+        value > 0 ? "bg-fail-bg text-fail-text" : "bg-pass-bg text-pass-text"
       }`}
     >
       {label}: {value >= 0 ? "+" : ""}
@@ -100,7 +83,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
       onClick={onClose}
     >
       <div
-        className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+        className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-xl bg-panel p-6 shadow-2xl "
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -111,7 +94,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
             type="button"
             onClick={onClose}
             aria-label={t`Fermer`}
-            className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-ink-secondary hover:border-accent hover:text-accent dark:border-slate-700"
+            className="flex h-8 w-8 items-center justify-center rounded border border-hairline text-ink-secondary hover:border-accent hover:text-accent "
           >
             <X size={16} strokeWidth={1.5} aria-hidden />
           </button>
@@ -122,7 +105,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t`Nom du scénario`}
             aria-label={t`Nom du scénario`}
-            className="rounded border border-slate-300 bg-transparent px-2 py-1 text-sm dark:border-slate-600"
+            className="rounded border border-hairline bg-transparent px-2 py-1 text-sm "
           />
           <button
             type="button"
@@ -135,7 +118,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
                 setNewName("");
               });
             }}
-            className="rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white"
+            className="rounded bg-accent px-3 py-1 text-sm font-semibold text-white"
           >
             <Trans>Photographier le modèle actuel</Trans>
           </button>
@@ -147,11 +130,8 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
               ["B", right, setRight],
             ] as const
           ).map(([slot, value, setter]) => (
-            <div
-              key={slot}
-              className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-            >
-              <p className="mb-1 text-xs font-bold text-slate-500">{slot}</p>
+            <div key={slot} className="rounded-lg border border-hairline p-3 ">
+              <p className="mb-1 text-xs font-bold text-ink-muted">{slot}</p>
               <select
                 value={value?.name ?? ""}
                 onChange={(e) => {
@@ -162,7 +142,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
                   });
                 }}
                 aria-label={t`Scénario ${slot}`}
-                className="w-full rounded border border-slate-300 bg-transparent px-2 py-1 text-sm dark:border-slate-600"
+                className="w-full rounded border border-hairline bg-transparent px-2 py-1 text-sm "
               >
                 <option value="">—</option>
                 {names.map((n) => (
@@ -172,7 +152,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
                 ))}
               </select>
               {value !== null ? (
-                <ul className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                <ul className="mt-2 text-xs text-ink-secondary ">
                   <li>
                     {t`Masse`}: {value.meta.massKg.toFixed(1)} kg
                   </li>

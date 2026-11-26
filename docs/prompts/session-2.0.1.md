@@ -1,0 +1,68 @@
+Task: github.com/elcoosp/rdm-studio. Ship v2.0.1 — final stabilization, conflict resolution, mandatory `shadcn/Tailwind` UI library integration (`lucide-react`, `tw-animate-css`, `@dnd-kit/sortable`, `recharts`), autonomous `impeccable` visual polish pass (eyeball all 5 screens without redesigning), and comprehensive real-world engineering E2E + edge-case suite (`0` failures across `G0 → G6` + production `vite build`):
+(1) **Resolve Active Merge Conflicts & Syntax Errors (`SettingsPopover.tsx`, `ForceDiagrams3D.tsx`, `loads.tsx`)**;
+(2) **Eliminate Duplicate Worker Solves & Fix All 10 Failing Playwright Tests (`fea.worker.ts`, `workerClient.ts`, `bindings/rdm-wasm/src/lib.rs`, `ProjectGalleryModal.tsx`, `supports.tsx`, `BottomSheet.tsx`)**;
+(3) **Install AND Actively Wire All 4 `shadcn/Tailwind` Ecosystem Libraries (`lucide-react`, `tw-animate-css`, `@dnd-kit/sortable`, `recharts` — verified by grep)**: - `tw-animate-css`: `@import "tw-animate-css";` in `app.css` + smooth `animate-in`/`animate-out` transitions on all Base UI popups (`PopoverContent`, `DialogContent`, `DropdownMenuContent`, `TooltipContent`); - `lucide-react`: replace ALL raw Unicode UI symbols (`⚙`, `✓`, `⇄`, `↩`, `↪`, `×`, `▲`, `↑`, `↓`, `▾`) across `__root.tsx`, `SettingsPopover.tsx`, `BottomSheet.tsx`, `results.tsx`, `report.tsx`, `OptimizerModal.tsx`, and `ScenarioCompareModal.tsx` with crisp `1.5px`-stroke Lucide icons; - `recharts`: render an interactive `<ScatterChart>` Pareto frontier (`mass_per_m` vs `utilization` with `η = 1.0` reference line) in `OptimizerModal.tsx` and an interactive `<AreaChart>` EN 1998-1 elastic response spectrum `Se(T)` in `AdvancedPanels.tsx`; - `@dnd-kit/core` + `@dnd-kit/sortable`: make Step 5's `ReportBuilder` chapters drag-reorderable with `<GripVertical />` handles;
+(4) **Autonomous `impeccable` v4.0.4 Visual Eyeball & Layout Polish Pass (NO Redesign — Surgical Refinement Only):** - Load `.agents/skills/impeccable/SKILL.md` + `reference/operate.md`, `reference/layout.md`, `reference/adapt.md`, `reference/polish.md`, and `reference/craft-floor.md` (enabling `hooks.mjs on || true`); - Unclutter `/geometry`, `/results`, `/report`, and the `860×900` split-screen header, capture real Playwright screenshots across **`1440×900`**, **`860×900`**, and **`390×844`** on all 5 routes (`/geometry`, `/supports`, `/loads`, `/results`, `/report`), inspect every screen for alignment, contrast, truncation, overlap, or scrollbars, and fix every visual flaw in one clean pass;
+(5) **Harden E2E Coverage with Real-World Structural Workflows & Edge Cases (`apps/web/e2e/real-world-scenarios.spec.ts`)**;
+(6) **Verify All Gates (`G0 → G6` + `pnpm --filter web build`) 100% Green & Archive**.
+
+EXECUTION CONTRACT (NON-NEGOTIABLE — 100% AUTONOMOUS, SINGLE BUILD TREE):
+
+- **ZERO QUESTIONS / FULL AUTONOMY:** Operate autonomously end-to-end from bootstrap to final `.zip` archive without prompting.
+- **NO REDESIGN — SURGICAL VISUAL POLISH ONLY:** Keep the existing Swiss Metrology Daylight tokens (`#F8FAFC` / `#FFFFFF` / `#1D4ED8`) and component architecture; only fix spacing, alignment, overlapping HUDs, and visual hierarchy defects surfaced by the `impeccable` eyeball pass.
+- **SINGLE SHARED BUILD TREE:** Execute inside the single `rdm-studio` working tree (never create parallel `git worktree` directories).
+- **STRICT SI & ZERO PANICS:** Keep strict SI units (`m`, `N`, `Pa`, `rad`, `kg/m³`) and zero `.unwrap()` / `.expect()` / `panic!()` in `crates/` and `bindings/rdm-wasm`.
+- **FAST SANDBOX PLAYWRIGHT (`AGENTS.md` §4):** Run Playwright strictly with `--project=chromium --project=firefox --reporter=list` (never `--project=webkit` or `--with-deps`).
+- Write complete, clean files (never blind regex/tab patches) to avoid `oxfmt` whitespace no-ops.
+
+1. **Bootstrap, Sync, Install `shadcn/Tailwind` UI Libs & Load `impeccable` References (< 3 tool calls):**
+   - `cd rdm-studio && git fetch origin && git reset --hard origin/main` (or clone `https://github.com/elcoosp/rdm-studio.git` if missing).
+   - Install `pnpm --filter web add lucide-react tw-animate-css @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities recharts`.
+   - Ensure `rustc`/`cargo`, `wasm-pack`, `pnpm`, and `ship` are installed, then read `AGENTS.md`, `STATUS.md`, and `.agents/skills/impeccable/` (`SKILL.md`, `operate.md`, `layout.md`, `adapt.md`, `polish.md`, `craft-floor.md`), enabling `node .agents/skills/impeccable/scripts/hooks.mjs on || true`.
+
+2. **Wave 1 — Resolve Merge Conflicts, Syntax Bug, LTB Curve-d Fallback & Worker Solve Deduplication:**
+   - **A. Clean Merge Conflicts & Top-of-File JSX (`SettingsPopover.tsx`, `ForceDiagrams3D.tsx`, `loads.tsx`):**
+     - Resolve the `<<<<<<< Updated upstream` conflict markers in `apps/web/src/components/SettingsPopover.tsx` (keeping `DEFAULT_SETTINGS` with `p_delta: false` and the `P-Δ (second ordre)` toggle) and `apps/web/src/viewport3d/ForceDiagrams3D.tsx` (keeping null-safe array normalization).
+     - Move `<EnvLoadGenerators />` from lines 1–4 of `apps/web/src/routes/loads.tsx` into `LoadsPage`'s left inspector JSX below the case tabs.
+   - **B. EN 1993-1-1 Table 6.3 General Curve-d Fallback (`crates/rdm-eurocode/src/en1993.rs`):**
+     - In `lateral_torsional_buckling`, replace the `h/b > 3.1` `Err(CheckUnavailable)` hard stop with general buckling curve `d` (`alpha_lt = 0.76`) so slender I-sections never abort `member_check`.
+   - **C. Reuse `cached_solved_model` Across All WASM Endpoints & Fix Worker Request Keys (`bindings/rdm-wasm/src/lib.rs`, `apps/web/src/wasmBridge/workerClient.ts`, `fea.worker.ts`):**
+     - Route `compute_envelopes_json`, `buckling_analysis_json`, and `optimize_sections_json` through `cached_solved_model(project_json)` instead of calling `solve_model(structure)` from scratch on every mount.
+     - In `workerClient.ts`, key `enginePending` by a unique monotonically increasing `callId` (passed in `EngineCallRequest` and echoed in `ENGINE_RESULT`) so concurrent calls to the same WASM function never overwrite each other's Promise callbacks.
+
+3. **Wave 2 — Fix All 10 Failing E2E Tests, Enforce `shadcn/Tailwind` Lib Usage & Run `impeccable` Visual Polish Pass (`apps/web/src/`):**
+   - **A. Fix Support Springs `"élastique"` Badge (`apps/web/src/routes/supports.tsx`):**
+     - In `SpringFields`, when `springs` are all `0` on mount, initialize the vertical translational spring (`kz`, index `2`) to `1000 kN/m` (`1_000_000 N/m`) so clicking `"Appliquer les ressorts à N1"` immediately creates a valid elastic spring and displays the `"élastique"` badge.
+   - **B. Fix Mobile Vaul Drawer Open/Close Interaction (`apps/web/src/components/BottomSheet.tsx`):**
+     - On `< 768 px` mobile viewports, keep the Vaul drawer closed by default (`useState(false)`) when `Drawer.Trigger` (`inspector-sheet-handle`) is rendered so clicking `inspector-sheet-handle` opens it (`setOpen(true)`) and `sheet-close` (`X` Lucide icon) closes it cleanly on both Chromium and Firefox.
+   - **C. Fix Parametric Generator Toast Duration (`apps/web/src/components/ProjectGalleryModal.tsx`):**
+     - Set `duration: 8_000` on the `"Structure paramétrique générée"` toast so slow cold-start browsers never miss the `"moteur Rust rdm-cad"` confirmation.
+   - **D. MANDATORY USAGE OF ALL 4 `shadcn/Tailwind` LIBRARIES (Zero Unused Packages — Every Lib Must Be Imported & Rendered):**
+     1. **`tw-animate-css` (`apps/web/src/app.css` + `components/ui/{popover,dialog,dropdown-menu,tooltip,collapsible}.tsx`):** Add `@import "tw-animate-css";` right after `@import "tailwindcss";` in `app.css` and apply `animate-in fade-in-0 zoom-in-95` / `animate-out fade-out-0 zoom-out-95` on every Base UI popup (`PopoverContent`, `DialogContent`, `DropdownMenuContent`, `TooltipContent`).
+     2. **`lucide-react` (`__root.tsx`, `SettingsPopover.tsx`, `BottomSheet.tsx`, `results.tsx`, `report.tsx`, `OptimizerModal.tsx`, `ScenarioCompareModal.tsx`):** Purge ALL raw Unicode UI symbols (`⚙`, `✓`, `⇄`, `↩`, `↪`, `×`, `▲`, `↑`, `↓`, `▾`) and replace them with `1.5px`-stroke `lucide-react` icons (`Settings`, `CheckCircle2`, `ArrowLeftRight`, `Undo2`, `Redo2`, `X`, `ChevronUp`, `ChevronDown`, `GripVertical`, `SlidersHorizontal`, `Sparkles`, `Printer`, `Download`, `FileSpreadsheet`, `Box`, `FileText`).
+     3. **`recharts` (`OptimizerModal.tsx` & `AdvancedPanels.tsx`):**
+        - In `OptimizerModal.tsx`, render a real **`<ResponsiveContainer><ScatterChart>`** (`Scatter`, `XAxis` `mass_per_m` kg/m, `YAxis` `utilization` η, `<ReferenceLine y={1} stroke="#DC2626" strokeDasharray="4 4" />`, `<Tooltip />`) displaying the Pareto frontier visually instead of raw text tuples.
+        - In `AdvancedPanels.tsx` (Seismic EN 1998-1 tab), replace the raw `<svg>` bars with a real **`<ResponsiveContainer><AreaChart>`** (`Area` `Se(T)` in `#1D4ED8`, `XAxis` period `T (s)`, `YAxis` `Se (g)`, `CartesianGrid`, `<Tooltip />`).
+     4. **`@dnd-kit/core` + `@dnd-kit/sortable` (`apps/web/src/routes/report.tsx`):**
+        - Wrap Step 5's `ReportBuilder` chapter list in `<DndContext collisionDetection={closestCenter} onDragEnd={...}>` + `<SortableContext items={chapters.map(c => c.id)} strategy={verticalListSortingStrategy}>` with `useSortable` drag handles (`<GripVertical size={14} />`) so users drag-and-drop chapters smoothly.
+     - **Verification Check:** Before moving to Wave 3, confirm via `grep` that `tw-animate-css`, `lucide-react`, `recharts`, and `@dnd-kit/sortable` are all imported and rendered in `apps/web/src/`.
+   - **E. `impeccable` Visual Polish Across All 5 Screens (Zero Redesign, Pixel-Perfect Craft):**
+     - **Header (`__root.tsx`):** Keep `SettingsPopover` and `Validation` compact inside the right control group so the 3-zone header never overflows at `860×900`.
+       Utilisez le code avec précaution.
+
+- Step 1 (geometry.tsx): Place FamilyPills inside the left inspector right above the profile Combobox (filtering ipeSections directly by familyOfDesignation), and dock CadToolbar cleanly above the viewport slot (never overlapping LayerToolbar or Iso | XY | XZ | YZ camera buttons).
+- Step 4 (results.tsx): Move AdvancedPanels (Global Buckling λcr, Seismic EN 1998-1, Multi-Material EC2/EC5/EC3-1-8/EC3-1-2/EC9) and the Optimiseur EC3 / Scénarios buttons into tabs inside the right 340px diagnostic rail (ec3-rail), and place ForceDiagrams3D as a clean toggleable panel below the 220px bottom dock so neither the 3D canvas nor the 220px uPlot dock is covered or overflowed.
+- Step 5 (report.tsx): Move <ReportBuilder /> into the sticky 320px right export rail beside the centered 794px A4 sheet, and sanitize project.name in .docx filenames (replace(/[^\w-]+/g, "_")).
+- Eyeball Verification Round: Capture Playwright screenshots of all 5 routes across 1440×900, 860×900, and 390×844, inspect every screenshot for clipping, cramped padding, text truncation, or visual imbalance per craft-floor.md, and fix every defect found.
+
+4. Wave 3 — Real-World Structural Engineering E2E & Edge-Case Suite (apps/web/e2e/real-world-scenarios.spec.ts):
+   • Author a dedicated E2E suite testing real civil/structural engineering workflows and edge cases end-to-end: 1. Industrial Portal Frame (Portique 18 m) with Wind + Snow + P-Δ + EC3 6.61/6.62 + 1-Click Optimizer Apply & ⌘Z Undo: Generate/load a portal frame, add EN 1991 Snow & Wind actions, enable P-Δ in SettingsPopover, run Step 4 solve, inspect KaTeX CalcTrace, apply the EC3 optimizer recommendation, verify utilization drops (η ≤ 1.0), and undo cleanly via ⌘Z. 2. Warren Truss (24 m) with Articulated Diagonals + Linear Buckling (λcr): Generate a 24 m Warren truss, toggle "Barre de treillis (articuler N1/N2)" on diagonals, apply nodal loads, and verify global buckling λcr modes render on Step 4. 3. Multi-Span Continuous Beam (3 travées) with Prescribed Support Settlement & L/300 SLS Check: Load the 3-span beam, verify reactions sum to equilibrium (ΣRz = ΣFz), switch SLS limit to L/300, and scrub x ∈ [0, L] across uPlot + 2D σvM cross-section cut. 4. Edge Case — Unstable Mechanism Diagnostic: Clear all supports on Step 2, navigate to Step 4, and verify the solver catches the mechanism with a clear pedagogical fault message without crashing the worker or UI. 5. Edge Case — Legacy .rdm v1 File Migration & Full Export Suite: Drop a legacy version: 1 .rdm file onto the shell, verify automatic migration + solve, and verify .docx Word + IFC4 BIM + .rdm exports download valid non-empty files.
+5. Verify All Gates (G0 → G6 + vite build, AGENTS.md §4) 100% Green & Archive:
+   • Run every gate and confirm 0 errors, 0 warnings, 0 failed tests:
+   • cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings
+   • RUSTFLAGS="-D warnings" cargo test --workspace --all-features
+   • wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg
+   • pnpm --filter web exec oxfmt --check && pnpm --filter web exec oxlint --deny-warnings && pnpm --filter web exec tsr generate && pnpm --filter web i18n:extract && pnpm --filter web i18n:compile && pnpm --filter web exec tsc --noEmit && pnpm --filter web test:unit
+   • pnpm --filter web exec playwright test --project=chromium --project=firefox --reporter=list
+   • pnpm --filter web build
+   • Update STATUS.md (v2.0.1 — 100% green across G0 → G6 and production vite build), write .github/pr-body.md and ship.toml (1 dirty file per [[commit]], ordered by dependency), run ship validate until exit 0, and zip the full clean tree (rdm-studio-v2.0.1-<SHA>.zip, excluding only .git/, target/, node_modules/, caches) into the downloads folder with zip contents proof.

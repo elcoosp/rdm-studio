@@ -50,6 +50,11 @@ interface StageState {
   setOptions: (key: string, getter: () => StageRenderOptions) => void;
   clearContent: (key: string) => void;
   setCapture: (capture: (() => string | null) | null) => void;
+  /** v2.0.2: last cached PNG of the stage (captured while a step slot was
+   * live, before the canvas hides on Step 5) — Step 5's A4 sheet and the
+   * Takumi PDF embed a crisp populated render instead of a blank box. */
+  lastSnapshot: string | null;
+  setLastSnapshot: (png: string | null) => void;
 }
 
 export const useStageStore = create<StageState>()((set, get) => ({
@@ -59,6 +64,7 @@ export const useStageStore = create<StageState>()((set, get) => ({
   contentKey: null,
   optionsGetter: null,
   capture: null,
+  lastSnapshot: null,
   setSlot: (key, el) => set({ slotKey: key, slotEl: el }),
   setContent: (key, getter) => {
     if (get().contentKey === key) {
@@ -74,6 +80,7 @@ export const useStageStore = create<StageState>()((set, get) => ({
     }
   },
   setCapture: (capture) => set({ capture }),
+  setLastSnapshot: (png) => set({ lastSnapshot: png }),
 }));
 
 /**
@@ -126,6 +133,14 @@ export function StageContent({
  * Takumi PDF embed). Returns null when the canvas has never mounted.
  */
 export function captureViewportPng(): string | null {
-  const capture = useStageStore.getState().capture;
-  return capture === null ? null : capture();
+  const { capture, lastSnapshot } = useStageStore.getState();
+  if (capture !== null) {
+    const live = capture();
+    if (live !== null) {
+      return live;
+    }
+  }
+  // v2.0.2: the canvas is hidden (and its buffer cleared) on Step 5 —
+  // fall back to the snapshot cached on the last live step.
+  return lastSnapshot;
 }

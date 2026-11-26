@@ -50,8 +50,8 @@ export function FamilyPills({
           }}
           className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
             active === family
-              ? "bg-blue-600 text-white"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+              ? "bg-accent text-white"
+              : "bg-panel-subtle text-ink-secondary hover:text-accent"
           }`}
         >
           {family === "Tous" ? (

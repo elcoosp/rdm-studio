@@ -74,13 +74,14 @@ test.describe("full desktop 1440×900", () => {
     expect(legendBox!.y).toBeGreaterThan((leftBox?.y ?? 0) + (leftBox?.height ?? 0));
   });
 
-  test("every route keeps the header 44px and no body scrollbar", async ({ page }) => {
+  test("every route keeps the header 48px and no body scrollbar", async ({ page }) => {
     for (const route of ALL_ROUTES) {
       await page.goto(route);
       const header = page.locator("header");
       const headerBox = await header.boundingBox();
       expect(headerBox).not.toBeNull();
-      expect(Math.round(headerBox!.height)).toBe(44);
+      // v2.1.2: the redesigned Swiss Metrology header is 48px (h-12).
+      expect(Math.round(headerBox!.height)).toBe(48);
       const metrics = await page.evaluate(() => ({
         inner: window.innerHeight,
         body: document.body.scrollHeight,

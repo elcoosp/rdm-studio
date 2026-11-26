@@ -40,11 +40,14 @@ export function CalcTraceTree({
             <div
               className="mt-1 text-sm"
               // KaTeX MathML output is generated from the engine's own
-              // clause strings, never user input.
+              // clause strings, never user input — `trust: false` keeps
+              // the renderer strictly read-only regardless (v2.1.2 audit).
               dangerouslySetInnerHTML={{
                 __html: katex.renderToString(node.formula_latex, {
                   throwOnError: false,
                   output: "mathml",
+                  trust: false,
+                  strict: false,
                 }),
               }}
             />

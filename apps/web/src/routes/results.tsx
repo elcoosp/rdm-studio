@@ -16,6 +16,7 @@ import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/work
 import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { UtilizationProgress } from "@/components/ui/progress";
+import { ArrowLeftRight, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import {
   feaClient,
   type ModalReport,
@@ -106,6 +107,11 @@ function ResultsPage() {
   const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [cutBeamId, setCutBeamId] = useState<number>(project.structure.beams[0]?.id ?? 0);
   const [station, setStation] = useState(0.5);
+  // v2.0.1: optimizer / scenario modals live on the diagnostic rail now.
+  const [optimizerOpen, setOptimizerOpen] = useState(false);
+  const [scenarioOpen, setScenarioOpen] = useState(false);
+  // v2.0.1: the ForceDiagrams3D panel is toggleable below the 220px dock.
+  const [diagramsOpen, setDiagramsOpen] = useState(false);
   const [massKg, setMassKg] = useState<number | null>(null);
   const ipeSeriesRef = useRef<string[]>([]);
   const areasRef = useRef<Map<string, number>>(new Map());
@@ -407,8 +413,6 @@ function ResultsPage() {
       {/* Zone 2 — viewport row: persistent stage slot + 340px EC3 rail. */}
       <div className="flex min-h-0 flex-1 gap-2">
         <section className="relative min-w-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
-          <ForceDiagrams3D />
-
           <div ref={slotRef} className="h-full w-full" data-testid="results-stage-slot" />
           <StageContent
             k="results"
@@ -607,6 +611,27 @@ function ResultsPage() {
                 <Trans>Toutes les vérifications EC3 sont vérifiées (η ≤ 1,00).</Trans>
               </p>
             )}
+            {/* v2.0.1: optimizer / scenario entries + advanced-analysis
+                tabs docked INSIDE the 340px diagnostic rail. */}
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
+              <button
+                type="button"
+                onClick={() => setOptimizerOpen(true)}
+                className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+              >
+                <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
+                Optimiseur EC3
+              </button>
+              <button
+                type="button"
+                onClick={() => setScenarioOpen(true)}
+                className="flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
+              >
+                <ArrowLeftRight size={14} strokeWidth={1.5} aria-hidden />
+                Scénarios
+              </button>
+            </div>
+            <AdvancedPanels />
           </aside>
         ) : null}
       </div>
@@ -623,6 +648,31 @@ function ResultsPage() {
           maxSlsDeflMm={maxSlsDeflMm}
           mRd={uls?.beams.find((b) => b.beam_id === cutBeamId)?.m_rd ?? null}
         />
+      ) : null}
+      {/* v2.0.1: ForceDiagrams3D as a clean toggleable panel BELOW the
+          220px dock — the 3D canvas and the uPlot dock stay uncovered. */}
+      {report !== null && project.structure.beams.length > 0 ? (
+        <section className="shrink-0">
+          <button
+            type="button"
+            data-testid="force-diagrams-toggle"
+            onClick={() => setDiagramsOpen((v) => !v)}
+            aria-expanded={diagramsOpen}
+            className="flex min-h-8 w-full items-center justify-between rounded-panel border border-hairline bg-panel px-3 text-[12px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
+          >
+            <Trans>Diagrammes d'efforts 3D (enveloppes)</Trans>
+            {diagramsOpen ? (
+              <ChevronUp size={14} strokeWidth={1.5} aria-hidden />
+            ) : (
+              <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
+            )}
+          </button>
+          {diagramsOpen ? (
+            <div className="mt-2">
+              <ForceDiagrams3D />
+            </div>
+          ) : null}
+        </section>
       ) : null}
       {/* Phone drawer: nodal displacements + SI/UI conversion note. */}
       {isMobile ? (
@@ -655,8 +705,12 @@ function ResultsPage() {
           <p className="font-data mt-1 text-[11px] text-ink-muted">
             {report !== null ? `${report.n_nodes} nœuds / ${report.n_beams} poutres` : ""}
           </p>
+          {/* v2.0.1: advanced analyses stay reachable on phones. */}
+          {report !== null ? <AdvancedPanels /> : null}
         </BottomSheet>
       ) : null}
+      {optimizerOpen ? <OptimizerModal onClose={() => setOptimizerOpen(false)} /> : null}
+      {scenarioOpen ? <ScenarioCompareModal onClose={() => setScenarioOpen(false)} /> : null}
     </div>
   );
 }
@@ -764,8 +818,6 @@ function DockedInspector({
   mRd: number | null;
 }) {
   const [stress, setStress] = useState<StressGrid | null>(null);
-  const [inspectorOptimizerOpen, setInspectorOptimizerOpen] = useState(false);
-  const [scenarioOpen, setScenarioOpen] = useState(false);
   const [forces, setForces] = useState<SpanForceSample[] | null>(null);
   const plotRef = useRef<HTMLDivElement>(null);
   const uplotRef = useRef<uPlot | null>(null);
@@ -1006,28 +1058,9 @@ function DockedInspector({
           />
         </div>
       </div>
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setInspectorOptimizerOpen(true)}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-        >
-          ⚙ Optimiseur EC3
-        </button>
-        <button
-          type="button"
-          onClick={() => setScenarioOpen(true)}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-semibold dark:border-slate-600"
-        >
-          ⇄ Scénarios
-        </button>
-        <span className="text-xs text-slate-500">Pourquoi ça échoue ? — 3 remèdes 1-clic</span>
-      </div>
-      <AdvancedPanels />
-      {inspectorOptimizerOpen ? (
-        <OptimizerModal onClose={() => setInspectorOptimizerOpen(false)} />
-      ) : null}
-      {scenarioOpen ? <ScenarioCompareModal onClose={() => setScenarioOpen(false)} /> : null}
+      {/* v2.0.1: the Optimiseur EC3 / Scénarios entries and the advanced
+          panels now live inside the right 340px diagnostic rail (ec3-rail)
+          — they no longer overlap the 220px uPlot dock. */}
     </section>
   );
 }

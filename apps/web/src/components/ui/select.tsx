@@ -1,4 +1,5 @@
 import { Select as SelectPrimitive } from "@base-ui/react/select";
+import { Check, ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
@@ -16,7 +17,9 @@ export function SelectTrigger({ className, children, ...props }: SelectPrimitive
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon className="text-[10px] text-ink-muted">▾</SelectPrimitive.Icon>
+      <SelectPrimitive.Icon className="text-ink-muted">
+        <ChevronDown size={12} strokeWidth={1.5} aria-hidden />
+      </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
 }
@@ -50,7 +53,7 @@ export function SelectItem({ className, children, ...props }: SelectPrimitive.It
     >
       <SelectPrimitive.ItemText className="flex-1">{children}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="text-[11px] text-accent">
-        ✓
+        <Check size={12} strokeWidth={1.5} aria-hidden />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   );

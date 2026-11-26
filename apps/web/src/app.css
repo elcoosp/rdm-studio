@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* v2.0.1: tw-animate-css — the `animate-in` / `animate-out` utilities
+ * driving the smooth Base UI popup transitions (popover, dialog,
+ * dropdown-menu, tooltip, collapsible). */
+@import "tw-animate-css";
 
 /* Bundled typefaces (section 2.3: Inter + JetBrains Mono) — self-hosted so
  * the app shell and the takumi PDF renderer both work fully offline. */

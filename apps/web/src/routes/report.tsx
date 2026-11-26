@@ -1,6 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/react/macro";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Download, FileText, GripVertical } from "lucide-react";
 import { encodeProject } from "@/lib/urlShare";
 import { useProjectStore, type ProjectData } from "@/state/projectStore";
 import QRCode from "qrcode";
@@ -104,7 +122,6 @@ function ReportPage() {
 
   return (
     <div className="h-full min-h-0 overflow-auto p-3 md:p-4">
-      <ReportBuilder />
       <div className="mx-auto flex max-w-[1140px] flex-col gap-4 md:flex-row md:items-start">
         <section className="print-sheet mx-auto w-full max-w-[794px] space-y-5 rounded-panel border border-hairline bg-panel p-8">
           {/* A4 sheet header: logo + title + date. */}
@@ -172,8 +189,10 @@ function ReportPage() {
           <ReportTables />
           <FingerprintFooter qrDataUrl={qrDataUrl} />
         </section>
-        {/* Sticky 320px export rail. */}
-        <aside className="w-full shrink-0 self-start md:sticky md:top-4 md:w-80">
+        {/* v2.0.1: sticky 320px export rail — the Report Builder chapters
+            and every export entry live beside the centered A4 sheet. */}
+        <aside className="w-full shrink-0 space-y-3 self-start md:sticky md:top-4 md:w-80">
+          <ReportBuilder />
           <div className="space-y-3 rounded-panel border border-hairline bg-panel p-4">
             <h3 className="text-[15px] font-semibold">
               <Trans>Exports (étape 5)</Trans>
@@ -507,20 +526,24 @@ function ReportBuilder(): React.ReactElement {
     return undefined;
   }, [project]);
 
-  const moveChapter = (index: number, delta: number): void => {
-    const next = [...chapters];
-    const target = index + delta;
-    if (target < 0 || target >= next.length) {
+  // v2.0.1: drag-reorderable chapters (@dnd-kit) replace the ↑/↓ buttons.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const handleDragEnd = (event: DragEndEvent): void => {
+    const { active, over } = event;
+    if (over === null || active.id === over.id) {
       return;
     }
-    const a = next[index];
-    const bNext = next[target];
-    if (a === undefined || bNext === undefined) {
-      return;
-    }
-    next[index] = bNext;
-    next[target] = a;
-    setChapters(next);
+    setChapters((current) => {
+      const from = current.findIndex((c) => c.id === active.id);
+      const to = current.findIndex((c) => c.id === over.id);
+      if (from < 0 || to < 0) {
+        return current;
+      }
+      return arrayMove(current, from, to);
+    });
   };
 
   const blocks = (): DocxBlock[] => {
@@ -596,40 +619,21 @@ function ReportBuilder(): React.ReactElement {
           className="rounded border border-slate-300 bg-transparent px-2 py-1 dark:border-slate-600"
         />
       </div>
-      <ul className="mb-3 space-y-1">
-        {chapters.map((chapter, index) => (
-          <li key={chapter.id} className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={chapter.on}
-                onChange={(e) =>
-                  setChapters(
-                    chapters.map((c) => (c.id === chapter.id ? { ...c, on: e.target.checked } : c)),
-                  )
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={chapters.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          <ul className="mb-3 space-y-1">
+            {chapters.map((chapter) => (
+              <SortableChapter
+                key={chapter.id}
+                chapter={chapter}
+                onToggle={(on) =>
+                  setChapters(chapters.map((c) => (c.id === chapter.id ? { ...c, on } : c)))
                 }
               />
-              {chapter.label}
-            </label>
-            <span className="flex gap-1">
-              <button
-                type="button"
-                onClick={() => moveChapter(index, -1)}
-                aria-label={`Monter ${chapter.label}`}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => moveChapter(index, 1)}
-                aria-label={`Descendre ${chapter.label}`}
-              >
-                ↓
-              </button>
-            </span>
-          </li>
-        ))}
-      </ul>
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
       <div className="flex flex-wrap gap-2 text-xs">
         <button
           type="button"
@@ -640,9 +644,12 @@ function ReportBuilder(): React.ReactElement {
         </button>
         <button
           type="button"
-          onClick={() => downloadDocx(blocks(), meta, `rapport-${project.name}.docx`)}
-          className="rounded bg-blue-600 px-3 py-1 font-semibold text-white"
+          onClick={() =>
+            downloadDocx(blocks(), meta, `rapport-${project.name.replace(/[^\w-]+/g, "_")}.docx`)
+          }
+          className="flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1 font-semibold text-white"
         >
+          <FileText size={14} strokeWidth={1.5} aria-hidden />
           Télécharger .docx
         </button>
         {["ifc4", "saf", "opensees", "solver", "gltf"].map((format) => (
@@ -650,8 +657,9 @@ function ReportBuilder(): React.ReactElement {
             key={format}
             type="button"
             onClick={() => exportBim(format)}
-            className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+            className="flex items-center justify-center gap-1 rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
           >
+            <Download size={12} strokeWidth={1.5} aria-hidden />
             {format.toUpperCase()}
           </button>
         ))}
@@ -667,5 +675,43 @@ function ReportBuilder(): React.ReactElement {
         {`SHA-256 : ${fingerprint ?? "calcul…"} — clause d'ingénieur incluse.`}
       </p>
     </section>
+  );
+}
+
+/**
+ * v2.0.1: one drag-reorderable Report Builder chapter row — a
+ * `<GripVertical />` handle drives the @dnd-kit sortable transform while
+ * the checkbox toggle stays a plain click.
+ */
+function SortableChapter({
+  chapter,
+  onToggle,
+}: {
+  chapter: { id: string; label: string; on: boolean };
+  onToggle: (on: boolean) => void;
+}): React.ReactElement {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: chapter.id,
+  });
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-center justify-between gap-2 rounded text-xs ${isDragging ? "z-10 bg-accent-tint shadow-sm" : ""}`}
+    >
+      <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+        <input type="checkbox" checked={chapter.on} onChange={(e) => onToggle(e.target.checked)} />
+        <span className="truncate">{chapter.label}</span>
+      </label>
+      <button
+        type="button"
+        aria-label={`Réordonner ${chapter.label}`}
+        className="flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-ink-muted hover:bg-accent-tint hover:text-accent active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={14} strokeWidth={1.5} aria-hidden />
+      </button>
+    </li>
   );
 }

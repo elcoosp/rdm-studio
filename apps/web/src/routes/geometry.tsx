@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trans } from "@lingui/react/macro";
 import { toast } from "sonner";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { t } from "@lingui/core/macro";
 import { IconPlus, IconTrash } from "@/components/icons";
 import { BottomSheet } from "@/components/BottomSheet";
@@ -12,7 +13,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
-import { FamilyPills } from "@/components/FamilyPills";
+import { FamilyPills, familyOfDesignation, type FamilyName } from "@/components/FamilyPills";
 import { CadToolbar } from "@/components/CadToolbar";
 import { useViewportStore } from "@/state/viewportStore";
 import { StageContent, useStageSlot } from "@/state/stageStore";
@@ -89,6 +90,13 @@ function GeometryPage() {
 
   const navigate = useNavigate();
   const ipeSections = sections;
+  // v2.0.1: FamilyPills filter the profile list directly (by designation
+  // family) inside the left inspector, above the profile Combobox.
+  const [family, setFamily] = useState<FamilyName>("Tous");
+  const familySections =
+    family === "Tous"
+      ? ipeSections
+      : ipeSections.filter((s) => familyOfDesignation(s.designation) === family);
   const selectedBeam = project.structure.beams.find((b) => b.id === selection.beamId) ?? null;
   const nodeIds = project.structure.nodes.map((n) => n.id);
 
@@ -268,13 +276,16 @@ function GeometryPage() {
               </option>
             ))}
           </select>
+          {/* v2.0.1: family pills docked above the profile Combobox — they
+              filter the section list directly by designation family. */}
+          <FamilyPills onPick={(picked: FamilyName) => setFamily(picked)} />
           <label className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
             <ProfileIpe size={14} />
             <Trans>Profil (EN 10365)</Trans>
           </label>
           {/* v1.6.0: family-accurate cross-section icons per designation. */}
           <ComboboxRoot
-            items={ipeSections.map((s) => s.designation)}
+            items={familySections.map((s) => s.designation)}
             value={selectedBeam?.section_id ?? newSection}
             onValueChange={(next: string | null) => {
               if (next === null) return;
@@ -399,19 +410,13 @@ function GeometryPage() {
     <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
       {/* v1.6.0: the persistent stage slot — the ONE canvas in __root.tsx
           overlays this pane, so orbit/zoom survive every step switch. */}
-      {/* v2.0.0: CAD toolbar + family pills overlay the stage (zero flow impact). */}
-      <div className="absolute inset-x-2 top-2 z-20 flex flex-col gap-1">
-        <CadToolbar />
-        <FamilyPills
-          onPick={(family: string) => {
-            // Family filter feeds the profile combobox search string.
-            const search = window.document.querySelector<HTMLInputElement>("[data-profile-search]");
-            if (search !== null && family !== "Tous") {
-              search.value = family === "Perso" ? "" : family;
-              search.dispatchEvent(new Event("input", { bubbles: true }));
-            }
-          }}
-        />
+      {/* v2.0.1: the CAD toolbar docks as a flow row ABOVE the viewport
+          slot — it can no longer overlap the app header, the in-stage
+          layer toolbar or the Iso|XY|XZ|YZ camera presets. */}
+      <div className="shrink-0 overflow-x-auto rounded-panel border border-hairline bg-panel px-2 py-1.5">
+        <div className="min-w-max">
+          <CadToolbar />
+        </div>
       </div>
       <div
         ref={slotRef}
@@ -622,11 +627,15 @@ function DataDock({
         <button
           type="button"
           aria-label={open ? "Replier le tableau de données" : "Déplier le tableau de données"}
-          className="ml-auto flex h-7 w-7 items-center justify-center rounded text-[12px] text-ink-muted hover:text-ink-primary"
+          className="ml-auto flex h-7 w-7 items-center justify-center rounded text-ink-muted hover:text-ink-primary"
           data-testid="data-dock-toggle"
           onClick={() => setOpen((v) => !v)}
         >
-          {open ? "▾" : "⌃"}
+          {open ? (
+            <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
+          ) : (
+            <ChevronUp size={14} strokeWidth={1.5} aria-hidden />
+          )}
         </button>
       </div>
       {open ? (

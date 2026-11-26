@@ -1,4 +1,5 @@
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
+import { Check } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
@@ -12,8 +13,8 @@ export function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) 
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className="text-[10px] leading-none text-white">
-        ✓
+      <CheckboxPrimitive.Indicator className="leading-none text-white">
+        <Check size={10} strokeWidth={2} aria-hidden />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );

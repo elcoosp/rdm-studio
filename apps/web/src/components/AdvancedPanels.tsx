@@ -1,6 +1,15 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useProjectStore } from "../state/projectStore";
 import { feaClient, type BucklingReportDto } from "../wasmBridge/workerClient";
 
@@ -164,25 +173,67 @@ export function AdvancedPanels(): ReactElement {
                 : "…"}
             </span>
           </div>
-          {seValues !== null ? (
-            <svg
-              viewBox="0 0 320 80"
-              className="h-20 w-full"
-              role="img"
-              aria-label={t`Spectre élastique`}
-            >
-              {seValues.map((se, i) => (
-                <rect
-                  key={i}
-                  x={i * 16}
-                  y={80 - Math.min(se / 3, 1) * 76}
-                  width={12}
-                  height={Math.max(Math.min(se / 3, 1) * 76, 1)}
-                  fill="#31688e"
-                />
-              ))}
-            </svg>
-          ) : null}
+          {seValues !== null && seValues.length > 0
+            ? (() => {
+                const spectrum = seValues.map((se, i) => ({
+                  t: Number((i * 0.1).toFixed(2)),
+                  se: Number(se.toFixed(4)),
+                }));
+                return (
+                  // v2.0.1: real recharts AreaChart for the EN 1998-1 elastic
+                  // spectrum Se(T) — replaces the raw <svg> bar strip.
+                  <div
+                    style={{ width: "100%", height: 200 }}
+                    data-testid="seismic-spectrum-chart"
+                    role="img"
+                    aria-label={t`Spectre élastique`}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={spectrum}
+                        margin={{ top: 8, right: 12, bottom: 16, left: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                        <XAxis
+                          dataKey="t"
+                          tick={{ fontSize: 11 }}
+                          tickFormatter={(value: number) => value.toFixed(1)}
+                          label={{
+                            value: "T (s)",
+                            position: "insideBottom",
+                            offset: -8,
+                            fontSize: 11,
+                          }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11 }}
+                          width={40}
+                          label={{
+                            value: "Se (g)",
+                            angle: -90,
+                            position: "insideLeft",
+                            style: { textAnchor: "middle", fontSize: 11 },
+                          }}
+                        />
+                        <Tooltip
+                          formatter={(value) => [`Se = ${String(value)} g`, "EN 1998-1"]}
+                          labelFormatter={(label) => `T = ${Number(label).toFixed(2)} s`}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="se"
+                          stroke="#1D4ED8"
+                          strokeWidth={1.5}
+                          fill="#1D4ED8"
+                          fillOpacity={0.18}
+                          isAnimationActive={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()
+            : null}
         </div>
       ) : null}
 

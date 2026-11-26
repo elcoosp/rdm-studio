@@ -3,6 +3,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
 import { Trans } from "@lingui/react/macro";
 import { Toaster } from "sonner";
+import { BadgeCheck, ChevronDown, Redo2, Undo2 } from "lucide-react";
 import { useAppHotkeys } from "@/hooks/useAppHotkeys";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { SettingsPopover } from "../components/SettingsPopover";
@@ -129,7 +130,7 @@ function RootLayout() {
             className="hidden shrink-0 rounded px-1 py-0.5 text-[12px] text-ink-muted hover:text-accent md:inline"
             onClick={() => setGalleryOpen(true)}
           >
-            ▾
+            <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
           </button>
           <span className="hidden min-w-0 truncate text-[12px] text-ink-muted md:inline">
             / {project.name}
@@ -181,7 +182,7 @@ function RootLayout() {
             className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary md:flex"
             onClick={() => undoModel()}
           >
-            ↩
+            <Undo2 size={14} strokeWidth={1.5} aria-hidden />
           </button>
           <button
             type="button"
@@ -190,7 +191,7 @@ function RootLayout() {
             className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary md:flex"
             onClick={() => redoModel()}
           >
-            ↪
+            <Redo2 size={14} strokeWidth={1.5} aria-hidden />
           </button>
           <button
             type="button"
@@ -219,10 +220,11 @@ function RootLayout() {
             type="button"
             onClick={() => setValidationOpen(true)}
             aria-label="Validation — 41 benchmarks analytiques"
-            className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
             title="Validation — 41 benchmarks analytiques"
+            className="flex items-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
           >
-            ✓<span className="hidden sm:inline">&nbsp;Validation</span>
+            <BadgeCheck size={14} strokeWidth={1.5} aria-hidden />
+            <span className="hidden sm:inline">&nbsp;Validation</span>
           </button>
         </div>
       </header>

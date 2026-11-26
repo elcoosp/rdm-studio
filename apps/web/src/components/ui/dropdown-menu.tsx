@@ -1,4 +1,5 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { Check } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
@@ -13,6 +14,8 @@ export function DropdownMenuContent({ className, children, ...props }: MenuPrimi
         <MenuPrimitive.Popup
           className={cn(
             "min-w-52 rounded-[8px] border border-hairline bg-panel py-1 shadow-[0_8px_24px_rgba(15,23,42,0.08)]",
+            "data-[open]:animate-in data-[open]:fade-in-0 data-[open]:zoom-in-95",
+            "data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
             className,
           )}
           {...props}
@@ -52,7 +55,7 @@ export function DropdownMenuCheckboxItem({
       {...props}
     >
       <MenuPrimitive.CheckboxItemIndicator className="text-[11px] text-accent">
-        ✓
+        <Check size={12} strokeWidth={1.5} aria-hidden />
       </MenuPrimitive.CheckboxItemIndicator>
       {children}
     </MenuPrimitive.CheckboxItem>

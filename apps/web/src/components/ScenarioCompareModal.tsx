@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import { X } from "lucide-react";
 import { deleteSnapshot, listSnapshots, loadSnapshot, saveSnapshot } from "../state/snapshots";
 import { useProjectStore } from "../state/projectStore";
 
@@ -106,8 +107,13 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
           <h2 className="text-lg font-bold">
             <Trans>Comparateur de scénarios</Trans>
           </h2>
-          <button type="button" onClick={onClose} aria-label={t`Fermer`} className="text-xl">
-            ×
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t`Fermer`}
+            className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-ink-secondary hover:border-accent hover:text-accent dark:border-slate-700"
+          >
+            <X size={16} strokeWidth={1.5} aria-hidden />
           </button>
         </div>
         <div className="mb-4 flex flex-wrap gap-2">

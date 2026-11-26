@@ -1,6 +1,18 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import { X } from "lucide-react";
+import {
+  CartesianGrid,
+  ReferenceLine,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+  ZAxis,
+} from "recharts";
 import { useProjectStore } from "../state/projectStore";
 import { toast } from "sonner";
 import { feaClient, type GroupOptimizationDto } from "../wasmBridge/workerClient";
@@ -11,6 +23,9 @@ import type { CalcTraceNodeDto } from "../wasmBridge/workerClient";
  * Optimizer modal (v1.8.0/v1.9.0): iterative EC3 lightest-profile search
  * over the catalog candidates, Pareto mass-vs-utilization scatter,
  * mass/carbon/cost totals and the "Why does this fail?" mitigation card.
+ * v2.0.1: the Pareto frontier renders as an interactive recharts
+ * `<ScatterChart>` (mass_per_m vs utilization with the η = 1.0 reference
+ * line) instead of raw text tuples.
  */
 
 const CARBON_KG_PER_KG = 1.9;
@@ -96,6 +111,13 @@ export function whyDoesThisFail(utilization: number): { label: string; impact: s
   ];
 }
 
+/** One Pareto candidate point of the mass-vs-utilization frontier. */
+interface ParetoPoint {
+  designation: string;
+  mass_per_m: number;
+  utilization: number;
+}
+
 export function OptimizerModal({ onClose }: { onClose: () => void }): ReactElement {
   const project = useProjectStore((st) => st.project);
   const loadProject = useProjectStore((st) => st.loadProject);
@@ -136,6 +158,20 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
     return undefined;
   }, [project]);
 
+  /** Flat Pareto frontier across every member group (recharts dataset). */
+  const paretoPoints = useMemo<ParetoPoint[]>(() => {
+    if (rows === null) {
+      return [];
+    }
+    return rows.flatMap((row) =>
+      row.pareto.map(([designation, mass, util]) => ({
+        designation,
+        mass_per_m: mass,
+        utilization: util,
+      })),
+    );
+  }, [rows]);
+
   const worst = rows?.reduce(
     (acc, row) =>
       Math.max(
@@ -172,8 +208,13 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
           <h2 className="text-lg font-bold">
             <Trans>Optimiseur EC3 — profil le plus léger</Trans>
           </h2>
-          <button type="button" onClick={onClose} aria-label={t`Fermer`} className="text-xl">
-            ×
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t`Fermer`}
+            className="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-ink-secondary hover:border-accent hover:text-accent dark:border-slate-700"
+          >
+            <X size={16} strokeWidth={1.5} aria-hidden />
           </button>
         </div>
         {totals !== null ? (
@@ -183,6 +224,69 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
               Coût {totals.cost_eur.toFixed(0)} € ({COST_EUR_PER_KG} €/kg)
             </Trans>
           </p>
+        ) : null}
+        {/* v2.0.1: interactive Pareto frontier (recharts ScatterChart) —
+            mass_per_m (kg/m) vs utilization η with the η = 1.0 limit. */}
+        {paretoPoints.length > 0 ? (
+          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+            <h3 className="mb-1 text-xs font-semibold">
+              <Trans>Frontière de Pareto (masse vs taux de travail)</Trans>
+            </h3>
+            <div style={{ width: "100%", height: 240 }} data-testid="pareto-scatter">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ top: 8, right: 16, bottom: 18, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis
+                    type="number"
+                    dataKey="mass_per_m"
+                    name="Masse linéique"
+                    unit=" kg/m"
+                    domain={["auto", "auto"]}
+                    tick={{ fontSize: 11 }}
+                    label={{
+                      value: "mass_per_m (kg/m)",
+                      position: "insideBottom",
+                      offset: -8,
+                      fontSize: 11,
+                    }}
+                  />
+                  <YAxis
+                    type="number"
+                    dataKey="utilization"
+                    name="Taux de travail"
+                    domain={[0, (max: number) => Math.max(1.2, Math.round(max * 10) / 10)]}
+                    tick={{ fontSize: 11 }}
+                    width={44}
+                  />
+                  <ZAxis range={[60, 60]} />
+                  <ReferenceLine
+                    y={1}
+                    stroke="#DC2626"
+                    strokeDasharray="4 4"
+                    label={{
+                      value: "η = 1.0",
+                      position: "insideTopRight",
+                      fontSize: 11,
+                      fill: "#DC2626",
+                    }}
+                  />
+                  <Tooltip
+                    cursor={{ strokeDasharray: "3 3" }}
+                    formatter={(value, name) => [
+                      name === "Masse linéique" ? `${String(value)} kg/m` : `η = ${value}`,
+                      String(name),
+                    ]}
+                  />
+                  <Scatter
+                    data={paretoPoints}
+                    fill="#1D4ED8"
+                    fillOpacity={0.75}
+                    name="Candidats EC3"
+                  />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         ) : null}
         <div className="mb-4 overflow-x-auto">
           <table className="w-full text-left text-xs">

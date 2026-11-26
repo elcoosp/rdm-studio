@@ -1,13 +1,18 @@
 packages:
   - apps/web
 
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+
 minimumReleaseAgeExclude:
   - "@types/react@19.3.1"
   - three-mesh-bvh@0.10.0
+  - "@types/node@26.6.11"
   - lucide-react@1.81.0
 
 overrides:
-  "@tanstack/router-generator": "1.99.9"
+  "@tanstack/router-generator": 1.99.9
 
 patchedDependencies:
   vaul@1.1.2: patches/vaul@1.1.2.patch

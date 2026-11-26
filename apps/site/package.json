@@ -1,0 +1,42 @@
+{
+  "name": "site",
+  "private": true,
+  "version": "2.2.0",
+  "type": "module",
+  "description": "RDM Studio marketing site — the v2.1.2 landing page ported to the Oxide static adapter (rdm-studio-site.vercel.app).",
+  "scripts": {
+    "dev": "oxide dev",
+    "build": "oxide build",
+    "start": "oxide start",
+    "routes": "oxide routes",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@number-flow/react": "^0.6.2",
+    "@oxide-fw/core": "^0.18.0",
+    "@oxide-fw/react": "^0.18.0",
+    "@oxide-fw/tailwind": "^0.18.0",
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "clsx": "2.1.1",
+    "lucide-react": "^1.19.0",
+    "motion": "^14.14.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sucrase": "^3.35.1",
+    "tailwind-merge": "3.7.0",
+    "tailwindcss": "^4.3.5",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

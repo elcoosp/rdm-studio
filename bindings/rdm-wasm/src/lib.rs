@@ -654,6 +654,39 @@ fn cached_solved_model(project_json: &str) -> Result<std::rc::Rc<SolvedModel>, S
     })
 }
 
+thread_local! {
+    /// v2.0.1: parsed-structure cache for analyses that need the model but
+    /// not the factorization (linear buckling) — repeated endpoint mounts
+    /// skip the re-parse + `resolve_properties` walk.
+    static PARSE_CACHE: std::cell::RefCell<Option<(String, std::rc::Rc<rdm_model::Structure>)>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Parses `project_json` through the one-entry parse cache.
+///
+/// # Errors
+///
+/// Propagates [`SolveError`] on malformed payloads.
+fn cached_structure(project_json: &str) -> Result<std::rc::Rc<rdm_model::Structure>, SolveError> {
+    PARSE_CACHE.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        if let Some((key, structure)) = slot.as_ref()
+            && key == project_json
+        {
+            return Ok(std::rc::Rc::clone(structure));
+        }
+        let project: rdm_model::ProjectFile =
+            serde_json::from_str(project_json).map_err(|e| SolveError::InvalidModel {
+                message: format!("malformed .rdm payload: {e}"),
+            })?;
+        let mut structure = project.structure;
+        resolve_properties(&mut structure);
+        let structure = std::rc::Rc::new(structure);
+        *slot = Some((project_json.to_owned(), std::rc::Rc::clone(&structure)));
+        Ok(structure)
+    })
+}
+
 /// n-point internal-force sampling of one member under a combination
 /// (Step 4 docked diagrams).
 ///
@@ -1521,16 +1554,21 @@ pub fn member_calc_trace(project_json: &str, beam_index: usize) -> Result<JsValu
 /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
 #[wasm_bindgen]
 pub fn compute_envelopes_json(project_json: &str) -> Result<JsValue, JsValue> {
-    let project = match parse_project(project_json) {
-        Ok(p) => p,
-        Err(message) => return fault_js("InvalidModel", message),
+    // v2.0.1: parse + resolve + solve all through the one-entry caches —
+    // `parse_project` alone leaves the section/material tables empty, which
+    // made every envelope mount fault inside `build_elements` (silently
+    // swallowed by the UI as "no envelopes").
+    let structure = match cached_structure(project_json) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
     };
-    let structure = &project.structure;
     let combos = rdm_eurocode::build_combinations_v2(
         &structure.load_cases,
         structure.settings.combination_method,
     );
-    let solved = match rdm_solver::solve_model(structure) {
+    // v2.0.1: reuse the one-entry factorization cache — every envelope
+    // mount no longer re-solves the model from scratch in the worker.
+    let solved = match cached_solved_model(project_json) {
         Ok(s) => s,
         Err(e) => return fault_js("SolveError", e.to_string()),
     };
@@ -1563,7 +1601,7 @@ pub fn compute_envelopes_json(project_json: &str) -> Result<JsValue, JsValue> {
         .iter()
         .map(|(label, weights)| (label.as_str(), weights.as_slice()))
         .collect();
-    match rdm_solver::compute_envelopes(structure, &solved, &combos_ref) {
+    match rdm_solver::compute_envelopes(&structure, &solved, &combos_ref) {
         Ok(envelopes) => serde_wasm_bindgen::to_value(&envelopes).map_err(Into::into),
         Err(e) => fault_js("SolveError", e.to_string()),
     }
@@ -1651,17 +1689,20 @@ pub fn optimize_sections_json(
     project_json: &str,
     candidates_json: &str,
 ) -> Result<JsValue, JsValue> {
-    let project = match parse_project(project_json) {
-        Ok(p) => p,
-        Err(message) => return fault_js("InvalidModel", message),
-    };
     let candidates: Vec<rdm_eurocode::ProfileCandidate> =
         match serde_json::from_str(candidates_json) {
             Ok(c) => c,
             Err(e) => return fault_js("InvalidModel", format!("bad candidates: {e}")),
         };
-    let structure = &project.structure;
-    let solved = match rdm_solver::solve_model(structure) {
+    // v2.0.1: parse + resolve through the cache — the mass totals read the
+    // resolved section table instead of an always-empty one.
+    let structure = match cached_structure(project_json) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
+    };
+    // v2.0.1: reuse the one-entry factorization cache — the optimizer and
+    // the solve share the same factorization instead of doubling it.
+    let solved = match cached_solved_model(project_json) {
         Ok(s) => s,
         Err(e) => return fault_js("SolveError", e.to_string()),
     };
@@ -1729,11 +1770,13 @@ pub fn optimize_sections_json(
 /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
 #[wasm_bindgen]
 pub fn buckling_analysis_json(project_json: &str, n_modes: usize) -> Result<JsValue, JsValue> {
-    let project = match parse_project(project_json) {
-        Ok(p) => p,
-        Err(message) => return fault_js("InvalidModel", message),
+    // v2.0.1: parse + resolve through the one-entry cache — repeated mounts
+    // reuse the parsed structure (no fresh serde walk per call).
+    let structure = match cached_structure(project_json) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
     };
-    match rdm_solver::buckling_analysis(&project.structure, n_modes) {
+    match rdm_solver::buckling_analysis(&structure, n_modes) {
         Ok(report) => serde_wasm_bindgen::to_value(&report).map_err(Into::into),
         Err(e) => fault_js("SolveError", e.to_string()),
     }
@@ -2032,11 +2075,13 @@ pub fn moving_loads_envelope_json(
     beam_index: usize,
     n_positions: usize,
 ) -> Result<JsValue, JsValue> {
-    let project = match parse_project(project_json) {
-        Ok(p) => p,
-        Err(message) => return fault_js("InvalidModel", message),
+    // v2.0.1: parse + resolve through the cache — same family as the other
+    // engine endpoints (an unresolved structure faults the assembly).
+    let structure = match cached_structure(project_json) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
     };
-    match rdm_solver::tandem_envelope(&project.structure, beam_index, n_positions.clamp(1, 24)) {
+    match rdm_solver::tandem_envelope(&structure, beam_index, n_positions.clamp(1, 24)) {
         Ok(envelope) => serde_wasm_bindgen::to_value(&envelope).map_err(Into::into),
         Err(e) => fault_js("SolveError", e.to_string()),
     }

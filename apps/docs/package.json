@@ -1,0 +1,31 @@
+{
+  "name": "docs",
+  "private": true,
+  "version": "2.2.0",
+  "type": "module",
+  "description": "RDM Studio documentation — 14-page bilingual (EN + FR) Diataxis Starlight site powered by @elcoosp/docs-toolkit (rdm-studio-docs.vercel.app).",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check --minimumFails error",
+    "lint": "docs-toolkit-lint",
+    "qa:components": "docs-toolkit-qa-components",
+    "qa": "docs-toolkit-qa-screenshots"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.43.1",
+    "@elcoosp/docs-toolkit": "^1.8.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "astro": "^7.4.13"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

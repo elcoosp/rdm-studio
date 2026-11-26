@@ -1,0 +1,244 @@
+{
+  "$schema": "./src/components/DocMedia.astro",
+  "version": 1,
+  "comment": [
+    "Structured media slots consumed by src/components/DocMedia.astro.",
+    "Every documentation <DocMedia id=\"...\" /> resolves through this file.",
+    "Session 21 (next capture session) walks items[].capture, drives the",
+    "studio at PUBLIC_APP_URL through Playwright, and writes public/media/",
+    "<id>.png (screenshot) or <id>.gif (gif). Until then every slot renders",
+    "the Stitch technical illustration declared as `fallback`."
+  ],
+  "appUrlEnv": "PUBLIC_APP_URL",
+  "defaultViewport": [1440, 900],
+  "items": [
+    {
+      "id": "getting-started-workspace",
+      "type": "screenshot",
+      "alt": "RDM Studio workspace at the Geometry step with the portal-frame quick-start template loaded",
+      "caption": "The 5-step workspace right after the first quick-start template — geometry, sections, units.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry?template=portique",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "getting-started-solve",
+      "type": "gif",
+      "alt": "Animated capture of the Calcul button running the solver and the Results step appearing",
+      "caption": "One click on Calculer: the Cholesky solve, deformed shape and EC3 rates render in under 20 ms.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry?template=portique",
+        "viewport": [1440, 900],
+        "actions": "click 'Calculer', wait 1200 ms, screenshot 3 frames at 400 ms interval"
+      }
+    },
+    {
+      "id": "naval-cradle-model",
+      "type": "screenshot",
+      "alt": "3D lifting-cradle model with the (ax, ay, az) × g acceleration field panel open",
+      "caption": "Naval cradle tutorial model: two transverses, cargo mass, acceleration field panel.",
+      "fallback": "/illustrations/bento-naval-dynamic.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open Load generators → Champs d'accélération (g), set (0, 0.4, 1.3) × g"
+      }
+    },
+    {
+      "id": "cad-modeling-snap",
+      "type": "screenshot",
+      "alt": "CAD toolbar with magnetic snap active and the DXF import dialog over the 3D viewport",
+      "caption": "Magnetic snap reticles (node square, midpoint triangle, grid crosshair) and DXF import.",
+      "fallback": "/illustrations/tour-cad-import.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "hover a beam midpoint, open the DXF import dialog"
+      }
+    },
+    {
+      "id": "cad-optimizer-pareto",
+      "type": "screenshot",
+      "alt": "Eurocode 3 Pareto optimizer dialog with the section candidates table",
+      "caption": "1-click Pareto optimizer: mass vs EC3 utilization candidates, 1-click apply with undo.",
+      "fallback": "/illustrations/bento-cad-optimizer.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "select the governing beam, open the Optimizer dialog"
+      }
+    },
+    {
+      "id": "supports-rdm7",
+      "type": "screenshot",
+      "alt": "RDM 7 supports library with the 6-DOF restraint matrix editor open",
+      "caption": "RDM 7 library: 6-DOF restraints (Ux, Uy, Uz, Rx, Ry, Rz) and elastic springs kx…krz.",
+      "fallback": "/illustrations/tour-supports-rdm7.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open Supports step, open the RDM 7 library popover on node N1"
+      }
+    },
+    {
+      "id": "loads-en1990",
+      "type": "screenshot",
+      "alt": "Load generators panel with EN 1991 wind, snow and thermal entries plus the EN 1990 combinations table",
+      "caption": "EN 1991 generators (vb, sk, ΔT), acceleration fields and the 6.10 / 6.10a+b combinations.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open Loads step, expand Générateurs EN 1991"
+      }
+    },
+    {
+      "id": "results-deformed-3d",
+      "type": "screenshot",
+      "alt": "3D deformed shape with the 5-tier thermal spectrum and uPlot My/Vz/N diagrams docked below",
+      "caption": "Results step: deformed shape, thermal spectrum, synchronized uPlot internal force diagrams.",
+      "fallback": "/illustrations/tour-results-sectioncut.png",
+      "capture": {
+        "route": "/geometry?template=portique",
+        "viewport": [1440, 900],
+        "actions": "solve, open Results step, scrub the cutting plane to 0.50 L"
+      }
+    },
+    {
+      "id": "results-section-cut",
+      "type": "screenshot",
+      "alt": "2D cross-section cut with the Von Mises σvM / fy heatmap",
+      "caption": "Section cut at x = 0,50 L: 2D Von Mises heatmap normalized by fy.",
+      "fallback": "/illustrations/tour-results-sectioncut.png",
+      "capture": {
+        "route": "/geometry?template=portique",
+        "viewport": [1440, 900],
+        "actions": "solve, Results step, cutting plane 0.50 L, section cut panel"
+      }
+    },
+    {
+      "id": "ec3-calctrace",
+      "type": "screenshot",
+      "alt": "CalcTrace tree with the EN 1993-1-1 6.61 clause opened as KaTeX formulas",
+      "caption": "CalcTrace: every EC3 clause unfolds into step-by-step KaTeX formulas with sources.",
+      "fallback": "/illustrations/bento-ec3-calctrace.png",
+      "capture": {
+        "route": "/geometry?template=portique",
+        "viewport": [1440, 900],
+        "actions": "solve, open the EC3 verification panel, expand clause 6.61"
+      }
+    },
+    {
+      "id": "ec3-ltb-chi",
+      "type": "screenshot",
+      "alt": "Lateral-torsional buckling panel showing Mcr, lambda-LT-bar and chi-LT curves",
+      "caption": "LTB verification: Mcr, λ̄LT and χLT on the rolled-section curve.",
+      "fallback": "/illustrations/bento-ec3-calctrace.png",
+      "capture": {
+        "route": "/geometry?template=travees",
+        "viewport": [1440, 900],
+        "actions": "solve, open the LTB verification of the governing beam"
+      }
+    },
+    {
+      "id": "advanced-modal-frequencies",
+      "type": "screenshot",
+      "alt": "Modal analysis table listing f1..f6 eigenfrequencies and the first mode 3D shape",
+      "caption": "Modal analysis: f₁…f₆ eigenfrequencies and the animated first mode.",
+      "fallback": "/illustrations/bento-naval-dynamic.png",
+      "capture": {
+        "route": "/geometry?template=warren",
+        "viewport": [1440, 900],
+        "actions": "solve, open Modal panel"
+      }
+    },
+    {
+      "id": "advanced-buckling-lambda-cr",
+      "type": "screenshot",
+      "alt": "Linear buckling panel showing lambda-cr and the first global buckling mode",
+      "caption": "Global linear buckling: λcr and the amplified first mode shape.",
+      "fallback": "/illustrations/bento-solver-pdelta.png",
+      "capture": {
+        "route": "/geometry?template=portique",
+        "viewport": [1440, 900],
+        "actions": "solve, open Flambement panel"
+      }
+    },
+    {
+      "id": "advanced-multimaterial",
+      "type": "screenshot",
+      "alt": "Multi-material checks panel with EC2, EC5, EC9 and EC3-1-2 fire verification entries",
+      "caption": "Multi-material checks in one model: EC2 concrete, EC5 timber, EC9 aluminium, EC3-1-2 fire.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open the Multi-material verification panel"
+      }
+    },
+    {
+      "id": "report-pdf-a4",
+      "type": "screenshot",
+      "alt": "Generated A4 vector PDF calculation note with firm branding and SHA-256 fingerprint",
+      "caption": "The A4 calculation note: cover, reactions, EC3 rates, SHA-256 fingerprint.",
+      "fallback": "/illustrations/bento-report-bim.png",
+      "capture": {
+        "route": "/report",
+        "viewport": [1440, 900],
+        "actions": "solve, open Report step, generate the Takumi PDF preview"
+      }
+    },
+    {
+      "id": "report-exports-bim",
+      "type": "screenshot",
+      "alt": "Exports panel listing IFC4, SAF, OpenSees TCL, glTF, .rdm and CSV export buttons",
+      "caption": "BIM & interoperability exports: IFC4, SAF, OpenSees TCL, glTF, .rdm, CSV.",
+      "fallback": "/illustrations/bento-report-bim.png",
+      "capture": {
+        "route": "/report",
+        "viewport": [1440, 900],
+        "actions": "open the Exports panel"
+      }
+    },
+    {
+      "id": "reference-benchmarks-41",
+      "type": "screenshot",
+      "alt": "Validation modal with the 41/41 benchmark certification table and domain filter",
+      "caption": "The 41-benchmark certification view, filtered on the RDM & flambement domain.",
+      "fallback": "/illustrations/tour-settings-benchmarks.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open the 41/41 validation modal, select the RDM filter"
+      }
+    },
+    {
+      "id": "reference-command-palette",
+      "type": "screenshot",
+      "alt": "Command palette (Cmd-K) open over the 3D workspace with quick actions",
+      "caption": "⌘K palette: navigate, toggle layers, run the solver, switch locale.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "press Cmd-K / Ctrl-K"
+      }
+    },
+    {
+      "id": "solver-architecture-wasm",
+      "type": "screenshot",
+      "alt": "DevTools performance trace of a sub-20-millisecond Cholesky solve inside the WASM worker",
+      "caption": "The solver at work: < 20 ms Cholesky LDLᵀ factorization, all inside the browser tab.",
+      "fallback": "/illustrations/bento-solver-pdelta.png",
+      "capture": {
+        "route": "/geometry?template=warren",
+        "viewport": [1440, 900],
+        "actions": "solve with the performance panel open"
+      }
+    }
+  ]
+}

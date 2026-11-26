@@ -278,6 +278,18 @@ fn build_combination_reports(
                         ) {
                             max_sigma_vm = max_sigma_vm.max(sigma_vm.abs());
                         }
+                        // v2.0.0: true moment gradient ψ from the two end
+                        // moments of the superposed block (clamped to the
+                        // Table 6.3 domain); the annex comes from the model
+                        // settings. The end-force block layout is
+                        // `[N, Vy, Vz, T, My, Mz] × (start, end)`.
+                        let my_start = block[4];
+                        let my_end = block[10];
+                        let psi = if my_start.abs() > 1e-9 {
+                            (my_end / my_start).clamp(-1.0, 1.0)
+                        } else {
+                            1.0
+                        };
                         let check = member_check(rdm_eurocode::MemberCheckInput {
                             beam_id: beam.id,
                             length,
@@ -285,6 +297,8 @@ fn build_combination_reports(
                             section,
                             material,
                             forces: (forces.n_axial, forces.my, forces.mz, forces.vz, forces.t),
+                            moment_ratio_psi: psi,
+                            national_annex: structure.settings.national_annex,
                             combination: combo.label(),
                         });
                         if let Ok(check) = check
@@ -1535,7 +1549,7 @@ pub fn compute_envelopes_json(project_json: &str) -> Result<JsValue, JsValue> {
         .collect();
     let weighted: Vec<(String, Vec<(rdm_model::LoadCase, f64)>)> = combos
         .iter()
-        .map(|(kind, label, weights)| {
+        .map(|(_kind, label, weights)| {
             (
                 label.clone(),
                 weights
@@ -1785,6 +1799,12 @@ pub fn export_bim(project_json: &str, format: &str) -> Result<String, JsValue> {
 /// v1.8.0 stateful session: caches the parsed model + solved cases so
 /// follow-up case superpositions (`solve_case_rhs`) skip the
 /// factorization entirely (< 2 ms) and model deltas re-solve on demand.
+impl Default for ModelSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 pub struct ModelSession {
     project: Option<rdm_model::ProjectFile>,
@@ -1890,5 +1910,134 @@ impl ModelSession {
     #[wasm_bindgen]
     pub fn has_cached_solve(&self) -> bool {
         self.solved.is_some()
+    }
+}
+
+use rdm_eurocode::{
+    AluminiumAlloy, ConcreteClass, LoadDuration, TimberProduct, ec2_flexure_as, ec2_shear,
+    ec3_fillet_weld, ec3_fire_check, ec3_joint_bolt_shear, ec5_timber_bending, ec9_aluminium_check,
+};
+
+/// v2.0.0: multi-material normative check dispatcher — `kind` selects
+/// `ec2_beam` (concrete flexure+shear), `ec5_timber`, `ec3_joint`,
+/// `ec3_fire` or `ec9_aluminium`; every result is a `CalcTraceNode` tree.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+#[allow(clippy::too_many_lines)]
+pub fn multi_material_check_json(kind: &str, params_json: &str) -> Result<JsValue, JsValue> {
+    let params: serde_json::Value = match serde_json::from_str(params_json) {
+        Ok(v) => v,
+        Err(e) => return fault_js("InvalidModel", format!("bad params: {e}")),
+    };
+    let p = |field: &str, default: f64| -> f64 { params[field].as_f64().unwrap_or(default) };
+    let trace: Vec<rdm_eurocode::CalcTraceNode> = match kind {
+        "ec2_beam" => {
+            let class = match params["class"].as_str().unwrap_or("C30") {
+                "C25" => ConcreteClass::C25,
+                "C30" => ConcreteClass::C30,
+                "C35" => ConcreteClass::C35,
+                "C40" => ConcreteClass::C40,
+                "C45" => ConcreteClass::C45,
+                _ => ConcreteClass::C50,
+            };
+            let mut nodes = ec2_flexure_as(
+                p("m_ed", 0.0),
+                p("effective_depth", 0.45),
+                p("width", 0.25),
+                class,
+                p("fyk_steel", 500e6),
+            );
+            nodes.extend(ec2_shear(
+                p("v_ed", 0.0),
+                p("width", 0.25),
+                p("effective_depth", 0.45),
+                class,
+                p("as_tension", 1.0e-3),
+                p("asw_per_s", 1.0e-3),
+                p("fywd", 500e6),
+            ));
+            nodes
+        }
+        "ec5_timber" => {
+            let product = match params["product"].as_str().unwrap_or("C24") {
+                "GL24h" => TimberProduct::Gl24h,
+                "GL28h" => TimberProduct::Gl28h,
+                _ => TimberProduct::C24,
+            };
+            let duration = match params["load_duration"].as_str().unwrap_or("MediumTerm") {
+                "Permanent" => LoadDuration::Permanent,
+                "ShortTerm" => LoadDuration::ShortTerm,
+                _ => LoadDuration::MediumTerm,
+            };
+            ec5_timber_bending(
+                p("m_ed", 0.0),
+                p("wel", 1.0e-4),
+                product,
+                params["service_class"].as_u64().unwrap_or(1) as u8,
+                duration,
+                p("kdef", 0.8),
+            )
+        }
+        "ec3_joint" => {
+            let mut nodes = ec3_joint_bolt_shear(
+                p("n_bolts", 4.0),
+                p("bolt_area", 2.01e-4),
+                p("fub", 800e6),
+                p("v_ed", 0.0),
+            );
+            nodes.extend(ec3_fillet_weld(
+                p("throat_a", 0.004),
+                p("weld_length", 0.1),
+                p("fu", 360e6),
+                p("beta_w", 0.8),
+                p("weld_force", 0.0),
+            ));
+            nodes
+        }
+        "ec3_fire" => ec3_fire_check(
+            p("utilization_mu0", 0.55),
+            params["rating_minutes"].as_u64().unwrap_or(60) as u32,
+            p("section_temperature", 480.0),
+        ),
+        "ec9_aluminium" => {
+            let alloy = match params["alloy"].as_str().unwrap_or("6082-T6") {
+                "6061-T6" => AluminiumAlloy::Alloy6061T6,
+                _ => AluminiumAlloy::Alloy6082T6,
+            };
+            ec9_aluminium_check(p("n_ed", 0.0), p("area", 1.0e-3), alloy, p("chi", 0.7))
+        }
+        _ => {
+            return fault_js(
+                "InvalidModel",
+                format!("unknown multi-material kind {kind}"),
+            );
+        }
+    };
+    serde_wasm_bindgen::to_value(&trace).map_err(Into::into)
+}
+
+/// v2.0.0: EN 1991-2 LM1 moving-load envelope of one deck beam — the
+/// tandem crossing the span in `n_positions` placements (max support
+/// reaction, N).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn moving_loads_envelope_json(
+    project_json: &str,
+    beam_index: usize,
+    n_positions: usize,
+) -> Result<JsValue, JsValue> {
+    let project = match parse_project(project_json) {
+        Ok(p) => p,
+        Err(message) => return fault_js("InvalidModel", message),
+    };
+    match rdm_solver::tandem_envelope(&project.structure, beam_index, n_positions.clamp(1, 24)) {
+        Ok(envelope) => serde_wasm_bindgen::to_value(&envelope).map_err(Into::into),
+        Err(e) => fault_js("SolveError", e.to_string()),
     }
 }

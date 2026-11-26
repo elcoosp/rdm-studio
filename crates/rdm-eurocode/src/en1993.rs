@@ -521,6 +521,13 @@ pub struct MemberCheckInput<'a> {
     pub material: &'a MaterialProperties,
     /// Design forces from the solver (local axes): N, My, Mz, Vz, T.
     pub forces: (f64, f64, f64, f64, f64),
+    /// Moment-gradient ratio ψ = M2/M1 of the governing bending span
+    /// (v2.0.0): drives the true C1 of Table 6.3 instead of the
+    /// uniform-moment default. Use 1.0 when the gradient is unknown.
+    pub moment_ratio_psi: f64,
+    /// National annex selecting the 6.61/6.62 interaction factors
+    /// (v2.0.0): Annex B for EN, Annex A otherwise.
+    pub national_annex: rdm_model::NationalAnnex,
     /// Combination label for the report.
     pub combination: String,
 }
@@ -563,16 +570,35 @@ pub fn member_check(input: MemberCheckInput<'_>) -> Result<MemberCheck, Ec3Error
         chi = Some((chi_y, chi_z));
     }
 
+    // v2.0.0: true moment-gradient C1 (EN 1993-1-1 Table 6.3 / 6.3.2.2)
+    // instead of the uniform-moment default.
+    let c1 = crate::interaction::c1_from_moment_ratio(input.moment_ratio_psi);
+    // Class 4: scale the elastic moduli with the outstand reduction ρ.
+    let class_index = class.map_or(3, Classification::index);
+    let rho = if class_index >= 4 {
+        let plate = props.h.unwrap_or(0.2).max(props.b.unwrap_or(0.1));
+        crate::interaction::class4_reduction(
+            material.e,
+            material.fy,
+            plate,
+            props.tf.unwrap_or((plate * 0.02).max(0.002)),
+        )
+    } else {
+        1.0
+    };
+
     // Bending verification: LTB governs for laterally unrestrained
     // doubly-symmetric I-sections; otherwise plastic (class 1-2) or elastic
     // (class 3, or plastic data missing) resistance applies.
-    let ltb = lateral_torsional_buckling(props, material, input.length, 1.0)?;
-    if let Some(ltb) = &ltb {
+    let ltb = lateral_torsional_buckling(props, material, input.length, c1)?;
+    let mc_y_rd = if let Some(ltb) = &ltb {
         utilizations.push(("Mb,Rd".to_owned(), my_ed.abs() / ltb.m_b_rd));
+        ltb.m_b_rd
     } else {
-        let mel_rd = props.wel_y * material.fy / GAMMA_M0;
+        let mel_rd = rho * props.wel_y * material.fy / GAMMA_M0;
         utilizations.push(("Mel,Rd,y".to_owned(), my_ed.abs() / mel_rd));
-    }
+        mel_rd
+    };
     if class.is_some_and(|c| c.index() <= 2)
         && let Some(wpl_y) = props.wpl_y
     {
@@ -581,8 +607,46 @@ pub fn member_check(input: MemberCheckInput<'_>) -> Result<MemberCheck, Ec3Error
             my_ed.abs() / (wpl_y * material.fy / GAMMA_M0),
         ));
     }
+    let mc_z_rd = rho * props.wel_z * material.fy / GAMMA_M0;
 
     utilizations.push(("Vpl,Rd".to_owned(), vz_ed.abs() / v_pl_rd));
+
+    // v2.0.0: full N + My + Mz biaxial interaction (6.61 / 6.62) with the
+    // annex factors selected by the model settings — the governing
+    // utilization now reflects the combined actions, not only Von Mises.
+    let (n_b_rd_y, n_b_rd_z, chi_lt) = if n_ed < 0.0 {
+        let (chi_y, chi_z) = chi.unwrap_or((0.6, 0.5));
+        (
+            chi_y * n_pl_rd,
+            chi_z * n_pl_rd,
+            ltb.as_ref().map_or(0.8, |l| l.chi_lt),
+        )
+    } else {
+        (n_pl_rd, n_pl_rd, 1.0)
+    };
+    let interaction_input = crate::interaction::InteractionInput {
+        n_ed,
+        my_ed,
+        mz_ed,
+        n_b_rd_y,
+        n_b_rd_z,
+        mc_y_rd,
+        mc_z_rd,
+        chi_lt,
+        lambda_bar_y_sq: 0.5,
+        lambda_bar_z_sq: 0.8,
+    };
+    let annex = if input.national_annex == rdm_model::NationalAnnex::EN {
+        crate::interaction::InteractionAnnex::B
+    } else {
+        crate::interaction::InteractionAnnex::A
+    };
+    let interaction_trace = crate::interaction::interaction_6_61_6_62(&interaction_input, annex);
+    let interaction_utilization = interaction_trace
+        .iter()
+        .map(|node| node.value)
+        .fold(0.0_f64, f64::max);
+    utilizations.push(("6.61/6.62".to_owned(), interaction_utilization));
 
     let vm = von_mises_utilisation(n_ed, my_ed, mz_ed, vz_ed, t_ed, props, material)?;
     utilizations.push(("Von Mises".to_owned(), vm));
@@ -868,6 +932,8 @@ mod tests {
             material: &mat,
             forces: (1e4, 2e4, 0.0, 3e3, 0.0), // tension is positive
             combination: "ULS 1.35G + 1.50Q".to_owned(),
+            moment_ratio_psi: 1.0,
+            national_annex: rdm_model::NationalAnnex::FR,
         };
         let check = member_check(input).unwrap();
         assert_eq!(check.beam_id, 7);
@@ -892,6 +958,8 @@ mod tests {
             material: &mat,
             forces: (-5e5, 0.0, 0.0, 0.0, 0.0),
             combination: "ULS 1.35G".to_owned(),
+            moment_ratio_psi: 1.0,
+            national_annex: rdm_model::NationalAnnex::FR,
         };
         let check = member_check(input).unwrap();
         let (chi_y, chi_z) = check.chi.expect("compression column must be buckled");

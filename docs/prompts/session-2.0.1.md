@@ -1,68 +1,72 @@
-Task: github.com/elcoosp/rdm-studio. Ship v2.0.1 — final stabilization, conflict resolution, mandatory `shadcn/Tailwind` UI library integration (`lucide-react`, `tw-animate-css`, `@dnd-kit/sortable`, `recharts`), autonomous `impeccable` visual polish pass (eyeball all 5 screens without redesigning), and comprehensive real-world engineering E2E + edge-case suite (`0` failures across `G0 → G6` + production `vite build`):
-(1) **Resolve Active Merge Conflicts & Syntax Errors (`SettingsPopover.tsx`, `ForceDiagrams3D.tsx`, `loads.tsx`)**;
-(2) **Eliminate Duplicate Worker Solves & Fix All 10 Failing Playwright Tests (`fea.worker.ts`, `workerClient.ts`, `bindings/rdm-wasm/src/lib.rs`, `ProjectGalleryModal.tsx`, `supports.tsx`, `BottomSheet.tsx`)**;
-(3) **Install AND Actively Wire All 4 `shadcn/Tailwind` Ecosystem Libraries (`lucide-react`, `tw-animate-css`, `@dnd-kit/sortable`, `recharts` — verified by grep)**: - `tw-animate-css`: `@import "tw-animate-css";` in `app.css` + smooth `animate-in`/`animate-out` transitions on all Base UI popups (`PopoverContent`, `DialogContent`, `DropdownMenuContent`, `TooltipContent`); - `lucide-react`: replace ALL raw Unicode UI symbols (`⚙`, `✓`, `⇄`, `↩`, `↪`, `×`, `▲`, `↑`, `↓`, `▾`) across `__root.tsx`, `SettingsPopover.tsx`, `BottomSheet.tsx`, `results.tsx`, `report.tsx`, `OptimizerModal.tsx`, and `ScenarioCompareModal.tsx` with crisp `1.5px`-stroke Lucide icons; - `recharts`: render an interactive `<ScatterChart>` Pareto frontier (`mass_per_m` vs `utilization` with `η = 1.0` reference line) in `OptimizerModal.tsx` and an interactive `<AreaChart>` EN 1998-1 elastic response spectrum `Se(T)` in `AdvancedPanels.tsx`; - `@dnd-kit/core` + `@dnd-kit/sortable`: make Step 5's `ReportBuilder` chapters drag-reorderable with `<GripVertical />` handles;
-(4) **Autonomous `impeccable` v4.0.4 Visual Eyeball & Layout Polish Pass (NO Redesign — Surgical Refinement Only):** - Load `.agents/skills/impeccable/SKILL.md` + `reference/operate.md`, `reference/layout.md`, `reference/adapt.md`, `reference/polish.md`, and `reference/craft-floor.md` (enabling `hooks.mjs on || true`); - Unclutter `/geometry`, `/results`, `/report`, and the `860×900` split-screen header, capture real Playwright screenshots across **`1440×900`**, **`860×900`**, and **`390×844`** on all 5 routes (`/geometry`, `/supports`, `/loads`, `/results`, `/report`), inspect every screen for alignment, contrast, truncation, overlap, or scrollbars, and fix every visual flaw in one clean pass;
-(5) **Harden E2E Coverage with Real-World Structural Workflows & Edge Cases (`apps/web/e2e/real-world-scenarios.spec.ts`)**;
-(6) **Verify All Gates (`G0 → G6` + `pnpm --filter web build`) 100% Green & Archive**.
+Task: github.com/elcoosp/rdm-studio. Ship v2.1.0 — refactor routing & UI state to best-in-class TanStack Router architecture (100% URL-driven query params with Valibot `validateSearch` + `retainSearchParams` + zero duplicate Zustand/useState mirrors, `StaticDataRouteOption` module augmentation, pathless layout routes `_marketing` & `_studio`, `useMatches()`-driven `PersistentStage`, `beforeLoad` `?p=` & `?template=` hydration on `_studio` with seamless `IndexedDB` rehydration, `notFoundComponent` / `errorComponent`, `defaultPreload: "intent"`, zero legacy root compat), ship the commercial product layer (`/` Landing Page with interactive 3-model preview, Offline Pro License & Firm Branding, `/legal` LCEN/GDPR/Responsibility pages) designed with `.agents/skills/impeccable` + `DESIGN.md` (leaving Astro Starlight docs in its own separate monorepo package outside the PWA), close all 7 remaining audit items from `22fd9fa` (`Uniform` load in `ProjectFileSchema`, Z-up gravity on all 12 `ENGINEERING_TEMPLATES`, true 3D on-member `ForceDiagrams3D` in `PersistentStage`, and the 3 `real-world-scenarios.spec.ts` assertions), and lock in a 25+ test real-world E2E suite with zero uncaught console/page errors:
 
 EXECUTION CONTRACT (NON-NEGOTIABLE — 100% AUTONOMOUS, SINGLE BUILD TREE):
 
 - **ZERO QUESTIONS / FULL AUTONOMY:** Operate autonomously end-to-end from bootstrap to final `.zip` archive without prompting.
-- **NO REDESIGN — SURGICAL VISUAL POLISH ONLY:** Keep the existing Swiss Metrology Daylight tokens (`#F8FAFC` / `#FFFFFF` / `#1D4ED8`) and component architecture; only fix spacing, alignment, overlapping HUDs, and visual hierarchy defects surfaced by the `impeccable` eyeball pass.
 - **SINGLE SHARED BUILD TREE:** Execute inside the single `rdm-studio` working tree (never create parallel `git worktree` directories).
-- **STRICT SI & ZERO PANICS:** Keep strict SI units (`m`, `N`, `Pa`, `rad`, `kg/m³`) and zero `.unwrap()` / `.expect()` / `panic!()` in `crates/` and `bindings/rdm-wasm`.
-- **FAST SANDBOX PLAYWRIGHT (`AGENTS.md` §4):** Run Playwright strictly with `--project=chromium --project=firefox --reporter=list` (never `--project=webkit` or `--with-deps`).
+- **LEVERAGE `impeccable` + `DESIGN.md` ON NEW SCREENS:** Before writing `_marketing/index.tsx`, `_marketing/legal.tsx`, and `LicenseModal.tsx`, read `.agents/skills/impeccable/SKILL.md` + `reference/{layout,typography,spatial-design,polish,craft-floor}.md` + `DESIGN.md` (`#F8FAFC` canvas, `#FFFFFF` panels, `1px #E2E8F0` hairlines, `#1D4ED8` Deep Cobalt accent, `Inter` + `JetBrains Mono` `tabular-nums`, zero drop shadows on docked cards, zero `dark:*` / `bg-slate-900` / `border-slate-*` classes).
+- **URL IS SINGLE SOURCE OF TRUTH (ZERO ZUSTAND DUPLICATES):** Never mirror URL-backed state (`beam`, `node`, `view`, `render`, `snap`, `layers`, `cutBeam`, `cut`, `family`, `tab`, `dock`, `case`, `loadTab`, `combo`, `scale`, `sls`, `diagrams`, `modal`) in Zustand stores or component `useState`. Components read directly from `Route.useSearch()` / `useStudioQuery` hooks and update via `navigate({ search: (prev) => ({ ...prev, ... }), replace: true })`.
+- **DO NOT ADD DOCS PAGES INSIDE THE PWA:** Documentation lives in a separate Astro Starlight package in the monorepo; link cleanly to `/docs` from the header & footer without bundling Starlight or markdown docs inside `apps/web`.
+- **FAST SANDBOX PLAYWRIGHT (`AGENTS.md` §4):** Run Playwright strictly with `--project=chromium --project=firefox --reporter=list`.
 - Write complete, clean files (never blind regex/tab patches) to avoid `oxfmt` whitespace no-ops.
 
-1. **Bootstrap, Sync, Install `shadcn/Tailwind` UI Libs & Load `impeccable` References (< 3 tool calls):**
+1. **Bootstrap, Sync & Load `impeccable` + `DESIGN.md` (< 3 tool calls):**
    - `cd rdm-studio && git fetch origin && git reset --hard origin/main` (or clone `https://github.com/elcoosp/rdm-studio.git` if missing).
-   - Install `pnpm --filter web add lucide-react tw-animate-css @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities recharts`.
-   - Ensure `rustc`/`cargo`, `wasm-pack`, `pnpm`, and `ship` are installed, then read `AGENTS.md`, `STATUS.md`, and `.agents/skills/impeccable/` (`SKILL.md`, `operate.md`, `layout.md`, `adapt.md`, `polish.md`, `craft-floor.md`), enabling `node .agents/skills/impeccable/scripts/hooks.mjs on || true`.
+   - Ensure `rustc`/`cargo`, `wasm-pack`, `pnpm`, and `ship` (`command -v ship >/dev/null 2>&1 || cargo install --git https://github.com/elcoosp/ship`) are installed.
+   - Read `AGENTS.md`, `DESIGN.md`, `STATUS.md`, and `.agents/skills/impeccable/` (`SKILL.md`, `layout.md`, `typography.md`, `spatial-design.md`, `polish.md`, `craft-floor.md`), enabling `node .agents/skills/impeccable/scripts/hooks.mjs on || true`.
 
-2. **Wave 1 — Resolve Merge Conflicts, Syntax Bug, LTB Curve-d Fallback & Worker Solve Deduplication:**
-   - **A. Clean Merge Conflicts & Top-of-File JSX (`SettingsPopover.tsx`, `ForceDiagrams3D.tsx`, `loads.tsx`):**
-     - Resolve the `<<<<<<< Updated upstream` conflict markers in `apps/web/src/components/SettingsPopover.tsx` (keeping `DEFAULT_SETTINGS` with `p_delta: false` and the `P-Δ (second ordre)` toggle) and `apps/web/src/viewport3d/ForceDiagrams3D.tsx` (keeping null-safe array normalization).
-     - Move `<EnvLoadGenerators />` from lines 1–4 of `apps/web/src/routes/loads.tsx` into `LoadsPage`'s left inspector JSX below the case tabs.
-   - **B. EN 1993-1-1 Table 6.3 General Curve-d Fallback (`crates/rdm-eurocode/src/en1993.rs`):**
-     - In `lateral_torsional_buckling`, replace the `h/b > 3.1` `Err(CheckUnavailable)` hard stop with general buckling curve `d` (`alpha_lt = 0.76`) so slender I-sections never abort `member_check`.
-   - **C. Reuse `cached_solved_model` Across All WASM Endpoints & Fix Worker Request Keys (`bindings/rdm-wasm/src/lib.rs`, `apps/web/src/wasmBridge/workerClient.ts`, `fea.worker.ts`):**
-     - Route `compute_envelopes_json`, `buckling_analysis_json`, and `optimize_sections_json` through `cached_solved_model(project_json)` instead of calling `solve_model(structure)` from scratch on every mount.
-     - In `workerClient.ts`, key `enginePending` by a unique monotonically increasing `callId` (passed in `EngineCallRequest` and echoed in `ENGINE_RESULT`) so concurrent calls to the same WASM function never overwrite each other's Promise callbacks.
+2. **Wave 1 — Best-in-Class TanStack Router, URL-First State & `22fd9fa` Audit Fixes (`router.ts`, `searchParams.schema.ts`, `project.schema.ts`, `engineeringTemplates.ts`, `ForceDiagrams3D.tsx`, `routes/_marketing.tsx`, `routes/_studio.tsx`):**
+   - **A. Close Remaining `22fd9fa` Codebase Defects:**
+     - Add `Uniform` load variant (`{ case, kind: "Uniform", beam_id, q_start, q_end, direction }`) to `LoadSchema` in `apps/web/src/schemas/project.schema.ts` so `.rdm` files containing EN 1991 snow/wind/imposed loads pass Valibot validation on re-import.
+     - Re-orient all 12 templates in `apps/web/src/lib/engineeringTemplates.ts` to RDM Studio's canonical **`Z-up`** coordinate frame (`X-Z` plane, `gravity = { x: 0, y: 0, z: -1 }`) so all 12 gallery models solve under vertical gravity.
+     - Upgrade `ForceDiagrams3D.tsx` to render true 3D signed force diagrams (`My, Mz, Vz, N, T`) along the 3D members inside `PersistentStage.tsx` when `diagrams=1`, and replace the raw `×` in `ValidationModal.tsx` with `<X size={18} strokeWidth={1.5} />`.
+   - **B. Comprehensive Valibot Search Schemas (`apps/web/src/schemas/searchParams.schema.ts`):**
+     - Define `StudioBaseSearchSchema` (shared across every `_studio` route, wrapped in `v.fallback(..., undefined)` per key so invalid URL query values gracefully fall back instead of throwing):
+       - `p?: string` (compressed `.rdm` payload),
+       - `template?: "warren" | "portique" | "potence" | "travees"`,
+       - `beam?: number` (selected member id),
+       - `node?: number` (selected node id),
+       - `view?: "iso" | "top-xy" | "face-xz" | "side-yz"` (default `"iso"`),
+       - `render?: "volumetric" | "wireframe"` (default `"volumetric"`),
+       - `snap?: 10 | 50 | 100` (default `50` mm),
+       - `layers?: string` (compact active layer flags, default `"nblsL"` = nodes, beams, loads, supports, labels),
+       - `cutBeam?: number` & `cut?: number` (`0..1` cutting-plane station).
+     - Extend with route-specific schemas:
+       - `GeometrySearchSchema`: `family?: "Tous" | "IPE" | "HEA" | "UPN" | "CHS" | "RHS" | "L" | "Perso"`, `tab?: "nodes" | "beams"`, `dock?: 0 | 1`.
+       - `LoadsSearchSchema`: `case?: "Permanent" | "Variable" | "Wind" | "Snow" | "Acceleration"`, `loadTab?: "nodal" | "uniform" | "trapezoid" | "point"`.
+       - `ResultsSearchSchema`: `combo?: string`, `scale?: "ec3" | "svm" | "auto"`, `sls?: 200 | 250 | 300`, `diagrams?: 0 | 1`, `modal?: "optim" | "compare"`.
+   - **C. Typed Router, `StaticDataRouteOption`, `notFoundComponent` & `retainSearchParams` (`apps/web/src/router.ts`, `main.tsx`):**
+     - Create `src/router.ts` creating the TanStack Router instance (`defaultPreload: "intent"`, `search: { structuralSharing: true }`, `defaultNotFoundComponent` rendering a clean _Swiss Metrology_ 404 card with `"Retour à l'atelier 3D →"`, and `defaultErrorComponent` with a safe recovery button) and augmenting `@tanstack/react-router`'s `Register` AND `StaticDataRouteOption` (`surface?: "marketing" | "studio"`, `stepOrder?: number`, `label?: string`, `mobileLabel?: string`, `icon?: ComponentType<{ size?: number; className?: string }>`, `stageVisible?: boolean`, `shortcut?: string`).
+     - Export `getStudioSteps()` derived dynamically from `router.flatRoutes` filtered by `staticData?.surface === "studio"` and sorted by `stepOrder` — eliminating every hardcoded `STEPS` array across `__root.tsx`, `CommandPalette.tsx`, and `useAppHotkeys.ts` (and preserve active search params when navigating via `⌘Enter` / `⌘P`!).
+   - **D. Pathless Layout Route Split (`_marketing.tsx` & `_studio.tsx`) + Zero-Duplicate URL Hooks (`useStudioQuery.ts`):**
+     - Keep `routes/__root.tsx` lean (global `Toaster`, `CommandPalette`, `UpdatePrompt`, `useFileOpening`, `useAppHotkeys`, `LicenseModal` host).
+     - Create `routes/_marketing.tsx` for public/commercial pages (`_marketing/index.tsx` at `/` and `_marketing/legal.tsx` at `/legal` — pure landing/legal routes with zero legacy redirect logic) with a crisp _Swiss Metrology_ editorial header (`RDM Studio`, `Fonctionnalités`, `Tarifs`, `Légal`, external `Documentation ↗` link to `/docs`, `EditionBadge`, `LocaleSwitch`, and `"Ouvrir l'atelier 3D →"` CTA) and normal document scrolling.
+     - Create `routes/_studio.tsx` for the locked `100dvh` CAD workstation (`_studio/geometry.tsx`, `_studio/supports.tsx`, `_studio/loads.tsx`, `_studio/results.tsx`, `_studio/report.tsx`):
+       - Hydrate `?p=` and `?template=` in `_studio.tsx`'s `beforeLoad` (validating `?p=` via `parseProject` or loading `quickStartProject(template)`, then stripping `p`/`template` via `redirect` / `replace: true` while retaining all other search params; if neither is present, allow `rehydrateProject()` from IndexedDB on initial mount).
+       - Attach `searchMiddlewares: [retainSearchParams(["beam", "node", "view", "render", "snap", "layers"])]` on `_studio.tsx` so navigating between Steps 1–5 preserves selection and 3D viewport state automatically in the URL!
+       - Refactor `viewportStore.ts` and `projectStore.ts` to remove all URL-duplicated fields (`nodeId`, `beamId`, `renderMode`, `cameraPreset`, `snapStep`, `layers`, `cutting`), replacing them with `useStudioQuery.ts` hooks (`useSelectedIds()`, `useViewportParams()`) backed directly by TanStack Router `useSearch` + `useNavigate({ replace: true })`.
+       - Update `PersistentStage.tsx` to read `useMatches()` and derive visibility directly from `matches.at(-1)?.staticData.stageVisible === true`.
 
-3. **Wave 2 — Fix All 10 Failing E2E Tests, Enforce `shadcn/Tailwind` Lib Usage & Run `impeccable` Visual Polish Pass (`apps/web/src/`):**
-   - **A. Fix Support Springs `"élastique"` Badge (`apps/web/src/routes/supports.tsx`):**
-     - In `SpringFields`, when `springs` are all `0` on mount, initialize the vertical translational spring (`kz`, index `2`) to `1000 kN/m` (`1_000_000 N/m`) so clicking `"Appliquer les ressorts à N1"` immediately creates a valid elastic spring and displays the `"élastique"` badge.
-   - **B. Fix Mobile Vaul Drawer Open/Close Interaction (`apps/web/src/components/BottomSheet.tsx`):**
-     - On `< 768 px` mobile viewports, keep the Vaul drawer closed by default (`useState(false)`) when `Drawer.Trigger` (`inspector-sheet-handle`) is rendered so clicking `inspector-sheet-handle` opens it (`setOpen(true)`) and `sheet-close` (`X` Lucide icon) closes it cleanly on both Chromium and Firefox.
-   - **C. Fix Parametric Generator Toast Duration (`apps/web/src/components/ProjectGalleryModal.tsx`):**
-     - Set `duration: 8_000` on the `"Structure paramétrique générée"` toast so slow cold-start browsers never miss the `"moteur Rust rdm-cad"` confirmation.
-   - **D. MANDATORY USAGE OF ALL 4 `shadcn/Tailwind` LIBRARIES (Zero Unused Packages — Every Lib Must Be Imported & Rendered):**
-     1. **`tw-animate-css` (`apps/web/src/app.css` + `components/ui/{popover,dialog,dropdown-menu,tooltip,collapsible}.tsx`):** Add `@import "tw-animate-css";` right after `@import "tailwindcss";` in `app.css` and apply `animate-in fade-in-0 zoom-in-95` / `animate-out fade-out-0 zoom-out-95` on every Base UI popup (`PopoverContent`, `DialogContent`, `DropdownMenuContent`, `TooltipContent`).
-     2. **`lucide-react` (`__root.tsx`, `SettingsPopover.tsx`, `BottomSheet.tsx`, `results.tsx`, `report.tsx`, `OptimizerModal.tsx`, `ScenarioCompareModal.tsx`):** Purge ALL raw Unicode UI symbols (`⚙`, `✓`, `⇄`, `↩`, `↪`, `×`, `▲`, `↑`, `↓`, `▾`) and replace them with `1.5px`-stroke `lucide-react` icons (`Settings`, `CheckCircle2`, `ArrowLeftRight`, `Undo2`, `Redo2`, `X`, `ChevronUp`, `ChevronDown`, `GripVertical`, `SlidersHorizontal`, `Sparkles`, `Printer`, `Download`, `FileSpreadsheet`, `Box`, `FileText`).
-     3. **`recharts` (`OptimizerModal.tsx` & `AdvancedPanels.tsx`):**
-        - In `OptimizerModal.tsx`, render a real **`<ResponsiveContainer><ScatterChart>`** (`Scatter`, `XAxis` `mass_per_m` kg/m, `YAxis` `utilization` η, `<ReferenceLine y={1} stroke="#DC2626" strokeDasharray="4 4" />`, `<Tooltip />`) displaying the Pareto frontier visually instead of raw text tuples.
-        - In `AdvancedPanels.tsx` (Seismic EN 1998-1 tab), replace the raw `<svg>` bars with a real **`<ResponsiveContainer><AreaChart>`** (`Area` `Se(T)` in `#1D4ED8`, `XAxis` period `T (s)`, `YAxis` `Se (g)`, `CartesianGrid`, `<Tooltip />`).
-     4. **`@dnd-kit/core` + `@dnd-kit/sortable` (`apps/web/src/routes/report.tsx`):**
-        - Wrap Step 5's `ReportBuilder` chapter list in `<DndContext collisionDetection={closestCenter} onDragEnd={...}>` + `<SortableContext items={chapters.map(c => c.id)} strategy={verticalListSortingStrategy}>` with `useSortable` drag handles (`<GripVertical size={14} />`) so users drag-and-drop chapters smoothly.
-     - **Verification Check:** Before moving to Wave 3, confirm via `grep` that `tw-animate-css`, `lucide-react`, `recharts`, and `@dnd-kit/sortable` are all imported and rendered in `apps/web/src/`.
-   - **E. `impeccable` Visual Polish Across All 5 Screens (Zero Redesign, Pixel-Perfect Craft):**
-     - **Header (`__root.tsx`):** Keep `SettingsPopover` and `Validation` compact inside the right control group so the 3-zone header never overflows at `860×900`.
-       Utilisez le code avec précaution.
+3. **Wave 2 — Commercial Landing Page (`/`), Offline Pro License Store & Legal Page (`/legal`) (`impeccable` + `DESIGN.md`):**
+   - **A. Local-First License & Firm Branding Store (`apps/web/src/state/licenseStore.ts`, `apps/web/src/components/LicenseModal.tsx`):**
+     - Create `licenseStore.ts` (Zustand + `localStorage` persistence) managing `tier: "free" | "pro"`, `licenseKey`, `firmName`, `engineerName`, `checkerName`, `activateKey(key)` (validates `RDM-PRO-` prefix), `activateDemoPro()`, and `resetToFree()`.
+     - Build `LicenseModal.tsx` using Base UI `Dialog` + `DESIGN.md` Daylight tokens so users can inspect plan limits, enter a `RDM-PRO-...` key, or click `"Activer une démonstration Pro"` in 1 click, and pre-fill Step 5's `ReportBuilder` cover metadata from `licenseStore`.
+   - **B. Commercial Product Landing Page (`apps/web/src/routes/_marketing/index.tsx`):**
 
-- Step 1 (geometry.tsx): Place FamilyPills inside the left inspector right above the profile Combobox (filtering ipeSections directly by familyOfDesignation), and dock CadToolbar cleanly above the viewport slot (never overlapping LayerToolbar or Iso | XY | XZ | YZ camera buttons).
-- Step 4 (results.tsx): Move AdvancedPanels (Global Buckling λcr, Seismic EN 1998-1, Multi-Material EC2/EC5/EC3-1-8/EC3-1-2/EC9) and the Optimiseur EC3 / Scénarios buttons into tabs inside the right 340px diagnostic rail (ec3-rail), and place ForceDiagrams3D as a clean toggleable panel below the 220px bottom dock so neither the 3D canvas nor the 220px uPlot dock is covered or overflowed.
-- Step 5 (report.tsx): Move <ReportBuilder /> into the sticky 320px right export rail beside the centered 794px A4 sheet, and sanitize project.name in .docx filenames (replace(/[^\w-]+/g, "_")).
-- Eyeball Verification Round: Capture Playwright screenshots of all 5 routes across 1440×900, 860×900, and 390×844, inspect every screenshot for clipping, cramped padding, text truncation, or visual imbalance per craft-floor.md, and fix every defect found.
+- Craft a distinctive, high-authority Swiss Metrology landing page at `/` (following `impeccable` `layout.md` & `spatial-design.md` — crisp `1px #E2E8F0` grid cards, `JetBrains Mono` technical telemetry, zero generic SaaS fluff) with:
 
-4. Wave 3 — Real-World Structural Engineering E2E & Edge-Case Suite (apps/web/e2e/real-world-scenarios.spec.ts):
-   • Author a dedicated E2E suite testing real civil/structural engineering workflows and edge cases end-to-end: 1. Industrial Portal Frame (Portique 18 m) with Wind + Snow + P-Δ + EC3 6.61/6.62 + 1-Click Optimizer Apply & ⌘Z Undo: Generate/load a portal frame, add EN 1991 Snow & Wind actions, enable P-Δ in SettingsPopover, run Step 4 solve, inspect KaTeX CalcTrace, apply the EC3 optimizer recommendation, verify utilization drops (η ≤ 1.0), and undo cleanly via ⌘Z. 2. Warren Truss (24 m) with Articulated Diagonals + Linear Buckling (λcr): Generate a 24 m Warren truss, toggle "Barre de treillis (articuler N1/N2)" on diagonals, apply nodal loads, and verify global buckling λcr modes render on Step 4. 3. Multi-Span Continuous Beam (3 travées) with Prescribed Support Settlement & L/300 SLS Check: Load the 3-span beam, verify reactions sum to equilibrium (ΣRz = ΣFz), switch SLS limit to L/300, and scrub x ∈ [0, L] across uPlot + 2D σvM cross-section cut. 4. Edge Case — Unstable Mechanism Diagnostic: Clear all supports on Step 2, navigate to Step 4, and verify the solver catches the mechanism with a clear pedagogical fault message without crashing the worker or UI. 5. Edge Case — Legacy .rdm v1 File Migration & Full Export Suite: Drop a legacy version: 1 .rdm file onto the shell, verify automatic migration + solve, and verify .docx Word + IFC4 BIM + .rdm exports download valid non-empty files.
-5. Verify All Gates (G0 → G6 + vite build, AGENTS.md §4) 100% Green & Archive:
-   • Run every gate and confirm 0 errors, 0 warnings, 0 failed tests:
-   • cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings
-   • RUSTFLAGS="-D warnings" cargo test --workspace --all-features
-   • wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg
-   • pnpm --filter web exec oxfmt --check && pnpm --filter web exec oxlint --deny-warnings && pnpm --filter web exec tsr generate && pnpm --filter web i18n:extract && pnpm --filter web i18n:compile && pnpm --filter web exec tsc --noEmit && pnpm --filter web test:unit
-   • pnpm --filter web exec playwright test --project=chromium --project=firefox --reporter=list
-   • pnpm --filter web build
-   • Update STATUS.md (v2.0.1 — 100% green across G0 → G6 and production vite build), write .github/pr-body.md and ship.toml (1 dirty file per [[commit]], ordered by dependency), run ship validate until exit 0, and zip the full clean tree (rdm-studio-v2.0.1-<SHA>.zip, excluding only .git/, target/, node_modules/, caches) into the downloads folder with zip contents proof.
+* Engineering Hero with live technical badges (`Rust + WASM · < 20 ms`, `EN 1990 / 1991 / 1992 / 1993 / 1995 / 1998 / 1999`, `100 % Hors-Ligne & Zéro Cloud`), primary `"Ouvrir l'atelier 3D →"` CTA (`/geometry`), and an interactive 3-Model Engineering Showcase (Portique 18 m, Treillis Warren 24 m, Poutre 3 travées) displaying an architectural SVG preview + telemetry (`Masse`, `Profilés`, `Norme`) and 1-click launch into `/geometry?template=...`;
+* 6-card Engineering Capabilities Grid (Timoshenko 3D Solver, Complete EC3 `6.61/6.62 + C1` + `KaTeX CalcTrace`, Multi-Material `EC2/EC5/EC8/EC9`, Interactive 3D CAD + Section Optimizer, A4 Vector PDF + `.docx` + `IFC4/SAF` BIM, Local-First GDPR Privacy);
+* 3-tier Pricing & Editions section (Découverte — 0 €, Bureau d'Études Pro — 49 €/mois ou Licence Perpétuelle, Équipe / Entreprise) with 1-click activation;
+  - Engineering FAQ `Accordion` + footer links to `/legal` and external Starlight `/docs`.
+  * C. Legal, GDPR Zero-Cloud & Engineer Responsibility (`apps/web/src/routes/_marketing/legal.tsx`):Build `/legal` covering Mentions légales (LCEN), Conditions Générales d'Utilisation & de Vente (CGU/CGV), Politique de Confidentialité RGPD (100 % local — aucune donnée envoyée sur un serveur), and Clause de Responsabilité Technique Ingénieur.
+  * Wrap all new UI copy in Lingui `<Trans>` / `t` and translate 100% of `apps/web/src/i18n/locales/en.po` (`0` untranslated strings).
+    [delivery]
+    branch = "feat/v210-tanstack-router-url-first"
+    pr_title = "feat: refactor routing to URL-first TanStack layouts and add commercial pages"
+    pr_body = ".github/pr-body.md"
+    base_commit = "<exact 40-char output of git rev-parse HEAD>"
+
+  [[commit]]
+  message = "feat(scope): specific description of this single file change"
+  files = ["path/to/dirty/file"]

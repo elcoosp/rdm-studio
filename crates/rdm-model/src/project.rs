@@ -84,6 +84,11 @@ pub struct ModelSettings {
     /// EN 1990 combination method.
     #[serde(default)]
     pub combination_method: CombinationMethod,
+    /// v2.0.0: second-order P-Δ analysis — each case re-solves with the
+    /// geometric stiffness `Kg(N)` assembled from the current axial force
+    /// distribution until the displacement residual converges.
+    #[serde(default)]
+    pub p_delta: bool,
     /// Timoshenko shear deformation (`Φ = 12 EI / (G Av L²)`); default on,
     /// auto-disabled with a warning flag when `L / h < 8` (shear-dominated
     /// deep members still solve, but the flag marks the approximation).
@@ -103,6 +108,7 @@ impl Default for ModelSettings {
         Self {
             national_annex: NationalAnnex::FR,
             combination_method: CombinationMethod::Eq610,
+            p_delta: false,
             shear_deformation: true,
             plane_frame_2d: false,
         }

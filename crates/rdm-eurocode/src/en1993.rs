@@ -418,15 +418,16 @@ pub fn lateral_torsional_buckling(
         ));
     }
     let h_over_b = h / b;
-    // EN 1993-1-1 Table 6.3 (rolled, doubly symmetric).
+    // EN 1993-1-1 Table 6.3 (rolled, doubly symmetric): curve a for
+    // h/b <= 2, curve b for 2 < h/b <= 3.1, and the general curve d
+    // (alpha_lt = 0.76) beyond — slender I-sections keep a conservative
+    // LTB check instead of aborting `member_check` (v2.0.1).
     let alpha_lt = if h_over_b <= 2.0 {
         0.21
     } else if h_over_b <= 3.1 {
         0.34
     } else {
-        return Err(Ec3Error::CheckUnavailable(
-            "h/b above 3.1 is outside Table 6.3 for rolled sections".to_owned(),
-        ));
+        0.76
     };
 
     let pi = std::f64::consts::PI;
@@ -867,6 +868,37 @@ mod tests {
         let upe = profile_catalog().properties("UPE 100").unwrap();
         let res = lateral_torsional_buckling(&upe, &s235(), 4.0, 1.0).unwrap();
         assert!(res.is_none());
+    }
+
+    #[test]
+    fn ltb_slender_i_sections_fall_back_to_curve_d() {
+        // Slender I-section: h/b = 400/120 ≈ 3.33 > 3.1 — outside the
+        // Table 6.3 a/b curves, so the general curve d (alpha_lt = 0.76)
+        // keeps the check available instead of aborting `member_check`
+        // (v2.0.1).
+        let slender = SectionProperties {
+            shape: SectionShape::DoubleSymmetricI,
+            a: 7.11e-3,
+            iy: 1.1637e-4,
+            iz: 7.68e-6,
+            it: 3.5e-8,
+            iw: Some(4.4e-7),
+            wel_y: 5.82e-4,
+            wel_z: 1.28e-4,
+            wpl_y: Some(6.58e-4),
+            wpl_z: Some(1.96e-4),
+            h: Some(0.4),
+            b: Some(0.12),
+            tw: Some(8.0e-3),
+            tf: Some(1.3e-2),
+            r: None,
+        };
+        let ltb = lateral_torsional_buckling(&slender, &s235(), 6.0, 1.0)
+            .unwrap()
+            .expect("curve-d fallback keeps slender I-sections checkable");
+        assert!(ltb.lambda_lt > 0.2);
+        assert!(ltb.chi_lt < 1.0);
+        assert!(ltb.m_b_rd < ltb.chi_lt * 6.58e-4 * 235e6 + 1e-9);
     }
 
     #[test]

@@ -52,15 +52,15 @@ export function SettingsPopover(): React.ReactElement {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
+        className="rounded-md border border-hairline px-3 py-1.5 text-sm font-medium hover:bg-panel-subtle  "
       >
-        <Trans>Réglages normatifs</Trans>
+        <Trans>Réglages</Trans>
       </button>
       {open ? (
         <div
           role="dialog"
           aria-label={t`Normative settings`}
-          className="absolute right-0 z-50 mt-2 w-72 rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          className="absolute right-0 z-50 mt-2 w-72 rounded-lg border border-hairline bg-panel p-4 shadow-lg"
         >
           <p className="mb-2 text-sm font-semibold">
             <Trans>Annexe nationale</Trans>
@@ -73,8 +73,8 @@ export function SettingsPopover(): React.ReactElement {
                 onClick={() => updateSettings({ national_annex: annex })}
                 className={`rounded px-2 py-1 text-xs font-semibold ${
                   nationalAnnex === annex
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                    ? "bg-accent text-white"
+                    : "bg-panel-subtle text-ink-secondary hover:bg-accent-tint hover:text-accent"
                 }`}
               >
                 {annex}
@@ -89,9 +89,7 @@ export function SettingsPopover(): React.ReactElement {
               type="button"
               onClick={() => updateSettings({ combination_method: "Eq610" })}
               className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
-                combinationMethod === "Eq610"
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 dark:bg-slate-800"
+                combinationMethod === "Eq610" ? "bg-accent text-white" : "bg-panel-subtle"
               }`}
             >
               6.10
@@ -100,9 +98,7 @@ export function SettingsPopover(): React.ReactElement {
               type="button"
               onClick={() => updateSettings({ combination_method: "Eq610ab" })}
               className={`flex-1 rounded px-2 py-1 text-xs font-semibold ${
-                combinationMethod === "Eq610ab"
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 dark:bg-slate-800"
+                combinationMethod === "Eq610ab" ? "bg-accent text-white" : "bg-panel-subtle"
               }`}
             >
               6.10a/b

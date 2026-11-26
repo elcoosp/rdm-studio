@@ -127,16 +127,19 @@ function LoadsPage() {
         fxSum += l.forces.fx;
         fySum += l.forces.fy;
         fzSum += l.forces.fz;
-      } else if (l.kind === "Trapezoid") {
+      } else if (l.kind === "Trapezoid" || l.kind === "Uniform") {
+        // v2.0.2: the EN 1991 generators append Uniform beam loads (snow /
+        // wind / imposed) - mean q x member length along the declared
+        // direction, and no `forces` block.
         const length = memberLength(
           nodes,
           beams.find((b) => b.id === l.beam_id) ?? { n1: 0, n2: 0 },
         );
-        const norm = Math.hypot(l.direction.x, l.direction.y, l.direction.z) || 1;
-        const total = ((l.q_start + l.q_end) / 2) * length;
-        fxSum += (total * l.direction.x) / norm;
-        fySum += (total * l.direction.y) / norm;
-        fzSum += (total * l.direction.z) / norm;
+        const norm = Math.hypot(l.direction?.x ?? 0, l.direction?.y ?? 0, l.direction?.z ?? 0) || 1;
+        const total = (((l.q_start ?? 0) + (l.q_end ?? 0)) / 2) * length;
+        fxSum += (total * (l.direction?.x ?? 0)) / norm;
+        fySum += (total * (l.direction?.y ?? 0)) / norm;
+        fzSum += (total * (l.direction?.z ?? 0)) / norm;
       } else {
         let total = 0;
         for (const b of beams) {
@@ -716,13 +719,13 @@ function LoadsPage() {
                           : "3D"}
                   </td>
                   <td>
-                    {l.kind === "Trapezoid"
-                      ? `${(l.q_start / 1000).toFixed(2)} → ${(l.q_end / 1000).toFixed(2)} kN/m`
+                    {l.kind === "Trapezoid" || l.kind === "Uniform"
+                      ? `${((l.q_start ?? 0) / 1000).toFixed(2)} → ${((l.q_end ?? 0) / 1000).toFixed(2)} kN/m`
                       : l.kind === "AccelerationField"
                         ? `(${l.ax_g} ; ${l.ay_g} ; ${l.az_g}) ×g`
                         : l.kind === "Thermal"
                           ? `ΔT = ${l.dt.toFixed(1)} K`
-                          : `${(l.forces.fz / 1000).toFixed(2)} kN`}
+                          : `${((l.forces?.fz ?? 0) / 1000).toFixed(2)} kN`}
                   </td>
                   <td className="text-right">
                     <button
@@ -763,7 +766,11 @@ function EnvLoadGenerators(): React.ReactElement {
   const loadProject = useProjectStore((st) => st.loadProject);
   const beams = project.structure.beams;
   const [beamId, setBeamId] = useState(beams[0]?.id ?? 0);
-  const [value] = useState(3);
+  // v2.0.2: realistic Eurocode defaults — imposed cat. B 3.0 kN/m²,
+  // snow sk 0.45 kN/m² (guide values) and wind vb 26 m/s.
+  const [imposedCat] = useState(2);
+  const [snowSk] = useState(0.45);
+  const [windVb] = useState(26);
   const [dt, setDt] = useState(30);
 
   const append = (kind: string, numeric: number, thermal: boolean): void => {
@@ -801,7 +808,7 @@ function EnvLoadGenerators(): React.ReactElement {
 
   return (
     <div
-      className="mb-3 rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-700"
+      className="mb-3 rounded-lg border border-hairline p-3 text-xs "
       aria-label="Générateurs EN 1991"
     >
       <p className="mb-2 font-semibold">Générateurs EN 1991 & thermique</p>
@@ -810,7 +817,7 @@ function EnvLoadGenerators(): React.ReactElement {
           value={beamId}
           onChange={(e) => setBeamId(Number(e.target.value))}
           aria-label="Membre cible"
-          className="rounded border border-slate-300 bg-transparent px-1 dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-1 "
         >
           {beams.map((b) => (
             <option key={b.id} value={b.id}>
@@ -820,36 +827,40 @@ function EnvLoadGenerators(): React.ReactElement {
         </select>
         <button
           type="button"
-          onClick={() => append("imposed", value, false)}
-          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          onClick={() => append("imposed", imposedCat, false)}
+          className="rounded bg-panel-subtle px-2 py-1 hover:bg-accent-tint hover:text-accent"
+          data-testid="env-imposed"
         >
-          Imposée cat. {Math.max(1, Math.min(5, Math.round(value)))}
+          Imposée cat. {String.fromCharCode(64 + imposedCat)} (
+          {imposedCat === 2 ? "3,0" : imposedCat} kN/m²)
         </button>
         <button
           type="button"
-          onClick={() => append("snow", value, false)}
-          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          onClick={() => append("snow", snowSk, false)}
+          className="rounded bg-panel-subtle px-2 py-1 hover:bg-accent-tint hover:text-accent"
+          data-testid="env-snow"
         >
-          Neige sk = {value.toFixed(1)} kN/m²
+          Neige sk = {snowSk.toFixed(2).replace(".", ",")} kN/m²
         </button>
         <button
           type="button"
-          onClick={() => append("wind", value, false)}
-          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          onClick={() => append("wind", windVb, false)}
+          className="rounded bg-panel-subtle px-2 py-1 hover:bg-accent-tint hover:text-accent"
+          data-testid="env-wind"
         >
-          Vent vb = {value.toFixed(0)} m/s
+          Vent vb = {windVb.toFixed(0)} m/s
         </button>
         <input
           type="number"
           value={dt}
           onChange={(e) => setDt(Number(e.target.value))}
           aria-label="ΔT"
-          className="w-16 rounded border border-slate-300 bg-transparent px-1 dark:border-slate-600"
+          className="w-16 rounded border border-hairline bg-transparent px-1 "
         />
         <button
           type="button"
           onClick={() => append("thermal", dt, true)}
-          className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"
+          className="rounded bg-panel-subtle px-2 py-1 "
         >
           ΔT {dt} K
         </button>

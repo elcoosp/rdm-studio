@@ -84,7 +84,7 @@ export function ForceDiagrams3D(): ReactElement {
   return (
     <section
       aria-label={t`Diagrammes d'efforts 3D`}
-      className="rounded-xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/90"
+      className="rounded-xl border border-hairline bg-panel/95 p-4  "
     >
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-bold">
@@ -94,7 +94,7 @@ export function ForceDiagrams3D(): ReactElement {
           value={component}
           onChange={(e) => setComponent(e.target.value as DiagramComponent)}
           aria-label={t`Composante`}
-          className="rounded border border-slate-300 bg-transparent px-2 py-1 text-xs dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-2 py-1 text-xs "
         >
           {(Object.keys(COMPONENT_LABELS) as DiagramComponent[]).map((key) => (
             <option key={key} value={key}>
@@ -118,14 +118,14 @@ export function ForceDiagrams3D(): ReactElement {
           value={palette}
           onChange={(e) => setPalette(e.target.value as keyof typeof PALETTES)}
           aria-label={t`Palette`}
-          className="rounded border border-slate-300 bg-transparent px-2 py-1 text-xs dark:border-slate-600"
+          className="rounded border border-hairline bg-transparent px-2 py-1 text-xs "
         >
           <option value="viridis">viridis</option>
           <option value="cividis">cividis</option>
         </select>
       </div>
       {envelopes === null || !Array.isArray(envelopes) || envelopes.length === 0 ? (
-        <p className="text-xs text-slate-500">{t`Résoudre le modèle pour afficher les enveloppes.`}</p>
+        <p className="text-xs text-ink-muted">{t`Résoudre le modèle pour afficher les enveloppes.`}</p>
       ) : (
         <svg viewBox="0 0 640 120" role="img" className="h-28 w-full">
           {envelopes.map((env, index) => {

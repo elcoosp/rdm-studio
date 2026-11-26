@@ -22,8 +22,14 @@ test("5-step workflow runs a real FE calculation", async ({ page }) => {
   // EC3 diagnosis heading).
   const combo = page.getByTestId("combination-selector");
   await expect(combo).toBeVisible({ timeout: 15_000 });
+  // v2.1.2: the combinations live in the Base UI Select popup (the closed
+  // trigger shows the ACTIVE combination label).
+  await combo.click();
+  const comboPopup = page.getByRole("listbox");
+  await expect(comboPopup.getByRole("option").filter({ hasText: "1.35G + 1.50Q" })).toBeVisible();
+  await expect(comboPopup.getByRole("option").filter({ hasText: "1.00G + 1.00Q" })).toBeVisible();
+  await comboPopup.getByRole("option").filter({ hasText: "1.35G + 1.50Q" }).click();
   await expect(combo).toContainText("1.35G + 1.50Q");
-  await expect(combo).toContainText("1.00G + 1.00Q");
   await expect(page.getByTestId("ec3-rail")).toBeVisible();
 
   // Step 5: the report shows the model summary and a share URL.

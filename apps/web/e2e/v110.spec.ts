@@ -15,15 +15,13 @@ test("supports mounts the 3D viewport and applies RDM 7 presets", async ({ page 
   await expect(page.getByTestId("preset-glissiere")).toBeVisible();
   // The demo project starts isostatic: 2 supports x 3 locked DOFs = 6.
   await expect(page.getByTestId("kinematic-status")).toContainText(/Isostatique|Hyperstatique/);
-  // Toggling any DOF flips the kinematic degree (6 is isostatic).
-  const unchecked = page
-    .locator('table tbody input[aria-checked="false"], table tbody input:not(:checked)')
-    .first();
-  const anyUnchecked = (await unchecked.count()) > 0 ? await unchecked.isVisible() : false;
-  if (anyUnchecked) {
-    await unchecked.check();
+  // v2.1.2: the DOF matrix rides Base UI Checkboxes (role=checkbox
+  // buttons). Toggling any DOF flips the kinematic degree (6 is isostatic).
+  const unchecked = page.locator('table tbody [role="checkbox"][aria-checked="false"]').first();
+  if ((await unchecked.count()) > 0) {
+    await unchecked.click();
   } else {
-    await page.locator("table tbody input").first().uncheck();
+    await page.locator('table tbody [role="checkbox"]').first().click();
   }
   await expect(page.getByTestId("kinematic-status")).toContainText(/Hyperstatique|Hypostatique/);
 });
@@ -57,19 +55,20 @@ test("results renders the 4 KPI cards, mode selector and docked inspector", asyn
   await expect(page.getByTestId("kpi-deflection")).toBeVisible();
   await expect(page.getByTestId("kpi-utilization")).toBeVisible();
   await expect(page.getByTestId("kpi-modal")).toBeVisible();
-  // v1.6.0: selector across every computed combination + Modes propres.
+  // v2.1.2: the combination selector is a Base UI Select — open the
+  // popup, pick the first option, then look for the eigenmode items.
   const combo = page.getByTestId("combination-selector");
   await expect(combo).toBeVisible();
-  await combo.selectOption({ index: 0 });
-  const modeValue = await combo
-    .locator("option")
-    .evaluateAll(
-      (options) =>
-        options.map((o) => (o as HTMLOptionElement).value).find((v) => v.startsWith("MODE:")) ?? "",
-    );
-  if (modeValue !== "") {
-    await combo.selectOption(modeValue);
+  await combo.click();
+  const popup = page.getByRole("listbox");
+  await popup.getByRole("option").first().click();
+  await combo.click();
+  const modeItems = popup.getByRole("option").filter({ hasText: /Mode propre/ });
+  if ((await modeItems.count()) > 0) {
+    await modeItems.first().click();
     await expect(page.getByTestId("modal-play")).toBeVisible();
+  } else {
+    await page.keyboard.press("Escape");
   }
   // Docked inspector: heatmap, synchronized cursor and forces plot.
   await expect(page.getByTestId("docked-inspector")).toBeVisible();

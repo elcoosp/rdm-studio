@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * CAD import dialog (v1.3.0 Step 1): extension-dispatched `.dxf`,
@@ -47,12 +48,7 @@ export function CadImportDialog({
           </DialogDescription>
         </DialogHeader>
         <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
-          <input
-            type="checkbox"
-            data-testid="cad-encastre"
-            defaultChecked
-            id="cad-encastre-check"
-          />
+          <Checkbox defaultChecked id="cad-encastre-check" data-testid="cad-encastre" />
           <Trans>Encastrer le nœud le plus à gauche</Trans>
         </label>
         <input

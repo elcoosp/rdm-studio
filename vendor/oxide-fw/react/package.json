@@ -1,0 +1,97 @@
+{
+  "name": "@oxide-fw/react",
+  "version": "0.18.0",
+  "description": "React adapter for Oxide: SSR renderer, hydration and the island runtime.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./hydrate": {
+      "types": "./dist/hydrate.d.ts",
+      "default": "./dist/hydrate.js"
+    },
+    "./ir": {
+      "types": "./dist/ir.d.ts",
+      "default": "./dist/ir.js"
+    },
+    "./package.json": "./package.json",
+    "./real-adapter": {
+      "types": "./dist/real-adapter.d.ts",
+      "default": "./dist/real-adapter.js"
+    },
+    "./render": {
+      "types": "./dist/render.d.ts",
+      "default": "./dist/render.js"
+    },
+    "./image": {
+      "types": "./dist/image.d.ts",
+      "default": "./dist/image.js"
+    }
+  },
+  "scripts": {
+    "postbuild": "node ../../scripts/clean-stray-dts.mjs",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "prepublishOnly": "pnpm build",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "oxide",
+    "react",
+    "ssr",
+    "hydration",
+    "web-framework"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsdown": "^0.23.3",
+    "typescript": "^7.0.2"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@oxide-fw/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elcoosp/oxide.git",
+    "directory": "packages/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "homepage": "https://github.com/elcoosp/oxide/tree/main/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/elcoosp/oxide/issues"
+  },
+  "author": "elcoosp <elcoosp@gmail.com>"
+}

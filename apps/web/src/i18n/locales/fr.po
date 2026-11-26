@@ -269,6 +269,10 @@ msgstr "Diagnostic EN 1993-1-1 — P{0} ({1})"
 msgid "Diagrammes d'efforts 3D"
 msgstr "Diagrammes d'efforts 3D"
 
+#: src/routes/results.tsx
+msgid "Diagrammes d'efforts 3D (enveloppes)"
+msgstr "Diagrammes d'efforts 3D (enveloppes)"
+
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Diagrammes N/V/T/M (envelopes)"
 msgstr "Diagrammes N/V/T/M (envelopes)"
@@ -500,8 +504,8 @@ msgid "Nœud"
 msgstr "Nœud"
 
 #: src/routes/geometry.tsx
-msgid "Nœuds"
-msgstr "Nœuds"
+#~ msgid "Nœuds"
+#~ msgstr "Nœuds"
 
 #: src/routes/report.tsx
 msgid "Nœuds / Poutres / Appuis / Charges"
@@ -540,8 +544,20 @@ msgid "Optimiseur EC3 — profil le plus léger"
 msgstr "Optimiseur EC3 — profil le plus léger"
 
 #: src/components/CadToolbar.tsx
+msgid "Outils"
+msgstr "Outils"
+
+#: src/components/CadToolbar.tsx
 msgid "Outils CAD"
 msgstr "Outils CAD"
+
+#: src/components/CadToolbar.tsx
+msgid "Outils CAD secondaires"
+msgstr "Outils CAD secondaires"
+
+#: src/components/CadToolbar.tsx
+msgid "Outils secondaires"
+msgstr "Outils secondaires"
 
 #: src/components/SettingsPopover.tsx
 msgid "P-Δ (second ordre)"
@@ -617,8 +633,8 @@ msgid "Poutre"
 msgstr "Poutre"
 
 #: src/routes/geometry.tsx
-msgid "Poutres"
-msgstr "Poutres"
+#~ msgid "Poutres"
+#~ msgstr "Poutres"
 
 #: src/routes/loads.tsx
 #~ msgid "poutres résolues par élément"
@@ -685,8 +701,12 @@ msgid "Réduire la portée ou ajouter un appui"
 msgstr "Réduire la portée ou ajouter un appui"
 
 #: src/components/SettingsPopover.tsx
-msgid "Réglages normatifs"
-msgstr "Réglages normatifs"
+msgid "Réglages"
+msgstr "Réglages"
+
+#: src/components/SettingsPopover.tsx
+#~ msgid "Réglages normatifs"
+#~ msgstr "Réglages normatifs"
 
 #: src/routes/geometry.tsx
 msgid "Relâchements N1 / N2"

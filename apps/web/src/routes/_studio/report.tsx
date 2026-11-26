@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import {
   DndContext,
@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Download, FileText, GripVertical } from "lucide-react";
+import { Download, GripVertical } from "lucide-react";
 import { encodeProject } from "@/lib/urlShare";
 import { useProjectStore, type ProjectData } from "@/state/projectStore";
 import QRCode from "qrcode";
@@ -79,9 +79,14 @@ function downloadBytes(filename: string, bytes: Uint8Array): void {
  */
 function ReportPage() {
   const project = useProjectStore((s) => s.project);
+  // v2.1.1: the Édition Découverte watermark (removed in Pro mode).
+  const licenseTier = useLicenseStore((s) => s.tier);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  // v2.1.1: ReportBuilder registers its .docx exporter so the rail-top
+  // `Word (.docx)` button shares the SAME cover/chapter payload.
+  const docxExportRef = useRef<() => void>(() => undefined);
   const shareUrl = useMemo(() => {
     const encoded = encodeProject(project);
     return `${window.location.origin}/report?p=${encoded}`;
@@ -104,6 +109,43 @@ function ReportPage() {
     });
   };
 
+  /** v2.1.1: BIM / solver exports live in the top export rail. */
+  const exportBim = (format: string): void => {
+    void feaClient
+      .engineCall("export_bim", project, format)
+      .then((payload) => {
+        const blob = new Blob([String(payload)], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const anchor = window.document.createElement("a");
+        anchor.href = url;
+        anchor.download = `rdm-model.${format === "ifc4" ? "ifc" : format}`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => undefined);
+  };
+
+  // v2.1.1: ⌘K palette export commands ride window events.
+  useEffect(() => {
+    const onExportRdm = () => exportRdm();
+    const onExportDocx = () => docxExportRef.current();
+    const onExportBim = (event: Event) => {
+      const format = (event as CustomEvent<string>).detail;
+      if (typeof format === "string") {
+        exportBim(format);
+      }
+    };
+    window.addEventListener("rdm-export-rdm", onExportRdm);
+    window.addEventListener("rdm-export-docx", onExportDocx);
+    window.addEventListener("rdm-export-bim", onExportBim);
+    return () => {
+      window.removeEventListener("rdm-export-rdm", onExportRdm);
+      window.removeEventListener("rdm-export-docx", onExportDocx);
+      window.removeEventListener("rdm-export-bim", onExportBim);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
+
   const exportPdf = async () => {
     setBusy("pdf");
     try {
@@ -125,6 +167,7 @@ function ReportPage() {
         { shareUrl, fresh: true },
         qrPng,
         stagePng,
+        { watermark: licenseTier === "free" },
       );
       const pdf = await feaClient.renderReportPdf(html, images);
       downloadBytes(`${project.name.replace(/[^\w-]+/g, "_")}-rapport.pdf`, pdf);
@@ -141,13 +184,16 @@ function ReportPage() {
           <div className="flex items-center justify-between border-b-2 border-accent pb-2">
             <div className="flex items-center gap-2">
               <img src="/logo-rdm-studio.svg" alt="" className="h-7 w-7" />
-              <h2 className="text-[17px] font-semibold">RDM Studio — Rapport de calcul</h2>
+              <h2 className="text-[17px] font-semibold">
+                <Trans>RDM Studio — Rapport de calcul</Trans>
+              </h2>
             </div>
             <span className="font-data text-[11px] text-ink-muted">
               {new Date().toISOString().slice(0, 10)}
             </span>
           </div>
-          {/* v1.6.0: live 3D snapshot of the persistent stage. */}
+          {/* v1.6.0 live 3D snapshot — v2.1.1: constrained to 220px on the
+              bg-canvas plate so the A4 sheet never balloons. */}
           <figure
             className="rounded-panel border border-hairline bg-panel-subtle p-2"
             data-testid="report-3d-snapshot"
@@ -155,7 +201,7 @@ function ReportPage() {
             <img
               src={captureViewportPng() ?? "/logo-rdm-studio.svg"}
               alt={t`Vue 3D du modèle`}
-              className="max-h-[360px] w-full rounded object-contain"
+              className="max-h-[220px] w-full rounded bg-canvas object-contain"
             />
             <figcaption className="font-data mt-1 text-[10px] text-ink-muted">
               <Trans>Capture temps réel de la vue 3D (étape 1–4)</Trans>
@@ -201,11 +247,20 @@ function ReportPage() {
           </div>
           <ReportTables />
           <FingerprintFooter qrDataUrl={qrDataUrl} />
+          {/* v2.1.1: subtle Édition Découverte watermark (Pro removes it). */}
+          {licenseTier === "free" ? (
+            <p
+              className="font-data border-t border-hairline pt-2 text-center text-[10px] text-ink-muted"
+              data-testid="edition-watermark"
+            >
+              <Trans>Édition Découverte — Évaluation non contractuelle</Trans>
+            </p>
+          ) : null}
         </section>
-        {/* v2.0.1: sticky 320px export rail — the Report Builder chapters
-            and every export entry live beside the centered A4 sheet. */}
+        {/* v2.1.1: sticky 320px export rail — PDF Takumi (primary Cobalt)
+            and Word (.docx) (secondary outline) TOGETHER at the top, then
+            the BIM/data formats, then the Report Builder + share block. */}
         <aside className="w-full shrink-0 space-y-3 self-start md:sticky md:top-4 md:w-80">
-          <ReportBuilder />
           <div className="space-y-3 rounded-panel border border-hairline bg-panel p-4">
             <h3 className="text-[15px] font-semibold">
               <Trans>Exports (étape 5)</Trans>
@@ -214,51 +269,77 @@ function ReportPage() {
               type="button"
               data-testid="export-pdf"
               disabled={busy !== null}
-              className="min-h-11 w-full rounded bg-accent px-2 py-1.5 text-[13px] text-white disabled:opacity-50"
+              className="min-h-11 w-full rounded bg-accent px-2 py-1.5 text-[13px] font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
               onClick={() => void exportPdf()}
             >
               {busy === "pdf" ? <Trans>Génération…</Trans> : <Trans>PDF Takumi</Trans>}
             </button>
             <button
               type="button"
-              data-testid="export-csv"
+              data-testid="export-docx"
               disabled={busy !== null}
-              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-              onClick={() => exportResultsCsv(getLastReport())}
+              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] font-semibold text-accent hover:bg-accent-tint disabled:opacity-50"
+              onClick={() => docxExportRef.current()}
             >
-              <Trans>CSV Excel</Trans>
+              <Trans>Word (.docx)</Trans>
             </button>
-            <button
-              type="button"
-              data-testid="export-html3d"
-              disabled={busy !== null}
-              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-              onClick={() =>
-                exportStandaloneHtml3d(project, getLastReport(), (name, text, mime) => {
-                  import("@/export/csvExport").then((m) => m.downloadText(name, text, mime));
-                })
-              }
-            >
-              <Trans>HTML 3D</Trans>
-            </button>
-            {/* v1.6.0: canonical `.rdm` round-trip export. */}
-            <button
-              type="button"
-              data-testid="export-rdm"
-              disabled={busy !== null}
-              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-              onClick={exportRdm}
-            >
-              <Trans>Exporter (.rdm)</Trans>
-            </button>
-            <button
-              type="button"
-              data-testid="print-report"
-              className="min-h-11 w-full rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary hover:border-accent hover:text-accent"
-              onClick={() => window.print()}
-            >
-              <Trans>Imprimer</Trans>
-            </button>
+            {/* BIM & data formats — secondary row under the 2 documents. */}
+            <div className="grid grid-cols-3 gap-1.5 border-t border-hairline pt-3">
+              {["ifc4", "saf", "opensees", "gltf"].map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  data-testid={`export-bim-${format}`}
+                  onClick={() => exportBim(format)}
+                  className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
+                >
+                  <Download size={12} strokeWidth={1.5} aria-hidden />
+                  {format.toUpperCase()}
+                </button>
+              ))}
+              <button
+                type="button"
+                data-testid="export-rdm"
+                disabled={busy !== null}
+                className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
+                onClick={exportRdm}
+              >
+                <Download size={12} strokeWidth={1.5} aria-hidden />
+                .rdm
+              </button>
+              <button
+                type="button"
+                data-testid="export-csv"
+                disabled={busy !== null}
+                className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
+                onClick={() => exportResultsCsv(getLastReport())}
+              >
+                <Download size={12} strokeWidth={1.5} aria-hidden />
+                CSV
+              </button>
+              <button
+                type="button"
+                data-testid="export-html3d"
+                disabled={busy !== null}
+                className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
+                onClick={() =>
+                  exportStandaloneHtml3d(project, getLastReport(), (name, text, mime) => {
+                    import("@/export/csvExport").then((m) => m.downloadText(name, text, mime));
+                  })
+                }
+              >
+                <Download size={12} strokeWidth={1.5} aria-hidden />
+                HTML 3D
+              </button>
+              <button
+                type="button"
+                data-testid="print-report"
+                className="col-span-2 flex items-center justify-center gap-1 rounded border border-hairline px-2 py-1.5 text-[11px] text-ink-secondary hover:border-accent hover:text-accent"
+                onClick={() => window.print()}
+              >
+                <Trans>Imprimer</Trans>
+              </button>
+            </div>
             {/* Share-by-URL (lz-string compressed, Valibot-validated). */}
             <div className="border-t border-hairline pt-3">
               <p className="text-[12px] text-ink-secondary">
@@ -294,6 +375,7 @@ function ReportPage() {
               ) : null}
             </div>
           </div>
+          <ReportBuilder registerDocxExport={(fn) => (docxExportRef.current = fn)} />
         </aside>
       </div>
     </div>
@@ -430,30 +512,39 @@ function ReportTables() {
   return (
     <div className="space-y-4">
       {[
-        { title: "Fréquences propres (Hz)", headers: ["Mode", "f (Hz)", "T (s)"], rows: modalRows },
+        // v2.1.1: A4 headings + table headers wrapped in Lingui macros.
         {
-          title: `Réactions d'appuis ELU (kN)${uls !== undefined ? ` — ${uls.label}` : ""}`,
-          headers: ["Appui", "Rx", "Ry", "Rz"],
+          title: t`Fréquences propres (Hz)`,
+          headers: [t`Mode`, t`f (Hz)`, t`T (s)`],
+          rows: modalRows,
+        },
+        {
+          title: `${t`Réactions d'appuis ELU (kN)`}${uls !== undefined ? ` — ${uls.label}` : ""}`,
+          headers: [t`Appui`, "Rx", "Ry", "Rz"],
           rows: [...reactionRows, ["Σ", fr(totalRx, 2), fr(totalRy, 2), fr(totalRz, 2)]],
         },
         {
-          title: "Vérification Eurocode 3",
-          headers: ["Poutre", "σvM (MPa)", "χy", "χz", "χLT", "η", "Statut"],
+          title: t`Vérification Eurocode 3`,
+          headers: [t`Poutre`, "σvM (MPa)", "χy", "χz", "χLT", "η", t`Statut`],
           rows: ec3Rows,
         },
         {
-          title: "Déplacements extrêmes ELS",
-          headers: ["Grandeur", "|U|max (mm)"],
-          rows: [["Déformée ELS", extremeDisplacement]],
+          title: t`Déplacements extrêmes ELS`,
+          headers: [t`Grandeur`, "|U|max (mm)"],
+          rows: [[t`Déformée ELS`, extremeDisplacement]],
         },
-        { title: "Nœuds", headers: ["ID", "X (m)", "Y (m)", "Z (m)"], rows: nodeRows },
+        { title: t`Nœuds`, headers: ["ID", "X (m)", "Y (m)", "Z (m)"], rows: nodeRows },
         {
-          title: "Profils utilisés",
-          headers: ["Poutre", "N1", "N2", "Profil", "Acier"],
+          title: t`Profils utilisés`,
+          headers: [t`Poutre`, "N1", "N2", t`Profil`, t`Acier`],
           rows: beamRows,
         },
-        { title: "Vérification ELU", headers: ["Poutre", "Profil", "η", "Statut"], rows: ulsRows },
-        { title: "Flèches ELS (mm)", headers: ["Poutre", "δ mid"], rows: slsRows },
+        {
+          title: t`Vérification ELU`,
+          headers: [t`Poutre`, t`Profil`, "η", t`Statut`],
+          rows: ulsRows,
+        },
+        { title: t`Flèches ELS (mm)`, headers: [t`Poutre`, "δ mid"], rows: slsRows },
       ].map((table) => (
         <div key={table.title}>
           <div className="flex items-center justify-between">
@@ -463,7 +554,7 @@ function ReportTables() {
               className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-accent"
               onClick={() => copy(table.headers, table.rows)}
             >
-              Copier TSV
+              <Trans>Copier TSV</Trans>
             </button>
           </div>
           <table className="mt-1 w-full text-[12px]">
@@ -503,7 +594,11 @@ export type { ProjectData };
  * engineer disclaimer + SHA-256 fingerprint, and the BIM export family
  * (IFC4 / SAF / OpenSees TCL / solver JSON / glTF).
  */
-function ReportBuilder(): React.ReactElement {
+function ReportBuilder({
+  registerDocxExport,
+}: {
+  registerDocxExport: (fn: () => void) => void;
+}): React.ReactElement {
   const project = useProjectStore((st) => st.project);
   // v2.1.0: the cover metadata pre-fills from the local-first license
   // store (Offline Pro firm branding — LicenseModal keeps it in sync).
@@ -592,22 +687,17 @@ function ReportBuilder(): React.ReactElement {
     revision,
     disclaimer:
       "Ce document est établi par un ingénieur structure. Les hypothèses, normes et résultats restent sous sa responsabilité.",
+    // v2.1.1: Édition Découverte watermark on the .docx cover (Pro: none).
+    evaluation: useLicenseStore.getState().tier === "free",
   };
 
-  const exportBim = (format: string): void => {
-    void feaClient
-      .engineCall("export_bim", project, format)
-      .then((payload) => {
-        const blob = new Blob([String(payload)], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const anchor = window.document.createElement("a");
-        anchor.href = url;
-        anchor.download = `rdm-model.${format === "ifc4" ? "ifc" : format}`;
-        anchor.click();
-        URL.revokeObjectURL(url);
-      })
-      .catch(() => undefined);
-  };
+  // v2.1.1: the rail-top `Word (.docx)` button executes THIS payload —
+  // re-registered every render so chapters/cover edits always apply.
+  useEffect(() => {
+    registerDocxExport(() =>
+      downloadDocx(blocks(), meta, `rapport-${project.name.replace(/[^\w-]+/g, "_")}.docx`),
+    );
+  });
 
   return (
     <section
@@ -664,27 +754,6 @@ function ReportBuilder(): React.ReactElement {
         >
           Sortie : {language.toUpperCase()}
         </button>
-        <button
-          type="button"
-          onClick={() =>
-            downloadDocx(blocks(), meta, `rapport-${project.name.replace(/[^\w-]+/g, "_")}.docx`)
-          }
-          className="flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-1 font-semibold text-white"
-        >
-          <FileText size={14} strokeWidth={1.5} aria-hidden />
-          Télécharger .docx
-        </button>
-        {["ifc4", "saf", "opensees", "solver", "gltf"].map((format) => (
-          <button
-            key={format}
-            type="button"
-            onClick={() => exportBim(format)}
-            className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1 "
-          >
-            <Download size={12} strokeWidth={1.5} aria-hidden />
-            {format.toUpperCase()}
-          </button>
-        ))}
         <button
           type="button"
           onClick={() => void saveSnapshot(`rapport-${revision}`, project)}

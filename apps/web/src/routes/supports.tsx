@@ -457,7 +457,19 @@ function SpringFields({
   springs: number[];
   onApply: (springs: number[]) => void;
 }) {
-  const [values, setValues] = useState<number[]>(springs);
+  // v2.0.1: when the mounted support carries no spring at all, seed the
+  // vertical translational spring (kz, index 2) with 1000 kN/m so one
+  // click on "Appliquer les ressorts" immediately creates a valid elastic
+  // support (the élastique badge requires at least one non-zero k).
+  const [values, setValues] = useState<number[]>(() => {
+    const hasAnySpring = springs.some((k) => k !== 0);
+    if (!hasAnySpring) {
+      const seeded: number[] = [...springs];
+      seeded[2] = 1_000_000;
+      return seeded;
+    }
+    return springs;
+  });
   return (
     <div className="mt-2" data-testid={`spring-fields-${nodeId}`}>
       <div className="grid grid-cols-3 gap-1.5">

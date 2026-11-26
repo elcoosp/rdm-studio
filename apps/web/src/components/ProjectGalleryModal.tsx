@@ -232,6 +232,9 @@ export function ProjectGalleryModal({
         const generated = JSON.parse(json) as ProjectData;
         loadProject(generated);
         toast(t`Structure paramétrique générée`, {
+          // v2.0.1: 8 s so slow cold-start browsers (wasm init on first
+          // run) never miss the "moteur Rust rdm-cad" confirmation.
+          duration: 8_000,
           description: t`${generated.structure.nodes.length} nœuds · ${generated.structure.beams.length} poutres (moteur Rust rdm-cad).`,
         });
         onClose();

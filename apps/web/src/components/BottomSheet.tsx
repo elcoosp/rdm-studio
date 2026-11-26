@@ -19,7 +19,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
  *   spring physics, snap points starting at `0.42` (compact working
  *   position) with `0.78` expanded, a compact top-right X icon button
  *   beside the title and NO white void: the content pane is exactly the
- *   snapped slice (`h-[100dvh]` + internal scroll behind the z-40 tab
+ *   snapped slice (`h-[100dvh]` + internal scroll above the z-40 tab (v2.2.0: z-50)
  *   bar).
  */
 export function BottomSheet({
@@ -76,7 +76,7 @@ export function BottomSheet({
           // by (1 - snap) × viewport, so the element itself is h-[100dvh]
           // with internal scrolling — the visible slice then matches the
           // snap exactly (0.42 → compact working pane, 0.78 → expanded).
-          className="fixed inset-x-0 bottom-0 z-30 h-[100dvh] touch-none overflow-hidden rounded-t-panel border border-b-0 border-hairline bg-panel shadow-[0_-8px_30px_rgba(17,24,39,0.12)]"
+          className="fixed inset-x-0 bottom-0 z-50 h-[100dvh] touch-none overflow-hidden rounded-t-panel border border-b-0 border-hairline bg-panel shadow-[0_-8px_30px_rgba(17,24,39,0.12)]"
         >
           <div className="flex h-full flex-col">
             <div
@@ -99,7 +99,9 @@ export function BottomSheet({
             {/* Zero white void: the content scrolls INSIDE the visible
                 slice (flex-1 + overflow-auto), it no longer overflows a
                 full-height pane with dead space below the last widget. */}
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-16">{children}</div>
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-[calc(64px+env(safe-area-inset-bottom))]">
+              {children}
+            </div>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

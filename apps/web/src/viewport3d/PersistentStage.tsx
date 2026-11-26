@@ -366,12 +366,29 @@ export function PersistentStage(): ReactElement {
     if (beams.length === 0) {
       return null;
     }
-    return buildBeamGeometry(nodes, beams, {
-      colorRatios: colorRatios ?? undefined,
-      displacements: displacements ?? undefined,
-      deformScale: deformScale ?? undefined,
-      profiles,
-    });
+    // v2.2.0: the solver fault path clears `displacements` — build the
+    // deformed mesh when a displacement field exists, but if it collapses
+    // to an empty mesh (or throws), fall back to the UNDEFORMED geometry
+    // so BeamMeshes never vanish and leave floating member labels in
+    // mid-air while the diagnostic card is on screen.
+    const build = (deformed: boolean) => {
+      try {
+        return buildBeamGeometry(nodes, beams, {
+          colorRatios: deformed ? (colorRatios ?? undefined) : undefined,
+          displacements: deformed ? (displacements ?? undefined) : undefined,
+          deformScale: deformed ? (deformScale ?? undefined) : undefined,
+          profiles,
+        });
+      } catch {
+        return build(false);
+      }
+    };
+    let geometry = build(displacements !== null);
+    if ((geometry.getAttribute("position")?.count ?? 0) === 0) {
+      geometry.dispose();
+      geometry = build(false);
+    }
+    return geometry;
   }, [nodes, beams, colorRatios, displacements, deformScale, profiles]);
   useEffect(() => {
     return () => {

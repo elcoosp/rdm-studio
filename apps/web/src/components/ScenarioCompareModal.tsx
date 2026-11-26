@@ -138,7 +138,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
               <SelectRoot
                 value={value?.name ?? ""}
                 onValueChange={(next) => {
-                  if (next === null || next === "") return;
+                  if (next === null || next === "none" || next === "") return;
                   void loadSnapshot(next).then((loaded) => {
                     if (loaded !== null) {
                       setter({ name: next, project: loaded, meta: computeMeta(loaded) });
@@ -154,7 +154,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="none">—</SelectItem>
                   {names.map((n) => (
                     <SelectItem key={n.name} value={n.name}>
                       {n.name}

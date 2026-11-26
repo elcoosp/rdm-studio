@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import {
@@ -115,6 +115,21 @@ export function CadToolbar(): ReactElement {
     });
     setFeedback(`${command.label} — ${command.shortcut}`);
   };
+
+  // v2.1.1: the ⌘K palette dispatches `rdm-cad-command` — the toolbar
+  // stays the single execution point (latest closure via a ref).
+  const runCommandRef = useRef(runCommand);
+  runCommandRef.current = runCommand;
+  useEffect(() => {
+    const onPaletteCommand = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail;
+      if (typeof id === "string") {
+        runCommandRef.current(id);
+      }
+    };
+    window.addEventListener("rdm-cad-command", onPaletteCommand);
+    return () => window.removeEventListener("rdm-cad-command", onPaletteCommand);
+  }, []);
 
   const snaps = snapCandidates(
     { nodes: project.structure.nodes, beams: project.structure.beams },

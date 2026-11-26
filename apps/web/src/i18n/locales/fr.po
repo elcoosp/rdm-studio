@@ -147,6 +147,10 @@ msgstr "Activée"
 #~ msgid "Activer"
 #~ msgstr "Activer"
 
+#: src/routes/_studio/results.tsx
+msgid "Activer Plan 2D & recalculer"
+msgstr "Activer Plan 2D & recalculer"
+
 #: src/components/LicenseModal.tsx
 #: src/routes/_marketing/index.tsx
 msgid "Activer une démonstration Pro"
@@ -384,6 +388,14 @@ msgstr "Cas G / Q / W / S / Acc, générateurs EN 1991 (imposée, neige, vent, �
 msgid "Ce site et le logiciel RDM Studio sont édités dans le cadre d'un projet open source. Les coordonnées complètes de l'éditeur — raison sociale, siège, numéro d'immatriculation et adresse de courrier électronique — sont publiées sur la présente page à l'ouverture de la boutique commerciale, conformément à l'article 6 III 1° de la LCEN."
 msgstr "Ce site et le logiciel RDM Studio sont édités dans le cadre d'un projet open source. Les coordonnées complètes de l'éditeur — raison sociale, siège, numéro d'immatriculation et adresse de courrier électronique — sont publiées sur la présente page à l'ouverture de la boutique commerciale, conformément à l'article 6 III 1° de la LCEN."
 
+#: src/routes/_studio/results.tsx
+msgid "Certains degrés de liberté hors plan (Uy, Rx, Rz) ne sont pas contraints : le modèle est hypostatique. Pour un portique ou une poutre plane, le mode plan 2D ajoute automatiquement ces liaisons et relance le calcul."
+msgstr "Certains degrés de liberté hors plan (Uy, Rx, Rz) ne sont pas contraints : le modèle est hypostatique. Pour un portique ou une poutre plane, le mode plan 2D ajoute automatiquement ces liaisons et relance le calcul."
+
+#: src/routes/_studio/results.tsx
+msgid "Certains degrés de liberté restent libres : le modèle n'est pas suffisamment soutenu. Vérifiez les appuis de l'étape Liaisons ou les relâchements d'extrémité avant de recalculer."
+msgstr "Certains degrés de liberté restent libres : le modèle n'est pas suffisamment soutenu. Vérifiez les appuis de l'étape Liaisons ou les relâchements d'extrémité avant de recalculer."
+
 #: src/routes/_marketing/legal.tsx
 msgid "CGU & CGV"
 msgstr "CGU & CGV"
@@ -615,6 +627,10 @@ msgstr "Déplacer"
 #: src/routes/_marketing/legal.tsx
 msgid "Dernière mise à jour : novembre 2026 — v2.1.0."
 msgstr "Dernière mise à jour : novembre 2026 — v2.1.0."
+
+#: src/routes/_studio/results.tsx
+msgid "Détails techniques"
+msgstr "Détails techniques"
 
 #: src/routes/_studio/results.tsx
 msgid "Diagnostic"
@@ -1032,6 +1048,10 @@ msgstr "Le calcul de structures 3D aux Eurocodes, entièrement sur votre poste."
 msgid "Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la relecture."
 msgstr "Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la relecture."
 
+#: src/routes/_studio/results.tsx
+msgid "Le solveur a détecté un mécanisme"
+msgstr "Le solveur a détecté un mécanisme"
+
 #: src/routes/_marketing.tsx
 msgid "Légal"
 msgstr "Légal"
@@ -1076,6 +1096,10 @@ msgstr "Longueurs de flambement"
 #: src/routes/_studio/results.tsx
 msgid "Maintien latéral mi-travée (kz = 0,5)"
 msgstr "Maintien latéral mi-travée (kz = 0,5)"
+
+#: src/routes/_studio/results.tsx
+msgid "Masquer les détails"
+msgstr "Masquer les détails"
 
 #: src/components/ScenarioCompareModal.tsx
 #: src/routes/_marketing/index.tsx
@@ -1393,6 +1417,10 @@ msgstr "Photographier le modèle actuel"
 #: src/components/SettingsPopover.tsx
 msgid "Plan 2D (Uy/Rx/Rz bloqués)"
 msgstr "Plan 2D (Uy/Rx/Rz bloqués)"
+
+#: src/routes/_studio/results.tsx
+msgid "Plan 2D activé — recalcul en cours"
+msgstr "Plan 2D activé — recalcul en cours"
 
 #: src/routes/_studio/report.tsx
 msgid "Poids propre automatique"

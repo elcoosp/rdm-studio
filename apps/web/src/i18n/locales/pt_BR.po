@@ -147,6 +147,10 @@ msgstr ""
 #~ msgid "Activer"
 #~ msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Activer Plan 2D & recalculer"
+msgstr ""
+
 #: src/components/LicenseModal.tsx
 #: src/routes/_marketing/index.tsx
 msgid "Activer une démonstration Pro"
@@ -384,6 +388,14 @@ msgstr ""
 msgid "Ce site et le logiciel RDM Studio sont édités dans le cadre d'un projet open source. Les coordonnées complètes de l'éditeur — raison sociale, siège, numéro d'immatriculation et adresse de courrier électronique — sont publiées sur la présente page à l'ouverture de la boutique commerciale, conformément à l'article 6 III 1° de la LCEN."
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Certains degrés de liberté hors plan (Uy, Rx, Rz) ne sont pas contraints : le modèle est hypostatique. Pour un portique ou une poutre plane, le mode plan 2D ajoute automatiquement ces liaisons et relance le calcul."
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Certains degrés de liberté restent libres : le modèle n'est pas suffisamment soutenu. Vérifiez les appuis de l'étape Liaisons ou les relâchements d'extrémité avant de recalculer."
+msgstr ""
+
 #: src/routes/_marketing/legal.tsx
 msgid "CGU & CGV"
 msgstr ""
@@ -614,6 +626,10 @@ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Dernière mise à jour : novembre 2026 — v2.1.0."
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Détails techniques"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -1032,6 +1048,10 @@ msgstr ""
 msgid "Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la relecture."
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Le solveur a détecté un mécanisme"
+msgstr ""
+
 #: src/routes/_marketing.tsx
 msgid "Légal"
 msgstr ""
@@ -1075,6 +1095,10 @@ msgstr ""
 
 #: src/routes/_studio/results.tsx
 msgid "Maintien latéral mi-travée (kz = 0,5)"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Masquer les détails"
 msgstr ""
 
 #: src/components/ScenarioCompareModal.tsx
@@ -1392,6 +1416,10 @@ msgstr ""
 
 #: src/components/SettingsPopover.tsx
 msgid "Plan 2D (Uy/Rx/Rz bloqués)"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Plan 2D activé — recalcul en cours"
 msgstr ""
 
 #: src/routes/_studio/report.tsx

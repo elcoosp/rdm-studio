@@ -64,6 +64,42 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
     { enableOnFormTags: false },
   );
 
+  // v2.1.1: 1–5 — jump straight to a workflow step (search preserved).
+  useHotkeys(
+    "1,2,3,4,5",
+    (event) => {
+      if (!isStudio) {
+        return;
+      }
+      event.preventDefault();
+      const paths: Record<string, string> = {
+        "1": "/geometry",
+        "2": "/supports",
+        "3": "/loads",
+        "4": "/results",
+        "5": "/report",
+      };
+      const to = paths[event.key];
+      if (to !== undefined) {
+        void navigate({ to, search: true });
+      }
+    },
+    { enableOnFormTags: false, preventDefault: true },
+  );
+
+  // v2.1.1: / — back to the commercial landing (studio only).
+  useHotkeys(
+    "/",
+    (event) => {
+      if (!isStudio) {
+        return;
+      }
+      event.preventDefault();
+      void navigate({ to: "/" });
+    },
+    { enableOnFormTags: false, preventDefault: true },
+  );
+
   // Step 1 tool modes: V selection, N node, B linking, Esc clears.
   useHotkeys(
     "v",
@@ -86,15 +122,25 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
     },
     { enableOnFormTags: false },
   );
-  // Escape clears the selection (v2.1.0: through the URL). A dedicated
-  // keydown listener lives in this centralized layer — react-hotkeys-hook
-  // v5 does not deliver bare Escape reliably in headless runs.
+  // Escape clears the selection (v2.1.1: through the URL, dialog-aware).
+  // A dedicated keydown listener lives in this centralized layer —
+  // react-hotkeys-hook v5 does not deliver bare Escape reliably in
+  // headless runs. When NO dialog is open it also blurs the focused
+  // table row first: a focused <tr> keeps the key events captured and
+  // the URL write from clearSelection could otherwise be swallowed by
+  // the table's own keyboard handling on Firefox.
   useEffect(() => {
     const onEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || !window.location.pathname.startsWith("/geometry")) {
         return;
       }
       event.preventDefault();
+      if (document.querySelector('[role="dialog"]') === null) {
+        const active = document.activeElement;
+        if (active instanceof HTMLElement && active !== document.body) {
+          active.blur();
+        }
+      }
       useProjectStore.getState().clearBeamSelection();
       clearSelection();
       setToolMode("select");

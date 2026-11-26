@@ -778,6 +778,22 @@ pub fn catalog_materials() -> Result<JsValue, JsValue> {
     serde_wasm_bindgen::to_value(&materials.designations()).map_err(Into::into)
 }
 
+/// v2.0.2: migrates a legacy `.rdm` payload to the canonical v2 JSON
+/// (`migrate_to_v2` + catalog resolution round-trip through the worker).
+///
+/// # Errors
+///
+/// Returns a serialized [`SolveFault`] on malformed payloads.
+#[wasm_bindgen]
+pub fn migrate_project_json(project_json: &str) -> Result<String, JsValue> {
+    let project = rdm_model::ProjectFile::load_json(project_json.as_bytes())
+        .map_err(|e| fault_err("InvalidModel", format!("invalid .rdm payload: {e}")))?;
+    project
+        .to_canonical_json()
+        .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+        .map_err(|e| fault_err("InvalidModel", format!("canonical write failed: {e}")))
+}
+
 /// Solves the `.rdm` JSON project and returns the typed report.
 ///
 /// # Errors
@@ -1487,11 +1503,17 @@ pub fn build_combinations_v2_json(project_json: &str) -> Result<JsValue, JsValue
 /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
 #[wasm_bindgen]
 pub fn member_calc_trace(project_json: &str, beam_index: usize) -> Result<JsValue, JsValue> {
-    let project = match parse_project(project_json) {
-        Ok(p) => p,
-        Err(message) => return fault_js("InvalidModel", message),
+    // v2.0.2: real EC3 CalcTrace — superposed ULS demands across every EN
+    // 1990 combination, Table 6.2 buckling curves, 6.49 chi per axis and
+    // the §6.3.2.2 LTB reduction, all through the one-entry caches.
+    let structure = match cached_structure(project_json) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
     };
-    let structure = &project.structure;
+    let solved = match cached_solved_model(project_json) {
+        Ok(s) => s,
+        Err(e) => return fault_js("SolveError", e.to_string()),
+    };
     let Some(beam) = structure.beams.get(beam_index) else {
         return fault_js(
             "InvalidModel",
@@ -1510,32 +1532,87 @@ pub fn member_calc_trace(project_json: &str, beam_index: usize) -> Result<JsValu
             format!("unknown material {}", beam.material_id),
         );
     };
-    let demand = match rdm_solver::solve_model(structure) {
-        Ok(solved) => {
-            // Worst-case envelope of the end moments and axial force.
-            let base = 12 * beam_index;
-            let mut my = 0.0_f64;
-            let mut n = 0.0_f64;
-            for (_, sol) in &solved.cases {
-                my = my.max(sol.beam_end_forces[base + 4].abs());
-                n = n.min(sol.beam_end_forces[base]);
+    let combos = rdm_eurocode::build_combinations_v2(
+        &structure.load_cases,
+        structure.settings.combination_method,
+    );
+    let case_map: std::collections::BTreeMap<String, rdm_model::LoadCase> = structure
+        .load_cases
+        .iter()
+        .map(|def| match def.category {
+            rdm_model::CaseCategory::Permanent => {
+                (def.code.clone(), rdm_model::LoadCase::Permanent)
             }
-            (n, my)
-        }
-        Err(_) => (0.0, 0.0),
+            rdm_model::CaseCategory::Variable => (def.code.clone(), rdm_model::LoadCase::Variable),
+            rdm_model::CaseCategory::Wind => (def.code.clone(), rdm_model::LoadCase::Wind),
+            rdm_model::CaseCategory::Snow => (def.code.clone(), rdm_model::LoadCase::Snow),
+            _ => (def.code.clone(), rdm_model::LoadCase::Acceleration),
+        })
+        .collect();
+    let mut n_ed = 0.0_f64;
+    let mut my_ed = 0.0_f64;
+    let mut mz_ed = 0.0_f64;
+    for (_kind, _label, weights) in &combos {
+        let weighted: Vec<(rdm_model::LoadCase, f64)> = weights
+            .iter()
+            .filter_map(|(code, f)| case_map.get(code).map(|c| (*c, *f)))
+            .collect();
+        let Ok((_, _, f)) = rdm_solver::superimpose(&solved, &weighted) else {
+            continue;
+        };
+        let base = 12 * beam_index;
+        n_ed = n_ed.min(f[base]);
+        my_ed = my_ed.max(f[base + 4].abs().max(f[base + 10].abs()));
+        mz_ed = mz_ed.max(f[base + 5].abs().max(f[base + 11].abs()));
+    }
+    let length = match (structure.node(beam.n1), structure.node(beam.n2)) {
+        (Ok(a), Ok(b)) => ((b.x - a.x).powi(2) + (b.y - a.y).powi(2) + (b.z - a.z).powi(2)).sqrt(),
+        _ => 0.0,
     };
     let gamma = rdm_eurocode::annex_factors(structure.settings.national_annex);
+    let lcr_y = beam.k_buckling_y * length;
+    let lcr_z = beam.k_buckling_z * length;
+    let ncr_y = rdm_eurocode::euler_critical_force(material.e, section.iy, lcr_y);
+    let ncr_z = rdm_eurocode::euler_critical_force(material.e, section.iz, lcr_z);
+    let lambda_bar_y_sq = if ncr_y > 0.0 {
+        section.a * material.fy / ncr_y
+    } else {
+        1.0
+    };
+    let lambda_bar_z_sq = if ncr_z > 0.0 {
+        section.a * material.fy / ncr_z
+    } else {
+        1.0
+    };
+    let chi_y = rdm_eurocode::buckling_curve_rolled(section, true)
+        .ok()
+        .map_or(0.6, |curve| {
+            rdm_eurocode::flexural_buckling_chi(curve, lambda_bar_y_sq.sqrt())
+        });
+    let chi_z = rdm_eurocode::buckling_curve_rolled(section, false)
+        .ok()
+        .map_or(0.6, |curve| {
+            rdm_eurocode::flexural_buckling_chi(curve, lambda_bar_z_sq.sqrt())
+        });
+    let chi_lt = rdm_eurocode::lateral_torsional_buckling(section, material, length, 1.0)
+        .ok()
+        .flatten()
+        .map_or(1.0, |ltb| ltb.chi_lt);
+    let n_b_rd_y = chi_y * section.a * material.fy / gamma.gamma_m1;
+    let n_b_rd_z = chi_z * section.a * material.fy / gamma.gamma_m1;
+    let mc_y_rd = section.wpl_y.unwrap_or(section.wel_y) * material.fy / gamma.gamma_m0;
+    let mc_z_rd = section.wel_z * material.fy / gamma.gamma_m0;
     let input = rdm_eurocode::InteractionInput {
-        n_ed: demand.0,
-        my_ed: demand.1,
-        mz_ed: 0.0,
-        n_b_rd_y: 0.6 * section.a * material.fy / gamma.gamma_m1,
-        n_b_rd_z: 0.5 * 0.6 * section.a * material.fy / gamma.gamma_m1,
-        mc_y_rd: section.wpl_y.unwrap_or(section.wel_y) * material.fy / gamma.gamma_m0,
-        mc_z_rd: section.wel_z * material.fy / gamma.gamma_m0,
-        chi_lt: 0.8,
-        lambda_bar_y_sq: 0.5,
-        lambda_bar_z_sq: 0.8,
+        n_ed,
+        my_ed,
+        mz_ed,
+        n_b_rd_y,
+        n_b_rd_z,
+        mc_y_rd,
+        mc_z_rd,
+        chi_lt,
+        lambda_bar_y_sq,
+        lambda_bar_z_sq,
     };
     let annex = if structure.settings.national_annex == rdm_model::NationalAnnex::EN {
         rdm_eurocode::InteractionAnnex::B

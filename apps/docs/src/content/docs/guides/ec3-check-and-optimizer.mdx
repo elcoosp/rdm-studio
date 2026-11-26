@@ -1,0 +1,90 @@
+---
+title: EC3 check and optimizer
+description: The complete EN 1993-1-1 verification chain — 6.61/6.62 interactions, LTB χLT, classes, CalcTrace KaTeX clauses — and the 1-click Pareto section optimizer with undo.
+sidebar:
+  order: 5
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+The Eurocode 3 verification chain turns solver forces into a compliance decision per
+member, per combination. Every number links to its clause through CalcTrace.
+
+<DocMedia
+  id="ec3-calctrace"
+  type="screenshot"
+/>
+
+## Section classification
+
+For each member and each combination sign, the chain classifies the section
+(EN 1993-1-1 Table 5.2) from the web/flange slenderness and ε = √(235/fy):
+
+```text
+classe 1 : rotule plastique atteinte            → Wpl
+classe 2 : moment plastique atteint             → Wpl
+classe 3 : limite élastique en fibre extrême    → Wel
+classe 4 : voilement local                      → Weff (§4.4)
+```
+
+Benchmark `E11` pins the ρ clamp of the class-4 effective-width computation, and
+`E04` pins ε itself.
+
+## Uniform members in compression and bending — 6.61 / 6.62
+
+The biaxial interaction follows the §6.3.3 equations with the Annex B interaction
+factors:
+
+```text
+6.61 : NEd/(χy·NRk) + kyy·MyEd/(χLT·MyRk) + kyz·MzEd/MzRk ≤ 1,00
+6.62 : NEd/(χz·NRk) + kzy·MyEd/(χLT·MyRk) + kzz·MzEd/MzRk ≤ 1,00
+```
+
+The verification keeps the governing equation, and CalcTrace unfolds every factor:
+Cmy,C0 equivalent moment factors, the ψ coefficients of the moment diagrams, and the
+kyy/kyz values from Annex B Tables B.1–B.3.
+
+<DocMedia
+  id="ec3-ltb-chi"
+  type="screenshot"
+/>
+
+## Lateral-torsional buckling χLT
+
+For members without continuous lateral bracing the chain computes the elastic
+critical moment Mcr (with the St-Venant + Wagner torsion contribution certified by
+benchmark `E10`), then:
+
+```text
+λ̄LT = √(Wpl,y·fy / Mcr)
+χLT  = 1 / [ΦLT + √(ΦLT² − β·λ̄LT²)]  ≤ 1,0  (§6.3.2.2 / §6.3.2.3)
+```
+
+The rolled-section method (Table 6.5/6.6 with kc correction) or the Annex F
+general case is selected automatically from the section type.
+
+## CalcTrace — every clause is openable
+
+Click any utilization badge to open the CalcTrace tree: the clause renders as KaTeX
+with the exact input values, intermediate results and the normative source
+(`EN 1993-1-1 §6.3.3 eq. 6.61`, French NA notes where applicable). A
+contresignateur can audit the whole chain without leaving the page. KaTeX renders
+with `trust: false` — no embedded HTML can leak through a formula.
+
+## The 1-click Pareto optimizer
+
+When a member exceeds η = 1,00 (or you just want lighter steel), open the optimizer:
+it sweeps the compatible catalog sections, evaluates the full EC3 chain per candidate,
+and plots mass against utilization. The Pareto front highlights non-dominated
+candidates; picking one applies the swap with an instant What-If diff toast —
+`Masse : +8,3 kg · Taux EC3 : 124,8 % → 68,4 %` — and a 5-second `Annuler (⌘Z)`.
+
+<DocMedia
+  id="cad-optimizer-pareto"
+  type="screenshot"
+/>
+
+## Next steps
+
+- Deflection limits behind the SLS badges: [Results and section cut](/guides/results-and-section-cut/).
+- The formulas behind every clause: [Eurocode formula reference](/reference/eurocode-formulas/).

@@ -1,0 +1,80 @@
+---
+title: Advanced analyses
+description: Linear global buckling λcr, modal eigenfrequencies f1..f6 with EN 1998-1 CQC/SRSS spectra, and multi-material verification — EC2 concrete, EC5 timber, EC9 aluminium, EC3-1-8 bolts and EC3-1-2 fire.
+sidebar:
+  order: 6
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+Beyond the static chain, the studio runs the dynamic and multi-material verifications
+on the same model — no separate tool, no re-entry of geometry.
+
+<DocMedia
+  id="advanced-buckling-lambda-cr"
+  type="screenshot"
+/>
+
+## Linear global buckling λcr
+
+The buckling run solves the generalized eigenproblem `[Ke]·φ = λcr·[Kg]` on the whole
+structure, where `[Kg]` is the geometric stiffness from the current axial force
+distribution. The report lists λcr per combination (the lowest is the governing one)
+and renders the amplified first mode. Per EN 1993-1-1 §5.2.1, `αcr = λcr ≥ 10` clears
+the first-order analysis; between 3 and 10 the P-Δ option — which adds `[Kg(N)]`
+inside the stiffness assembly — becomes the honest path.
+
+<DocMedia
+  id="advanced-modal-frequencies"
+  type="screenshot"
+/>
+
+## Modal eigenfrequencies f₁…f₆
+
+The modal run extracts the first six eigenfrequencies with the Arnoldi/Lanczos
+iteration on the shifted operator. Each mode renders as an animated shape with its
+effective modal mass. Typical uses: floor vibration comfort (f₁ above the 3 Hz
+threshold), crane gantry rhythm, and the seismic mass definition.
+
+## EN 1998-1 seismic response
+
+The seismic module combines the modal results with the EN 1998-1 design spectrum:
+
+```text
+Sd(T1)  = ag·S·[ 2,5 + η·(Tc/T1) ]        (plateau branch, §3.2.2.5)
+Vb      = Sd(T1)·m·λ                       (base shear, §4.3.3.2.2)
+Fi      = Vb·si·mi / Σ(sj·mj)              (vertical distribution)
+```
+
+Choose the spectrum type (Type 1/2), the ground class (A…E) and the behavior factor q;
+the modal combination runs CQC (default) or SRSS, and the resulting forces enter the
+combination table as the `Acc-x/±` seismic actions with the statutory ψ values.
+
+## Multi-material verification in one model
+
+The verification step adapts per member material — the geometry is shared, the
+normative chain is not:
+
+| Material | Standard | Governing checks |
+| --- | --- | --- |
+| Steel S235–S460 | EN 1993-1-1 | classes, 6.61/6.62, χLT |
+| Stainless 304L | EN 1993-1-4 | ρ-reduced properties |
+| Aluminium 6061 / 6082-T6 | EN 1999-1-1 | fo/fu, welded zones, classes |
+| Timber GL24h–GL32h | EN 1995-1-1 | kmod/γM, fm,d, fv,d, kdef creep |
+| Concrete (reinforced) | EN 1992-1-1 | bending/axial design sections |
+| Bolted joints | EN 1993-1-8 | shear/bearing/tension per bolt group |
+| Fire R30–R120 | EN 1993-1-2 | reduced fy at θa, critical temperature |
+
+Switching a member from S355 to GL28h keeps every load path and combination intact —
+only the verification chain changes, which is exactly how a mixed wood/steel/alu
+cradle or a steel-concrete composite beam should behave.
+
+<DocMedia
+  id="advanced-multimaterial"
+  type="screenshot"
+/>
+
+## Next steps
+
+- The buckling theory: [Solver architecture](/explanation/solver-architecture/).
+- Deliver the multi-material note: [Reports and BIM exports](/guides/reports-and-bim-exports/).

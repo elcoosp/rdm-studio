@@ -1,0 +1,74 @@
+---
+title: CAD modeling and custom sections
+description: Draw and edit 3D models with magnetic snap, import DXF/STEP/IGES wireframes, and define custom PRS/RHS/CHS sections. Every CAD tool of the RDM Studio 3D editor explained with shortcuts.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+The studio ships a real 3D CAD surface, not a form-driven model builder. This guide
+covers the drawing tools, the magnetic snap system, the import pipeline and the
+custom-section editor.
+
+<DocMedia
+  id="cad-modeling-snap"
+  type="screenshot"
+/>
+
+## Drawing and editing tools
+
+The CAD toolbar (left edge of the viewport) exposes the member tools: line beams,
+rectangular grids, duplicate (`Ctrl+D`), subdivide (right-click a beam →
+`Subdiviser en 4 tronçons`), and node fusion (drag one node onto another, or
+right-click → `Fusionner les nœuds`). Every action runs through the undo stack
+(`⌘Z`), including the destructive ones like `Tout supprimer`, which uses a
+hold-to-confirm button instead of a fragile single click.
+
+| Tool | Action | Shortcut / entry |
+| --- | --- | --- |
+| Beam | Draw a member between two snapped points | `B` or toolbar |
+| Duplicate | Copy the selection with an offset | `Ctrl+D` |
+| Subdivide | Split a beam into n segments | right-click → Subdiviser |
+| Fuse nodes | Merge coincident nodes (tolerance 1 mm) | drag or right-click |
+| Articulate | Insert an internal hinge on a beam end | right-click → Articuler N1/N2 |
+| Encastre | Fix all 6 DOF of a node | right-click → Encastrer le nœud |
+
+## Magnetic snap and cursor reticles
+
+The snap system projects a 3D reticle at the cursor: a **cobalt square** on existing
+nodes, a **cyan triangle** on beam midpoints, and a slate crosshair on metric grid
+intersections. The grid pitch toggles between 10 / 50 / 100 mm in the status bar, and
+`Shift` projects a dashed orthogonal guide from the last point. On touch devices each
+snap fires an 8 ms haptic tick so you feel the magnetism without looking.
+
+## DXF / STEP / IGES import
+
+Drop a `.dxf`, `.step` or `.igs` file anywhere on the viewport. The importer keeps
+line and arc entities as wireframe candidates, fuses endpoints within tolerance, and
+proposes the resulting edges as beam centerlines — you then assign sections per
+selection. The import is local: the file is parsed in the WASM sandbox and never
+uploaded.
+
+## Custom PRS / RHS / CHS sections
+
+When the EN 10365 / EN 10210 / EN 10056 catalogs are not enough, open the section
+editor and define a custom profile. For hollow sections the geometric properties are
+computed from the bounding dimensions and thickness:
+
+```text
+RHS h×b×t  (en 10210 style, corner radius r = t)
+A   = 2·(h + b − 2t)·t
+Iy  ≈ [b·h³ − (b − 2t)(h − 2t)³] / 12
+Wel = Iy / (h/2)
+Wpl = [b·h² − (b − 2t)(h − 2t)²] / (4h)
+```
+
+The editor reports A, Iy/iz, Wel/Wel, Wpl/Wpl, torsion constant IT and warping
+constant IW, and flags the EN 1993-1-1 class of the section for the entered steel —
+so a class-4 warning appears at design time, not at the verification step.
+
+## Next steps
+
+- Restrain the model you just drew: [Supports and releases](/guides/supports-and-releases/).
+- Load it: [Loads and combinations](/guides/loads-and-combinations/).

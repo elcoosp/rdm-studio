@@ -1,0 +1,70 @@
+---
+title: Reports and BIM exports
+description: Produce the vector A4 PDF calculation note, the structured .docx, the SHA-256 fingerprint and ?p= share links — then export IFC4, SAF, OpenSees TCL, glTF, .rdm and CSV for downstream tools.
+sidebar:
+  order: 7
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+The Rapport step is where the model becomes a deliverable. Everything is generated
+locally — the PDF renderer, the .docx writer and every BIM exporter run in the tab.
+
+<DocMedia
+  id="report-pdf-a4"
+  type="screenshot"
+/>
+
+## The vector A4 PDF note
+
+The note uses the Takumi vector renderer (not a raster screenshot): selectable text,
+embedded Inter and JetBrains Mono faces, and hairline tables that print cleanly on
+any printer. The cover carries the firm branding fields of the Pro edition — bureau
+name, address, logo — followed by the model summary, the combination table, the
+reactions, the EC3 verification table and the deflection checks. Page breaks respect
+`break-inside: avoid` on tables and section figures.
+
+## SHA-256 fingerprint and ?p= sharing
+
+Every note embeds the SHA-256 fingerprint of the exact serialized model state that was
+solved — the contresignateur can recompute it from the attached `.rdm` and verify the
+match. The share button compresses the model into the URL itself (`?p=…`, lz-string,
+revalidated by Valibot on read): the link contains the whole project and transits no
+server.
+
+<DocMedia
+  id="report-exports-bim"
+  type="screenshot"
+/>
+
+## Structured .docx
+
+The Word export is structured, not a text dump: heading levels, real tables, and
+figure placeholders survive round-trip editing so the note can be extended inside a
+bureau's own template.
+
+## The export matrix
+
+| Export | Target | What it carries |
+| --- | --- | --- |
+| `.rdm` | canonical JSON | nodes, beams, sections, loads, settings — reimportable byte-exact |
+| IFC4 | BIM authoring | IfcBeam/IfcColumn entities with profile geometry |
+| SAF | EN 1993-1-1 structural analysis | members, sections, materials, load cases |
+| OpenSees TCL | research workflows | nodes, elements, elastic section commands |
+| glTF | 3D web viewer | mesh geometry with member colors |
+| CSV | spreadsheets | reactions, verifications, deflections |
+
+The standalone 3D HTML export inlines `three.module.js` (three@0.187 ships
+`build/three.module.js` — no `three.min.js`) so a reviewer can orbit the deformed
+model from a single emailed file, offline.
+
+## Copy-for-Excel TSV
+
+Each report table exposes `Copier pour Excel`: tab-separated values with French
+decimal commas and non-breaking space units (`235 MPa`, `4,82 mm`), pasting directly
+into a spreadsheet without reformatting.
+
+## Next steps
+
+- What the tables contain: [Results and section cut](/guides/results-and-section-cut/).
+- Verify before you sign: [EC3 check and optimizer](/guides/ec3-check-and-optimizer/).

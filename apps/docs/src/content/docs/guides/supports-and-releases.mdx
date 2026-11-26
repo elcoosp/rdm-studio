@@ -1,0 +1,65 @@
+---
+title: Supports and releases
+description: Restrain models with the RDM 7 six-DOF library, elastic springs kx…krz and beam end releases N1/N2 — with the mechanism diagnostics that explain any insufficiently restrained model.
+sidebar:
+  order: 2
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+A restraint removes degrees of freedom; a release removes stiffness. The studio treats
+both as first-class model objects with a visual editor and solver-grade diagnostics.
+
+<DocMedia
+  id="supports-rdm7"
+  type="screenshot"
+/>
+
+## The 6-DOF restraint matrix
+
+Each node support is a boolean row of the six global DOF in Z-up order:
+`[Ux, Uy, Uz, Rx, Ry, Rz]`. The preset library mirrors the classic RDM 7 vocabulary:
+
+| Preset | Locked DOF | Typical use |
+| --- | --- | --- |
+| Encastrement | `[true, true, true, true, true, true]` | Fixed column base |
+| Rotule | `[true, true, true, false, false, false]` | Pin joint, truss support |
+| Appui simple (2D) | `[true, true, true, true, false, false]` | Plane-frame roller with anti-roll |
+| Glissière | `[false, true, true, true, false, false]` | Sliding guide along X |
+| Appui élastique | springs instead of locks | Soil / bearing stiffness |
+
+The editor shows the exact boolean row — for a 2D plane frame in the XZ plane the
+out-of-plane DOF `Uy`, `Rz` and the roll `Rx` must be restrained at the boundary:
+that is the `[true, true, true, true, false, false]` pattern of the *appui simple*
+preset, and it is the correct default for the `travees` quick-start template.
+
+## Elastic springs
+
+The *appui élastique* preset replaces booleans with stiffness values
+`kx, ky, kz, krx, kry, krz` (SI: N/m and N·m/rad). Springs enter the global matrix on
+the diagonal exactly like a restraint with a finite value, so a partially stiff bearing
+can be modeled without a second run. Typical values: elastomeric bearing
+`kz = 2×10⁸ N/m`, pile head `kx = ky = 5×10⁷ N/m`.
+
+## Beam end releases N1/N2
+
+Select a beam and open **Relâchements**: each end (N1 = start node, N2 = end node)
+can release `N, Vy, Vz, T, My, Mz` individually. A truss chord is
+`My + Mz + T released` at both ends (axial only); a Vierendeel post releases moments
+at both ends while the chords stay rigid. Released moments transfer nothing, which is
+why the releases of R06-style fixed-fixed frames change the moment diagram instantly.
+
+## Mechanism diagnostics
+
+If the solver detects a singular system (a mechanism), it refuses a meaningless answer
+and reports the unconstrained DOFs explicitly: which nodes, which DOF, and whether the
+cause is out-of-plane freedom (`Uy`, `Rx`, `Rz` in a plane frame). The results page
+renders this as a pedagogical card with a one-click **Activer Plan 2D & recalculer**
+fix that adds the missing plane-frame restraints and re-runs — no raw 12 000-character
+matrix dump required. The collapsible details section still exposes the full
+diagnostics for review.
+
+## Next steps
+
+- Load the restrained model: [Loads and combinations](/guides/loads-and-combinations/).
+- Read the internal forces: [Results and section cut](/guides/results-and-section-cut/).

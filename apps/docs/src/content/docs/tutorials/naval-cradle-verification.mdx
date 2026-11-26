@@ -1,0 +1,102 @@
+---
+title: Naval & lifting transport cradle under (ax, ay, az) × g accelerations
+description: Model a lifting and transport cradle for a 12 t cargo under combined acceleration fields, verify the transverses in S355 steel and aluminium 6082-T6, and export the certified note. Full EN 1990 + EN 1993/1999 workflow.
+sidebar:
+  order: 2
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+A transport or lifting cradle sees gravity **plus** the accelerations of the lifting
+gear, the road, or the sea. This tutorial builds a two-transverse cradle for a 12 t
+colis, applies the dynamic field `(ax, ay, az) × g = (0,4 ; 0,4 ; 1,3) × g`, and
+verifies the transverses in S355 steel — then repeats the check in aluminium 6082-T6
+under EN 1999.
+
+<DocMedia
+  id="naval-cradle-model"
+  type="screenshot"
+/>
+
+## Step 1 — Draw the cradle skeleton
+
+Start from a blank project. The cradle is two parallel IPE 200 transverses
+(`L = 2,40 m`) sitting on longitudinal runners. Draw with the beam tool on the 50 mm
+grid, or import the wireframe from a DXF (see the CAD guide). Set the units panel to
+metres, keep the Z-up repère, and use `Ctrl+D` to duplicate the first transverse at a
+2,00 m spacing.
+
+```text
+N1 (0, 0, 0)      N2 (2.4, 0, 0)   — transverse A
+N5 (0, 2.0, 0)    N6 (2.4, 2.0, 0) — transverse B
+B1..B2 transverses IPE 200 · S355J2
+```
+
+## Step 2 — Apply the cargo mass and the acceleration field
+
+Instead of guessing an equivalent static force, attach the cargo as a **mass** at its
+four bearing points (1 t each, via the mass tool) and let the solver integrate the
+acceleration field. In the **Charges** step, open
+**Champs d'accélération (g)** and enter:
+
+```yaml
+acc_field:
+  ax: 0.4   # traction / braking (×g)
+  ay: 0.4   # racking / rolling (×g)
+  az: 1.3   # lifting dynamic amplification (×g)
+```
+
+The field becomes an inertial body load on every member and every attached mass — the
+cradle's own steel weight is amplified exactly like the cargo, with no fictitious
+equivalent point loads to maintain. Each acceleration component is registered as its
+own action so EN 1990 combinations can weight them independently.
+
+## Step 3 — Combine per EN 1990
+
+Open the combination table. The generators create the fundamental combinations:
+
+```text
+ELU-1 : G + 1,3·g_z + 0,4·g_y   (levage + roulis)
+ELU-2 : G + 1,3·g_z − 0,4·g_y   (levage + roulis inversé)
+ELS-c : G + 1,0·g_z
+```
+
+Sign inversion matters: a racking acceleration that stabilizes the cargo in one
+combination destabilizes it in the mirrored one. RDM Studio generates both gisements
+automatically, and `6.10a/b` re-weights with ψ₀ when you switch the recipe selector.
+
+## Step 4 — Verify the transverses
+
+Solve. The verification panel shows, per member and per combination, the flexion rate
+`MEd / Mc,Rd` (EN 1993-1-1 §6.2.5), the shear rate against `Vpl,Rd` (§6.2.6) and —
+for the S355 transverse — the class check `c/t ≤ 33ε` on the flange. For the worked
+example the governing ELU gives `MEd = 45,9 kN·m` against
+`Mc,Rd = 78,3 kN·m` → η = 0,59.
+
+<DocMedia
+  id="ec3-calctrace"
+  type="screenshot"
+/>
+
+## Step 5 — Swap to aluminium 6082-T6 and compare
+
+Duplicate the project, switch the transverse material to **Aluminium 6082-T6**
+(EN 1999-1-1: `fo = 250 MPa`, `fu = 290 MPa`). The solver re-runs with the EN 1999
+verification chain — including the welded-zone factors if you declare welds — and the
+comparison table shows the mass saving against the steel design. Export the PDF note
+with both materials side by side; the SHA-256 fingerprint ties the note to the exact
+model state.
+
+## What you learned
+
+- Acceleration fields convert dynamic transport environments into EN 1990 actions
+  without fictitious loads.
+- Both gisements of every acceleration enter the combinations automatically.
+- The same geometry verifies in EN 1993 steel and EN 1999 aluminium.
+
+## Next steps
+
+- [Loads and combinations](/guides/loads-and-combinations/) — every EN 1991 generator.
+- [Advanced analyses](/guides/advanced-analyses/) — modal frequencies and seismic spectra
+  for transport dynamics.
+- [Reports and BIM exports](/guides/reports-and-bim-exports/) — deliver the certified note.

@@ -1,0 +1,109 @@
+---
+title: Eurocode formula reference
+description: Every normative formula implemented by RDM Studio, from EN 1990 combinations to EN 1999-1-1 aluminium — with the exact clause references and the benchmarks that certify each one.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+This reference lists the implemented formulas verbatim with their clause. Every entry
+is exercised by the benchmark suite (see [validation benchmarks](/reference/validation-benchmarks/)),
+and every verification in the app renders these formulas through CalcTrace with the
+actual input values.
+
+## EN 1990 — basis of design
+
+| Quantity | Formula | Clause | Benchmark |
+| --- | --- | --- | --- |
+| Combination 6.10 | Σ γG,j·Gk,j + γQ,1·Qk,1 + Σ γQ,i·ψ0,i·Qk,i | 6.4.3.3 (1) | `E05`, `E06` |
+| Combination 6.10a | Σ γG,j·Gk,j + γ0,1·γQ,1·ψ0,1·Qk,1 + … | 6.4.3.3 (2) | `E06` |
+| Combination 6.10b | ξ·Σ γG,j·Gk,j + γQ,1·Qk,1 + … | 6.4.3.3 (3) | `E06` |
+| ψ0, Q (offices) | 0,7 | A1.1 | `E07` |
+| γG (FR NA) | 1,35 | A1.2.1 | `E05` |
+| γM0 (FR NA) | 1,00 | 6.1 NA | `E09` |
+
+## EN 1991 — actions
+
+| Quantity | Formula | Clause |
+| --- | --- | --- |
+| Basic wind velocity | vb = vb,0·cdir·cseason | 1991-1-4 §4.2 (2) |
+| Peak velocity pressure | qp = (1 + 7·Iv)·½·ρ·vm² | §4.5 (2) |
+| Net wind pressure | we = qp·cpe | §5.2 (1) |
+| Snow load on roof | s = μi·Ce·Ct·sk | 1991-1-3 §5.2 (5) |
+| Thermal uniform action | ΔT component per §5.3 | 1991-1-5 §5.3 |
+| Inertial actions | (ax, ay, az)·m·g per axis | 1990 §5.1.4 + project rules |
+
+## EN 1993-1-1 — steel
+
+| Quantity | Formula | Clause | Benchmark |
+| --- | --- | --- | --- |
+| Yield ratio ε | ε = √(235/fy) | Table 3.1 | `E04` |
+| Axial plastic resistance | Npl,Rd = A·fy/γM0 | §6.2.3 (2) | `E01` |
+| Shear plastic resistance | Vpl,Rd = Av·(fy/√3)/γM0 | §6.2.6 (2) | `E02` |
+| Bending plastic resistance | Mc,Rd = Wpl·fy/γM0 | §6.2.5 (2) | `E03` |
+| Flexural buckling | Nb,Rd = χ·A·fy/γM1 | §6.3.1.1 (1) | — |
+| Perry curve | χ = 1/[Φ + √(Φ² − λ̄²)] ≤ 1 | §6.3.1.2 | — |
+| Imperfection (curve b) | α = 0,34 | Table 6.1 | — |
+| LTB resistance | Mb,Rd = χLT·Wpl,y·fy/γM1 | §6.3.2.2 | `E10` |
+| Interaction | 6.61 / 6.62 with Annex B kij | §6.3.3 | `E08` |
+| Class 4 effective width | ρ = (λ̄ − 0,055(3 + ψ))/λ̄² clamped | §4.4 (3) | `E11` |
+
+## EN 1993-1-8 — bolted joints
+
+```text
+shear  : Fv,Rd = αv·fub·A / γM2              (Table 3.4)
+bearing: Fb,Rd = k1·αb·fu·d·t / γM2          (Table 3.4)
+tension: Ft,Rd = 0,9·fub·As / γM2            (Table 3.4)
+combined: Fv,Ed/Fv,Rd + Ft,Ed/(1,4·Ft,Rd) ≤ 1,0
+```
+
+## EN 1993-1-2 — fire
+
+```text
+ky,θ from Table 3.1 (θa per ISO 834 curve)
+Mfi,Rd = ky,θ·Mc,Rd                    (§4.2.3)
+critical temperature θcr via inversion of the utilization μ0
+```
+
+## EN 1992-1-1 — concrete (bending design)
+
+```text
+MRd = Fs·z = As·fsd·z,  z = d − λ·x/2
+x   = As·fsd / (λ·η·fcd·b)
+fsd = fyd = fyk/γs (γs = 1,15)
+```
+
+## EN 1995-1-1 — timber
+
+| Quantity | Formula | Clause |
+| --- | --- | --- |
+| Design bending strength | fm,d = kmod·fm,k/γM | §2.4.1 / §6.1.6 |
+| Design shear strength | fv,d = kmod·fv,k/γM | §6.1.7 |
+| Instantaneous deflection | winst from E0,mean | §2.4.3 |
+| Final deflection | ufin = winst(G)·(1+kdef) + winst(Q)·(1+ψ2·kdef) | §2.2.3 (5) |
+| GL24h properties | fm,k = 24 MPa, fvk = 3,5 MPa, E0,mean = 11 500 MPa | §3.2 |
+
+## EN 1998-1 — seismic
+
+```text
+Sd(T1) = ag·S·[2,5 + η·(Tc/T1)]          (§3.2.2.5, plateau)
+Vb     = Sd(T1)·m·λ                       (§4.3.3.2.2)
+Fi     = Vb·si·mi / Σ(sj·mj)              (§4.3.3.2.3)
+CQC    : ρij from Tanimoto modal correlation (§B.1)
+```
+
+## EN 1999-1-1 — aluminium
+
+```text
+fo (6082-T6) = 250 MPa, fu = 290 MPa     (Table 3.2)
+ρ1 = ω-reduction for HAZ welded zones    (§6.1.4)
+classing with εal = √(250/fo)            (Table 5.3)
+```
+
+## SI contract
+
+The engine stores everything in SI units (`m`, `N`, `Pa`, `rad`, `kg/m³`); display
+conversions (`mm`, `kN`, `MPa`) happen exclusively in the app layer. The formula
+reference above is therefore written in the same SI form the solver uses — no hidden
+unit step between a clause and the code that implements it.

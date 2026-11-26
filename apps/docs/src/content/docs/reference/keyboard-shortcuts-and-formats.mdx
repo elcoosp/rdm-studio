@@ -1,0 +1,85 @@
+---
+title: Keyboard shortcuts & file formats
+description: The complete shortcut map (⌘K palette, CAD keys, viewport presets), the unit system, and the .rdm canonical JSON schema with its round-trip guarantees.
+sidebar:
+  order: 3
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+<DocMedia
+  id="reference-command-palette"
+  type="screenshot"
+/>
+
+## ⌘K command palette
+
+`⌘K` (Windows/Linux: `Ctrl+K`) opens the palette: type to filter projects, steps,
+views and actions — run the solver, toggle layers, switch FR/EN, open the settings or
+the validation modal without touching the mouse. `Esc` closes; `Enter` runs the
+selected item.
+
+## Shortcuts by surface
+
+| Context | Key | Action |
+| --- | --- | --- |
+| Global | `⌘K` / `Ctrl+K` | Command palette |
+| Global | `⌘Z` | Undo (optimizer swaps included) |
+| Global | `?` | Onboarding tour (9 illustrated steps) |
+| Viewport | `F` | Zoom extents (framed on the whole model) |
+| Viewport | `I` | Isometric preset |
+| Viewport | `1` / `2` / `3` | Dessus XY / Face XZ / Côté YZ presets |
+| Viewport | `Space` | Play/pause the modal animation |
+| CAD | `B` | Beam tool |
+| CAD | `Shift` (hold) | Orthogonal axis guide |
+| CAD | `Alt` (hold) | Keycap hints `[X] [Y] [Z]` axis locks |
+| CAD | `Ctrl+D` | Duplicate selection |
+| Steps | `⌘S` | Save project (IndexedDB, local) |
+
+## Units and formatting
+
+The model layer is strict SI (`m`, `N`, `Pa`, `rad`, `kg/m³`). The display layer
+converts for readability and formats with the fr-FR rules: decimal comma, non-breaking
+space before units (`235 MPa`, `4,82 mm`), and `font-variant-numeric: tabular-nums` so
+columns of numbers align digit-for-digit. The EN locale keeps SI units with the same
+tabular discipline.
+
+## The .rdm canonical format
+
+`.rdm` is the canonical save format — a JSON document with a fixed schema version:
+
+```json
+{
+  "schema": "rdm/project@1",
+  "meta": { "name": "Portique 18 m", "created": "2026-11-26T09:00:00Z" },
+  "units": { "length": "m", "force": "N", "stress": "Pa" },
+  "nodes": [ { "id": 1, "x": 0.0, "y": 0.0, "z": 0.0 } ],
+  "beams": [ { "id": 1, "n1": 1, "n2": 2, "section": "IPE 300", "material": "S235JR" } ],
+  "sections": [ { "catalog": "en10365", "designation": "IPE 300" } ],
+  "materials": [ { "catalog": "en10025", "designation": "S235JR" } ],
+  "loads": [ { "kind": "uniform", "beam": 1, "q": [0, 0, -15000] } ],
+  "supports": [ { "node": 1, "locked_dofs": [true, true, true, true, false, false] } ],
+  "settings": { "plane_frame_2d": false, "pdelta": true, "annexe": "FR" }
+}
+```
+
+Load objects are tagged unions (`kind: "point" | "uniform" | "trapezoid" | "moment" |
+"mass" | "acc_field"`) — note that the WASM boundary serializes them through JSON
+strings, never `serde_wasm_bindgen` direct values, so the tag survives the bridge.
+
+## Round-trip guarantees
+
+- `export .rdm → import .rdm` is byte-exact: the importer revalidates every field with
+  Valibot against the same schema the exporter wrote.
+- The `?p=` share URL embeds the lz-string-compressed model; reading it runs the same
+  Valibot validation, so a truncated or tampered link is rejected rather than silently
+  repaired.
+- The SHA-256 fingerprint in the report note is computed on the canonical `.rdm`
+  serialization — two models with the same fingerprint solved the same physics.
+
+## Versioning policy
+
+The schema carries `rdm/project@N`; readers accept `N` and `N-1`, and an unknown
+schema stops with an explicit diagnostic instead of guessing. Profile and material
+catalogs are referenced by `{catalog, designation}` pairs, so a file never embeds
+properties that could drift from the EN catalogs it cites.

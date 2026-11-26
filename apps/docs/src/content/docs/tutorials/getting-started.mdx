@@ -1,0 +1,85 @@
+---
+title: First 3D portal frame in 5 minutes
+description: A complete beginner walkthrough — open RDM Studio, load the portal-frame quick-start template, run the solver, read the EC3 rates and export the A4 note. No prior FEA experience required.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+This tutorial takes you from an empty browser tab to a **solved, EC3-verified portal
+frame with a signed-ready A4 calculation note** in about five minutes. Everything runs
+locally: the Rust solver compiled to WebAssembly executes inside your tab, and no
+project data ever leaves your machine.
+
+<DocMedia
+  id="getting-started-workspace"
+  type="screenshot"
+/>
+
+## Step 1 — Open the studio and load a template
+
+Open the studio at `rdm-studio-app.vercel.app`. The app is a progressive web app: the
+first load caches the solver, the EN 10365 / EN 10210 / EN 10056 profile catalogs and
+the print fonts, so every later start works fully offline. From the gallery
+(gallery icon in the 48 px header) or the hero launch button, pick the
+**Portique 18 m** template. The model opens with two HEA 200 columns, an IPE 300
+girder, an encastré-articulé support layout and a gravity load case already wired to an
+EN 1990 combination.
+
+If you prefer starting from a blank canvas, skip the gallery and draw with the
+`Créer une poutre` tool: click two grid points (magnetic snap pulls to the 50 mm grid
+by default), then pick a section from the IPE catalog in the inspector.
+
+## Step 2 — Inspect geometry and sections
+
+At the **Géométrie** step the left inspector lists every member with its profile,
+length and mass. Click the girder and change its section to `IPE 330` to feel the
+instant recalculation: the model mass, the EC3 rate badge and the 3D silhouette update
+without any reload. The property rows use JetBrains Mono tabular figures, so numbers
+stay aligned while you compare candidates.
+
+## Step 3 — Check supports and loads
+
+Move to **Liaisons** and **Charges**. The template ships a pinned base on one column
+and a fixed base on the other (with anti-roll restraint — every collinear X-frame
+locks `Rx` on at least one support). The load case is a uniform gravity load
+`{ x: 0, y: 0, z: -1 }` attached to the girder, aggregated into combination
+`1.35·G + 1.50·Q` per EN 1990 6.10. Open the combination selector to see the recipe;
+switching to `6.10a/b` re-weights the actions with the recommended ψ factors.
+
+## Step 4 — Run the solver and read the results
+
+Press **Calculer**. The Cholesky LDLᵀ factorization solves the 6-DOF-per-node system
+in under 20 ms for this size of model, and the **Calcul** step renders the deformed
+shape with the 5-tier thermal spectrum, the `My / Vz / N` uPlot diagrams and the EC3
+verification rates per member. Scrub the cutting plane from `0` to `1,00 L` to see the
+synchronized 2D Von Mises section cut at any position.
+
+<DocMedia
+  id="results-deformed-3d"
+  type="screenshot"
+/>
+
+## Step 5 — Export the calculation note
+
+At **Rapport**, the note assembles itself: cover with firm branding (Pro edition),
+reactions table, Eurocode verification summary, deflection checks against `L/250` and
+`L/300`, and the SHA-256 fingerprint of the exact model that was solved. Generate the
+vector A4 PDF (Takumi renderer with embedded fonts) or the structured `.docx`, or copy
+any table as TSV for a spreadsheet.
+
+## What you learned
+
+- The 5-step workspace carries a model from geometry to a signed-ready note.
+- Templates open fully loaded — supports, loads and combinations included.
+- The solver runs locally in milliseconds; the thermal spectrum and uPlot diagrams
+  make results readable at a glance.
+- Every number in the report traces back to a normative clause through CalcTrace.
+
+## Next steps
+
+- Model real restraint releases: [Supports and releases](/guides/supports-and-releases/).
+- Build regulated load combinations: [Loads and combinations](/guides/loads-and-combinations/).
+- Go deeper into the EC3 verification and the optimizer:
+  [EC3 check and optimizer](/guides/ec3-check-and-optimizer/).

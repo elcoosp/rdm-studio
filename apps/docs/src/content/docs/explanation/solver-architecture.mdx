@@ -1,0 +1,100 @@
+---
+title: Solver architecture
+description: Why the RDM Studio engine is built the way it is — the Timoshenko 12-DOF stiffness matrix, Cholesky LDLᵀ factorization, P-Δ geometric stiffness, the Arnoldi/Lanczos eigen-solver, and the 100% local-first Rust/WASM privacy stance.
+sidebar:
+  order: 1
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+This page explains the design of the engine — the physics model, the numerical
+choices, and why everything runs in your browser. It is the page to read before
+trusting the numbers or questioning a result.
+
+<DocMedia
+  id="solver-architecture-wasm"
+  type="screenshot"
+/>
+
+## The element: Timoshenko 3D beams, 12 DOF
+
+Every member is a 3D beam element with **6 DOF per node** — `(Ux, Uy, Uz, Rx, Ry, Rz)`
+in the Z-up global frame, 12 DOF per element. The stiffness matrix is the standard
+Timoshenko beam stiffness: Euler–Bernoulli bending augmented with the shear
+deformation terms `Φ = 12EI/(kGA·L²)`. When shear deformation is disabled (a per-solve
+setting), the matrix degenerates exactly to the Euler–Bernoulli form, which is what
+benchmarks `R01`–`R06` pin down. The DOF ordering is itself a benchmark (`R25`):
+consistent indexing is what makes the assembly deterministic.
+
+## The solve: sparse Cholesky LDLᵀ
+
+Assembly produces a symmetric positive-definite system (after restraints and springs)
+`[Ke]·u = F`. The solver factorizes it with a **sparse Cholesky LDLᵀ** (the `faer`
+crate, compiled to WASM with `default-features = false` so no rayon/rand threads
+break the `wasm32-unknown-unknown` target). Why Cholesky and not an iterative solver:
+
+- SPD systems from structural assembly are exactly the case Cholesky is for — no
+  pivoting decisions to justify in a metrology context.
+- A factorization is reusable across load cases: one factorization, N combination
+  solves. With 6 combinations that is a 6× win over per-case iterative setups.
+- Deterministic: the same matrix produces bit-for-bit the same factors on every
+  platform, which the SHA-256 model fingerprint relies on.
+
+For the flagship sizes (hundreds of members) the full pipeline — assembly,
+factorization, all combination solves, force recovery — completes in **under 20 ms**
+on a laptop-class tab, which is what the hero page advertises and the performance
+trace shows.
+
+## P-Δ: the geometric stiffness
+
+Second-order effects enter as the geometric stiffness `[Kg(N)]` built from the axial
+forces of a previous solve: the system becomes `[Ke + Kg(N)]·u = F`, solved again
+until the force distribution converges. The global linear buckling run solves the
+generalized eigenproblem `[Ke]·φ = λcr·[Kg]`, whose λcr doubles as the `αcr`
+sensitivity factor of EN 1993-1-1 §5.2.1. The theory is benchmark-anchored: `R06`
+(fixed-fixed UDL end moment) and the buckling panel tests keep the P-Δ path honest.
+
+## Eigenproblems: Arnoldi / Lanczos
+
+Modal analysis and buckling need extremal eigenpairs of large sparse matrices. The
+solver runs Arnoldi/Lanczos iterations on the shifted operator rather than forming or
+factorizing dense eigendecompositions:
+
+- Lanczos on the SPD `[Ke]` (with mass `[M]` for frequencies) returns the lowest
+  eigenfrequencies `f₁…f₆` with effective modal masses.
+- Shifted Arnoldi on `[Ke]⁻¹·[Kg]` returns the smallest λcr — the physically
+  interesting buckling mode — without inverting anything explicitly.
+
+The CQC/SRSS modal combination of EN 1998-1 then runs on the extracted modes; the
+correlation coefficients follow the annex formulation.
+
+## Zero panics, typed errors
+
+The Rust core never panics in solver paths: no `.unwrap()`, `.expect()`, `todo!()` or
+`panic!()` under `crates/rdm-solver`, `crates/rdm-cad` or `bindings/rdm-wasm`.
+Everything propagates as typed `thiserror` domain errors, surfaced by the UI as the
+pedagogical solver card (with the 1-click `Activer Plan 2D & recalculer` fix for the
+classic plane-frame mechanism). A singular matrix is a *report*, not a crash — the
+undeformed model stays visible in the 3D stage while you fix the restraint.
+
+## Local-first by architecture, not by policy
+
+Everything above runs inside the browser tab: the Rust core is a WASM module, the
+catalogs are JSON fetched once and cached by the service worker, projects live in
+IndexedDB, and the PDF renderer ships its own fonts. There is no backend to trust:
+
+- no telemetry, no traceurs, no third-party requests — auditable in the network tab;
+- the `?p=` share link embeds the compressed model itself, so sharing never uploads
+  anything;
+- the offline PWA mode computes identically without connectivity.
+
+The privacy stance is not a promise about behavior — it is a consequence of the
+architecture: **there is no server component to send data to**.
+
+## Where the norms live
+
+All profile dimensions (EN 10365, EN 10210, EN 10056) and material properties
+(EN 1993-1-1, EN 1993-1-4, EN 1999-1-1) live as JSON data under
+`crates/rdm-eurocode/data/` — nothing is hardcoded in solver logic. The formula
+reference ([EN 1990 → EN 1999](/reference/eurocode-formulas/)) maps each implemented
+formula to its clause and its certifying benchmark.

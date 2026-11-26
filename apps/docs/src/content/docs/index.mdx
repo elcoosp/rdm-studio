@@ -1,0 +1,48 @@
+---
+title: RDM Studio documentation
+description: Official documentation of RDM Studio — the local-first 3D structural Eurocode workstation. Tutorials, how-to guides, normative reference and solver architecture in English and French.
+template: splash
+---
+
+import { DiataxisGrid } from '@elcoosp/docs-toolkit/components';
+import DocMedia from '../../components/DocMedia.astro';
+
+RDM Studio is a **local-first 3D finite element and Eurocode workstation**: a
+Timoshenko beam solver in Rust compiled to WebAssembly, an interactive 3D CAD surface,
+and normative checks from EN 1990 to EN 1999 — all running inside your browser tab with
+**zero bytes sent to a server**. This documentation follows the
+[Diátaxis](https://diataxis.fr/) framework, so every page has one clear job.
+
+<DiataxisGrid />
+
+<DocMedia
+  id="getting-started-workspace"
+  type="screenshot"
+/>
+
+## Where to start
+
+- **New to structural analysis software?** Follow [First 3D portal frame in 5 minutes](/tutorials/getting-started/) — it walks from opening the app to a solved, EC3-verified portal frame without touching any advanced feature.
+- **Checking a specific deliverable?** The [how-to guides](/guides/loads-and-combinations/) cover one task per page: RDM 7 supports, EN 1990 combinations, section cuts, EC3 optimization, naval acceleration fields, reports and BIM exports.
+- **Looking up a formula or a benchmark?** The [reference](/reference/eurocode-formulas/) section lists every implemented normative formula from EN 1990 to EN 1999 and the 41 analytical benchmarks `R01–R30` / `E01–E11` that certify the solver at each release.
+- **Curious why the engine is built this way?** [Solver architecture](/explanation/solver-architecture/) explains the 12-DOF stiffness matrix, the Cholesky LDLᵀ factorization, the P-Δ geometric stiffness and the 100 % local-first privacy stance.
+
+## The 5-step workspace
+
+The studio is organized around a single 5-step workflow: **Géométrie → Liaisons →
+Charges → Calcul → Rapport**. Every guide links back to the step it belongs to, and the
+`⌘K` command palette can jump to any step from anywhere.
+
+<DocMedia
+  id="getting-started-solve"
+  type="gif"
+/>
+
+## Products, editions and licensing
+
+The **Découverte** edition is free forever and covers the full solver, EC3 checks and
+the A4 note. **Pass Projet 48 h** (19 € HT) unlocks every Pro feature for 48 hours — a
+full working weekend without an account. **Bureau d'Études Pro** (49 € HT/month or a
+perpetual key) adds firm branding, extended multi-material catalogs and BIM IFC4/SAF
+exports. **Équipe / Intranet** covers floating licenses and on-premise deployment.
+Activation is offline: the license is verified locally and never phones home.

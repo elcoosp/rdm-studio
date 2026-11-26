@@ -1,0 +1,80 @@
+---
+title: Results and section cut
+description: Read the 3D deformed shape, the N/Vy/Vz/T/My/Mz uPlot diagrams, the 2D Von Mises section cut and the SLS deflection checks L/200…L/300 — everything the Calcul step renders after a solve.
+sidebar:
+  order: 4
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+After **Calculer**, the Calcul step turns raw solver output into an engineering
+readout. This guide walks every surface and how to interrogate it.
+
+<DocMedia
+  id="results-deformed-3d"
+  type="screenshot"
+/>
+
+## 3D deformed shape
+
+The deformed mesh renders with the 5-tier thermal spectrum
+(`#1D4ED8 → #06B6D4 → #10B981 → #F59E0B → #DC2626`) where color encodes the member
+utilization η, not a temperature. The scale factor slider exaggerates displacements
+from ×1 to ×50; at any factor the legend keeps the true mm values. Undeformed ghosts
+can be toggled to compare both states. When the solver cannot run, the 3D beams stay
+visible in their undeformed state — a solver fault never blanks the canvas.
+
+## Internal force diagrams — N, Vy, Vz, T, My, Mz
+
+Six uPlot diagrams dock below the viewport. They are synchronized with the 3D stage:
+a cursor on the `My` diagram moves the cobalt cutting plane along the member, and the
+readouts follow with fr-FR tabular formatting (`235 MPa`, non-breaking space before
+the unit). The diagrams are exact — sampled at the integration points the solver used,
+including the released ends where a diagram drops to zero.
+
+## 2D Von Mises section cut
+
+At the cursor position, the section cut renders the member's cross-section as a 2D
+heatmap of `σvM / fy`:
+
+```text
+σvM = √(σ_axial² + 3·(τ Vy + τ Vz)² + 3·τ_T²)   normalized by fy
+```
+
+The stress recovery uses the beam's elastic section properties plus the plastic
+correction of the EC3 chain, so the heatmap matches the utilization the verification
+reports for the same position. Detents at `0 / 0,25 L / 0,50 L / 0,75 L / 1,00 L` snap
+the cursor to the classical stations.
+
+<DocMedia
+  id="results-section-cut"
+  type="screenshot"
+/>
+
+## SLS deflection checks
+
+The serviceability panel compares the characteristic-combination deflection against
+the editable limits:
+
+| Limit | Default members | Applies to |
+| --- | --- | --- |
+| L/200 | roofs without sensitive finishes | total wfin |
+| L/250 | standard floors / beams | wfin |
+| L/300 | brittle cladding, plastered ceilings | winst |
+| L/500 | crane rails, sensitive equipment | winst |
+
+For each member the table lists `winst`, `wfin`, the governing limit, and the ratio
+`w/limite` with the pass/fail badge. The limits are editable per member — a crane beam
+can demand L/800 while the roof next to it keeps L/250.
+
+## Reading multi-combination results
+
+The combination selector switches the whole readout between ELU and ELS cases; the
+envelope view keeps the worst value per member across all cases with the governing
+combination named. Every table has a `Copier TSV` button that exports French-comma
+tab-separated values ready for a spreadsheet paste.
+
+## Next steps
+
+- Turn readouts into design decisions: [EC3 check and optimizer](/guides/ec3-check-and-optimizer/).
+- Frequencies and buckling modes: [Advanced analyses](/guides/advanced-analyses/).

@@ -1,0 +1,90 @@
+---
+title: Validation benchmarks (41)
+description: The complete catalog of the 41 analytical benchmarks R01–R30 and E01–E11 that certify the RDM Studio solver and its Eurocode constants at every release, with the analytical reference solutions.
+sidebar:
+  order: 2
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+Every release of RDM Studio replays **41 analytical benchmarks**: 30 structural
+mechanics cases (`R01–R30`) and 11 Eurocode constants (`E01–E11`). A release ships
+only at **41 / 41**. Each benchmark compares the solver output against the exact
+analytical solution, not another simulation.
+
+<DocMedia
+  id="reference-benchmarks-41"
+  type="screenshot"
+/>
+
+## R01–R17 — elementary member mechanics
+
+| ID | Case | Analytical reference |
+| --- | --- | --- |
+| `R01` | Simply supported beam, point load at midspan | reaction = P/2 |
+| `R02` | Simply supported beam, UDL | reaction = qL/2 |
+| `R03` | Simply supported beam, UDL | total resultant R = qL |
+| `R04` | Cantilever, point load at tip | δtip = PL³/3EI |
+| `R05` | Cantilever, moment at tip | θtip = ML/EI |
+| `R06` | Fixed-fixed beam, UDL | Mend = qL²/12 |
+| `R07` | Axial bar | δ = NL/EA |
+| `R08` | Torsion bar | θx = TL/GIT |
+| `R09` | Timoshenko cantilever (shear deformation on) | δ = PL³/3EI + P/(kGA)·L |
+| `R10` | Uniform thermal ΔT, free | δ = α·ΔT·L |
+| `R11` | Uniform thermal ΔT, fixed | N = EA·α·ΔT |
+| `R12` | Support settlement 10 mm | reaction = k·δ |
+| `R13` | Partial UDL on half span | R1 from the trapezoid resultant |
+| `R14` | Tension-only element under compression | N = 0 (no stiffness) |
+| `R15` | 2D plane frame, symmetric UDL | reaction = qL/2 |
+| `R16` | Tapered cantilever | δ with mean-I integration |
+| `R17` | Cantilever, moment at tip | δ = ML²/2EI |
+
+## R18–R30 — structures, invariants and recipes
+
+| ID | Case | Analytical reference |
+| --- | --- | --- |
+| `R18` | Point load at a/L = 0,25 | reaction A = 3P/4 |
+| `R19` | Point load at midspan (independent mesh) | reaction = P/2 |
+| `R20` | Two-span continuous beam, UDL | middle reaction = 1,25·qL |
+| `R21` | Linearity | δ(3q) = 3·δ(q) |
+| `R22` | Symmetric load | R1 = R2 |
+| `R23` | Global equilibrium | ΣFz = 0 exactly |
+| `R24` | SS beam UDL | Mmid = qL²/8 |
+| `R25` | DOF layout | 6 DOF per node, ordered (Ux, Uy, Uz, Rx, Ry, Rz) |
+| `R26` | Thermal gradient (top/bottom), fixed ends | M = EI·α·ΔT/h |
+| `R27` | Thermal gradient, free ends | ΣR = 0 |
+| `R28` | Tension-only element under tension | δ = NL/EA (active) |
+| `R29` | Compression-only strut | δ follows the compressed state |
+| `R30` | Superposition 1,35·G + 1,50·Q | equals the weighted sum of the two load runs |
+
+## E01–E11 — Eurocode constants
+
+| ID | Constant | Reference value |
+| --- | --- | --- |
+| `E01` | Npl,Rd = A·fy/γM0 | exact product |
+| `E02` | Vpl,Rd = Av·fy/(√3·γM0) | exact product |
+| `E03` | Mc,Rd = Wpl·fy/γM0 | exact product |
+| `E04` | ε = √(235/fy) | S235 → 1,000; S355 → 0,814 |
+| `E05` | γG of the 6.10 recipe | 1,35 (FR NA) |
+| `E06` | 6.10a/b recipe count | 2 recipes generated |
+| `E07` | ψ0(Q) recommended value | 0,70 |
+| `E08` | C1(ψ = 0) Table 6.3 | Annex B factor |
+| `E09` | γM0 — French NA | 1,00 |
+| `E10` | Ncr,T = St-Venant + Wagner torsion | combined analytical value |
+| `E11` | Class 4 ρ clamp | ρ ≤ 1,0 bound |
+
+## How to read the certification view
+
+The studio header exposes the 41/41 badge; opening it renders the certification
+hierarchy: the executive header with the score, the 4-tier summary strip, a filter
+(`Tous (41) | RDM & Flambement (30) | Eurocode 3 (11)`) with search, and the grouped
+metrology table with per-benchmark `value / expected / error / tolerance` rows and a
+`Copier TSV` export. In French locale every benchmark title is translated; the IDs
+stay normative.
+
+## Reproducing a benchmark
+
+Each benchmark is a plain model: the cases above are reproducible in the studio by
+drawing the geometry, entering the load and reading the reaction/deflection — the
+tolerance shown in the modal is the same `1e-12`-scale bound the Rust test suite uses
+(`crates/rdm-solver/tests/validation_40.rs` replays them in CI at every commit).

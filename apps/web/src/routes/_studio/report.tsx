@@ -35,6 +35,10 @@ import { StudioBaseSearchSchema } from "@/schemas/searchParams.schema";
 import { IconReport } from "@/components/icons";
 import { useLicenseStore } from "@/state/licenseStore";
 import { downloadText } from "@/export/csvExport";
+import { CopyButton, LoadingButton, SegmentedControl } from "@/components/interior";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_studio/report")({
   staticData: {
@@ -66,6 +70,24 @@ function downloadBytes(filename: string, bytes: Uint8Array): void {
 }
 
 /**
+ * Strips the catalog-derived `sections` / `materials` maps before
+ * `encodeProject` (v2.1.2 audit fix): they are re-derived from the EN
+ * catalogs by designation strings at rehydration, so carrying them in the
+ * lz-string payload only bloats the share URL and makes the QR code
+ * unreadably dense. An empty record still validates (v.record).
+ */
+function compactSharePayload(project: ProjectData): ProjectData {
+  return {
+    ...project,
+    structure: {
+      ...project.structure,
+      sections: {},
+      materials: {},
+    },
+  };
+}
+
+/**
  * Step 5 (DESIGN.md §4 + mockups tape_5, v1.6.0): centered A4 engineering
  * sheet (`max-w-[794px]`, p-8) with the logo header, the LIVE 3D snapshot
  * of the persistent stage, 2-column metadata grid, aligned monospace
@@ -76,24 +98,40 @@ function downloadBytes(filename: string, bytes: Uint8Array): void {
  * v1.6.0: ELU support reactions are superposed from the ACTUAL EN 1990
  * multipliers of the solved ULS combination (`("G", 1.35)`, `("Q", 1.5)`,
  * plus W/S when present) across all cases — no more hardcoded 1.35/1.50.
+ *
+ * v2.1.2 (audit `519229b`): `QRCode.toDataURL` moved OUT of `useMemo`
+ * (an async side effect never belonged there — StrictMode double-invoked
+ * it and the result raced the render) into a cancellable `useEffect`, the
+ * share payload is compacted (catalog maps stripped) so the QR stays
+ * scannable, the export rail uses the interior.dev `LoadingButton` +
+ * `CopyButton`, and every form control is a shadcn/Base UI primitive.
  */
 function ReportPage() {
   const project = useProjectStore((s) => s.project);
   // v2.1.1: the Édition Découverte watermark (removed in Pro mode).
   const licenseTier = useLicenseStore((s) => s.tier);
-  const [copied, setCopied] = useState(false);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   // v2.1.1: ReportBuilder registers its .docx exporter so the rail-top
   // `Word (.docx)` button shares the SAME cover/chapter payload.
   const docxExportRef = useRef<() => void>(() => undefined);
   const shareUrl = useMemo(() => {
-    const encoded = encodeProject(project);
+    const encoded = encodeProject(compactSharePayload(project));
     return `${window.location.origin}/report?p=${encoded}`;
   }, [project]);
 
-  useMemo(() => {
-    void QRCode.toDataURL(shareUrl, { margin: 1, width: 176 }).then(setQrDataUrl);
+  // v2.1.2 (audit 519229b): QR generation is an async SIDE EFFECT —
+  // cancellable in useEffect, never in useMemo.
+  useEffect(() => {
+    let cancelled = false;
+    void QRCode.toDataURL(shareUrl, { margin: 1, width: 176 }).then((url) => {
+      if (!cancelled) {
+        setQrDataUrl(url);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [shareUrl]);
 
   /** v1.6.0: one-click canonical `.rdm` export (Step 5 + header menu). */
@@ -147,7 +185,7 @@ function ReportPage() {
   }, [project]);
 
   const exportPdf = async () => {
-    setBusy("pdf");
+    setBusy(true);
     try {
       let report = getLastReport();
       report ??= await feaClient.solveModel(project);
@@ -172,7 +210,7 @@ function ReportPage() {
       const pdf = await feaClient.renderReportPdf(html, images);
       downloadBytes(`${project.name.replace(/[^\w-]+/g, "_")}-rapport.pdf`, pdf);
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   };
 
@@ -259,30 +297,33 @@ function ReportPage() {
         </section>
         {/* v2.1.1: sticky 320px export rail — PDF Takumi (primary Cobalt)
             and Word (.docx) (secondary outline) TOGETHER at the top, then
-            the BIM/data formats, then the Report Builder + share block. */}
+            the BIM/data formats, then the Report Builder + share block.
+            v2.1.2: the two document buttons are interior.dev
+            `LoadingButton`s (locked width, idle → pending → success). */}
         <aside className="w-full shrink-0 space-y-3 self-start md:sticky md:top-4 md:w-80">
           <div className="space-y-3 rounded-panel border border-hairline bg-panel p-4">
             <h3 className="text-[15px] font-semibold">
               <Trans>Exports (étape 5)</Trans>
             </h3>
-            <button
-              type="button"
-              data-testid="export-pdf"
-              disabled={busy !== null}
-              className="min-h-11 w-full rounded bg-accent px-2 py-1.5 text-[13px] font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
-              onClick={() => void exportPdf()}
+            <LoadingButton
+              testId="export-pdf"
+              className="min-h-11 w-full"
+              disabled={busy}
+              onAction={() => exportPdf()}
+              pendingLabel={t`Génération…`}
+              successLabel={t`PDF téléchargé`}
             >
-              {busy === "pdf" ? <Trans>Génération…</Trans> : <Trans>PDF Takumi</Trans>}
-            </button>
-            <button
-              type="button"
-              data-testid="export-docx"
-              disabled={busy !== null}
-              className="min-h-11 w-full rounded border border-accent px-2 py-1.5 text-[13px] font-semibold text-accent hover:bg-accent-tint disabled:opacity-50"
-              onClick={() => docxExportRef.current()}
+              {t`PDF Takumi`}
+            </LoadingButton>
+            <LoadingButton
+              testId="export-docx"
+              className="min-h-11 w-full border-accent bg-panel text-accent hover:bg-accent-tint"
+              disabled={busy}
+              onAction={() => docxExportRef.current()}
+              successLabel={t`.docx téléchargé`}
             >
-              <Trans>Word (.docx)</Trans>
-            </button>
+              {t`Word (.docx)`}
+            </LoadingButton>
             {/* BIM & data formats — secondary row under the 2 documents. */}
             <div className="grid grid-cols-3 gap-1.5 border-t border-hairline pt-3">
               {["ifc4", "saf", "opensees", "gltf"].map((format) => (
@@ -300,7 +341,7 @@ function ReportPage() {
               <button
                 type="button"
                 data-testid="export-rdm"
-                disabled={busy !== null}
+                disabled={busy}
                 className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
                 onClick={exportRdm}
               >
@@ -310,7 +351,7 @@ function ReportPage() {
               <button
                 type="button"
                 data-testid="export-csv"
-                disabled={busy !== null}
+                disabled={busy}
                 className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
                 onClick={() => exportResultsCsv(getLastReport())}
               >
@@ -320,7 +361,7 @@ function ReportPage() {
               <button
                 type="button"
                 data-testid="export-html3d"
-                disabled={busy !== null}
+                disabled={busy}
                 className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
                 onClick={() =>
                   exportStandaloneHtml3d(project, getLastReport(), (name, text, mime) => {
@@ -340,7 +381,8 @@ function ReportPage() {
                 <Trans>Imprimer</Trans>
               </button>
             </div>
-            {/* Share-by-URL (lz-string compressed, Valibot-validated). */}
+            {/* Share-by-URL (lz-string compressed, Valibot-validated).
+                v2.1.2: compacted payload + interior.dev CopyButton. */}
             <div className="border-t border-hairline pt-3">
               <p className="text-[12px] text-ink-secondary">
                 <Trans>
@@ -348,23 +390,18 @@ function ReportPage() {
                   relecture.
                 </Trans>
               </p>
-              <textarea
+              <Textarea
                 readOnly
-                className="font-data mt-2 h-24 w-full rounded border border-hairline p-2 text-[11px]"
+                className="font-data mt-2 h-20 text-[11px]"
                 value={shareUrl}
+                aria-label={t`URL de partage`}
               />
-              <button
-                type="button"
-                className="mt-2 w-full rounded border border-accent px-2 py-1.5 text-[13px] text-accent"
-                onClick={() => {
-                  void navigator.clipboard.writeText(shareUrl).then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 1500);
-                  });
-                }}
-              >
-                {copied ? <Trans>Copie !</Trans> : <Trans>Copier l'URL de partage</Trans>}
-              </button>
+              <CopyButton
+                value={shareUrl}
+                className="mt-2 h-9 w-full justify-center"
+                label={t`Copier l'URL de partage`}
+                copiedLabel={t`Copie !`}
+              />
               {qrDataUrl !== null ? (
                 <img
                   src={qrDataUrl}
@@ -410,6 +447,14 @@ function FingerprintFooter({ qrDataUrl }: { qrDataUrl: string | null }) {
         <span data-testid="model-fingerprint" className="break-all">
           {hash ?? "calcul…"}
         </span>
+        {hash !== null ? (
+          <CopyButton
+            value={hash}
+            iconOnly
+            label={t`Copier l'empreinte SHA-256`}
+            className="ml-2 align-middle"
+          />
+        ) : null}
       </p>
       {qrDataUrl !== null ? (
         <img src={qrDataUrl} alt="" aria-hidden className="h-16 w-16 shrink-0" />
@@ -424,11 +469,6 @@ function ReportTables() {
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
   const beamById = new Map(project.structure.beams.map((b) => [b.id, b]));
-  const copy = (headers: string[], rows: string[][]) => {
-    const tsv = [headers.join("\t"), ...rows.map((r) => r.join("\t"))].join("\n");
-    void navigator.clipboard.writeText(tsv);
-    toast("Table copiée pour Excel (TSV)");
-  };
   const nodeRows = project.structure.nodes.map((n) => [String(n.id), fr(n.x), fr(n.y), fr(n.z)]);
   const beamRows = project.structure.beams.map((b) => [
     String(b.id),
@@ -545,42 +585,47 @@ function ReportTables() {
           rows: ulsRows,
         },
         { title: t`Flèches ELS (mm)`, headers: [t`Poutre`, "δ mid"], rows: slsRows },
-      ].map((table) => (
-        <div key={table.title}>
-          <div className="flex items-center justify-between">
-            <h3 className="text-[13px] font-semibold text-ink-secondary">{table.title}</h3>
-            <button
-              type="button"
-              className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary hover:border-accent"
-              onClick={() => copy(table.headers, table.rows)}
-            >
-              <Trans>Copier TSV</Trans>
-            </button>
-          </div>
-          <table className="mt-1 w-full text-[12px]">
-            <thead className="text-left text-[11px] text-ink-muted">
-              <tr>
-                {table.headers.map((h, j) => (
-                  <th key={h} className={`py-0.5 ${j === 0 ? "" : "text-right"}`}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="font-data [font-variant-numeric:tabular-nums]">
-              {table.rows.map((row, i) => (
-                <tr key={i} className="border-t border-hairline">
-                  {row.map((cell, j) => (
-                    <td key={j} className={`py-0.5 ${j === 0 ? "pr-2" : "text-right"}`}>
-                      {cell}
-                    </td>
+      ].map((table) => {
+        const tsv = [table.headers.join("\t"), ...table.rows.map((r) => r.join("\t"))].join("\n");
+        return (
+          <div key={table.title}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[13px] font-semibold text-ink-secondary">{table.title}</h3>
+              {/* v2.1.2: interior.dev CopyButton — animated Copy → Check. */}
+              <CopyButton
+                value={tsv}
+                label={t`Copier TSV`}
+                copiedLabel={t`Copié !`}
+                onCopy={() => toast("Table copiée pour Excel (TSV)")}
+                className="h-7 px-2"
+                testId={`copy-tsv-${table.rows.length}-${table.headers.length}`}
+              />
+            </div>
+            <table className="mt-1 w-full text-[12px]">
+              <thead className="text-left text-[11px] text-ink-muted">
+                <tr>
+                  {table.headers.map((h, j) => (
+                    <th key={h} className={`py-0.5 ${j === 0 ? "" : "text-right"}`}>
+                      {h}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+              </thead>
+              <tbody className="font-data [font-variant-numeric:tabular-nums]">
+                {table.rows.map((row, i) => (
+                  <tr key={i} className="border-t border-hairline">
+                    {row.map((cell, j) => (
+                      <td key={j} className={`py-0.5 ${j === 0 ? "pr-2" : "text-right"}`}>
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -702,33 +747,33 @@ function ReportBuilder({
   return (
     <section
       aria-label="Générateur de rapport"
-      className="rounded-xl border border-hairline bg-panel/95 p-4  "
+      className="rounded-xl border border-hairline bg-panel/95 p-4"
     >
       <h3 className="mb-2 text-sm font-bold">Générateur de rapport (PDF + .docx)</h3>
       <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
-        <input
+        <Input
           value={firm}
           onChange={(e) => setFirm(e.target.value)}
           aria-label="Cabinet"
-          className="rounded border border-hairline bg-transparent px-2 py-1 "
+          className="h-7"
         />
-        <input
+        <Input
           value={engineer}
           onChange={(e) => setEngineer(e.target.value)}
           aria-label="Ingénieur"
-          className="rounded border border-hairline bg-transparent px-2 py-1 "
+          className="h-7"
         />
-        <input
+        <Input
           value={checker}
           onChange={(e) => setChecker(e.target.value)}
           aria-label="Vérificateur"
-          className="rounded border border-hairline bg-transparent px-2 py-1 "
+          className="h-7"
         />
-        <input
+        <Input
           value={revision}
           onChange={(e) => setRevision(e.target.value)}
           aria-label="Révision"
-          className="rounded border border-hairline bg-transparent px-2 py-1 "
+          className="h-7"
         />
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -746,18 +791,22 @@ function ReportBuilder({
           </ul>
         </SortableContext>
       </DndContext>
-      <div className="flex flex-wrap gap-2 text-xs">
-        <button
-          type="button"
-          onClick={() => setLanguage(language === "fr" ? "en" : "fr")}
-          className="rounded bg-panel-subtle px-2 py-1 "
-        >
-          Sortie : {language.toUpperCase()}
-        </button>
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        {/* v2.1.2: FR / EN output as a crisp SegmentedControl. */}
+        <SegmentedControl
+          size="sm"
+          label="Langue de sortie"
+          value={language}
+          onValueChange={(next) => setLanguage(next === "en" ? "en" : "fr")}
+          options={[
+            { value: "fr", label: "FR" },
+            { value: "en", label: "EN" },
+          ]}
+        />
         <button
           type="button"
           onClick={() => void saveSnapshot(`rapport-${revision}`, project)}
-          className="rounded bg-panel-subtle px-2 py-1 "
+          className="rounded bg-panel-subtle px-2 py-1"
         >
           Photographier
         </button>
@@ -772,7 +821,7 @@ function ReportBuilder({
 /**
  * v2.0.1: one drag-reorderable Report Builder chapter row — a
  * `<GripVertical />` handle drives the @dnd-kit sortable transform while
- * the checkbox toggle stays a plain click.
+ * the toggle is a Base UI `Checkbox` (v2.1.2: no raw HTML checkbox).
  */
 function SortableChapter({
   chapter,
@@ -791,7 +840,11 @@ function SortableChapter({
       className={`flex items-center justify-between gap-2 rounded text-xs ${isDragging ? "z-10 bg-accent-tint shadow-sm" : ""}`}
     >
       <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-        <input type="checkbox" checked={chapter.on} onChange={(e) => onToggle(e.target.checked)} />
+        <Checkbox
+          checked={chapter.on}
+          onCheckedChange={(checked) => onToggle(checked === true)}
+          aria-label={`Inclure ${chapter.label}`}
+        />
         <span className="truncate">{chapter.label}</span>
       </label>
       <button

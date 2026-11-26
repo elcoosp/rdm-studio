@@ -8,7 +8,6 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
-import { Trans } from "@lingui/react/macro";
 import { BadgeCheck, ChevronDown, Redo2, Undo2 } from "lucide-react";
 import { retainSearchParams } from "@tanstack/react-router";
 import { getStudioSteps } from "@/router";
@@ -135,7 +134,7 @@ function OfflinePill() {
   }, []);
   if (online) {
     return (
-      <span className="hidden font-data text-[11px] text-ink-muted xl:inline">
+      <span className="hidden font-data text-[11px] text-ink-muted 2xl:inline">
         Enregistré en local
       </span>
     );
@@ -163,6 +162,18 @@ function StudioLayout() {
   // locked desktop workstation.
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [validationOpen, setValidationOpen] = useState(false);
+  // v2.1.1: the ⌘K palette opens the Validation modal and the project
+  // gallery through window events (the header owns both modals).
+  useEffect(() => {
+    const openValidation = () => setValidationOpen(true);
+    const openGallery = () => setGalleryOpen(true);
+    window.addEventListener("rdm-open-validation", openValidation);
+    window.addEventListener("rdm-open-gallery", openGallery);
+    return () => {
+      window.removeEventListener("rdm-open-validation", openValidation);
+      window.removeEventListener("rdm-open-gallery", openGallery);
+    };
+  }, []);
   // The stage renders only while the active leaf route declares
   // `stageVisible` in its staticData (report → false).
   const stageVisible = matches.at(-1)?.staticData.stageVisible === true;
@@ -170,16 +181,19 @@ function StudioLayout() {
 
   return (
     <div className="flex h-[100dvh] flex-col">
-      <header className="flex h-11 shrink-0 items-center justify-between gap-2 overflow-hidden border-b border-hairline bg-panel px-3 sm:gap-3 sm:px-4">
-        {/* Left zone: brand + project switcher. */}
-        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+      {/* v2.1.1: no `overflow-hidden` on the header itself — the Settings
+          popover must never be clipped; every zone shrinks via min-w-0 /
+          truncate instead so 1440 / 860 / 390 px stay overflow-free. */}
+      <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-hairline bg-panel pl-3 pr-2 sm:gap-3 sm:pl-4 sm:pr-3">
+        {/* Left zone: brand + project switcher (name truncates first). */}
+        <div className="flex min-w-0 shrink items-center gap-1.5">
           <Link
             to="/geometry"
             id="rdm-logo"
             className="flex shrink-0 items-center gap-1.5 text-accent"
           >
             <img src="/logo-rdm-studio.svg" alt="RDM Studio" className="h-6 w-6 shrink-0" />
-            <span className="hidden font-semibold tracking-tight sm:inline">RDM Studio</span>
+            <span className="hidden font-semibold tracking-tight xl:inline">RDM Studio</span>
           </Link>
           <button
             type="button"
@@ -195,11 +209,13 @@ function StudioLayout() {
           </span>
         </div>
         {/* Center zone: the derived 5-step flow with the shared gliding
-            underline. The labels compact to `N` + icon below xl so
-            `FR | EN` stays 100% visible at 860 px. */}
+            underline and the v2.1.1 named labels. The active step gets the
+            Cobalt pill highlight (bg-accent-tint + ring) so the current
+            page is unmistakable; `whitespace-nowrap` + `min-w-0` keep the
+            named stepper inside the header at 1440 / 860 / 390 px. */}
         <nav
           id="rdm-steps"
-          className="mx-auto hidden min-w-0 items-center gap-0.5 md:flex"
+          className="mx-auto hidden min-w-0 items-center gap-0.5 overflow-hidden md:flex"
           aria-label="workflow"
         >
           {steps.map((step) => {
@@ -209,12 +225,21 @@ function StudioLayout() {
                 key={step.path}
                 to={step.path}
                 aria-label={`Étape ${step.stepOrder}`}
-                className={`relative flex min-h-11 shrink-0 items-center gap-1 rounded px-1.5 py-1.5 text-[13px] text-ink-secondary hover:bg-canvas ${active ? "text-accent" : ""}`}
+                aria-current={active ? "page" : undefined}
+                title={step.label}
+                className={`relative flex min-h-11 shrink-0 items-center gap-1 rounded px-1.5 py-1.5 text-[12px] ${
+                  active
+                    ? "bg-accent-tint font-semibold text-accent ring-1 ring-accent-ring"
+                    : "text-ink-secondary hover:bg-canvas"
+                }`}
               >
-                {step.icon !== undefined ? <step.icon size={14} /> : null}
-                <span className="font-data xl:hidden">{step.stepOrder}</span>
-                <span className="hidden xl:inline">
-                  <Trans>Étape {step.stepOrder}</Trans>
+                {step.icon !== undefined ? (
+                  <span className="hidden shrink-0 xl:inline">
+                    <step.icon size={14} />
+                  </span>
+                ) : null}
+                <span className="whitespace-nowrap">
+                  {step.stepOrder}. {step.mobileLabel}
                 </span>
                 {active ? (
                   <motion.span
@@ -226,16 +251,19 @@ function StudioLayout() {
             );
           })}
         </nav>
-        {/* Right zone: undo/redo, telemetry, ⌘K, offline pill, locale. */}
-        <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
-          <span className="font-data hidden text-[11px] text-ink-muted lg:inline">
+        {/* Right zone: ONE consolidated flex group (v2.1.1) — undo/redo,
+            ⌘K, offline/license telemetry (2xl+), help, normative settings,
+            the Validation icon button and the FR | EN switch. Secondary
+            pills hide below 2xl so the named stepper never overflows. */}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
+          <span className="font-data hidden text-[11px] text-ink-muted 2xl:inline">
             {nodeCount} nœuds · {beamCount} poutres
           </span>
           <button
             type="button"
             aria-label="Annuler la dernière action"
             title="Annuler (⌘Z)"
-            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary md:flex"
+            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary xl:flex"
             onClick={() => undoModel()}
           >
             <Undo2 size={14} strokeWidth={1.5} aria-hidden />
@@ -244,7 +272,7 @@ function StudioLayout() {
             type="button"
             aria-label="Rétablir l'action suivante"
             title="Rétablir (⇧⌘Z)"
-            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary md:flex"
+            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded border border-hairline text-[12px] text-ink-secondary xl:flex"
             onClick={() => redoModel()}
           >
             <Redo2 size={14} strokeWidth={1.5} aria-hidden />
@@ -268,21 +296,18 @@ function StudioLayout() {
           >
             ?
           </button>
-          <LocaleSwitch />
-        </div>
-        {/* Normative settings + validation modal (compact on mobile). */}
-        <div className="flex shrink-0 items-center gap-1">
           <SettingsPopover />
           <button
             type="button"
             onClick={() => setValidationOpen(true)}
             aria-label="Validation — 41 benchmarks analytiques"
             title="Validation — 41 benchmarks analytiques"
-            className="flex items-center rounded-md border border-hairline px-2 py-1 text-xs font-medium hover:bg-panel-subtle"
+            className="flex shrink-0 items-center justify-center rounded-md border border-hairline px-1.5 py-1 text-xs font-medium text-ink-secondary hover:bg-panel-subtle"
           >
             <BadgeCheck size={14} strokeWidth={1.5} aria-hidden />
-            <span className="hidden xl:inline">&nbsp;Validation</span>
+            <span className="hidden 2xl:inline">&nbsp;Validation</span>
           </button>
+          <LocaleSwitch />
         </div>
       </header>
       {validationOpen ? <ValidationModal onClose={() => setValidationOpen(false)} /> : null}

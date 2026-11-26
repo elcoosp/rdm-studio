@@ -1,22 +1,28 @@
-import { useNavigate } from "@tanstack/react-router";
-import { useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import { useProjectStore } from "@/state/projectStore";
-import { redoModel, undoModel } from "@/state/projectStore";
+import { redoModel, undoModel, useProjectStore } from "@/state/projectStore";
 import { useViewportStore } from "@/state/viewportStore";
+import { useIsStudio, useSelectedIds } from "@/hooks/useStudioQuery";
 
 /**
  * Centralized keyboard layer (v1.4.0, react-hotkeys-hook): every
  * production shortcut lives here — no ad-hoc `keydown` listeners in
  * components. `mod` maps to ⌘ on macOS and Ctrl elsewhere; form fields
  * never swallow model shortcuts (`enableOnFormTags: false`).
+ *
+ * v2.1.0: `⌘Enter` / `⌘P` navigate with `search: true` so the active
+ * URL state (`beam`, `view`, `snap`, `layers`, `combo`, …) survives the
+ * step switch — the URL is the single source of truth.
  */
 export function useAppHotkeys(onTogglePalette: () => void): void {
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
   const setToolMode = useViewportStore((s) => s.setToolMode);
   const viewportMounted = useViewportStore((s) => s.viewportMounted);
+  const { beamId, nodeId, selectBeam, selectNode, clearSelection } = useSelectedIds();
+  const isStudio = useIsStudio();
 
   // ⌘K — command palette.
   useHotkeys(
@@ -38,22 +44,22 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
     redoModel();
   });
 
-  // ⌘Enter — run the calculation and jump to Step 4.
+  // ⌘Enter — run the calculation and jump to Step 4 (search preserved).
   useHotkeys(
     "mod+enter",
     (event) => {
       event.preventDefault();
-      void navigate({ to: "/results" });
+      void navigate({ to: "/results", search: true });
     },
     { enableOnFormTags: false },
   );
 
-  // ⌘P — Step 5 print/PDF sheet.
+  // ⌘P — Step 5 print/PDF sheet (search preserved).
   useHotkeys(
     "mod+p",
     (event) => {
       event.preventDefault();
-      void navigate({ to: "/report" });
+      void navigate({ to: "/report", search: true });
     },
     { enableOnFormTags: false },
   );
@@ -80,17 +86,22 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
     },
     { enableOnFormTags: false },
   );
-  useHotkeys(
-    "escape",
-    () => {
-      if (pathname === "/geometry") {
-        useProjectStore.getState().clearBeamSelection();
-        useProjectStore.getState().selectNode(null);
-        setToolMode("select");
+  // Escape clears the selection (v2.1.0: through the URL). A dedicated
+  // keydown listener lives in this centralized layer — react-hotkeys-hook
+  // v5 does not deliver bare Escape reliably in headless runs.
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !window.location.pathname.startsWith("/geometry")) {
+        return;
       }
-    },
-    { enableOnFormTags: false },
-  );
+      event.preventDefault();
+      useProjectStore.getState().clearBeamSelection();
+      clearSelection();
+      setToolMode("select");
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [clearSelection, setToolMode]);
 
   // ⇧⌘I — invert the multi-beam selection (Step 1 batch inspector).
   useHotkeys(
@@ -108,17 +119,13 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
   useHotkeys(
     "alt+r",
     (event) => {
-      if (pathname !== "/geometry") {
+      if (!isStudio) {
         return;
       }
       event.preventDefault();
-      const { project, selection, updateBeam } = useProjectStore.getState();
+      const { project, batch, updateBeam } = useProjectStore.getState();
       const targets =
-        selection.selectedBeamIds.length > 0
-          ? selection.selectedBeamIds
-          : selection.beamId === null
-            ? []
-            : [selection.beamId];
+        batch.selectedBeamIds.length > 0 ? batch.selectedBeamIds : beamId === null ? [] : [beamId];
       for (const id of targets) {
         const beam = project.structure.beams.find((b) => b.id === id);
         if (beam === undefined) {
@@ -142,21 +149,25 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
   useHotkeys(
     "delete, backspace",
     (event) => {
-      if (pathname !== "/geometry") {
+      if (!isStudio) {
         return;
       }
       event.preventDefault();
-      const { project, selection, removeNode, removeBeam } = useProjectStore.getState();
-      if (selection.selectedBeamIds.length > 0) {
-        for (const id of selection.selectedBeamIds) {
+      const { project, batch, removeNode, removeBeam } = useProjectStore.getState();
+      if (batch.selectedBeamIds.length > 0) {
+        for (const id of batch.selectedBeamIds) {
           if (project.structure.beams.some((b) => b.id === id)) {
             removeBeam(id);
           }
         }
-      } else if (selection.beamId !== null) {
-        removeBeam(selection.beamId);
-      } else if (selection.nodeId !== null) {
-        removeNode(selection.nodeId);
+        useProjectStore.getState().clearBeamSelection();
+        selectBeam(null);
+      } else if (beamId !== null) {
+        removeBeam(beamId);
+        selectBeam(null);
+      } else if (nodeId !== null) {
+        removeNode(nodeId);
+        selectNode(null);
       }
     },
     { enableOnFormTags: false, preventDefault: true },
@@ -176,7 +187,7 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
     "i",
     () => {
       if (viewportMounted) {
-        window.dispatchEvent(new CustomEvent("rdm-camera-iso"));
+        void navigate({ search: { view: "iso" } as never, replace: true });
       }
     },
     { enableOnFormTags: false },

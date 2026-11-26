@@ -203,7 +203,13 @@ interface LanePending {
 }
 
 const lanePending = new Map<number, LanePending>();
-const enginePending = new Map<string, LanePending>();
+/** v2.0.1: engine replies are routed by unique monotonically increasing
+ * `callId` (echoed by the worker) — concurrent calls to the same WASM
+ * function never overwrite each other's Promise callbacks. */
+const enginePending = new Map<number, LanePending>();
+let engineCallCounter = 0;
+/** v2.0.1: the single validation-suite slot (only one runs at a time). */
+let validationPending: LanePending | null = null;
 let liveTokenCounter = 0;
 let liveListeners = new Set<(token: number) => void>();
 
@@ -299,7 +305,7 @@ class FeaClient {
         | { type: "CASE_RESULT"; token: number; response: unknown }
         | { type: "CASE_FAULT"; token: number; fault: SolveFault }
         | { type: "VALIDATION_RESULT"; results: BenchResultDto[] }
-        | { type: "ENGINE_RESULT"; fn: string; result: unknown };
+        | { type: "ENGINE_RESULT"; callId: number; fn: string; result: unknown };
       // v1.8.0: lane messages bypass the ordered queue (priority lanes).
       if (
         data.type === "LIVE_RESULT" ||
@@ -322,16 +328,16 @@ class FeaClient {
           lanePending.get(data.token)?.reject(data.fault);
           lanePending.delete(data.token);
         } else if (data.type === "VALIDATION_RESULT") {
-          const pending = enginePending.get("VALIDATION_SUITE");
-          if (pending !== undefined) {
+          const pending = validationPending;
+          validationPending = null;
+          if (pending !== null) {
             pending.resolve(data.results);
-            enginePending.delete("VALIDATION_SUITE");
           }
         } else {
-          const pending = enginePending.get(data.fn);
+          const pending = enginePending.get(data.callId);
           if (pending !== undefined) {
             pending.resolve(data.result);
-            enginePending.delete(data.fn);
+            enginePending.delete(data.callId);
           }
         }
         return;
@@ -452,31 +458,28 @@ class FeaClient {
   /** v1.8.0: the 41 closed-form benchmarks for the Validation modal. */
   fetchValidationSuite(): Promise<BenchResultDto[]> {
     return new Promise<BenchResultDto[]>((resolve, reject) => {
-      if (enginePending.has("VALIDATION_SUITE")) {
+      if (validationPending !== null) {
         reject({ kind: "Fault", message: "validation in flight" });
         return;
       }
-      enginePending.set("VALIDATION_SUITE", {
+      validationPending = {
         resolve: resolve as (value: unknown) => void,
         reject,
-      });
+      };
       this.worker.postMessage({ type: "VALIDATION_SUITE" } satisfies WorkerRequest);
     });
   }
 
-  /** v1.8.0/v1.9.0: named engine call over the generic lane. */
+  /** v1.8.0/v1.9.0: named engine call over the generic lane.
+   * v2.0.1: keyed by a unique `callId` so concurrent calls never collide. */
   engineCall(fn: EngineFn, ...args: unknown[]): Promise<unknown> {
     return new Promise<unknown>((resolve, reject) => {
-      const key = `${fn}:${(liveTokenCounter += 1)}`;
-      enginePending.set(key, {
+      const callId = ++engineCallCounter;
+      enginePending.set(callId, {
         resolve: resolve as (value: unknown) => void,
         reject,
       });
-      this.worker.postMessage({ type: "ENGINE_CALL", fn, args } satisfies WorkerRequest);
-      // Route the reply by fn-name (single in-flight per fn is the UI norm).
-      const original = enginePending.get(key);
-      enginePending.delete(key);
-      enginePending.set(fn, original ?? { resolve, reject });
+      this.worker.postMessage({ type: "ENGINE_CALL", callId, fn, args } satisfies WorkerRequest);
     });
   }
 

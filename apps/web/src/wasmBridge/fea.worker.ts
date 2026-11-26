@@ -124,9 +124,13 @@ export interface ValidationRequest {
   type: "VALIDATION_SUITE";
 }
 
-/** v1.8.0: generic named-call lane for the v1.8/v1.9 surface. */
+/** v1.8.0: generic named-call lane for the v1.8/v1.9 surface.
+ * v2.0.1: every call carries a unique monotonically increasing `callId`
+ * echoed back in `ENGINE_RESULT`, so concurrent calls to the same WASM
+ * function never overwrite each other's Promise callbacks. */
 export interface EngineCallRequest {
   type: "ENGINE_CALL";
+  callId: number;
   fn:
     | "build_combinations_v2_json"
     | "member_calc_trace"
@@ -356,7 +360,12 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     } catch (error) {
       result = { kind: "Fault", message: String(error) };
     }
-    self.postMessage({ type: "ENGINE_RESULT", fn: request.fn, result });
+    self.postMessage({
+      type: "ENGINE_RESULT",
+      callId: request.callId,
+      fn: request.fn,
+      result,
+    });
     return;
   }
   if (request.type === "FETCH_CATALOG") {

@@ -13,6 +13,7 @@ import {
   RotateCw,
   ScanSearch,
   Spline,
+  Trash2,
 } from "lucide-react";
 import {
   DropdownMenuContent,
@@ -25,11 +26,13 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 import { Input } from "@/components/ui/input";
 import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipGroup } from "@/components/interior";
+import { Tooltip, TooltipGroup } from "@rdm-studio/ui/interior";
 import { useProjectStore } from "@/state/projectStore";
 import { useSelectedIds } from "@/hooks/useStudioQuery";
+import { useViewportStore } from "@/state/viewportStore";
 import { CAD_COMMANDS, parseUnitValue, snapCandidates, snapPolar } from "@/modeling/cadTools";
 import type { CadModel } from "@/modeling/cadTools";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 /**
  * v2.0.2 Swiss Metrology CAD strip (DESIGN.md §4): a hairline segmented
@@ -63,9 +66,26 @@ export function CadToolbar(): ReactElement {
   // batch selection stays in the project store.
   const { nodeId: selectedNodeId } = useSelectedIds();
   const selectedBeamIds = useProjectStore((st) => st.batch.selectedBeamIds);
+  const deleteBeamMode = useViewportStore((st) => st.deleteBeamMode);
+  const toggleDeleteBeamMode = useViewportStore((st) => st.toggleDeleteBeamMode);
+  const setDeleteBeamMode = useViewportStore((st) => st.setDeleteBeamMode);
   const [cheatOpen, setCheatOpen] = useState(false);
   const [input, setInput] = useState("4m");
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // v2.4.0: Escape exits the two-step beam deletion mode.
+  useEffect(() => {
+    if (!deleteBeamMode) {
+      return;
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDeleteBeamMode(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deleteBeamMode, setDeleteBeamMode]);
 
   const runCommand = (id: string): void => {
     const command = CAD_COMMANDS.find((c) => c.id === id);
@@ -118,6 +138,7 @@ export function CadToolbar(): ReactElement {
       structure: { ...project.structure, nodes: next.nodes, beams },
     });
     setFeedback(`${command.label} — ${command.shortcut}`);
+    void trackProductEvent("cad_tool_selected", { tool: id });
   };
 
   // v2.1.1: the ⌘K palette dispatches `rdm-cad-command` — the toolbar
@@ -143,16 +164,11 @@ export function CadToolbar(): ReactElement {
 
   return (
     <div
-      className="flex items-center justify-between gap-2 rounded-panel border border-hairline bg-panel px-2 py-1.5"
+      className="flex items-center justify-between gap-2 border-b border-hairline bg-panel px-2.5 py-1"
       role="toolbar"
       aria-label={t`Outils CAD`}
     >
-      {/* Left segmented group: 5 primary actions + the Outils ▾ menu.
-          v2.1.2: the strip is a TooltipGroup — the first hover waits
-          300 ms, then every sibling tooltip opens INSTANTLY (warm). */}
-      <TooltipGroup className="inline-flex min-w-0 items-center rounded-[4px] border border-hairline bg-panel-subtle/60">
-        {/* v2.1.2: TooltipGroup — the first hover waits 300 ms, then every
-            sibling tooltip opens INSTANTLY (warm group). */}
+      <TooltipGroup className="inline-flex min-w-0 items-center overflow-hidden rounded-[4px] border border-hairline bg-canvas">
         {PRIMARY.map((tool) => (
           <Tooltip
             key={tool.id}
@@ -163,20 +179,20 @@ export function CadToolbar(): ReactElement {
               type="button"
               aria-label={tool.label}
               onClick={() => runCommand(tool.id)}
-              className="flex shrink-0 items-center gap-1.5 border-r border-hairline px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary last:border-r-0 hover:bg-accent-tint hover:text-accent"
+              className="flex h-7 shrink-0 items-center gap-1.5 border-r border-hairline px-2.5 text-[12px] font-medium text-ink-secondary transition-colors hover:bg-accent-tint hover:text-accent active:bg-accent/15"
             >
-              <tool.icon size={16} strokeWidth={1.5} aria-hidden />
+              <tool.icon size={15} strokeWidth={1.5} aria-hidden />
               <span className="hidden lg:inline">{tool.label}</span>
             </button>
           </Tooltip>
         ))}
         <DropdownMenuRoot>
           <DropdownMenuTrigger
-            className="flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary hover:bg-accent-tint hover:text-accent"
+            className="flex h-7 shrink-0 items-center gap-1 px-2.5 text-[12px] font-medium text-ink-secondary transition-colors hover:bg-accent-tint hover:text-accent"
             aria-label={t`Outils secondaires`}
           >
             <Trans>Outils</Trans>
-            <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
+            <ChevronDown size={13} strokeWidth={1.5} aria-hidden />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuLabel>
@@ -197,6 +213,34 @@ export function CadToolbar(): ReactElement {
         </DropdownMenuRoot>
       </TooltipGroup>
 
+      {/* v2.4.0: two-step beam deletion toggle (click mode → click members). */}
+      <Tooltip
+        label={
+          deleteBeamMode
+            ? t`Quitter le mode suppression (Échap)`
+            : t`Supprimer des poutres (cliquer ensuite une poutre)`
+        }
+        side="bottom"
+      >
+        <button
+          type="button"
+          data-testid="delete-beam-mode"
+          aria-pressed={deleteBeamMode}
+          aria-label={t`Supprimer des poutres`}
+          onClick={() => toggleDeleteBeamMode()}
+          className={`flex h-7 shrink-0 items-center gap-1 rounded-[4px] border px-2 text-[12px] font-medium transition-colors ${
+            deleteBeamMode
+              ? "border-fea-max bg-fea-max/10 text-fea-max"
+              : "border-hairline bg-canvas text-ink-secondary hover:border-fea-max hover:text-fea-max"
+          }`}
+        >
+          <Trash2 size={15} strokeWidth={1.5} aria-hidden />
+          <span className="hidden lg:inline">
+            <Trans>Supprimer</Trans>
+          </span>
+        </button>
+      </Tooltip>
+
       {/* Right compact parameter & help group. */}
       <div className="flex shrink-0 items-center gap-2">
         <label className="flex items-center gap-1 text-[11px] text-ink-secondary">
@@ -207,12 +251,12 @@ export function CadToolbar(): ReactElement {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             aria-label={t`Valeur unitaire`}
-            className="h-7 w-16 px-1.5 text-[12px]"
+            className="font-data h-7 w-14 px-1.5 text-center text-[12px]"
           />
         </label>
         <span
           aria-live="polite"
-          className="hidden text-[11px] text-ink-muted md:inline"
+          className="font-data hidden rounded-[4px] border border-hairline bg-canvas px-1.5 py-0.5 text-[11px] text-ink-muted md:inline"
           data-testid="cad-feedback"
         >
           {feedback ?? `snap: ${snaps.length}`}
@@ -221,40 +265,87 @@ export function CadToolbar(): ReactElement {
           type="button"
           onClick={() => setCheatOpen(true)}
           aria-label={t`Raccourcis clavier`}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-hairline text-ink-secondary hover:border-accent hover:text-accent"
+          className="font-data flex h-7 shrink-0 items-center gap-1 rounded-[4px] border border-hairline bg-canvas px-2 text-[11px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
         >
-          ?
+          <Trans>Raccourcis</Trans>
         </button>
       </div>
-      {/* v2.1.2: keyboard cheat sheet as a Base UI Dialog with <Kbd> chips. */}
       <DialogRoot open={cheatOpen} onOpenChange={setCheatOpen}>
-        <DialogContent className="w-[min(92vw,448px)]" data-testid="cad-shortcuts-dialog">
-          <DialogHeader>
-            <DialogTitle>
-              <Trans>Raccourcis CAD</Trans>
-            </DialogTitle>
+        <DialogContent
+          className="w-[min(92vw,480px)] overflow-hidden p-0"
+          data-testid="cad-shortcuts-dialog"
+        >
+          <DialogHeader className="flex-row items-center justify-between border-b border-hairline bg-canvas/70 px-4 py-3">
+            <div>
+              <DialogTitle className="text-[14px] font-semibold text-ink-primary">
+                <Trans>Raccourcis CAD &amp; Atelier</Trans>
+              </DialogTitle>
+              <p className="mt-0.5 text-[11px] text-ink-muted">
+                <Trans>Commandes clavier actives sur la scène 3D</Trans>
+              </p>
+            </div>
+            <Kbd className="font-data text-[10px]">Esc</Kbd>
           </DialogHeader>
-          <ul className="space-y-1 text-sm text-ink-secondary">
-            {CAD_COMMANDS.map((c) => (
-              <li key={c.id} className="flex justify-between">
-                <span>{c.label}</span>
-                <Kbd className="px-2 text-xs">{c.shortcut}</Kbd>
-              </li>
-            ))}
-            <li className="flex justify-between">
-              <span>{t`Polar 15°`}</span>
-              <Kbd className="px-2 text-xs">
-                {`${snapPolar({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }).x.toFixed(0)}°`}
-              </Kbd>
-            </li>
-          </ul>
-          <button
-            type="button"
-            onClick={() => setCheatOpen(false)}
-            className="mt-4 w-full rounded bg-accent py-1.5 text-sm font-semibold text-white hover:bg-accent-strong"
-          >
-            <Trans>Fermer</Trans>
-          </button>
+
+          <div className="max-h-[62vh] space-y-3 overflow-y-auto p-4">
+            <div>
+              <p className="font-data mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+                <Trans>Dessin &amp; Transformations</Trans>
+              </p>
+              <ul className="divide-y divide-hairline rounded-[6px] border border-hairline bg-panel">
+                {CAD_COMMANDS.slice(0, 7).map((c) => (
+                  <li
+                    key={c.id}
+                    className="flex items-center justify-between px-3 py-1.5 text-[12px] text-ink-primary"
+                  >
+                    <span>{c.label}</span>
+                    <Kbd className="font-data px-2 py-0.5 text-[11px]">{c.shortcut}</Kbd>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-data mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+                <Trans>Sélection, Magnétisme &amp; Vue</Trans>
+              </p>
+              <ul className="divide-y divide-hairline rounded-[6px] border border-hairline bg-panel">
+                {CAD_COMMANDS.slice(7).map((c) => (
+                  <li
+                    key={c.id}
+                    className="flex items-center justify-between px-3 py-1.5 text-[12px] text-ink-primary"
+                  >
+                    <span>{c.label}</span>
+                    <Kbd className="font-data px-2 py-0.5 text-[11px]">{c.shortcut}</Kbd>
+                  </li>
+                ))}
+                <li className="flex items-center justify-between px-3 py-1.5 text-[12px] text-ink-primary">
+                  <span>{t`Accrochage polaire (15°)`}</span>
+                  <Kbd className="font-data px-2 py-0.5 text-[11px]">
+                    {`Shift · ${Math.round(snapPolar({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }).x * 15)}°`}
+                  </Kbd>
+                </li>
+                <li className="flex items-center justify-between px-3 py-1.5 text-[12px] text-ink-primary">
+                  <span>{t`Cadrer la structure`}</span>
+                  <Kbd className="font-data px-2 py-0.5 text-[11px]">F</Kbd>
+                </li>
+                <li className="flex items-center justify-between px-3 py-1.5 text-[12px] text-ink-primary">
+                  <span>{t`Palette de commandes`}</span>
+                  <Kbd className="font-data px-2 py-0.5 text-[11px]">⌘K</Kbd>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end border-t border-hairline bg-canvas/70 px-4 py-2.5">
+            <button
+              type="button"
+              onClick={() => setCheatOpen(false)}
+              className="rounded-[4px] border border-hairline bg-panel px-3 py-1 text-[12px] font-medium text-ink-primary hover:bg-panel-subtle"
+            >
+              <Trans>Fermer</Trans>
+            </button>
+          </div>
         </DialogContent>
       </DialogRoot>
     </div>

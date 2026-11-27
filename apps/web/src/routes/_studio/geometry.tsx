@@ -5,13 +5,13 @@ import { Trans } from "@lingui/react/macro";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { t } from "@lingui/core/macro";
-import { IconFrame, IconPlus, IconTrash } from "@/components/icons";
+import { IconFrame, IconPlus, IconTrash, PortalFrameIcon } from "@rdm-studio/ui/icons";
 import { GeometryFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useSelectedIds, useUpdateSearch, useViewportParams } from "@/hooks/useStudioQuery";
 import { useViewportStore } from "@/state/viewportStore";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rdm-studio/ui/primitives";
 import { DataTable } from "@/components/ui/data-table";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { feaClient, type SectionDims, type SectionSummary } from "@/wasmBridge/workerClient";
 import { useProjectStore, type BeamData, type NodeData } from "@/state/projectStore";
 import { FamilyPills, familyOfDesignation, type FamilyName } from "@/components/FamilyPills";
+import { familyColorOf } from "@/viewport3d/BeamMeshes";
 import { CadToolbar } from "@/components/CadToolbar";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -50,9 +51,10 @@ import {
   ReleaseHinge,
   SteelJointIcon,
   TorqueMoment,
-} from "@/components/icons/EngineeringIcons";
+} from "@rdm-studio/ui/icons";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { CadImportDialog } from "@/components/CadImportDialog";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 export const Route = createFileRoute("/_studio/geometry")({
   staticData: {
@@ -81,7 +83,7 @@ export const Route = createFileRoute("/_studio/geometry")({
 function GeometryPage() {
   const project = useProjectStore((s) => s.project);
   // v2.1.0: selection and render mode are URL-driven (zero Zustand mirror).
-  const { beamId, selectBeam } = useSelectedIds();
+  const { beamId, selectBeam, selectNode } = useSelectedIds();
   const { render } = useViewportParams();
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -208,6 +210,9 @@ function GeometryPage() {
     const y = nodeY ?? fallback[1];
     const z = nodeZ ?? fallback[2];
     addNode(x, y, z);
+    void trackProductEvent("node_placed", {
+      n_nodes: project.structure.nodes.length + 1,
+    });
   };
 
   /** v1.5.0 profile legend: active sections + member counts. */
@@ -252,59 +257,109 @@ function GeometryPage() {
 
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
-      {/* Flat action rows — nested card borders stay out of the inspector.
-          v2.1.1 row 1: `+ Nœud` beside the X/Y/Z placement fields with
-          EXPLICIT metre labels and unit-suffixed parsing (`4000mm`,
-          `4m` — parseUnitValue). v2.1.1 row 2: full-width `Importer CAO`
-          + `Galerie de projets` side-by-side so nothing truncates. */}
-      <div className="flex flex-wrap items-end gap-2" data-testid="node-placement">
-        <button
-          type="button"
-          className="flex items-center gap-1 rounded bg-accent px-2.5 py-1.5 text-[13px] text-white"
-          data-testid="add-node"
-          onClick={placeNode}
-        >
-          <IconPlus size={12} />
-          <Trans>Nœud</Trans>
-        </button>
-        {(
-          [
-            ["X", nodeX, setNodeX],
-            ["Y", nodeY, setNodeY],
-            ["Z", nodeZ, setNodeZ],
-          ] as const
-        ).map(([axis, value, setter]) => (
-          <UnitCoordinateField key={axis} axis={axis} value={value} onValue={setter} />
-        ))}
-        {cadError !== null ? (
-          <span className="self-center text-[12px] text-fea-max">{cadError}</span>
-        ) : null}
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          className="min-w-0 whitespace-nowrap rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary"
-          data-testid="open-cad-import"
-          onClick={() => setCadOpen(true)}
-        >
-          <Trans>Importer CAO</Trans>
-        </button>
-        <button
-          type="button"
-          className="min-w-0 whitespace-nowrap rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary"
-          data-testid="open-gallery"
-          onClick={() => setGalleryOpen(true)}
-        >
-          <Trans>Galerie de projets</Trans>
-        </button>
+      {/* v2.3.0: Inspector sections grouped into hairline sub-cards with 16px engineering icons. */}
+
+      {/* v2.3.0: 1-click quick-start switcher — always on top of the
+          inspector, empty model or not: the 4 pre-supported, pre-loaded
+          flagships, ready to solve and jump straight to Steps 4–5. */}
+      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <PortalFrameIcon size={16} />
+          <Trans>Modèles rapides (1 clic)</Trans>
+        </h3>
+        <div className="grid grid-cols-2 gap-1.5">
+          {(
+            [
+              ["naval-cradle", "Berceau naval DNV", "inspector-quick-naval-cradle"],
+              ["lifting-beam", "Palonnier 20 t", "inspector-quick-lifting-beam"],
+              ["workshop-jib", "Potence 5 t", "inspector-quick-workshop-jib"],
+              ["portal-frame", "Portique 18 m", "inspector-quick-portal-frame"],
+            ] as const
+          ).map(([kind, label, testId]) => (
+            <button
+              key={kind}
+              type="button"
+              data-testid={testId}
+              className="truncate rounded-[4px] border border-hairline bg-panel px-2 py-1.5 text-left text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:bg-accent-tint/50 hover:text-accent"
+              onClick={() => {
+                const project = quickStartProject(kind);
+                loadProject(project);
+                selectBeam(null);
+                selectNode(null);
+                toast(t`Modèle chargé : ${project.name}`);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 2-column key-value property grid (craft-floor: flat hairlines). */}
-      {/* v2.0.2: family pills full-width above the grid, still filtering
-          the profile list directly by designation family. */}
-      <FamilyPills active={family} onPick={(picked: FamilyName) => setFamily(picked)} />
-      <section className="border-t border-hairline pt-3">
-        <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+      {/* Node Placement sub-card */}
+      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <NodePin size={16} />
+          <Trans>Placement des nœuds</Trans>
+        </h3>
+        {/* Flat action rows — nested card borders stay out of the inspector.
+            v2.1.1 row 1: `+ Nœud` beside the X/Y/Z placement fields with
+            EXPLICIT metre labels and unit-suffixed parsing (`4000mm`,
+            `4m` — parseUnitValue). v2.1.1 row 2: full-width `Importer CAO`
+            + `Galerie de projets` side-by-side so nothing truncates. */}
+        <div className="space-y-2" data-testid="node-placement">
+          <div className="grid grid-cols-3 gap-1.5">
+            {(
+              [
+                ["X", nodeX, setNodeX],
+                ["Y", nodeY, setNodeY],
+                ["Z", nodeZ, setNodeZ],
+              ] as const
+            ).map(([axis, value, setter]) => (
+              <UnitCoordinateField key={axis} axis={axis} value={value} onValue={setter} />
+            ))}
+          </div>
+          {cadError !== null ? <p className="text-[11px] text-fea-max">{cadError}</p> : null}
+          <button
+            type="button"
+            className="flex w-full items-center justify-center gap-1.5 rounded-[4px] bg-accent px-2.5 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-accent-strong"
+            data-testid="add-node"
+            onClick={placeNode}
+          >
+            <IconPlus size={12} />
+            <Trans>Placer le nœud</Trans>
+          </button>
+        </div>
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            className="min-w-0 whitespace-nowrap rounded-[4px] border border-hairline bg-panel px-2 py-1.5 text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+            data-testid="open-cad-import"
+            onClick={() => setCadOpen(true)}
+          >
+            <Trans>Importer CAO</Trans>
+          </button>
+          <button
+            type="button"
+            className="min-w-0 whitespace-nowrap rounded-[4px] border border-hairline bg-panel px-2 py-1.5 text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+            data-testid="open-gallery"
+            onClick={() => setGalleryOpen(true)}
+          >
+            <Trans>Galerie de projets</Trans>
+          </button>
+        </div>
+      </div>
+
+      {/* Material & Profile Selection sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <SteelJointIcon size={16} />
+          <Trans>Matériau et profilé</Trans>
+        </h3>
+        {/* 2-column key-value property grid (craft-floor: flat hairlines). */}
+        {/* v2.0.2: family pills full-width above the grid, still filtering
+            the profile list directly by designation family. */}
+        <FamilyPills active={family} onPick={(picked: FamilyName) => setFamily(picked)} />
+        <div className="mt-2.5 grid grid-cols-[84px_1fr] items-center gap-x-2 gap-y-2">
           <label className="text-xs font-medium text-ink-secondary" htmlFor="material-select">
             <Trans>Matériau</Trans>
           </label>
@@ -352,9 +407,9 @@ function GeometryPage() {
               </SelectItem>
             </SelectContent>
           </SelectRoot>
-          <label className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
-            <ProfileIpe size={16} />
-            <Trans>Profil (EN 10365)</Trans>
+          <label className="flex items-center gap-1 text-xs font-medium text-ink-secondary whitespace-nowrap">
+            <ProfileIpe size={15} />
+            <Trans>Profilé</Trans>
           </label>
           {/* v1.6.0: family-accurate cross-section icons per designation,
               v2.1.2: right-aligned kg/m · h metadata on every row. */}
@@ -364,6 +419,7 @@ function GeometryPage() {
             onValueChange={(next: string | null) => {
               if (next === null) return;
               setNewSection(next);
+              void trackProductEvent("section_searched", { query: next });
               if (selectedBeam !== null) {
                 updateBeam(selectedBeam.id, { section_id: next });
               }
@@ -387,15 +443,17 @@ function GeometryPage() {
           </ComboboxRoot>
         </div>
         <SectionCatalogRow designation={selectedBeam?.section_id ?? newSection} />
-      </section>
+      </div>
 
-      {/* Bug 5: explicit N1 → N2 selection replaces the hardcoded demo pair.
-          v2.1.2: searchable Comboboxes with NodePin icons + coordinates. */}
-      <section className="border-t border-hairline pt-3">
-        <h3 className="text-xs font-medium text-ink-secondary">
+      {/* Create Beam sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <ProfileIpe size={16} />
           <Trans>Créer une poutre</Trans>
         </h3>
-        <div className="mt-2 grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+        {/* Bug 5: explicit N1 → N2 selection replaces the hardcoded demo pair.
+            v2.1.2: searchable Comboboxes with NodePin icons + coordinates. */}
+        <div className="mt-2.5 grid grid-cols-[84px_1fr] items-center gap-x-2 gap-y-2">
           <span className="text-xs font-medium text-ink-secondary">Extrémités</span>
           <div className="flex items-center gap-2">
             <NodeCombobox
@@ -421,24 +479,29 @@ function GeometryPage() {
         </div>
         <button
           type="button"
-          className="mt-2 w-full rounded bg-accent px-2 py-1.5 text-[13px] text-white disabled:opacity-40"
+          className="mt-2.5 w-full rounded-[4px] bg-accent px-2.5 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-accent-strong disabled:opacity-40"
           disabled={beamN1 === null || beamN2 === null || beamN1 === beamN2 || pairAlreadyLinked}
           data-testid="connect-beam"
           onClick={() => {
             if (beamN1 === null || beamN2 === null || beamN1 === beamN2 || pairAlreadyLinked)
               return;
             const newBeamId = addBeam(beamN1, beamN2, newSection, material);
-            // v2.1.0: the single selection is URL-backed — selecting the
-            // freshly created member writes `?beam=` (replace: true).
+            void trackProductEvent("beam_connected", {
+              n_beams: project.structure.beams.length + 1,
+            });
             selectBeam(newBeamId);
           }}
         >
           {pairAlreadyLinked ? <Trans>Déjà reliés</Trans> : <Trans>Relier N1 → N2</Trans>}
         </button>
-      </section>
+      </div>
 
-      {/* Selected-member patch panel (roll, releases, buckling lengths). */}
-      <section className="border-t border-hairline pt-3">
+      {/* Selected-member patch panel sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <TorqueMoment size={16} />
+          <Trans>Caractéristiques de la poutre</Trans>
+        </h3>
         {selectedBeam !== null ? (
           <BeamPatchPanel beam={selectedBeam} />
         ) : (
@@ -446,9 +509,9 @@ function GeometryPage() {
             <Trans>Sélectionnez une poutre pour éditer ses caractéristiques.</Trans>
           </p>
         )}
-      </section>
+      </div>
 
-      <p className="font-data border-t border-hairline pt-3 text-[12px] text-ink-secondary">
+      <p className="mt-2 font-data border-t border-hairline pt-3 text-[12px] text-ink-secondary">
         {sections.length} profils — EN 10365 / 10210 / 10056
       </p>
 
@@ -466,7 +529,7 @@ function GeometryPage() {
       {/* v1.3.0 Step 2 hand-off. */}
       <button
         type="button"
-        className="w-full rounded border border-hairline px-2.5 py-1.5 text-[13px] text-accent hover:bg-accent-tint disabled:opacity-40"
+        className="mt-2 w-full rounded border border-hairline px-2.5 py-1.5 text-[13px] text-accent hover:bg-accent-tint disabled:opacity-40"
         data-testid="next-supports"
         disabled={project.structure.beams.length === 0}
         onClick={() => void navigate({ to: "/supports" })}
@@ -477,7 +540,7 @@ function GeometryPage() {
   );
 
   const main = (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* v1.6.0: the persistent stage slot — the ONE canvas in the studio
           layout overlays this pane, so orbit/zoom survive every step. */}
       {/* v2.0.1: the CAD toolbar docks as a flow row ABOVE the viewport
@@ -486,7 +549,7 @@ function GeometryPage() {
       <CadToolbar />
       <div
         ref={slotRef}
-        className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"
+        className="relative min-h-0 flex-1 overflow-hidden bg-canvas"
         data-testid="geometry-stage-slot"
       >
         {project.structure.nodes.length === 0 ? (
@@ -510,13 +573,14 @@ function GeometryPage() {
               </Button>
               <button
                 type="button"
-                className="rounded border border-hairline px-3 py-1.5 text-[13px] text-ink-secondary"
+                className="rounded-[4px] border border-hairline px-3 py-1.5 text-[13px] text-ink-secondary"
                 onClick={() => setCadOpen(true)}
               >
                 <Trans>Importer CAO</Trans>
               </button>
             </div>
-            {/* v1.4.0: 1-click quick-start pills (mockups tape_1). */}
+            {/* v1.4.0: 1-click quick-start pills (mockups tape_1). v2.3.0:
+                the naval & lifting flagships ride the same row. */}
             <div className="flex flex-wrap items-center justify-center gap-1.5">
               {(
                 [
@@ -524,13 +588,16 @@ function GeometryPage() {
                   ["portique", "Portique 18 m"],
                   ["potence", "Potence HEA 200"],
                   ["travees", "Poutre 3 travées"],
+                  ["naval-cradle", "Berceau de transport naval DNV"],
+                  ["lifting-beam", "Palonnier de levage 20 t"],
+                  ["workshop-jib", "Potence d'atelier 5 t"],
                 ] as const
               ).map(([kind, label]) => (
                 <button
                   key={kind}
                   type="button"
                   data-testid={`quick-${kind}`}
-                  className="rounded-full border border-hairline px-2.5 py-1 text-[12px] text-ink-secondary hover:border-accent hover:text-accent"
+                  className="truncate rounded-[4px] border border-hairline bg-panel px-2 py-1.5 text-left text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:bg-accent-tint/50 hover:text-accent"
                   onClick={() => loadProject(quickStartProject(kind))}
                 >
                   {label}
@@ -554,8 +621,13 @@ function GeometryPage() {
             {sectionCounts.map(([designation, count]) => (
               <span
                 key={designation}
-                className="font-data rounded bg-panel-subtle px-1.5 py-0.5 text-[10px] text-ink-secondary"
+                className="font-data flex items-center gap-1 rounded bg-panel-subtle px-1.5 py-0.5 text-[10px] text-ink-secondary"
               >
+                <span
+                  aria-hidden
+                  className="inline-block h-2 w-2 rounded-[2px]"
+                  style={{ backgroundColor: familyColorOf(designation) }}
+                />
                 {designation} × {count}
               </span>
             ))}
@@ -839,12 +911,12 @@ function UnitCoordinateField({
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   return (
-    <label className="flex items-center gap-1 text-[11px] text-ink-muted">
-      <span className="font-data shrink-0">{axis} (m)</span>
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="font-data text-[10px] font-medium text-ink-muted">{axis} (m)</span>
       <Input
         inputMode="decimal"
         aria-label={`Placement ${axis} (m)`}
-        placeholder={axis}
+        placeholder="0"
         value={draft ?? (value === null ? "" : String(value))}
         onChange={(e) => {
           const raw = e.currentTarget.value;
@@ -852,7 +924,7 @@ function UnitCoordinateField({
           onValue(parseUnitValue(raw));
         }}
         onBlur={() => setDraft(null)}
-        className="h-6 w-16 px-1 text-[12px]"
+        className="font-data h-7 w-full min-w-0 px-2 text-[12px]"
       />
     </label>
   );
@@ -1080,19 +1152,40 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
       <p className="font-data text-[12px] text-ink-secondary">
         P{beam.id} · {beam.section_id} · {beam.material_id}
       </p>
-      <div className="mt-2 grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+      <div className="mt-2.5 grid grid-cols-[84px_1fr] items-center gap-x-2 gap-y-2">
         <label className="text-xs font-medium text-ink-secondary" htmlFor="roll-angle">
           <Trans>Roulis θx (°)</Trans>
         </label>
-        <NumberFieldRoot
-          id="roll-angle"
-          value={Math.round((beam.roll_angle_rad * 180) / Math.PI)}
-          onValueChange={(deg) => {
-            if (deg !== null) updateBeam(beam.id, { roll_angle_rad: (deg * Math.PI) / 180 });
-          }}
-        >
-          <NumberFieldInput className="h-8 w-24" />
-        </NumberFieldRoot>
+        <div className="flex items-center gap-1.5">
+          <NumberFieldRoot
+            id="roll-angle"
+            data-testid="beam-roll-angle"
+            value={Math.round((beam.roll_angle_rad * 180) / Math.PI)}
+            onValueChange={(deg) => {
+              if (deg !== null) updateBeam(beam.id, { roll_angle_rad: (deg * Math.PI) / 180 });
+            }}
+          >
+            <NumberFieldInput className="h-8 w-20" />
+          </NumberFieldRoot>
+          <div className="flex gap-1">
+            {[0, 45, 90].map((deg) => (
+              <button
+                key={deg}
+                type="button"
+                data-testid={`beam-roll-${deg}`}
+                aria-pressed={Math.round((beam.roll_angle_rad * 180) / Math.PI) === deg}
+                className={`rounded border px-1.5 py-0.5 font-data text-[11px] ${
+                  Math.round((beam.roll_angle_rad * 180) / Math.PI) === deg
+                    ? "border-accent bg-accent-tint text-accent"
+                    : "border-hairline text-ink-secondary hover:border-accent hover:text-accent"
+                }`}
+                onClick={() => updateBeam(beam.id, { roll_angle_rad: (deg * Math.PI) / 180 })}
+              >
+                {deg}°
+              </button>
+            ))}
+          </div>
+        </div>
         <span className="text-xs font-medium text-ink-secondary">
           <Trans>Longueurs de flambement</Trans>
         </span>

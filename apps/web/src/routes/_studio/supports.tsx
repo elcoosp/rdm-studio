@@ -3,12 +3,18 @@ import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rdm-studio/ui/primitives";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ExpandablePanel, HoldToConfirm, StatusBadge } from "@/components/interior";
+import {
+  ExpandablePanel,
+  HoldToConfirm,
+  StatusBadge,
+  Tooltip,
+  TooltipGroup,
+} from "@rdm-studio/ui/interior";
 import {
   SupportFixed,
   SupportPinned,
@@ -16,12 +22,14 @@ import {
   SupportSlider,
   SupportSpring,
   SupportReaction,
-} from "@/components/icons/EngineeringIcons";
+} from "@rdm-studio/ui/icons";
+import { NodePin } from "@rdm-studio/ui/icons";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { useProjectStore } from "@/state/projectStore";
 import { StudioBaseSearchSchema } from "@/schemas/searchParams.schema";
 import { useSelectedIds } from "@/hooks/useStudioQuery";
-import { IconSupport } from "@/components/icons";
+import { IconSupport } from "@rdm-studio/ui/icons";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 export const Route = createFileRoute("/_studio/supports")({
   staticData: {
@@ -66,7 +74,7 @@ const PRIMARY_PRESETS: (Preset & { icon: typeof SupportFixed })[] = [
   },
   {
     key: "appui-simple-z",
-    label: "Appui simple Z",
+    label: "Simple Z",
     icon: SupportRoller,
     locked: [false, false, true, false, false, false],
   },
@@ -192,10 +200,17 @@ function SupportsPage() {
   const status = kinematicStatus(reactionCount);
 
   const applyPreset = (preset: Preset) => {
-    if (selectedNodeId === null) {
+    const targetId = selectedNodeId ?? nodes.at(0)?.id ?? null;
+    if (targetId === null) {
+      toast("Placez d'abord au moins un nœud à l'étape 1.");
       return;
     }
-    setSupport(selectedNodeId, [...preset.locked]);
+    if (selectedNodeId === null) {
+      selectNode(targetId);
+    }
+    setSupport(targetId, [...preset.locked]);
+    void trackProductEvent("support_preset_applied", { preset: preset.key });
+    toast(`Liaison « ${preset.label} » appliquée à N${targetId}`);
   };
 
   const clearAll = () => {
@@ -204,6 +219,7 @@ function SupportsPage() {
     }
     const before = structuredClone(supports);
     clearSupports();
+    void trackProductEvent("support_cleared");
     toast("Appuis supprimés", {
       description: `${before.length} appui(s) retiré(s).`,
       action: {
@@ -220,16 +236,22 @@ function SupportsPage() {
 
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Liaisons (RDM 7)</Trans>}>
-      <div className="flex items-center justify-between gap-2">
-        <StatusBadge tone={status.tone} testId="kinematic-status">
-          {status.label}
-        </StatusBadge>
-        <label className="flex items-center gap-1.5 font-data text-[11px] text-ink-muted">
-          <SupportSpring size={16} />
-          {supports.length} appui(s) · {reactionCount} réactions
-        </label>
+      {/* v2.3.0: Inspector sections grouped into hairline sub-cards with 16px engineering icons. */}
+
+      {/* Status & Kinematic sub-card */}
+      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <StatusBadge tone={status.tone} testId="kinematic-status">
+            {status.label}
+          </StatusBadge>
+          <span className="flex shrink-0 items-center gap-1 font-data text-[11px] whitespace-nowrap text-ink-muted">
+            <SupportSpring size={16} />
+            {supports.length} appuis · {reactionCount} DDL
+          </span>
+        </div>
       </div>
-      {/* v1.6.0: selected node coordinate + free/locked DOF summary card. */}
+
+      {/* Selected Node Summary sub-card */}
       {selectedNodeId !== null
         ? (() => {
             const node = nodes.find((n) => n.id === selectedNodeId);
@@ -238,9 +260,13 @@ function SupportsPage() {
             const freeDofs = DOF_LABELS.filter((_, i) => !locked[i]);
             return (
               <div
-                className="mt-2 rounded border border-hairline bg-panel-subtle p-2"
+                className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
                 data-testid="node-summary-card"
               >
+                <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+                  <NodePin size={16} />
+                  <Trans>Nœud sélectionné</Trans>
+                </h3>
                 <p className="font-data text-[11px] text-ink-primary" data-testid="node-coords">
                   N{selectedNodeId} · ({node ? node.x.toFixed(2).replace(".", ",") : "0,00"} ;{" "}
                   {node ? node.y.toFixed(2).replace(".", ",") : "0,00"} ;{" "}
@@ -254,29 +280,43 @@ function SupportsPage() {
             );
           })()
         : null}
-      <section className="border-t border-hairline pt-3">
-        <h3 className="text-xs font-medium text-ink-secondary">
+
+      {/* Presets d'appui sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <SupportFixed size={16} />
           <Trans>Presets d'appui</Trans>
         </h3>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {PRIMARY_PRESETS.map((preset) => (
-            <Button
-              key={preset.key}
-              variant="outline"
-              size="sm"
-              data-testid={`preset-${preset.key}`}
-              className={`justify-start ${activePreset === preset.key ? "border-accent text-accent" : ""}`}
-              disabled={selectedNodeId === null}
-              onClick={() => applyPreset(preset)}
-            >
-              <preset.icon size={18} />
-              {preset.label}
-            </Button>
-          ))}
+        <div className="grid grid-cols-2 gap-2">
+          <TooltipGroup className="contents">
+            {PRIMARY_PRESETS.map((preset) => (
+              <Tooltip
+                key={preset.key}
+                label={t`Appliquer « ${preset.label} » au nœud sélectionné`}
+                side="top"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-testid={`preset-${preset.key}`}
+                  className={`h-8 justify-start gap-1.5 whitespace-nowrap px-2.5 text-[12px] ${activePreset === preset.key ? "border-accent bg-accent-tint font-semibold text-accent" : ""}`}
+                  disabled={nodes.length === 0}
+                  onClick={() => applyPreset(preset)}
+                >
+                  <preset.icon size={18} />
+                  {preset.label}
+                </Button>
+              </Tooltip>
+            ))}
+          </TooltipGroup>
         </div>
-      </section>
-      {/* v2.1.2: expandable Appuis élastiques (kx..krz) — ExpandablePanel. */}
-      <div className="border-t border-hairline pt-3" data-testid="spring-section">
+      </div>
+
+      {/* Appuis élastiques sub-card */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="spring-section"
+      >
         <ExpandablePanel
           title={
             <Trans>
@@ -307,32 +347,40 @@ function SupportsPage() {
           )}
         </ExpandablePanel>
       </div>
-      {/* Grouped 12-preset RDM 7 library + custom entry (ExpandablePanel
-          keeping the `rdm7-library` contract test id). */}
-      <div className="border-t border-hairline pt-3" data-testid="rdm7-library">
-        <ExpandablePanel title="Bibliothèque RDM 7 (12 appuis groupés)">
+
+      {/* Bibliothèque RDM 7 sub-card */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="rdm7-library"
+      >
+        <ExpandablePanel title={<Trans>Bibliothèque RDM 7 (12 appuis groupés)</Trans>}>
           <div className="mt-2 space-y-2">
             {GROUPED_PRESETS.map((group) => (
               <div key={group.group}>
                 <p className="mb-1 text-[11px] text-ink-muted">{group.group}</p>
                 <div className="flex flex-wrap gap-1">
                   {group.presets.map((preset) => (
-                    <button
+                    <Tooltip
                       key={preset.key}
-                      type="button"
-                      data-testid={`preset-${preset.key}`}
-                      className={`rounded border border-hairline px-2 py-0.5 font-data text-[11px] ${
-                        activePreset === preset.key
-                          ? "border-accent bg-accent-tint text-accent"
-                          : "text-ink-secondary hover:text-ink-primary"
-                      }`}
-                      disabled={selectedNodeId === null}
-                      onClick={() => applyPreset(preset)}
+                      label={t`${group.group} ${preset.label} — appliquer au nœud sélectionné`}
+                      side="top"
                     >
-                      {group.group === "Appuis simples"
-                        ? `Appui ${preset.label}`
-                        : `${group.group} ${preset.label}`}
-                    </button>
+                      <button
+                        type="button"
+                        data-testid={`preset-${preset.key}`}
+                        className={`rounded border border-hairline px-2 py-0.5 font-data text-[11px] ${
+                          activePreset === preset.key
+                            ? "border-accent bg-accent-tint text-accent"
+                            : "text-ink-secondary hover:text-ink-primary"
+                        }`}
+                        disabled={nodes.length === 0}
+                        onClick={() => applyPreset(preset)}
+                      >
+                        {group.group === "Appuis simples"
+                          ? `Appui ${preset.label}`
+                          : `${group.group} ${preset.label}`}
+                      </button>
+                    </Tooltip>
                   ))}
                 </div>
               </div>
@@ -343,8 +391,11 @@ function SupportsPage() {
           </div>
         </ExpandablePanel>
       </div>
-      <section className="border-t border-hairline pt-3">
-        <h3 className="text-xs font-medium text-ink-secondary">
+
+      {/* Matrice 6 DDL sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <SupportReaction size={16} />
           <Trans>Matrice 6 DDL des appuis</Trans>
         </h3>
         <p className="mb-2 text-[11px] text-ink-muted">
@@ -396,8 +447,10 @@ function SupportsPage() {
             </tbody>
           </table>
         </div>
-      </section>
-      <section className="border-t border-hairline pt-3">
+      </div>
+
+      {/* Appuis actifs sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
         <div className="mb-1 flex items-center justify-between">
           <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
             <SupportReaction size={16} />
@@ -458,10 +511,11 @@ function SupportsPage() {
             })}
           </ul>
         )}
-      </section>
+      </div>
+
       {/* v1.3.0 Step 2: next-step hand-off. */}
       <Button
-        className="w-full"
+        className="mt-2 w-full"
         data-testid="next-loads"
         disabled={reactionCount < 6}
         onClick={() => void navigate({ to: "/loads" })}
@@ -472,18 +526,15 @@ function SupportsPage() {
   );
 
   const main = (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div
         ref={slotRef}
-        className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"
+        className="relative min-h-0 flex-1 overflow-hidden bg-canvas"
         data-testid="supports-stage-slot"
       />
       <StageContent k="supports" options={{ wireframe: false, selectedBeamId: null }}>
         {null}
       </StageContent>
-      <p className="shrink-0 text-[12px] text-ink-muted">
-        <Trans>Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui.</Trans>
-      </p>
     </section>
   );
 
@@ -543,7 +594,13 @@ function SpringFields({
         type="button"
         className="mt-2 w-full rounded bg-accent px-2 py-1.5 text-[12px] text-white"
         data-testid={`apply-springs-${nodeId}`}
-        onClick={() => onApply(values)}
+        onClick={() => {
+          onApply(values);
+          void trackProductEvent("support_spring_set", {
+            dof: "kz",
+            stiffness: (values[2] ?? 0) / 1000,
+          });
+        }}
       >
         <Trans>Appliquer les ressorts à N{nodeId}</Trans>
       </button>

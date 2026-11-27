@@ -25,7 +25,7 @@ export function CalcTraceTree({
   return (
     <ul className="space-y-3">
       {nodes.map((node, index) => (
-        <li key={`${node.clause}-${index}`} className="rounded-lg border border-hairline p-3">
+        <li key={`${node.clause}-${index}`} className="rounded-[8px] border border-hairline p-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-ink-muted">{node.clause}</span>
             <span

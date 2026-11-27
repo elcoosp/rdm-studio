@@ -3,7 +3,7 @@
 prerendered site + docs HTML trees and the web source tree."""
 import json, pathlib, re, sys
 
-root = pathlib.Path("/home/z/my-project/rdm-studio")
+root = pathlib.Path(__file__).resolve().parent.parent
 errors, checked = [], 0
 
 def audit_html_tree(dist: pathlib.Path, base: str):

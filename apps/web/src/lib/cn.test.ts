@@ -153,3 +153,66 @@ describe("v2.1.2 engineering icon parity (44 icons)", () => {
     expect(missing).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Design System hygiene (Swiss Metrology Daylight): the @rdm-studio/ui
+// consolidation is ENFORCED here — zero dark-mode variant classes and zero
+// ad-hoc rounded-md / rounded-lg radii anywhere in the design system
+// sources (packages/ui, apps/web/src, apps/site/src, apps/docs/src).
+// Buttons use rounded-[4px], cards/overlays rounded-[8px] (DESIGN.md §5).
+// Test files are excluded from the scan so the patterns below never
+// self-flag.
+// ---------------------------------------------------------------------------
+
+const REPO_ROOT = join(__dirname, "..", "..", "..", "..");
+const DS_SCANNED_ROOTS = [
+  join(REPO_ROOT, "packages", "ui", "src"),
+  join(REPO_ROOT, "apps", "web", "src"),
+  join(REPO_ROOT, "apps", "site", "src"),
+  join(REPO_ROOT, "apps", "docs", "src"),
+];
+
+const DS_SCAN_EXTENSIONS = [".ts", ".tsx", ".css", ".astro"];
+
+function* walkDsFiles(dir: string): Generator<string> {
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      if (entry === "node_modules" || entry === "dist" || entry === "wasm-pkg") continue;
+      yield* walkDsFiles(full);
+    } else if (
+      DS_SCAN_EXTENSIONS.some((ext) => entry.endsWith(ext)) &&
+      !entry.endsWith(".test.ts") &&
+      !entry.endsWith(".test.tsx")
+    ) {
+      yield full;
+    }
+  }
+}
+
+/** Files whose comment-stripped source matches `pattern`, as repo-relative paths. */
+function dsOffenders(pattern: RegExp): string[] {
+  const offenders: string[] = [];
+  for (const root of DS_SCANNED_ROOTS) {
+    for (const file of walkDsFiles(root)) {
+      if (pattern.test(stripComments(readFileSync(file, "utf8")))) {
+        offenders.push(file.replace(REPO_ROOT + "/", ""));
+      }
+    }
+  }
+  return offenders.sort();
+}
+
+describe("Design System hygiene (Swiss Metrology Daylight)", () => {
+  it("contains zero dark-mode variant classes", () => {
+    expect(dsOffenders(/dark:/)).toEqual([]);
+  });
+
+  it("contains zero slate utility classes", () => {
+    expect(dsOffenders(/\b(?:bg|border|text)-slate-/)).toEqual([]);
+  });
+
+  it("contains zero ad-hoc rounded-md / rounded-lg radii", () => {
+    expect(dsOffenders(/rounded-(?:md|lg)\b/)).toEqual([]);
+  });
+});

@@ -1,0 +1,201 @@
+:root {
+  /* Swiss Metrology Daylight Tokens (DESIGN.md) — single source of truth.
+   * Apps consume these via `@import "@rdm-studio/ui/tokens.css"` plus the
+   * `@theme` block below (Tailwind v4 utilities); Starlight/docs read the
+   * `:root` variables directly. */
+  --color-canvas: #F8FAFC;
+  --color-panel: #FFFFFF;
+  --color-panel-subtle: #F1F5F9;
+  --color-hairline: #E2E8F0;
+  --color-hairline-strong: #CBD5E1;
+  --color-border-subtle: #CBD5E1;
+  --color-ink-primary: #0F172A;
+  --color-ink-secondary: #475569;
+  --color-ink-muted: #94A3B8;
+  --color-accent: #1D4ED8;
+  --color-accent-hover: #1E40AF;
+  --color-accent-strong: #1E40AF;
+  --color-accent-tint: #EFF6FF;
+  --color-accent-ring: #93C5FD;
+
+  /* FEA Thermal Spectrum (Analytical Meshes & Charts Only) */
+  --color-fea-tier-1: #1D4ED8; /* Cobalt Blue - Nominal 0.0-0.2 */
+  --color-fea-tier-2: #06B6D4; /* Cyan - Low 0.2-0.5 */
+  --color-fea-tier-3: #10B981; /* Emerald - Elastic 0.5-0.8 */
+  --color-fea-tier-4: #F59E0B; /* Amber - Plastic Limit Approach 0.8-1.0 */
+  --color-fea-tier-5: #DC2626; /* Crimson - Yield/Buckling Failure >1.0 */
+  /* Same tiers under the min/low/mid/warn/max names used by components. */
+  --color-fea-min: #1D4ED8;
+  --color-fea-low: #06B6D4;
+  --color-fea-mid: #10B981;
+  --color-fea-warn: #F59E0B;
+  --color-fea-max: #DC2626;
+
+  /* Status Badges (2px radius, JetBrains Mono 11px) */
+  --color-pass-bg: #ECFDF5;
+  --color-pass-border: #A7F3D0;
+  --color-pass-text: #065F46;
+  --color-fail-bg: #FEF2F2;
+  --color-fail-border: #FECACA;
+  --color-fail-text: #991B1B;
+  --color-warn-bg: #FFFBE6;
+  --color-warn-border: #FDE68A;
+  --color-warn-text: #854D0E;
+
+  /* Corner Radii (DESIGN.md §5) */
+  --radius-badge: 2px;
+  --radius-control: 4px;
+  --radius-overlay: 8px;
+  --radius-sheet-top: 16px;
+  --radius-panel: 0.5rem;
+  --radius-card: 8px;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-mono-tabular: 'JetBrains Mono', monospace;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Transitions (Critically Damped Precision Curve) */
+  --ease-precision: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+
+  /* Shadows (Zero on docked, soft on floating) */
+  --shadow-none: none;
+  --shadow-floating: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+  /* Z-Index Layers */
+  --z-header: 40;
+  --z-toolbar: 30;
+  --z-gizmo: 25;
+  --z-inspector: 20;
+  --z-bottom-sheet: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-command-palette: 80;
+}
+
+/* Tailwind v4 theme — the same values as `:root` above, so utilities such
+ * as `bg-accent`, `text-ink-primary`, `border-hairline` and `bg-fea-mid`
+ * resolve from this single file in every app that imports it. The
+ * duplicated `@theme` blocks in apps/web and apps/site were deleted; this
+ * block is the only definition. */
+@theme {
+  --color-canvas: #f8fafc;
+  --color-panel: #ffffff;
+  --color-panel-subtle: #f1f5f9;
+  --color-hairline: #e2e8f0;
+  --color-border-subtle: #cbd5e1;
+  --color-ink-primary: #0f172a;
+  --color-ink-secondary: #475569;
+  --color-ink-muted: #94a3b8;
+  --color-accent: #1d4ed8;
+  --color-accent-strong: #1e40af;
+  --color-accent-tint: #eff6ff;
+  --color-accent-ring: #93c5fd;
+  --color-fea-tier-1: #1d4ed8;
+  --color-fea-tier-2: #06b6d4;
+  --color-fea-tier-3: #10b981;
+  --color-fea-tier-4: #f59e0b;
+  --color-fea-tier-5: #dc2626;
+  --color-fea-min: #1d4ed8;
+  --color-fea-low: #06b6d4;
+  --color-fea-mid: #10b981;
+  --color-fea-warn: #f59e0b;
+  --color-fea-max: #dc2626;
+  --color-pass-bg: #ecfdf5;
+  --color-pass-border: #a7f3d0;
+  --color-pass-text: #065f46;
+  --color-fail-bg: #fef2f2;
+  --color-fail-border: #fecaca;
+  --color-fail-text: #991b1b;
+  --color-warn-bg: #fffbe6;
+  --color-warn-border: #fde68a;
+  --color-warn-text: #854d0e;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-panel: 0.5rem;
+  --radius-control: 4px;
+  --radius-overlay: 8px;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-ink-primary);
+  background: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* Tabular Numeric Alignment */
+.font-data,
+.tabular-nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: none;
+  ring: 2px solid var(--color-accent-ring);
+  ring-offset: 2px;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-hairline-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

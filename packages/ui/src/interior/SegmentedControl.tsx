@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 
@@ -27,7 +25,8 @@ export type SegmentedOption = {
 
 export type SegmentedControlProps = {
   options: SegmentedOption[];
-  label: string;
+  label?: string;
+  testId?: string;
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
@@ -44,9 +43,10 @@ export function SegmentedControl({
   onValueChange,
   className = "",
   size = "md",
+  testId,
 }: SegmentedControlProps): React.ReactElement {
   const count = Math.max(1, options.length);
-  const template = `repeat(${count}, minmax(auto, 1fr))`;
+  const template = `repeat(${count}, minmax(max-content, 1fr))`;
   const segClass =
     size === "sm"
       ? "px-1.5 py-[3px] text-center text-[11.5px] font-medium leading-[18px] tracking-[-0.01em] whitespace-nowrap"
@@ -127,8 +127,8 @@ export function SegmentedControl({
   return (
     <div
       role="radiogroup"
-      aria-label={label}
-      className={`relative inline-block select-none rounded-[6px] border border-hairline bg-panel-subtle/70 p-0.5 ${className}`}
+      aria-label={label} data-testid={testId}
+      className={`relative inline-block min-w-max shrink-0 select-none rounded-[6px] border border-hairline bg-panel-subtle/70 p-0.5 ${className}`}
     >
       <div
         className="relative grid"

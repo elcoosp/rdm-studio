@@ -1,0 +1,88 @@
+{
+  "name": "@rdm-studio/ui",
+  "version": "2.3.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./tokens.css": "./dist/style.css",
+    "./icons": {
+      "types": "./dist/icons/EngineeringIcons.d.ts",
+      "import": "./dist/icons/EngineeringIcons.js",
+      "default": "./dist/icons/EngineeringIcons.js"
+    },
+    "./primitives": {
+      "types": "./dist/primitives/index.d.ts",
+      "import": "./dist/primitives/index.js",
+      "default": "./dist/primitives/index.js"
+    },
+    "./interior": {
+      "types": "./dist/interior/index.d.ts",
+      "import": "./dist/interior/index.js",
+      "default": "./dist/interior/index.js"
+    },
+    "./templates": {
+      "types": "./dist/templates/index.d.ts",
+      "import": "./dist/templates/index.js",
+      "default": "./dist/templates/index.js"
+    },
+    "./deeplinks": {
+      "types": "./dist/deeplinks/index.d.ts",
+      "import": "./dist/deeplinks/index.js",
+      "default": "./dist/deeplinks/index.js"
+    },
+    "./viewport": {
+      "types": "./dist/viewport/index.d.ts",
+      "import": "./dist/viewport/index.js",
+      "default": "./dist/viewport/index.js"
+    },
+    "./lib/cn": {
+      "types": "./dist/lib/cn.d.ts",
+      "import": "./dist/lib/cn.js",
+      "default": "./dist/lib/cn.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings",
+    "format": "oxfmt"
+  },
+  "peerDependencies": {
+    "@lingui/core": "^5.0.0",
+    "@lingui/react": "^5.0.0",
+    "@number-flow/react": "^0.3.0",
+    "@tanstack/react-router": "^1.99.0",
+    "@tanstack/react-table": "^8.20.0",
+    "lucide-react": "^0.475.0",
+    "motion": "^12.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sonner": "^2.0.0",
+    "uplot": "^1.6.0",
+    "valibot": "^1.0.0"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "3.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "oxfmt": "^0.1.0",
+    "oxlint": "^0.13.0",
+    "typescript": "^5.6.0",
+    "@tsdown/css": "^0.23.7",
+    "tsdown": "^0.23.7"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

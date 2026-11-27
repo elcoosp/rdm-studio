@@ -1,10 +1,8 @@
-"use client";
-
 import { useId, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 
-import { cn } from "@/lib/cn";
+import { cn } from "../lib/cn";
 
 /**
  * SliderDetents (interior.dev, "Stops you can feel."): a precision slider

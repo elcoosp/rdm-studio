@@ -1,9 +1,7 @@
-"use client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
-import { cn } from "@/lib/cn";
+import { cn } from "../lib/cn";
 
 /**
  * LoadingButton (interior.dev, "The label changes. The button stays put."):

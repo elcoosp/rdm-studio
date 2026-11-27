@@ -1,10 +1,8 @@
-"use client";
-
 import { useId, useState } from "react";
 import { motion } from "motion/react";
 import { useReducedMotion } from "motion/react";
 
-import { cn } from "@/lib/cn";
+import { cn } from "../lib/cn";
 
 /**
  * ExpandablePanel (interior.dev-style smooth disclosure): height + opacity

@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@rdm-studio/ui/*": ["../../packages/ui/src/*"]
     },
     "strict": true,
     "noUncheckedIndexedAccess": true,

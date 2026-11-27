@@ -1,8 +1,6 @@
-"use client";
-
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-import { cn } from "@/lib/cn";
+import { cn } from "../lib/cn";
 
 /**
  * StatusBadge (interior.dev-style animated state pill): the pill swaps its

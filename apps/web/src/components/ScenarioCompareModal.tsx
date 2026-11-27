@@ -132,13 +132,13 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
               ["B", right, setRight],
             ] as const
           ).map(([slot, value, setter]) => (
-            <div key={slot} className="rounded-lg border border-hairline p-3 ">
+            <div key={slot} className="rounded-[8px] border border-hairline p-3 ">
               <p className="mb-1 text-xs font-bold text-ink-muted">{slot}</p>
               {/* v2.1.2: scenario picker as a Base UI Select (zero raw selects). */}
               <SelectRoot
                 value={value?.name ?? ""}
                 onValueChange={(next) => {
-                  if (next === null || next === "none" || next === "") return;
+                  if (next === null || next === "__none__" || next === "") return;
                   void loadSnapshot(next).then((loaded) => {
                     if (loaded !== null) {
                       setter({ name: next, project: loaded, meta: computeMeta(loaded) });
@@ -154,7 +154,7 @@ export function ScenarioCompareModal({ onClose }: { onClose: () => void }): Reac
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">—</SelectItem>
+                  <SelectItem value="__none__">—</SelectItem>
                   {names.map((n) => (
                     <SelectItem key={n.name} value={n.name}>
                       {n.name}

@@ -225,7 +225,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
         {/* v2.0.1: interactive Pareto frontier (recharts ScatterChart) —
             mass_per_m (kg/m) vs utilization η with the η = 1.0 limit. */}
         {paretoPoints.length > 0 ? (
-          <div className="mb-4 rounded-lg border border-hairline bg-panel-subtle p-3  ">
+          <div className="mb-4 rounded-[8px] border border-hairline bg-panel-subtle p-3  ">
             <h3 className="mb-1 text-xs font-semibold">
               <Trans>Frontière de Pareto (masse vs taux de travail)</Trans>
             </h3>
@@ -320,7 +320,7 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
           </table>
         </div>
         {worst !== undefined && worst > 1.0 ? (
-          <div className="mb-4 rounded-lg border border-fail-border bg-fail-bg p-3">
+          <div className="mb-4 rounded-[8px] border border-fail-border bg-fail-bg p-3">
             <h3 className="mb-2 text-sm font-bold text-fail-text">
               <Trans>Pourquoi ça échoue ? — 3 remèdes 1-clic</Trans>
             </h3>

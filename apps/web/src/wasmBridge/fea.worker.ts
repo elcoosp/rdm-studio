@@ -501,6 +501,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   // M2 criterion: the first FE calculation is displayed in the Worker
   // console, then posted back to the UI.
   console.info("[fea.worker] SOLVE_MODEL received");
+  if (request.project === undefined) {
+    return;
+  }
   const result = solve(JSON.stringify(request.project));
   const fault = (result as { kind?: string }).kind;
   if (typeof fault === "string") {

@@ -26,7 +26,8 @@ import {
   ThermalLoadIcon,
   TimberBeamIcon,
   MassWeightIcon,
-} from "@/components/icons/EngineeringIcons";
+} from "@rdm-studio/ui/icons";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 /**
  * Step 4 advanced-analysis tabs (v2.0.0): Global Buckling (λcr modes
@@ -59,6 +60,11 @@ function MaterialCheckIcon({ kind }: { kind: string }): ReactElement {
 export function AdvancedPanels(): ReactElement {
   const project = useProjectStore((st) => st.project);
   const [tab, setTab] = useState<Tab>("buckling");
+
+  const setAdvancedTab = (next: Tab) => {
+    setTab(next);
+    void trackProductEvent("advanced_panel_used", { panel: next });
+  };
   const [buckling, setBuckling] = useState<BucklingReportDto | null>(null);
   const [agG, setAgG] = useState(0.35);
   const [ground, setGround] = useState<(typeof GROUNDS)[number]>("B");
@@ -130,7 +136,7 @@ export function AdvancedPanels(): ReactElement {
             role="tab"
             type="button"
             aria-selected={tab === key}
-            onClick={() => setTab(key)}
+            onClick={() => setAdvancedTab(key)}
             className={`rounded px-3 py-1 text-xs font-semibold ${
               tab === key ? "bg-accent text-white" : "bg-panel-subtle"
             }`}

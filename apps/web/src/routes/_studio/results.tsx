@@ -5,21 +5,15 @@ import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { ResultsFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useSelectedIds, useUpdateSearch, useViewportParams } from "@/hooks/useStudioQuery";
-import { IconResults } from "@/components/icons";
+import { IconResults } from "@rdm-studio/ui/icons";
 import { BottomSheet } from "@/components/BottomSheet";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import { computeModelMassKg, nextHeavierProfile } from "@/lib/resultsMath";
-import { NumberFlowValue } from "@/components/NumberFlowValue";
-import {
-  LoadCombination,
-  ModalVibration,
-  SectionCut,
-  DeflectionLimit,
-  BeamSegment,
-} from "@/components/icons/EngineeringIcons";
+import { NumberFlowValue } from "@rdm-studio/ui/interior";
+import { LoadCombination, ModalVibration, SectionCut, DeflectionLimit } from "@rdm-studio/ui/icons";
 import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/workerClient";
 import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -37,22 +31,16 @@ import { OptimizerModal } from "@/components/OptimizerModal";
 import { AdvancedPanels } from "@/components/AdvancedPanels";
 import { ScenarioCompareModal } from "@/components/ScenarioCompareModal";
 import { StageContent, useStageSlot } from "@/state/stageStore";
-import { spectrumColor } from "@/viewport3d/BeamMeshes";
-import { LoadingButton, SegmentedControl, SliderDetents, StatusBadge } from "@/components/interior";
+import { spectrumColor } from "@rdm-studio/ui/viewport";
 import {
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxRoot,
-} from "@/components/ui/combobox";
-import {
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  LoadingButton,
+  SegmentedControl,
+  SliderDetents,
+  StatusBadge,
+  Tooltip,
+} from "@rdm-studio/ui/interior";
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "@/components/ui/select";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 export const Route = createFileRoute("/_studio/results")({
   staticData: {
@@ -186,6 +174,11 @@ function ResultsPage() {
   const run = () => {
     setBusy(true);
     setFault(null);
+    void trackProductEvent("solve_attempted", {
+      n_nodes: project.structure.nodes.length,
+      n_beams: project.structure.beams.length,
+      n_load_cases: project.structure.loads.length,
+    });
     void feaClient
       .solveModel(project)
       .then((r) => {
@@ -195,6 +188,7 @@ function ResultsPage() {
       .catch((f: SolveFault) => {
         setFault(f);
         setReport(null);
+        void trackProductEvent("solver_fault", { fault: f.kind });
       })
       .finally(() => setBusy(false));
   };
@@ -237,7 +231,10 @@ function ResultsPage() {
   const cutBeamId = cutting?.beamId ?? project.structure.beams[0]?.id ?? 0;
   const station = cutting?.ratio ?? 0.5;
   const setCutBeamId = (id: number) => setCutting({ beamId: id, ratio: station });
-  const setStation = (ratio: number) => setCutting({ beamId: cutBeamId, ratio });
+  const setStation = (ratio: number) => {
+    setCutting({ beamId: cutBeamId, ratio });
+    void trackProductEvent("section_cut_used", { axis: "z" });
+  };
   // v2.1.0: optimizer / scenario modals ride `?modal=optim|compare`.
   const optimizerOpen = search.modal === "optim";
   const setOptimizerOpen = (open: boolean) => {
@@ -252,6 +249,7 @@ function ResultsPage() {
   const diagramsOpen = search.diagrams === 1;
   const setDiagramsOpen = (open: boolean) => {
     updateSearch((prev) => ({ ...prev, diagrams: open ? 1 : undefined }));
+    void trackProductEvent("force_diagram_toggled", { visible: open });
   };
   const [massKg, setMassKg] = useState<number | null>(null);
   const ipeSeriesRef = useRef<string[]>([]);
@@ -819,22 +817,29 @@ function ResultsPage() {
                   )}
                   {/* v2.0.1: optimizer / scenario entries live in the EC3 tab. */}
                   <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
-                    <button
-                      type="button"
-                      onClick={() => setOptimizerOpen(true)}
-                      className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent/90"
+                    <Tooltip
+                      label={t`Optimiser automatiquement les profilés surchargés`}
+                      side="top"
                     >
-                      <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
-                      Optimiseur EC3
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setScenarioOpen(true)}
-                      className="flex items-center gap-1.5 rounded-md border border-hairline px-3 py-1.5 text-xs font-semibold "
-                    >
-                      <ArrowLeftRight size={14} strokeWidth={1.5} aria-hidden />
-                      Scénarios
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setOptimizerOpen(true)}
+                        className="flex items-center gap-1.5 rounded-[4px] bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent/90"
+                      >
+                        <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
+                        Optimiseur EC3
+                      </button>
+                    </Tooltip>
+                    <Tooltip label={t`Comparer des scénarios de calcul côte à côte`} side="top">
+                      <button
+                        type="button"
+                        onClick={() => setScenarioOpen(true)}
+                        className="flex items-center gap-1.5 rounded-[4px] border border-hairline px-3 py-1.5 text-xs font-semibold "
+                      >
+                        <ArrowLeftRight size={14} strokeWidth={1.5} aria-hidden />
+                        Scénarios
+                      </button>
+                    </Tooltip>
                   </div>
                 </>
               ) : (
@@ -860,6 +865,10 @@ function ResultsPage() {
           mRd={uls?.beams.find((b) => b.beam_id === cutBeamId)?.m_rd ?? null}
           view3d={diagramsOpen}
           onView3dChange={setDiagramsOpen}
+          inspected={inspected}
+          sectionDims={sectionDims}
+          scaleMode={scaleMode}
+          onScaleModeChange={(next) => setScaleMode(next)}
         />
       ) : null}
       {/* Phone drawer: nodal displacements + SI/UI conversion note. */}
@@ -998,6 +1007,10 @@ function DockedInspector({
   mRd,
   view3d,
   onView3dChange,
+  inspected,
+  sectionDims,
+  scaleMode,
+  onScaleModeChange,
 }: {
   project: ReturnType<typeof useProjectStore.getState>["project"];
   beams: { id: number; section_id: string }[];
@@ -1010,6 +1023,18 @@ function DockedInspector({
   mRd: number | null;
   view3d: boolean;
   onView3dChange: (open: boolean) => void;
+  inspected: {
+    beam_id: number;
+    class_index?: number | null;
+    chi_y?: number | null;
+    chi_z?: number | null;
+    chi_lt?: number | null;
+    section_id?: string | null;
+  } | null;
+  sectionDims: Map<string, SectionDims>;
+  scaleMode: "ec3" | "svm" | "auto";
+  /** v2.3.0: the SectionCutCard toggle writes back to `?scale=`. */
+  onScaleModeChange: (next: "svm" | "auto") => void;
 }) {
   const [stress, setStress] = useState<StressGrid | null>(null);
   const [forces, setForces] = useState<SpanForceSample[] | null>(null);
@@ -1063,6 +1088,42 @@ function DockedInspector({
   }, [project, beamId, station]);
 
   const fibers = useMemo(() => (stress !== null ? fiberStresses(stress) : null), [stress]);
+  // v2.4.0: elastic section properties of the cut member for the σvM(x)
+  // curve + cursor readout (Pa, m, m³ derived from the catalog outline).
+  const sectionProps = useMemo(() => {
+    const beam = beams.find((b) => b.id === beamId);
+    const dims = beam !== undefined ? sectionDims.get(beam.section_id) : undefined;
+    if (dims === undefined) {
+      return null;
+    }
+    const h = dims.h ?? 0.2;
+    const b = dims.b ?? 0.1;
+    const tw = dims.tw ?? 0.01;
+    const tf = dims.tf ?? 0.01;
+    const a = dims.a > 0 ? dims.a : b * h;
+    const iy = (b * h ** 3 - (b - tw) * (h - 2 * tf) ** 3) / 12;
+    const iz = (2 * tf * b ** 3 + (h - 2 * tf) * tw ** 3) / 12;
+    const welY = iy / (h / 2);
+    const welZ = iz / (b / 2);
+    return { a, welY, welZ };
+  }, [beams, beamId, sectionDims]);
+  /** Approximate von Mises (Pa) at a station from the internal forces. */
+  const sigmaVmAt = useCallback(
+    (f: { n: number; my: number; mz: number; vz: number; t: number }): number => {
+      if (sectionProps === null) {
+        return 0;
+      }
+      const sn = f.n / sectionProps.a;
+      const smy = f.my / sectionProps.welY;
+      const smz = f.mz / sectionProps.welZ;
+      // Torsion + shear contribute a τ term; the von Mises equivalent for
+      // a beam section is sqrt(σn² + σmy² + σmz² + 3τ²) with τ ≈ Vz/A.
+      const tau = f.vz / sectionProps.a;
+      return Math.sqrt(sn * sn + smy * smy + smz * smz + 3 * tau * tau);
+    },
+    [sectionProps],
+  );
+  const fyPa = 235e6;
   // Live cursor force readouts: linear interpolation across the samples.
   const cursorForces = useMemo(() => {
     if (forces === null || forces.length === 0) {
@@ -1086,14 +1147,17 @@ function DockedInspector({
     const span = b.ratio - a.ratio || 1;
     const t = Math.min(1, Math.max(0, (target - a.ratio) / span));
     const lerp = (x: number, y: number) => x + (y - x) * t;
+    const svm = lerp(sigmaVmAt(a), sigmaVmAt(b)) / 1e6;
     return {
       my: lerp(a.my, b.my) / 1000,
       mz: lerp(a.mz, b.mz) / 1000,
       vz: lerp(a.vz, b.vz) / 1000,
       n: lerp(a.n, b.n) / 1000,
       t: lerp(a.t, b.t) / 1000,
+      svm,
+      svmRatio: (svm * 1e6) / fyPa,
     };
-  }, [forces, station]);
+  }, [forces, station, sigmaVmAt]);
 
   useEffect(() => {
     if (forces === null || view3d || plotRef.current === null) {
@@ -1106,6 +1170,8 @@ function DockedInspector({
       forces.map((f) => f.vz / 1e3),
       forces.map((f) => f.n / 1e3),
       forces.map((f) => f.t / 1e3),
+      // v2.4.0: σvM(x) curve (MPa) from the internal forces + section props.
+      forces.map((f) => sigmaVmAt(f) / 1e6),
       ...(mRd !== null ? [forces.map(() => mRd / 1000), forces.map(() => -mRd / 1000)] : []),
     ] as unknown as uPlot.AlignedData;
     const opts: uPlot.Options = {
@@ -1127,6 +1193,7 @@ function DockedInspector({
         { label: "Vz (kN)", stroke: "#dc2626", width: 1.5 },
         { label: "N (kN)", stroke: "#10b981", width: 1.5 },
         { label: "T (kN·m)", stroke: "#f59e0b", width: 1.5 },
+        { label: "σvM (MPa)", stroke: "#7c3aed", width: 1.5 },
         ...(mRd !== null
           ? [
               { label: "+M_Rd", stroke: "#dc2626", width: 1.5, dash: [6, 4] },
@@ -1142,7 +1209,7 @@ function DockedInspector({
       plot.destroy();
       uplotRef.current = null;
     };
-  }, [forces, mRd, syncCursor, view3d]);
+  }, [forces, mRd, syncCursor, view3d, sigmaVmAt]);
 
   // v1.6.0 bug 5: ResizeObserver keeps uPlot glued to its pane (the old
   // fixed-width build overflowed / clipped on pane resizes).
@@ -1167,79 +1234,27 @@ function DockedInspector({
       className="grid h-[220px] shrink-0 grid-cols-1 gap-3 overflow-hidden rounded-panel border border-hairline bg-panel p-2.5 lg:grid-cols-[280px_1fr]"
       data-testid="docked-inspector"
     >
-      <div className="flex min-h-0 flex-col">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-medium text-ink-secondary">
-            <Trans>Coupe 2D σvM</Trans>
-          </h3>
-          {/* v2.1.2: cutting-plane member target = searchable Combobox. */}
-          <ComboboxRoot
-            items={beams.map((b) => b.id)}
-            value={beamId}
-            onValueChange={(next: number | null) => {
-              if (next !== null) onBeamChange(next);
-            }}
-            itemToStringValue={(id: number) => `B${id}`}
-          >
-            <ComboboxInput
-              aria-label={t`Poutre inspectée`}
-              className="h-7 w-24 font-data text-[11px]"
-              placeholder="B…"
-            />
-            <ComboboxContent
-              renderItem={(id: number) => (
-                <ComboboxItem key={id} value={id}>
-                  <BeamSegment size={16} />
-                  <span className="font-data flex-1">B{id}</span>
-                </ComboboxItem>
-              )}
-            >
-              <ComboboxEmpty>Aucune poutre</ComboboxEmpty>
-            </ComboboxContent>
-          </ComboboxRoot>
-        </div>
-        {stress !== null ? <HeatmapSvg grid={stress} /> : null}
-        {/* v1.5.0: top fiber / neutral axis / bottom fiber σvM readouts. */}
-        {fibers !== null ? (
-          <div
-            className="font-data mt-1 grid grid-cols-3 gap-1 text-[10px] text-ink-secondary"
-            data-testid="fiber-stresses"
-          >
-            <span>σsup {fibers.top.toFixed(1)} MPa</span>
-            <span>σNA {fibers.na.toFixed(1)} MPa</span>
-            <span>σinf {fibers.bottom.toFixed(1)} MPa</span>
-          </div>
-        ) : null}
-        {/* v2.1.2: cutting-plane scrubber with magnetic detents at
-            0 · 0,25 L · 0,50 L · 0,75 L · 1,00 L (SliderDetents). */}
-        <div className="mt-1 flex items-center gap-2 text-[10px] text-ink-muted">
-          <span className="shrink-0">x ∈ [0, L]</span>
-          <SliderDetents
-            label={t`Position de la coupe`}
-            min={0}
-            max={1}
-            step={0.01}
-            detents={[0, 0.25, 0.5, 0.75, 1]}
-            magnetRadius={0.02}
-            value={station}
-            onValueChange={onStationChange}
-            formatValue={(v) => `${v.toFixed(2)} L`}
-            className="min-w-0 flex-1"
-          />
-        </div>
-        <h3 className="mt-1 border-t border-hairline pt-1 text-[11px] font-medium text-ink-secondary">
-          {slsLabel !== undefined ? `${slsLabel} · Déplacements ELS` : "Déplacements ELS"}
-        </h3>
-        <p className="font-data text-[11px] text-ink-primary">
-          Flèche max = {formatMm(maxSlsDeflMm / 1000)}
-        </p>
-      </div>
+      <SectionCutCard
+        beamId={beamId}
+        station={station}
+        stress={stress}
+        fibers={fibers}
+        inspected={inspected}
+        sectionDims={sectionDims}
+        _onBeamChange={onBeamChange}
+        onStationChange={onStationChange}
+        beams={beams}
+        scaleMode={scaleMode}
+        onScaleModeChange={onScaleModeChange}
+        slsLabel={slsLabel}
+        maxSlsDeflMm={maxSlsDeflMm}
+      />
       <div className="flex min-h-0 flex-col">
         {/* Dock header: title + 1-line color-key pill strip + the view
             switcher (5 courbes | Enveloppes 3D). */}
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <h3 className="text-xs font-medium text-ink-secondary">
-            <Trans>Efforts internes (5 courbes)</Trans>
+            <Trans>Efforts internes (6 courbes)</Trans>
           </h3>
           <div
             className="font-data flex flex-wrap items-center gap-1 text-[10px]"
@@ -1252,6 +1267,7 @@ function DockedInspector({
                 ["Vz", "#dc2626", false],
                 ["N", "#10b981", false],
                 ["T", "#f59e0b", false],
+                ["σvM", "#7c3aed", false],
               ] as const
             ).map(([label, stroke]) => (
               <span key={label} className="flex items-center gap-0.5 text-ink-secondary">
@@ -1288,7 +1304,7 @@ function DockedInspector({
               value={view3d ? "3d" : "curves"}
               onValueChange={(next) => onView3dChange(next === "3d")}
               options={[
-                { value: "curves", label: "5 courbes", testId: "forces-curves" },
+                { value: "curves", label: "6 courbes", testId: "forces-curves" },
                 { value: "3d", label: "Enveloppes 3D", testId: "force-diagrams-toggle" },
               ]}
             />
@@ -1311,7 +1327,8 @@ function DockedInspector({
                 <span>
                   My = {cursorForces.my.toFixed(1)} · Mz = {cursorForces.mz.toFixed(1)} kN·m · Vz ={" "}
                   {cursorForces.vz.toFixed(1)} kN · N = {cursorForces.n.toFixed(1)} kN · T ={" "}
-                  {cursorForces.t.toFixed(1)} kN·m
+                  {cursorForces.t.toFixed(1)} kN·m · σvM = {cursorForces.svm.toFixed(1)} MPa (
+                  {(cursorForces.svmRatio * 100).toFixed(0)} % fy)
                 </span>
               ) : null}
             </div>
@@ -1380,43 +1397,329 @@ function fiberStresses(grid: StressGrid): { top: number; na: number; bottom: num
   return { top: top.sigma_vm / 1e6, na: na / 1e6, bottom: bottom.sigma_vm / 1e6 };
 }
 
-/** sigma_vM heatmap: points -> colored squares scaled into a fixed viewBox. */
-function HeatmapSvg({ grid }: { grid: StressGrid }) {
-  const [y0, y1, z0, z1] = grid.bounds;
-  const max = grid.points.reduce((m: number, p) => Math.max(m, p.sigma_vm), 1e-9);
-  const tier = (ratio: number): string => {
-    if (ratio < 0.2) return "#1d4ed8";
-    if (ratio < 0.5) return "#06b6d4";
-    if (ratio < 0.8) return "#10b981";
-    if (ratio <= 1.0) return "#f59e0b";
-    return "#dc2626";
+/**
+ * v2.3.0 SectionCutCard — precision engineering cross-section card (DESIGN.md §7):
+ * Header: SectionCut icon + "Coupe transversale — {section_id}" + segmented toggle "0 → fy (235) | 0 → Max"
+ * 2-Column Body: Left true profile outline (IPE/HEA/UPN/CHS/RHS) filled with smooth 5-tier thermal stress gradient
+ *   (#1D4ED8 → #06B6D4 → #10B981 → #F59E0B → #DC2626) + dashed horizontal elastic neutral axis line G
+ * Right 3 color-badged fiber stress readouts (tabular-nums): Top fiber, Neutral axis, Bottom fiber
+ * Metrological Footer: "Classe {class_index} · χy = {chi_y} · χz = {chi_z} · χLT = {chi_lt}" + emerald "EN 1993-1-1" badge
+ */
+function SectionCutCard({
+  beamId,
+  station,
+  stress,
+  fibers,
+  inspected,
+  sectionDims,
+  _onBeamChange,
+  onStationChange,
+  beams,
+  scaleMode,
+  onScaleModeChange,
+  slsLabel,
+  maxSlsDeflMm,
+}: {
+  beamId: number;
+  station: number;
+  stress: StressGrid | null;
+  fibers: { top: number; na: number; bottom: number } | null;
+  inspected: {
+    beam_id: number;
+    class_index?: number | null;
+    chi_y?: number | null;
+    chi_z?: number | null;
+    chi_lt?: number | null;
+    section_id?: string | null;
+  } | null;
+  sectionDims: Map<string, SectionDims>;
+  _onBeamChange: (id: number) => void;
+  onStationChange: (ratio: number) => void;
+  beams: { id: number; section_id: string }[];
+  scaleMode: "ec3" | "svm" | "auto";
+  /** v2.3.0: the thermal-scale toggle writes back to the parent's
+      `?scale=` search param, so the section readout and the 3D thermal
+      scale update together. */
+  onScaleModeChange: (next: "svm" | "auto") => void;
+  slsLabel?: string;
+  maxSlsDeflMm: number;
+}) {
+  const beam = beams.find((b) => b.id === beamId);
+  const designation = beam?.section_id ?? "";
+  const dims = designation ? (sectionDims.get(designation) ?? null) : null;
+
+  // 5-tier thermal gradient stops (DESIGN.md §2)
+  const gradientStops = [
+    { offset: "0%", color: "#1D4ED8" }, // Tier 1: 0.0-0.2
+    { offset: "20%", color: "#06B6D4" }, // Tier 2: 0.2-0.5
+    { offset: "50%", color: "#10B981" }, // Tier 3: 0.5-0.8
+    { offset: "80%", color: "#F59E0B" }, // Tier 4: 0.8-1.0
+    { offset: "100%", color: "#DC2626" }, // Tier 5: >1.0
+  ];
+
+  // Profile shape SVG path generator (from SectionDiagram logic)
+  const getProfilePath = (dims: SectionDims, scale: number, cx: number, cy: number): string => {
+    const mm = (v: number | null): number => (v ?? 0) * 1000;
+    const h = mm(dims.h);
+    const b = mm(dims.b);
+    const tw = mm(dims.tw);
+    const tf = mm(dims.tf);
+    const bw = (b * scale) / 2;
+    const isChs = dims.shape === "CircularHollow";
+
+    if (isChs) {
+      const r = (h / 2) * scale;
+      return `M ${cx - r} ${cy} A ${r} ${r} 0 1 0 ${cx + r} ${cy} A ${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
+    }
+    if (dims.shape === "RectangularHollow") {
+      const hw = (h * scale) / 2;
+      const tws = tw * scale;
+      const tfs = tf * scale;
+      return `M ${cx - bw} ${cy - hw} h ${b * scale} v ${h * scale} h ${-b * scale} Z M ${cx - bw + tws} ${cy - hw + tfs} h ${b * scale - 2 * tws} v ${h * scale - 2 * tfs} h ${-b * scale + 2 * tws} Z`;
+    }
+    if (dims.shape === "Channel") {
+      const hw = (h * scale) / 2;
+      const tfs = tf * scale;
+      return `M ${cx - bw} ${cy - hw} h ${b * scale} v ${tfs} h ${-(b - tw) * scale} v ${(h - 2 * tf) * scale} h ${(b - tw) * scale} v ${tfs} h ${-b * scale} Z`;
+    }
+    // Doubly-symmetric I (IPE, HEA, HEB, etc.)
+    const hw = (h * scale) / 2;
+    const tfs = tf * scale;
+    return `M ${cx - bw} ${cy - hw} h ${b * scale} v ${tfs} h ${-((b - tw) / 2) * scale} v ${(h - 2 * tf) * scale} h ${((b - tw) / 2) * scale} v ${tfs} h ${-b * scale} Z`;
   };
-  const w = 120;
-  const h = 80;
+
+  // Inner profile path (for gradient fill clipping)
+  const getInnerProfilePath = (
+    dims: SectionDims,
+    scale: number,
+    cx: number,
+    cy: number,
+  ): string => {
+    const mm = (v: number | null): number => (v ?? 0) * 1000;
+    const h = mm(dims.h);
+    const b = mm(dims.b);
+    const tw = mm(dims.tw);
+    const tf = mm(dims.tf);
+    const isChs = dims.shape === "CircularHollow";
+
+    if (isChs) {
+      const r = Math.max((h / 2) * scale - tf * scale, 2);
+      return `M ${cx - r} ${cy} A ${r} ${r} 0 1 0 ${cx + r} ${cy} A ${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
+    }
+    if (dims.shape === "RectangularHollow") {
+      const hw = (h * scale) / 2;
+      const bw = (b * scale) / 2;
+      const tws = tw * scale;
+      const tfs = tf * scale;
+      return `M ${cx - bw + tws} ${cy - hw + tfs} h ${b * scale - 2 * tws} v ${h * scale - 2 * tfs} h ${-b * scale + 2 * tws} Z`;
+    }
+    if (dims.shape === "Channel") {
+      const hw = (h * scale) / 2;
+      const bw = (b * scale) / 2;
+      const tws = tw * scale;
+      const tfs = tf * scale;
+      return `M ${cx - bw + tws} ${cy - hw + tfs} h ${(b - tw) * scale - tws} v ${(h - 2 * tf) * scale} h ${-(b - tw) * scale + tws} Z`;
+    }
+    // Doubly-symmetric I - web only
+    const hw = (h * scale) / 2;
+    const tws = tw * scale;
+    const tfs = tf * scale;
+    const webHeight = h * scale - 2 * tfs;
+    const webX = cx - tws / 2;
+    return `M ${webX} ${cy - hw + tfs} h ${tws} v ${webHeight} h ${-tws} Z`;
+  };
+
+  // Neutral axis Y position in SVG coordinates (center of profile)
+  const getNeutralAxisY = (dims: SectionDims, scale: number, cy: number): number => {
+    return cy;
+  };
+
   return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      className="mt-1 h-20 w-full"
-      role="img"
-      aria-label="sigma heatmap"
-    >
-      <rect x="0" y="0" width={w} height={h} fill="#f8fafc" />
-      {grid.points.map((p, i) => {
-        const x = ((p.y - y0) / (y1 - y0 || 1)) * (w - 12) + 6;
-        const y = ((z1 - p.z) / (z1 - z0 || 1)) * (h - 12) + 6;
-        const ratio = p.sigma_vm / max;
-        return (
-          <rect
-            key={i}
-            x={x - 1.5}
-            y={y - 1.5}
-            width="3"
-            height="3"
-            fill={tier(ratio)}
-            opacity={0.25 + 0.75 * ratio}
+    <div className="flex min-h-0 flex-col rounded-panel border border-hairline bg-panel overflow-hidden">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-hairline px-2.5 py-2">
+        <div className="flex items-center gap-1.5">
+          <SectionCut size={16} strokeWidth={1.5} className="text-accent" />
+          <span className="font-data text-[11px] font-medium text-ink-secondary">
+            <Trans>Coupe transversale</Trans>
+            {designation ? ` — ${designation}` : ""}
+          </span>
+        </div>
+        {/* Thermal scale toggle: 0 → fy (235) | 0 → Max */}
+        <SegmentedControl
+          size="sm"
+          value={scaleMode === "svm" ? "fy" : "max"}
+          onValueChange={(next) => onScaleModeChange(next === "fy" ? "svm" : "auto")}
+          options={[
+            { value: "fy", label: "0 → fy (235)", testId: "scale-fy" },
+            { value: "max", label: "Max", testId: "scale-max" },
+          ]}
+          className="ml-auto"
+        />
+      </div>
+
+      {/* 2-Column Body */}
+      <div className="flex-1 overflow-hidden grid grid-cols-[140px_1fr] gap-0">
+        {/* Left: True profile outline with thermal gradient */}
+        <div className="relative flex items-center justify-center p-2 bg-panel-subtle/35 min-w-0">
+          {stress !== null && dims !== null ? (
+            <>
+              <svg
+                viewBox="0 0 140 100"
+                className="w-full h-full max-w-[140px]"
+                role="img"
+                aria-label={`Coupe 2D ${designation} - gradient thermique σvM`}
+              >
+                {/* v2.3.0: <defs> MUST live inside <svg> — outside it the
+                    gradient reference resolves to nothing and the section
+                    silhouette renders black. */}
+                <defs>
+                  <linearGradient
+                    id={`thermal-gradient-${beamId}`}
+                    x1="0%"
+                    y1="100%"
+                    x2="0%"
+                    y2="0%"
+                  >
+                    {gradientStops.map((stop, i) => (
+                      <stop key={i} offset={stop.offset} stopColor={stop.color} />
+                    ))}
+                  </linearGradient>
+                </defs>
+                <g>
+                  {/* Outer profile outline */}
+                  <path
+                    d={getProfilePath(dims, 0.35, 70, 50)}
+                    fill={`url(#thermal-gradient-${beamId})`}
+                    stroke="#E2E8F0"
+                    strokeWidth="1"
+                  />
+                  {/* Inner profile (web) for hollow sections */}
+                  {dims.shape !== "DoublySymmetricI" && dims.shape !== "Channel" && (
+                    <path
+                      d={getInnerProfilePath(dims, 0.35, 70, 50)}
+                      fill="#F8FAFC"
+                      stroke="#E2E8F0"
+                      strokeWidth="0.5"
+                    />
+                  )}
+                  {/* Neutral axis dashed line G */}
+                  <line
+                    x1="20"
+                    y1={getNeutralAxisY(dims, 0.35, 50)}
+                    x2="120"
+                    y2={getNeutralAxisY(dims, 0.35, 50)}
+                    stroke="#64748B"
+                    strokeWidth="1"
+                    strokeDasharray="4 3"
+                    strokeLinecap="round"
+                  />
+                  {/* G label */}
+                  <text
+                    x="122"
+                    y={getNeutralAxisY(dims, 0.35, 50) - 3}
+                    fontSize="8"
+                    fill="#64748B"
+                    fontFamily="JetBrains Mono, monospace"
+                    fontWeight="500"
+                  >
+                    G
+                  </text>
+                </g>
+              </svg>
+            </>
+          ) : (
+            <p className="text-[11px] text-ink-muted text-center">
+              <Trans>Sélectionnez une poutre et lancez le calcul</Trans>
+            </p>
+          )}
+        </div>
+
+        {/* Right: 3 fiber stress readouts */}
+        <div className="flex flex-col justify-center gap-2 p-3 min-w-0">
+          {fibers !== null ? (
+            <>
+              {/* Top fiber */}
+              <div className="flex items-center gap-2 rounded-[4px] bg-fail-bg border border-fail-border p-2">
+                <span className="w-2 h-2 rounded bg-fail-text shrink-0" aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <p className="font-data text-[11px] text-ink-primary">
+                    <span className="text-fail-text">■ +{fibers.top.toFixed(1)} MPa</span>
+                  </p>
+                  <p className="text-[10px] text-ink-muted">Semelle sup. compression (Ed)</p>
+                </div>
+              </div>
+              {/* Neutral axis */}
+              <div className="flex items-center gap-2 rounded-[4px] bg-pass-bg border border-pass-border p-2">
+                <span className="w-2 h-2 rounded bg-pass-text shrink-0" aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <p className="font-data text-[11px] text-ink-primary">
+                    <span className="text-pass-text">■ {fibers.na.toFixed(1)} MPa</span>
+                  </p>
+                  <p className="text-[10px] text-ink-muted">Axe neutre élastique G</p>
+                </div>
+              </div>
+              {/* Bottom fiber */}
+              <div className="flex items-center gap-2 rounded-[4px] bg-accent-tint border border-accent-ring p-2">
+                <span className="w-2 h-2 rounded bg-accent shrink-0" aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <p className="font-data text-[11px] text-ink-primary">
+                    <span className="text-accent">■ -{Math.abs(fibers.bottom).toFixed(1)} MPa</span>
+                  </p>
+                  <p className="text-[10px] text-ink-muted">Semelle inf. traction (Ed)</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-[11px] text-ink-muted text-center py-4">
+              <Trans>Résultats σvM indisponibles</Trans>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Metrological Footer */}
+      {inspected !== null && (
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-hairline px-2.5 py-2 bg-panel-subtle/35">
+          <div className="flex items-center gap-2 font-data text-[10px] text-ink-secondary">
+            <span>Classe {inspected.class_index ?? "—"}</span>
+            <span>χy = {(inspected.chi_y ?? 1).toFixed(2).replace(".", ",")}</span>
+            <span>χz = {(inspected.chi_z ?? 1).toFixed(2).replace(".", ",")}</span>
+            <span>
+              χLT ={" "}
+              {inspected.chi_lt == null ? "1,00" : inspected.chi_lt.toFixed(2).replace(".", ",")}
+            </span>
+          </div>
+          <StatusBadge tone="pass" mono className="text-[10px]">
+            EN 1993-1-1
+          </StatusBadge>
+        </div>
+      )}
+
+      {/* Station slider + SLS displacement */}
+      <div className="shrink-0 border-t border-hairline px-2.5 py-2 bg-panel-subtle/35">
+        <div className="mb-2 flex items-center gap-2 text-[10px] text-ink-muted">
+          <span className="shrink-0">x ∈ [0, L]</span>
+          <SliderDetents
+            label={t`Position de la coupe`}
+            min={0}
+            max={1}
+            step={0.01}
+            detents={[0, 0.25, 0.5, 0.75, 1]}
+            magnetRadius={0.02}
+            value={station}
+            onValueChange={onStationChange}
+            formatValue={(v) => `${v.toFixed(2)} L`}
+            className="min-w-0 flex-1"
           />
-        );
-      })}
-    </svg>
+        </div>
+        <h3 className="text-[11px] font-medium text-ink-secondary">
+          {slsLabel !== undefined ? `${slsLabel} · Déplacements ELS` : "Déplacements ELS"}
+        </h3>
+        <p className="font-data text-[11px] text-ink-primary">
+          Flèche max = {formatMm(maxSlsDeflMm / 1000)}
+        </p>
+      </div>
+    </div>
   );
 }

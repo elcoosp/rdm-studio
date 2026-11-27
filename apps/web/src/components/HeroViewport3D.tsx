@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Grid, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import { spectrumColor } from "@/viewport3d/BeamMeshes";
+import { spectrumColor } from "@rdm-studio/ui/viewport";
 
 /**
  * HeroViewport3D (v2.1.2): the single-context Three.js / R3F structural

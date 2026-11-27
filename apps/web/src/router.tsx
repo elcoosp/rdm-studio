@@ -76,7 +76,7 @@ export const router = createRouter({
   // [data-testid="persistent-stage"]) so the WebGL canvas never flickers
   // between /, /legal, /geometry and /report. Respects
   // `prefers-reduced-motion` (document.hidden-aware in TanStack core).
-  defaultViewTransition: true,
+  defaultViewTransition: false,
   defaultNotFoundComponent: NotFoundCard,
   defaultErrorComponent: ErrorCard,
 });

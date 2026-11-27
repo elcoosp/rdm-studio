@@ -8,8 +8,8 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
-import { Trans, useLingui } from "@lingui/react/macro";
-import { BadgeCheck, ChevronDown, Redo2, Undo2 } from "lucide-react";
+import { Trans } from "@lingui/react/macro";
+import { BadgeCheck, ChevronDown } from "lucide-react";
 import { retainSearchParams } from "@tanstack/react-router";
 import { getStudioSteps } from "@/router";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -17,15 +17,16 @@ import { SettingsPopover } from "@/components/SettingsPopover";
 import { ValidationModal } from "@/components/ValidationModal";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
-import { LicenseBadge } from "@/components/LicenseBadge";
-import { SegmentedControl, Tooltip, TooltipGroup } from "@/components/interior";
+import { SegmentedControl, Tooltip } from "@rdm-studio/ui/interior";
+import { BrandMark } from "@rdm-studio/ui/primitives";
 import { openProjectOrCadFile } from "@/hooks/useFileOpening";
-import { redoModel, undoModel, useProjectStore } from "@/state/projectStore";
+import { useProjectStore } from "@/state/projectStore";
 import { parseProject } from "@/lib/urlShare";
 import { quickStartProject, rehydrateProject, type QuickStartKind } from "@/state/projectStore";
 import { PersistentStage } from "@/viewport3d/PersistentStage";
 import { KeycapHint } from "@/components/KeycapHints";
 import { StudioBaseSearchSchema, type StudioBaseSearch } from "@/schemas/searchParams.schema";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 /**
  * `_studio` pathless layout (v2.1.2): the locked `100dvh` CAD workstation
@@ -37,8 +38,13 @@ import { StudioBaseSearchSchema, type StudioBaseSearch } from "@/schemas/searchP
  * URL entry contracts handled by `beforeLoad`:
  * - `?p=<lz-string>` — compressed `.rdm` share link, Valibot-validated,
  *   hydrated BEFORE the first studio render then STRIPPED from the URL.
- * - `?template=warren|portique|potence|travees` — quick-start gallery
- *   model, loaded then stripped the same way.
+ * - `?template=<slug>` — quick-start gallery model, loaded then
+ *   stripped the same way. `quickStartProject` resolves every slug:
+ *   the canonical English slugs (`portal-frame`, `warren-truss`,
+ *   `continuous-beam`, `cantilever`, `naval-cradle`, `lifting-beam`,
+ *   `workshop-jib`), all `ENGINEERING_TEMPLATES` ids, the English
+ *   gallery slugs and the legacy aliases (`portique`, `warren`,
+ *   `travees`, `potence`).
  * - Neither present — IndexedDB `rehydrateProject()` on the initial mount
  *   only (local-first continuity, zero cloud).
  *
@@ -100,16 +106,15 @@ function useProjectLocale(): "fr" | "en" {
  */
 export function LocaleSwitch() {
   const current = useProjectLocale();
-  const { t } = useLingui();
   const switchLocale = async (locale: "fr" | "en") => {
     const { activateLocale } = await import("@/i18n/i18n");
     await activateLocale(locale);
+    void trackProductEvent("locale_switched", { from: current, to: locale });
   };
   return (
     <SegmentedControl
       size="sm"
       className="shrink-0"
-      label={t`Langue de l'interface`}
       value={current}
       onValueChange={(next) => void switchLocale(next === "en" ? "en" : "fr")}
       options={[
@@ -133,11 +138,7 @@ function OfflinePill() {
     };
   }, []);
   if (online) {
-    return (
-      <span className="hidden font-data text-[11px] text-ink-muted 2xl:inline">
-        Enregistré en local
-      </span>
-    );
+    return null;
   }
   return (
     <span className="rounded border border-fea-warn/50 bg-fea-warn/10 px-1.5 py-0.5 font-data text-[11px] text-ink-secondary">
@@ -205,19 +206,28 @@ function ProjectTitle({ name }: { name: string }) {
 function StudioLayout() {
   const pathname = useLocation().pathname;
   const matches = useMatches();
-  // v2.1.0: the workflow steps are DERIVED from the route tree's
-  // `staticData` (surface === "studio", sorted by stepOrder) — adding a
-  // step file extends every bar, palette and hotkey automatically.
   const steps = getStudioSteps();
   const project = useProjectStore((s) => s.project);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const nodeCount = project.structure.nodes.length;
   const beamCount = project.structure.beams.length;
-  // v1.5.0 unified breakpoint: the mobile tab bar (and every drawer)
-  // exists ONLY below 768 px — 860 px split-screen windows get the full
-  // locked desktop workstation.
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [validationOpen, setValidationOpen] = useState(false);
+  const prevPathRef = useRef<string | null>(null);
+  const dwellStartRef = useRef<number>(0);
+  useEffect(() => {
+    void trackProductEvent("studio_opened");
+    dwellStartRef.current = Date.now();
+    prevPathRef.current = pathname;
+  }, [pathname]);
+  useEffect(() => {
+    const step = steps.find((s) => s.path === pathname);
+    if (step === undefined || prevPathRef.current === null) return;
+    const dwellMs = Date.now() - dwellStartRef.current;
+    void trackProductEvent("step_dwell", { step: step.stepOrder, dwell_ms: dwellMs });
+    dwellStartRef.current = Date.now();
+    prevPathRef.current = pathname;
+  }, [pathname]);
   // v2.1.1: the ⌘K palette opens the Validation modal and the project
   // gallery through window events (the header owns both modals).
   useEffect(() => {
@@ -236,7 +246,7 @@ function StudioLayout() {
   void stageVisible;
 
   return (
-    <div className="flex h-[100dvh] flex-col">
+    <div className="flex h-[100dvh] flex-col overflow-hidden">
       {/* v2.1.2 — the redesigned 48px header: no `overflow-hidden` on the
           header itself (the portal Settings popover can never clip); every
           zone shrinks via min-w-0 / truncate, and the uniform h-7 (28px)
@@ -250,8 +260,7 @@ function StudioLayout() {
             id="rdm-logo"
             className="flex shrink-0 items-center gap-1.5 text-accent"
           >
-            <img src="/logo-rdm-studio.svg" alt="RDM Studio" className="h-6 w-6 shrink-0" />
-            <span className="hidden font-semibold tracking-tight xl:inline">RDM Studio</span>
+            <BrandMark size="sm" wordmarkClassName="hidden xl:inline" />
           </Link>
           {/* The gallery trigger stays a DIRECT sibling of #rdm-logo (the
               `#rdm-logo ~ button` selector contract). */}
@@ -276,7 +285,7 @@ function StudioLayout() {
             crisp white active card + Cobalt text + 2px underline. */}
         <nav
           id="rdm-steps"
-          className="mx-auto hidden min-w-0 items-center overflow-hidden rounded-[6px] border border-hairline bg-panel-subtle/70 p-0.5 md:flex"
+          className="mx-auto hidden h-full min-w-0 items-stretch gap-5 md:flex"
           aria-label="workflow"
         >
           {steps.map((step) => {
@@ -288,15 +297,13 @@ function StudioLayout() {
                 aria-label={`Étape ${step.stepOrder}`}
                 aria-current={active ? "page" : undefined}
                 title={step.label}
-                className={`relative flex h-9 shrink-0 items-center gap-1 rounded-[4px] px-1.5 text-[12px] ${
-                  active
-                    ? "bg-panel font-semibold text-accent shadow-[0_0_0_1px_var(--color-hairline)]"
-                    : "text-ink-secondary hover:bg-panel/60"
+                className={`relative flex shrink-0 items-center gap-1.5 px-1 text-[13px] transition-colors ${
+                  active ? "font-semibold text-accent" : "text-ink-secondary hover:text-ink-primary"
                 }`}
               >
                 {step.icon !== undefined ? (
-                  <span className="hidden shrink-0 xl:inline">
-                    <step.icon size={14} />
+                  <span className="shrink-0">
+                    <step.icon size={18} />
                   </span>
                 ) : null}
                 <span className="whitespace-nowrap">
@@ -305,7 +312,8 @@ function StudioLayout() {
                 {active ? (
                   <motion.span
                     layoutId="stepper-underline"
-                    className="absolute inset-x-1.5 -bottom-px h-[2px] bg-accent"
+                    transition={{ type: "spring", stiffness: 520, damping: 38 }}
+                    className="absolute inset-x-0 bottom-0 h-[2px] bg-accent"
                   />
                 ) : null}
               </Link>
@@ -317,33 +325,6 @@ function StudioLayout() {
             Réglages, 41/41 validation, ?, FR | EN. Secondary pills hide
             below 2xl so the named stepper never overflows. */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
-          <TooltipGroup className="hidden md:inline-flex md:items-center md:gap-1.5">
-            <div className="flex items-center rounded-[4px] border border-hairline bg-panel p-0.5">
-              <Tooltip label="Annuler (⌘Z)">
-                <button
-                  type="button"
-                  aria-label="Annuler la dernière action"
-                  title="Annuler (⌘Z)"
-                  className="flex h-7 w-7 items-center justify-center rounded-[3px] text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
-                  onClick={() => undoModel()}
-                >
-                  <Undo2 size={14} strokeWidth={1.5} aria-hidden />
-                </button>
-              </Tooltip>
-              <span className="h-5 w-px bg-hairline" aria-hidden />
-              <Tooltip label="Rétablir (⇧⌘Z)">
-                <button
-                  type="button"
-                  aria-label="Rétablir l'action suivante"
-                  title="Rétablir (⇧⌘Z)"
-                  className="flex h-7 w-7 items-center justify-center rounded-[3px] text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
-                  onClick={() => redoModel()}
-                >
-                  <Redo2 size={14} strokeWidth={1.5} aria-hidden />
-                </button>
-              </Tooltip>
-            </div>
-          </TooltipGroup>
           <button
             type="button"
             id="rdm-cmdk"
@@ -354,7 +335,6 @@ function StudioLayout() {
             <KeycapHint label="⌘K" />
           </button>
           <OfflinePill />
-          <LicenseBadge />
           <span className="h-5 w-px bg-hairline max-md:hidden" aria-hidden />
           <SettingsPopover />
           <button
@@ -377,15 +357,13 @@ function StudioLayout() {
               ?
             </button>
           </Tooltip>
-          <span className="h-5 w-px bg-hairline max-md:hidden" aria-hidden />
-          <LocaleSwitch />
         </div>
       </header>
       {validationOpen ? <ValidationModal onClose={() => setValidationOpen(false)} /> : null}
       {/* Locked workstation shell — on md+ the main region NEVER page-
           scrolls (each route manages its own panes); on phones the stacked
           routes may scroll under the fixed tab bar. */}
-      <main className="min-h-0 flex-1 overflow-auto pb-14 md:overflow-hidden md:pb-0">
+      <main className="min-h-0 flex-1 overflow-hidden pb-14 md:pb-0">
         <Outlet />
       </main>
       {/* The ONE persistent 3D stage: mounted once per studio session, it

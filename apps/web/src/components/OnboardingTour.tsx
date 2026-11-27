@@ -5,6 +5,7 @@ import { t } from "@lingui/core/macro";
 import { useNavigate } from "@tanstack/react-router";
 import "driver.js/dist/driver.css";
 import "@/app-tour.css";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 const TOUR_DONE_KEY = "rdm-tour-done";
 
@@ -124,6 +125,7 @@ export function OnboardingTour(): null {
     const start = () => {
       const stages = buildStages();
       index = 0;
+      void trackProductEvent("tour_started");
       driverInstance = driver({
         popoverClass: "driver-popover-rdm",
         showProgress: true,
@@ -135,6 +137,11 @@ export function OnboardingTour(): null {
         progressText: "{{current}} / 9",
         onDestroyed: () => {
           localStorage.setItem(TOUR_DONE_KEY, "1");
+          if (index >= stages.length - 1) {
+            void trackProductEvent("tour_completed");
+          } else {
+            void trackProductEvent("tour_skipped");
+          }
         },
         steps: stages.map((stage) => ({
           element: stage.element,

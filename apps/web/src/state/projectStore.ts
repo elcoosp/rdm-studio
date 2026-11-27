@@ -1,6 +1,12 @@
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { temporal } from "zundo";
 import { create } from "zustand";
+import { trackProductEvent } from "@/lib/productTelemetry";
+import {
+  ENGINEERING_TEMPLATES,
+  canonicalSupports,
+  type TemplateSeed,
+} from "@/lib/engineeringTemplates";
 
 /**
  * Model store (ARCHITECTURE.md section 5, `store.ts`): Zustand + Zundo
@@ -260,44 +266,147 @@ function point(id: number, x: number, y: number, z: number): NodeData {
 }
 
 /**
- * The 4 one-click quick-start templates of the Step 1 empty state
+ * Converts an `ENGINEERING_TEMPLATES` seed into a loadable project —
+ * the same mapping the gallery uses (v2.3.0): explicit seed supports
+ * win over the canonical ground restraints (naval cradle, lifting
+ * beam), the `AccelerationField` load rides through verbatim, and
+ * nodal loads keep their horizontal (fx / fy) components.
+ */
+function projectFromTemplateSeed(seed: TemplateSeed): ProjectData {
+  return {
+    version: 2,
+    name: seed.name,
+    structure: {
+      nodes: seed.nodes,
+      beams: seed.beams.map((beam) => ({
+        ...beam,
+        roll_angle_rad: 0,
+        releases_start: [false, false, false, false, false, false],
+        releases_end: [false, false, false, false, false, false],
+        k_buckling_y: 1,
+        k_buckling_z: 1,
+      })),
+      supports: (seed.supports ?? canonicalSupports(seed)).map((sup) => ({
+        ...sup,
+        spring_stiffness: [0, 0, 0, 0, 0, 0] as number[],
+      })),
+      loads: seed.loads.map((load) =>
+        load.kind === "AccelerationField"
+          ? {
+              case: load.case,
+              kind: "AccelerationField" as const,
+              ax_g: load.ax_g,
+              ay_g: load.ay_g,
+              az_g: load.az_g,
+            }
+          : {
+              case: load.case,
+              kind: load.kind,
+              beam_id: load.beam_id ?? 0,
+              node_id: load.node_id ?? 0,
+              position_ratio: load.position_ratio ?? 0.5,
+              q_start: load.q_start ?? 0,
+              q_end: load.q_end ?? 0,
+              forces: {
+                fx: load.fx ?? 0,
+                fy: load.fy ?? 0,
+                fz: load.fz ?? 0,
+                mx: 0,
+                my: 0,
+                mz: 0,
+              },
+              direction: load.direction ?? { x: 0, y: 0, z: -1 },
+            },
+      ),
+      sections: {},
+      materials: {},
+      self_weight_enabled: false,
+    },
+  };
+}
+
+/**
+ * Canonical English `?template=` slugs → legacy quick-start kind
+ * (`portal-frame` is the 18 m portal, `warren-truss` the 24 m Warren,
+ * `continuous-beam` the 3-span beam, `cantilever` the jib).
+ */
+const CANONICAL_QUICK_START: Record<string, "warren" | "portique" | "potence" | "travees"> = {
+  "portal-frame": "portique",
+  "warren-truss": "warren",
+  "continuous-beam": "travees",
+  cantilever: "potence",
+};
+
+/**
+ * English `?template=` slugs for the gallery engineering templates
+ * (the `TemplateSlug` picklist values with no French id of their own).
+ */
+const ENGLISH_TEMPLATE_SLUGS: Record<string, string> = {
+  "pitched-portal": "portique-2-versants",
+  "pratt-truss": "treillis-pratt",
+  "howe-truss": "treillis-howe",
+  "braced-frame": "ossature-r2",
+  "cantilever-canopy": "auvent-porte-a-faux",
+  "pedestrian-bridge": "passerelle-pietonne",
+  "glulam-beam": "poutre-gl24h",
+  "offshore-skid": "naval-cradle",
+};
+
+/**
+ * The one-click quick-start templates of the Step 1 empty state
  * (mockups tape_1): Warren truss, portal frame, cantilever and a
- * 3-span continuous beam.
+ * 3-span continuous beam — plus the naval & lifting flagships
+ * (v2.3.0) and every `ENGINEERING_TEMPLATES` id, all reachable from
+ * `?template=<slug>`.
  */
 export function quickStartProject(kind: QuickStartKind): ProjectData {
-  if (kind === "warren") {
-    // Treillis Warren 24 m: 4 top chords, 4 bottom chords, 4 diagonals.
-    const top = [0, 4, 8, 12].map((x, i) => point(i + 1, x, 0, 2.5));
-    const bottom = [2, 6, 10].map((x, i) => point(i + 5, x, 0, 0));
-    const nodes = [...top, ...bottom];
+  const normalized = CANONICAL_QUICK_START[kind] ?? kind;
+  if (normalized === "warren") {
+    // Treillis Warren 24 m: 4 bays × 6 m, bottom chord z = 0, top chord
+    // z = 3 m — the same geometry as the gallery parametric Warren
+    // (`buildTemplate("warren")`). v2.3.0: the old layout spanned 12 m
+    // (4 m bays) despite the "24 m" title. Supports mirror the
+    // parametric Warren (encastre + Tz roller) so the Rx rigid mode is
+    // restrained and the model solves out of the box.
+    const nodes = [
+      point(1, 0, 0, 0),
+      point(2, 6, 0, 0),
+      point(3, 12, 0, 0),
+      point(4, 18, 0, 0),
+      point(5, 24, 0, 0),
+      point(6, 3, 0, 3),
+      point(7, 9, 0, 3),
+      point(8, 15, 0, 3),
+      point(9, 21, 0, 3),
+    ];
     const beams = [
-      member(1, 1, 2),
-      member(2, 2, 3),
-      member(3, 3, 4),
-      member(4, 5, 6, "IPE 200"),
-      member(5, 6, 7, "IPE 200"),
-      member(6, 1, 5),
-      member(7, 2, 5),
-      member(8, 2, 6),
-      member(9, 3, 6),
-      member(10, 3, 7),
-      member(11, 4, 7),
-    ].map((b, i) => ({ ...b, id: i + 1 }));
+      member(1, 1, 6),
+      member(2, 6, 2),
+      member(3, 2, 7),
+      member(4, 7, 3),
+      member(5, 3, 8),
+      member(6, 8, 4),
+      member(7, 4, 9),
+      member(8, 9, 5),
+      member(9, 6, 7),
+      member(10, 7, 8),
+      member(11, 8, 9),
+    ];
     return {
       version: 1,
       name: "Treillis Warren 24 m",
       structure: {
         nodes,
-        beams: beams.map((b, i) => ({ ...b, id: i + 1 })),
+        beams,
         supports: [
           {
             node_id: 1,
-            locked_dofs: [true, true, true, false, false, false],
+            locked_dofs: [true, true, true, true, true, true],
             spring_stiffness: [0, 0, 0, 0, 0, 0],
           },
           {
-            node_id: 4,
-            locked_dofs: [false, true, true, false, false, false],
+            node_id: 5,
+            locked_dofs: [false, false, true, false, false, false],
             spring_stiffness: [0, 0, 0, 0, 0, 0],
           },
         ],
@@ -308,7 +417,7 @@ export function quickStartProject(kind: QuickStartKind): ProjectData {
       },
     };
   }
-  if (kind === "portique") {
+  if (normalized === "portique") {
     // Portique 18 m: two 5 m columns + an 18 m? -> standard 18 m portal.
     const nodes = [point(1, 0, 0, 0), point(2, 0, 0, 5), point(3, 18, 0, 5), point(4, 18, 0, 0)];
     return {
@@ -329,14 +438,26 @@ export function quickStartProject(kind: QuickStartKind): ProjectData {
             spring_stiffness: [0, 0, 0, 0, 0, 0],
           },
         ],
-        loads: [],
+        // v2.3.0: realistic roof load (-12 kN/m on the IPE 300 rafter)
+        // so Step 4 shows non-zero moments, deflections and EC3 rates
+        // with zero manual setup.
+        loads: [
+          {
+            case: "Permanent",
+            kind: "Trapezoid",
+            beam_id: 2,
+            q_start: -12000,
+            q_end: -12000,
+            direction: { x: 0, y: 0, z: -1 },
+          },
+        ],
         sections: {},
         materials: {},
         self_weight_enabled: false,
       },
     };
   }
-  if (kind === "potence") {
+  if (normalized === "potence") {
     // Potence HEA 200: 6 m cantilever + tie.
     const nodes = [point(1, 0, 0, 0), point(2, 6, 0, 0), point(3, 0, 0, 4)];
     return {
@@ -363,6 +484,14 @@ export function quickStartProject(kind: QuickStartKind): ProjectData {
         self_weight_enabled: false,
       },
     };
+  }
+  // v2.3.0: naval & lifting flagships + every ENGINEERING_TEMPLATES id
+  // (plus the English template slugs) resolve through the seed table —
+  // anything else falls through to the 3-span beam below.
+  const templateId = ENGLISH_TEMPLATE_SLUGS[normalized] ?? normalized;
+  const seed = ENGINEERING_TEMPLATES.find((t) => t.id === templateId);
+  if (seed !== undefined) {
+    return projectFromTemplateSeed(seed);
   }
   // Poutre 3 travées: 12 m, 3 × 4 m spans, continuous.
   // v2.1.1: node 1 also locks Rx (torsion) — a 3D 6-DOF model without ANY
@@ -405,7 +534,45 @@ export function quickStartProject(kind: QuickStartKind): ProjectData {
   };
 }
 
-export type QuickStartKind = "warren" | "portique" | "potence" | "travees";
+/**
+ * v2.3.0: every `?template=` slug the studio resolves — the 4 legacy
+ * French kinds, the canonical English slugs, the naval & lifting
+ * flagships, the English gallery slugs and every
+ * `ENGINEERING_TEMPLATES` id.
+ */
+export type QuickStartKind =
+  | "warren"
+  | "portique"
+  | "potence"
+  | "travees"
+  | "portal-frame"
+  | "warren-truss"
+  | "continuous-beam"
+  | "cantilever"
+  | "naval-cradle"
+  | "lifting-beam"
+  | "workshop-jib"
+  | "pitched-portal"
+  | "pratt-truss"
+  | "howe-truss"
+  | "braced-frame"
+  | "cantilever-canopy"
+  | "pedestrian-bridge"
+  | "glulam-beam"
+  | "offshore-skid"
+  | "composite-beam"
+  | "poutre-isostatique"
+  | "poutre-continue-3-travees"
+  | "portique-simple"
+  | "portique-2-versants"
+  | "treillis-warren-24"
+  | "treillis-pratt"
+  | "treillis-howe"
+  | "potence-encastree"
+  | "ossature-r2"
+  | "auvent-porte-a-faux"
+  | "passerelle-pietonne"
+  | "poutre-gl24h";
 
 /** Canonical demo model: simply supported IPE 200 beam, 4 m, 10 kN midspan. */
 export function demoProject(): ProjectData {
@@ -923,6 +1090,8 @@ useProjectStore.subscribe((state) => {
 /** Undo/Redo over the model history (zundo temporal). */
 export function undoModel(): void {
   useProjectStore.temporal.getState().undo();
+  const count = useProjectStore.getState().batch.selectedBeamIds.length;
+  void trackProductEvent("undo_burst", { count });
 }
 
 export function redoModel(): void {

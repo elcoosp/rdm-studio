@@ -23,10 +23,20 @@ describe("studio search params (v2.1.0 URL-first)", () => {
       layers: "nblsL",
       cutBeam: 2,
       cut: 0.5,
-      template: "warren",
+      template: "warren-truss",
     });
     expect(parsed.beam).toBe(12);
-    expect(parsed.template).toBe("warren");
+    expect(parsed.template).toBe("warren-truss");
+  });
+  it("accepts the naval & lifting flagship slugs and legacy aliases", () => {
+    for (const template of ["naval-cradle", "lifting-beam", "workshop-jib", "warren", "portique"]) {
+      expect(v.parse(StudioBaseSearchSchema, { template }).template).toBe(template);
+    }
+  });
+  it("accepts engineering template ids", () => {
+    expect(v.parse(StudioBaseSearchSchema, { template: "treillis-warren-24" }).template).toBe(
+      "treillis-warren-24",
+    );
   });
   it("accepts an empty query (all optional)", () => {
     expect(v.parse(StudioBaseSearchSchema, {})).toEqual({});

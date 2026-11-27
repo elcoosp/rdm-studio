@@ -11,8 +11,48 @@ import * as v from "valibot";
 /** Compressed `.rdm` payload (`?p=lz-string…`, stripped after hydration). */
 const CompressedPayload = v.pipe(v.string(), v.maxLength(120_000));
 
-/** Quick-start template slug (`?template=warren`), stripped after load. */
-const TemplateSlug = v.picklist(["warren", "portique", "potence", "travees"]);
+/**
+ * Quick-start template slug (`?template=warren`), stripped after load.
+ * v2.3.0: the full resolution set — canonical English slugs, the naval
+ * & lifting flagships, every `ENGINEERING_TEMPLATES` id and the legacy
+ * French aliases (`warren`, `portique`, `potence`, `travees`).
+ */
+export const TemplateSlug = v.picklist([
+  "portal-frame",
+  "warren-truss",
+  "continuous-beam",
+  "cantilever",
+  "pitched-portal",
+  "pratt-truss",
+  "howe-truss",
+  "braced-frame",
+  "cantilever-canopy",
+  "pedestrian-bridge",
+  "naval-cradle",
+  "lifting-beam",
+  "workshop-jib",
+  "offshore-skid",
+  "glulam-beam",
+  "composite-beam",
+  "poutre-isostatique",
+  "poutre-continue-3-travees",
+  "portique-simple",
+  "portique-2-versants",
+  "treillis-warren-24",
+  "treillis-pratt",
+  "treillis-howe",
+  "potence-encastree",
+  "ossature-r2",
+  "auvent-porte-a-faux",
+  "passerelle-pietonne",
+  "poutre-gl24h",
+  "warren",
+  "portique",
+  "potence",
+  "travees",
+]);
+
+export type TemplateSlug = v.InferOutput<typeof TemplateSlug>;
 
 /** Selected member / node ids (geometry picker, docked inspector). */
 const SelectedId = v.pipe(v.number(), v.integer(), v.minValue(0));
@@ -22,6 +62,9 @@ const ViewPreset = v.picklist(["iso", "top-xy", "face-xz", "side-yz"]);
 
 /** Rendering mode of the beam meshes (`?render=wireframe`). */
 const RenderModeChoice = v.picklist(["volumetric", "wireframe"]);
+
+/** UI language (`?lang=fr|en`), persists across navigation. */
+const LangChoice = v.picklist(["fr", "en"]);
 
 /** Magnetic snap grid in mm (`?snap=50` → 0.05 m). */
 const SnapStepMm = v.union([v.literal(10), v.literal(50), v.literal(100)]);
@@ -55,6 +98,7 @@ export const StudioBaseSearchSchema = v.object({
   layers: v.fallback(v.optional(LayerFlags), undefined),
   cutBeam: v.fallback(v.optional(SelectedId), undefined),
   cut: v.fallback(v.optional(Station), undefined),
+  lang: v.fallback(v.optional(LangChoice), undefined),
 });
 
 export type StudioBaseSearch = v.InferOutput<typeof StudioBaseSearchSchema>;

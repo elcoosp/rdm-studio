@@ -14,16 +14,17 @@ import {
   SteelJointIcon,
   VolumetricMesh,
   WarrenTrussIcon,
-} from "@/components/icons/EngineeringIcons";
-import { NumberFlowValue } from "@/components/NumberFlowValue";
+} from "@rdm-studio/ui/icons";
+import { NumberFlowValue } from "@rdm-studio/ui/interior";
 import {
   ExpandablePanel,
   SegmentedControl,
   SliderDetents,
   type SegmentedOption,
-} from "@/components/interior";
+} from "@rdm-studio/ui/interior";
 import { HeroFallbackSvg, type HeroModel } from "@/components/HeroViewport3D";
 import { docsHref } from "@/lib/urls";
+import type { TemplateSlug } from "@/schemas/searchParams.schema";
 
 export const Route = createFileRoute("/_marketing/")({
   staticData: { surface: "marketing" },
@@ -68,7 +69,7 @@ function heroDeflectionMm(loadKN: number): number {
 function buildShowcase() {
   return [
     {
-      kind: "portique" as const,
+      kind: "portal-frame" as const,
       name: t`Portique 18 m`,
       description: t`Portique encastré-articulé en HEA 200, traversé IPE 300 — le cas d'école de la transmission M/N au nœud rigide.`,
       sections: "HEA 200 + IPE 300",
@@ -109,7 +110,7 @@ function buildShowcase() {
       ),
     },
     {
-      kind: "warren" as const,
+      kind: "warren-truss" as const,
       name: t`Treillis Warren 24 m`,
       description: t`Diagonales alternées sans montants : certains barreaux sont sans effort selon le chargement — articulez et comparez.`,
       sections: "IPE 200",
@@ -156,7 +157,7 @@ function buildShowcase() {
       ),
     },
     {
-      kind: "travees" as const,
+      kind: "continuous-beam" as const,
       name: t`Poutre 3 travées`,
       description: t`Poutre continue 3 × 4 m : moments négatifs sur appuis et redistribution — comparez 6.10 et 6.10a/b ici.`,
       sections: "IPE 300",
@@ -322,10 +323,10 @@ function buildFaq() {
   ] as const;
 }
 
-const HERO_MODELS: { value: HeroModel; label: string; template: string }[] = [
-  { value: "portique", label: t`Portique 18 m`, template: "portique" },
-  { value: "warren", label: t`Treillis Warren 24 m`, template: "warren" },
-  { value: "travees", label: t`Poutre 3 travées`, template: "travees" },
+const HERO_MODELS: { value: HeroModel; label: string; template: TemplateSlug }[] = [
+  { value: "portique", label: t`Portique 18 m`, template: "portal-frame" },
+  { value: "warren", label: t`Treillis Warren 24 m`, template: "warren-truss" },
+  { value: "travees", label: t`Poutre 3 travées`, template: "continuous-beam" },
 ];
 
 /** 3D Hero: lazy R3F stage + SegmentedControl model switcher + live load
@@ -341,7 +342,7 @@ function HeroStage(): React.ReactElement {
   const massKg = model === "portique" ? 1183 : model === "warren" ? 877 : 268;
   const eta = heroEta(loadKN);
   const deflection = heroDeflectionMm(loadKN);
-  const template = HERO_MODELS.find((m) => m.value === model)?.template ?? "portique";
+  const template = HERO_MODELS.find((m) => m.value === model)?.template ?? "portal-frame";
   return (
     <div
       className="overflow-hidden rounded-[8px] border border-hairline bg-canvas"
@@ -418,7 +419,7 @@ function HeroStage(): React.ReactElement {
         </dl>
         <Link
           to="/geometry"
-          search={{ template: template as "portique" }}
+          search={{ template }}
           data-testid="hero-launch"
           className={`flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white transition-colors ${reduced ? "" : "hover:bg-accent-strong"}`}
         >
@@ -585,9 +586,9 @@ function LandingPage() {
           >
             {showcaseItems.map((model, index) => {
               const Icon =
-                model.kind === "portique"
+                model.kind === "portal-frame"
                   ? PortalFrameIcon
-                  : model.kind === "warren"
+                  : model.kind === "warren-truss"
                     ? WarrenTrussIcon
                     : ContinuousBeamIcon;
               return (

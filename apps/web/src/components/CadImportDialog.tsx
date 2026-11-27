@@ -8,7 +8,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rdm-studio/ui/primitives";
 import { Checkbox } from "@/components/ui/checkbox";
 
 /**

@@ -15,7 +15,7 @@ export function UpdatePrompt() {
   const wbRef = useRef<Workbox | null>(null);
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) {
+    if (!import.meta.env.PROD || !("serviceWorker" in navigator)) {
       return;
     }
     const wb = new Workbox("/sw.js");

@@ -3,16 +3,10 @@ import { get, set } from "idb-keyval";
 import { toast } from "sonner";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
-import { useProjectStore, type ProjectData } from "@/state/projectStore";
+import { quickStartProject, useProjectStore, type ProjectData } from "@/state/projectStore";
 import { downloadText } from "@/export/csvExport";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
-import {
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "@/components/ui/select";
 import {
   ComboboxContent,
   ComboboxEmpty,
@@ -21,12 +15,9 @@ import {
   ComboboxRoot,
 } from "@/components/ui/combobox";
 import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
-import {
-  ContinuousBeamIcon,
-  PortalFrameIcon,
-  WarrenTrussIcon,
-} from "@/components/icons/EngineeringIcons";
+import { ContinuousBeamIcon, PortalFrameIcon, WarrenTrussIcon } from "@rdm-studio/ui/icons";
 import { feaClient, type SectionDims, type ParametricParamsInput } from "@/wasmBridge/workerClient";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 /**
  * Project gallery modal (mockups cran_7): saved models from IndexedDB
@@ -38,7 +29,7 @@ import { feaClient, type SectionDims, type ParametricParamsInput } from "@/wasmB
  * with configurable Portée L / Hauteur H / Travées / Profilés, and the
  * modal doubles as the header project menu's `Exporter (.rdm)` surface.
  *
- * v2.1.2 (audit `519229b`): the 12 `ENGINEERING_TEMPLATES` `Charger`
+ * v2.1.2 (audit `519229b`): the 15 `ENGINEERING_TEMPLATES` `Charger`
  * buttons now default the load direction to gravity `{ x: 0, y: 0, z: -1 }`
  * (the old `{ x: 0, y: -1, z: 0 }` aimed loads sideways in the Z-up
  * scene), confirm with a toast, and close the modal. Every picker is a
@@ -294,6 +285,7 @@ export function ProjectGalleryModal({
       .then((json) => {
         const generated = JSON.parse(json) as ProjectData;
         loadProject(generated);
+        void trackProductEvent("template_opened", { kind: "parametric", template: paramTemplate });
         toast(t`Structure paramétrique générée`, {
           // v2.0.1: 8 s so slow cold-start browsers (wasm init on first
           // run) never miss the "moteur Rust rdm-cad" confirmation.
@@ -515,6 +507,42 @@ export function ProjectGalleryModal({
               <Trans>+ Nouveau projet vierge</Trans>
             </button>
           </div>
+          {/* v2.3.0: naval & lifting flagships — 1-click quick-start pills
+              beside the parametric / engineering templates. */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium text-ink-secondary">
+              <Trans>Naval & levage —</Trans>
+            </span>
+            {(
+              [
+                ["naval-cradle", "Berceau de transport naval DNV"],
+                ["lifting-beam", "Palonnier de levage 20 t"],
+                ["workshop-jib", "Potence d'atelier 5 t"],
+              ] as const
+            ).map(([kind, label]) => (
+              <button
+                key={kind}
+                type="button"
+                data-testid={`gallery-quick-${kind}`}
+                className="rounded-[4px] border border-hairline px-2.5 py-1 text-[12px] text-ink-secondary hover:border-accent hover:text-accent"
+                onClick={() => {
+                  const project = quickStartProject(kind);
+                  loadProject(project);
+                  void trackProductEvent("template_opened", {
+                    kind: "quick_start",
+                    template: kind,
+                  });
+                  toast(t`Modèle chargé`, {
+                    description: t`${project.name} — prêt à calculer.`,
+                    duration: 4_000,
+                  });
+                  onClose();
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {PARAMETRIC_TEMPLATES.map((tpl) => {
               // v1.4.0: rich metadata cards (node/beam counts, span, tags).
@@ -533,6 +561,10 @@ export function ProjectGalleryModal({
                   data-testid={`gallery-${tpl.kind}`}
                   onClick={() => {
                     loadProject(preview);
+                    void trackProductEvent("template_opened", {
+                      kind: "parametric_preset",
+                      template: tpl.kind,
+                    });
                     onClose();
                   }}
                 >
@@ -552,7 +584,7 @@ export function ProjectGalleryModal({
                 "Pourquoi ce modèle" notes. v2.1.2 audit fix: gravity
                 direction { x: 0, y: 0, z: -1 }, onClose() + toast. */}
             {ENGINEERING_TEMPLATES.map((template) => (
-              <div key={template.id} className="rounded-lg border border-hairline p-3">
+              <div key={template.id} className="rounded-[8px] border border-hairline p-3">
                 <p className="text-sm font-semibold">{template.name}</p>
                 <p className="mt-1 text-xs italic text-ink-secondary">
                   « Pourquoi ce modèle » — {template.why}
@@ -571,30 +603,54 @@ export function ProjectGalleryModal({
                         k_buckling_z: 1.0,
                       })),
                       // v2.0.2: canonical per-template restraints (stable,
-                      // solvable models straight from the gallery).
-                      supports: canonicalSupports(template).map((sup) => ({
+                      // solvable models straight from the gallery) — an
+                      // explicit seed `supports` list wins (v2.3.0: the
+                      // naval cradle and the lifting beam do not sit on
+                      // the ground).
+                      supports: (template.supports ?? canonicalSupports(template)).map((sup) => ({
                         ...sup,
                         spring_stiffness: [0, 0, 0, 0, 0, 0] as number[],
                       })),
-                      loads: template.loads.map((load) => ({
-                        case: load.case,
-                        kind: load.kind,
-                        beam_id: load.beam_id ?? 0,
-                        node_id: load.node_id ?? 0,
-                        position_ratio: load.position_ratio ?? 0.5,
-                        q_start: load.q_start ?? 0,
-                        q_end: load.q_end ?? 0,
-                        forces: { fx: 0, fy: 0, fz: load.fz ?? 0, mx: 0, my: 0, mz: 0 },
-                        // v2.1.2 (audit 519229b): gravity is −Z in the
-                        // Z-up scene — the old { x: 0, y: -1, z: 0 } aimed
-                        // distributed loads sideways in 3D.
-                        direction: load.direction ?? { x: 0, y: 0, z: -1 },
-                      })),
+                      loads: template.loads.map((load) =>
+                        load.kind === "AccelerationField"
+                          ? {
+                              case: load.case,
+                              kind: "AccelerationField" as const,
+                              ax_g: load.ax_g,
+                              ay_g: load.ay_g,
+                              az_g: load.az_g,
+                            }
+                          : {
+                              case: load.case,
+                              kind: load.kind,
+                              beam_id: load.beam_id ?? 0,
+                              node_id: load.node_id ?? 0,
+                              position_ratio: load.position_ratio ?? 0.5,
+                              q_start: load.q_start ?? 0,
+                              q_end: load.q_end ?? 0,
+                              forces: {
+                                fx: load.fx ?? 0,
+                                fy: load.fy ?? 0,
+                                fz: load.fz ?? 0,
+                                mx: 0,
+                                my: 0,
+                                mz: 0,
+                              },
+                              // v2.1.2 (audit 519229b): gravity is −Z in the
+                              // Z-up scene — the old { x: 0, y: -1, z: 0 } aimed
+                              // distributed loads sideways in 3D.
+                              direction: load.direction ?? { x: 0, y: 0, z: -1 },
+                            },
+                      ),
                       sections: {},
                       materials: {},
                       self_weight_enabled: false,
                     };
                     loadProject({ version: 2, name: template.name, structure });
+                    void trackProductEvent("template_opened", {
+                      kind: "engineering",
+                      template: template.id,
+                    });
                     toast(t`Modèle chargé`, {
                       description: t`${template.name} — ${structure.beams.length} poutre(s) prête(s) à calculer.`,
                       duration: 4_000,
@@ -638,6 +694,10 @@ export function ProjectGalleryModal({
                     className="w-full rounded px-2 py-1.5 text-left text-[13px] hover:bg-accent-tint"
                     onClick={() => {
                       loadProject(e.project);
+                      void trackProductEvent("template_opened", {
+                        kind: "gallery_saved",
+                        template: e.id,
+                      });
                       onClose();
                     }}
                   >
@@ -674,6 +734,7 @@ export function ProjectGalleryModal({
                 "application/json;charset=utf-8",
               );
               toast(t`Modèle .rdm exporté`);
+              void trackProductEvent("template_exported");
               onClose();
             }}
           >

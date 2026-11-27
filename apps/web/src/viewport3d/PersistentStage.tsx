@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { useLocation, useMatches, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useLingui } from "@lingui/react/macro";
+import { toast } from "sonner";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { useProjectStore } from "@/state/projectStore";
@@ -9,7 +10,13 @@ import { ForceDiagram3DLayer } from "./ForceDiagrams3D";
 import { useSelectedIds, useViewportParams } from "@/hooks/useStudioQuery";
 import { useViewportStore } from "@/state/viewportStore";
 import { ViewportCanvas } from "./ViewportCanvas";
-import { BeamMeshes, buildBeamGeometry, nodePositions } from "./BeamMeshes";
+import {
+  BeamMeshes,
+  buildBeamGeometry,
+  nodePositions,
+  hexToRgb,
+  familyColorOf,
+} from "./BeamMeshes";
 import { SupportMarkers } from "./SupportMarkers";
 import { NodeMarkers } from "./NodeMarkers";
 import { ForceVectors3D } from "./ForceVectors3D";
@@ -259,6 +266,7 @@ export function PersistentStage(): ReactElement {
   // flags and the cutting plane are URL params too (zero store mirrors).
   const { selectBeam, selectNode, beamId: selectedBeamId } = useSelectedIds();
   const { layers, cutting, snapStep } = useViewportParams();
+  const deleteBeamMode = useViewportStore((s) => s.deleteBeamMode);
   const contentGetter = useStageStore((s) => s.contentGetter);
   const optionsGetter = useStageStore((s) => s.optionsGetter);
   const pathname = useLocation().pathname;
@@ -362,6 +370,17 @@ export function PersistentStage(): ReactElement {
     () => (sectionDims.size > 0 ? beamProfileLookup(beams, sectionDims) : undefined),
     [beams, sectionDims],
   );
+  // v2.4.0: family colours tint members outside the FEA thermal view.
+  const familyColors = useMemo(() => {
+    if (colorRatios !== null && colorRatios.size > 0) {
+      return undefined;
+    }
+    const out = new Map<number, [number, number, number]>();
+    for (const beam of beams) {
+      out.set(beam.id, hexToRgb(familyColorOf(beam.section_id)));
+    }
+    return out;
+  }, [beams, colorRatios]);
   const sharedGeometry = useMemo(() => {
     if (beams.length === 0) {
       return null;
@@ -378,6 +397,7 @@ export function PersistentStage(): ReactElement {
           displacements: deformed ? (displacements ?? undefined) : undefined,
           deformScale: deformed ? (deformScale ?? undefined) : undefined,
           profiles,
+          beamColors: deformed ? undefined : (familyColors ?? undefined),
         });
       } catch {
         return build(false);
@@ -389,7 +409,7 @@ export function PersistentStage(): ReactElement {
       geometry = build(false);
     }
     return geometry;
-  }, [nodes, beams, colorRatios, displacements, deformScale, profiles]);
+  }, [nodes, beams, colorRatios, displacements, deformScale, profiles, familyColors]);
   useEffect(() => {
     return () => {
       sharedGeometry?.dispose();
@@ -429,13 +449,18 @@ export function PersistentStage(): ReactElement {
           pickLatency={pickMs}
           nodes={nodes}
           beams={beams}
+          deleteMode={deleteBeamMode}
         >
           <CaptureBridge />
           <StagePickLayer
             geometry={sharedGeometry}
             onPick={(beamId, ms) => {
               setPickMs(ms);
-              selectBeam(beamId);
+              // v2.4.0: while the deletion mode is armed the member click
+              // is owned by BeamMeshes (remove + toast) — skip selection.
+              if (!deleteBeamMode) {
+                selectBeam(beamId);
+              }
             }}
           />
           <StageContextMenuBridge
@@ -460,6 +485,27 @@ export function PersistentStage(): ReactElement {
               selectedBeamId={options.selectedBeamId ?? null}
               hoveredBeamId={options.hoveredBeamId ?? null}
               onPick={(id) => selectBeam(id)}
+              deleteMode={deleteBeamMode}
+              onDelete={(id) => {
+                const beam = beams.find((b) => b.id === id);
+                if (beam === undefined) {
+                  return;
+                }
+                const before = structuredClone(useProjectStore.getState().project);
+                removeBeam(id);
+                if (selectedBeamId === id) {
+                  selectBeam(null);
+                }
+                toast(t`Poutre B${id} supprimée`, {
+                  action: {
+                    label: t`Annuler`,
+                    onClick: () => {
+                      useProjectStore.getState().loadProject(before);
+                    },
+                  },
+                  duration: 5_000,
+                });
+              }}
             />
           ) : null}
           {layers.supports ? <SupportMarkers nodes={nodes} supports={supports} /> : null}

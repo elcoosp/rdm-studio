@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { BeamData, NodeData } from "@/state/projectStore";
 import { beamProfileLookup, profileOutline, type ProfileDims } from "./ProfileShapes";
@@ -28,6 +28,37 @@ const LAST_STOP = SPECTRUM_STOPS[SPECTRUM_STOPS.length - 1] ?? [1, [1, 0, 0]];
 export function hexToRgb(hex: string): [number, number, number] {
   const value = Number.parseInt(hex.slice(1), 16);
   return [((value >> 16) & 0xff) / 255, ((value >> 8) & 0xff) / 255, (value & 0xff) / 255];
+}
+
+/**
+ * v2.4.0: section-family colour palette (DESIGN.md §17) used to tint members
+ * by their profile family outside the FEA thermal results view. Mirrors the
+ * `familyOfDesignation` grouping in `@/components/FamilyPills`.
+ */
+export const FAMILY_COLORS: Record<string, string> = {
+  IPE: "#1D4ED8",
+  HEA: "#0891B2",
+  UPN: "#7C3AED",
+  CHS: "#059669",
+  RHS: "#D97706",
+  L: "#DB2777",
+  Perso: "#475569",
+};
+
+/** Maps a section designation onto its family colour (hex). */
+export function familyColorOf(designation: string): string {
+  const upper = designation.toUpperCase();
+  if (upper.startsWith("IPE")) return FAMILY_COLORS.IPE ?? "#1D4ED8";
+  if (upper.startsWith("HEA") || upper.startsWith("HEB") || upper.startsWith("HEM")) {
+    return FAMILY_COLORS.HEA ?? "#0891B2";
+  }
+  if (upper.startsWith("UPN") || upper.startsWith("UPE")) return FAMILY_COLORS.UPN ?? "#7C3AED";
+  if (upper.startsWith("CHS") || upper.startsWith("D")) return FAMILY_COLORS.CHS ?? "#059669";
+  if (upper.startsWith("RHS") || upper.startsWith("SHS")) return FAMILY_COLORS.RHS ?? "#D97706";
+  if (upper.startsWith("L ") || upper.startsWith("INL") || upper.startsWith("ANG")) {
+    return FAMILY_COLORS.L ?? "#DB2777";
+  }
+  return FAMILY_COLORS.Perso ?? "#475569";
 }
 
 /** Maps a ratio in [0, 1] onto the 5-tier FEA thermal spectrum (lerped). */
@@ -74,6 +105,11 @@ export interface BeamGeometryOptions {
   profiles?: Map<number, ProfileDims>;
   /** Per-beam section designation lookup used with `profileDims`. */
   beams_sections?: undefined;
+  /**
+   * v2.4.0: per-beam family colour (linear RGB) used outside the FEA
+   * thermal view. Ignored for any beam that carries a `colorRatios` entry.
+   */
+  beamColors?: Map<number, [number, number, number]>;
 }
 
 interface UnitBox {
@@ -186,9 +222,18 @@ export function buildBeamGeometry(
     const yy = znZ * exx - znX * exz;
     const yz = znX * exy - znY * exx;
     const hw = width / 2;
+    // v2.4.0: roll θx (rad) about the member's local longitudinal X axis —
+    // rotates the section outline (web/flanges) in the local Y-Z plane.
+    const roll = Number.isFinite(beam.roll_angle_rad) ? beam.roll_angle_rad : 0;
+    const cosR = Math.cos(roll);
+    const sinR = Math.sin(roll);
 
     const ratio = options.colorRatios?.get(beam.id) ?? 0.5;
-    const [r, g, b] = spectrumColor(ratio);
+    const familyRgb = options.beamColors?.get(beam.id);
+    const [r, g, b] =
+      options.colorRatios?.has(beam.id) || familyRgb === undefined
+        ? spectrumColor(ratio)
+        : familyRgb;
     const base = positions.length / 3;
 
     const dims = options.profiles?.get(beam.id);
@@ -196,12 +241,15 @@ export function buildBeamGeometry(
       // Square-box path (benchmark + fallback rendering).
       for (let vi = 0; vi < UNIT_BOX.vertices.length; vi += 3) {
         const vx = UNIT_BOX.vertices[vi] ?? 0;
-        const vy = UNIT_BOX.vertices[vi + 1] ?? 0;
-        const vz = UNIT_BOX.vertices[vi + 2] ?? 0;
+        const vy = (UNIT_BOX.vertices[vi + 1] ?? 0) * hw;
+        const vz = (UNIT_BOX.vertices[vi + 2] ?? 0) * hw;
+        // Roll about local X: rotate the (y, z) section coordinates.
+        const ry = vy * cosR - vz * sinR;
+        const rz = vy * sinR + vz * cosR;
         positions.push(
-          ax + exx * vx * length + yx * vy * hw + znX * vz * hw,
-          ay + exy * vx * length + yy * vy * hw + znY * vz * hw,
-          az + exz * vx * length + yz * vy * hw + znZ * vz * hw,
+          ax + exx * vx * length + yx * ry + znX * rz,
+          ay + exy * vx * length + yy * ry + znY * rz,
+          az + exz * vx * length + yz * ry + znZ * rz,
         );
         colors.push(r, g, b);
         beamIds.push(beam.id);
@@ -223,7 +271,10 @@ export function buildBeamGeometry(
     const ringCoords: [number, number][] = [...contour, ...holeRings.flat()];
     const pushRing = (endX: number): number => {
       const ringBase = positions.length / 3;
-      for (const [py, pz] of ringCoords) {
+      for (const [py0, pz0] of ringCoords) {
+        // Roll about local X (section outline in the Y-Z plane).
+        const py = py0 * cosR - pz0 * sinR;
+        const pz = py0 * sinR + pz0 * cosR;
         positions.push(
           ax + exx * endX * length + yx * py + znX * pz,
           ay + exy * endX * length + yy * py + znY * pz,
@@ -320,6 +371,13 @@ interface BeamMeshesProps {
    * rendering and picking.
    */
   geometry?: THREE.BufferGeometry;
+  /**
+   * v2.4.0: two-step deletion mode — when true, hovering a member tints it
+   * critical red and clicking it removes it (chained deletes stay armed).
+   */
+  deleteMode?: boolean;
+  /** v2.4.0: member removal callback fired on click while `deleteMode`. */
+  onDelete?: (beamId: number) => void;
 }
 
 export function BeamMeshes({
@@ -334,7 +392,23 @@ export function BeamMeshes({
   sectionDims,
   hoveredBeamId = null,
   geometry: sharedGeometry,
+  deleteMode = false,
+  onDelete,
 }: BeamMeshesProps) {
+  // v2.4.0: family colours apply only outside the FEA thermal view (no
+  // colorRatios) — the spectrum stays reserved for Step 4 results.
+  const familyColors = useMemo(() => {
+    if (colorRatios !== undefined && colorRatios.size > 0) {
+      return undefined;
+    }
+    const out = new Map<number, [number, number, number]>();
+    for (const beam of beams) {
+      out.set(beam.id, hexToRgb(familyColorOf(beam.section_id)));
+    }
+    return out;
+  }, [beams, colorRatios]);
+  // v2.4.0: local hover state drives the critical-red deletion preview.
+  const [deleteHoverId, setDeleteHoverId] = useState<number | null>(null);
   const geometry = useMemo(
     () =>
       sharedGeometry ??
@@ -343,8 +417,18 @@ export function BeamMeshes({
         displacements,
         deformScale,
         profiles: sectionDims === undefined ? undefined : beamProfileLookup(beams, sectionDims),
+        beamColors: familyColors,
       }),
-    [sharedGeometry, nodes, beams, colorRatios, displacements, deformScale, sectionDims],
+    [
+      sharedGeometry,
+      nodes,
+      beams,
+      colorRatios,
+      displacements,
+      deformScale,
+      sectionDims,
+      familyColors,
+    ],
   );
   // v1.6.0 GPU-hygiene: internally-built geometries are disposed when
   // replaced; the shared stage geometry belongs to PersistentStage.
@@ -411,11 +495,58 @@ export function BeamMeshes({
     const id = geometry.getAttribute("beamId");
     const face = event.face;
     if (face == null || id === undefined) {
-      onPick(null);
+      if (deleteMode) {
+        setDeleteHoverId(null);
+      } else {
+        onPick(null);
+      }
       return;
     }
-    onPick(id.getX(face.a));
+    const beamId = id.getX(face.a);
+    if (deleteMode) {
+      setDeleteHoverId(null);
+      onDelete?.(beamId);
+      return;
+    }
+    onPick(beamId);
   };
+
+  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
+    if (!deleteMode) {
+      return;
+    }
+    const id = geometry.getAttribute("beamId");
+    const face = event.face;
+    if (face == null || id === undefined) {
+      setDeleteHoverId(null);
+      return;
+    }
+    setDeleteHoverId(id.getX(face.a));
+  };
+
+  // v2.4.0: critical-red preview of the member under the cursor while the
+  // deletion mode is armed (separate from the table-hover blue rim).
+  const deletePreview = useMemo(() => {
+    if (!deleteMode || deleteHoverId === null) {
+      return null;
+    }
+    const beam = beams.find((b) => b.id === deleteHoverId);
+    if (beam === undefined) {
+      return null;
+    }
+    const dims = sectionDims?.get(beam.section_id);
+    const profiles =
+      dims === undefined ? undefined : new Map<number, ProfileDims>([[beam.id, dims]]);
+    return buildBeamGeometry(nodes, [beam], { displacements, deformScale, profiles });
+  }, [deleteMode, deleteHoverId, beams, nodes, displacements, deformScale, sectionDims]);
+  useEffect(() => {
+    if (deletePreview === null) {
+      return undefined;
+    }
+    return () => {
+      deletePreview.dispose();
+    };
+  }, [deletePreview]);
 
   return (
     <>
@@ -425,10 +556,30 @@ export function BeamMeshes({
           <lineBasicMaterial color="#94A3B8" />
         </lineSegments>
       ) : (
-        <mesh geometry={geometry} onClick={handleClick}>
+        <mesh
+          geometry={geometry}
+          onClick={handleClick}
+          onPointerMove={handlePointerMove}
+          onPointerOut={() => {
+            if (deleteMode) {
+              setDeleteHoverId(null);
+            }
+          }}
+        >
           <meshStandardMaterial vertexColors flatShading side={THREE.DoubleSide} />
         </mesh>
       )}
+      {deletePreview !== null ? (
+        <mesh geometry={deletePreview}>
+          <meshStandardMaterial
+            color="#DC2626"
+            emissive="#DC2626"
+            emissiveIntensity={0.4}
+            flatShading
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ) : null}
       {selectedGeometry !== null ? (
         <>
           {/* v1.4.0: cobalt tint body + cobalt edge wireframe. */}

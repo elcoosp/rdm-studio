@@ -18,6 +18,14 @@ interface ViewportState {
   /** True while the WebGL canvas is mounted (gates `f` / `i` hotkeys). */
   viewportMounted: boolean;
   setViewportMounted: (mounted: boolean) => void;
+  /**
+   * v2.4.0: two-step beam deletion mode — when true, clicking a member in
+   * the 3D viewport removes it (staying in the mode for chained deletes)
+   * until Escape or the toolbar toggle is pressed again.
+   */
+  deleteBeamMode: boolean;
+  setDeleteBeamMode: (active: boolean) => void;
+  toggleDeleteBeamMode: () => void;
 }
 
 export const useViewportStore = create<ViewportState>()((set) => ({
@@ -25,4 +33,7 @@ export const useViewportStore = create<ViewportState>()((set) => ({
   setToolMode: (mode) => set({ toolMode: mode }),
   viewportMounted: false,
   setViewportMounted: (mounted) => set({ viewportMounted: mounted }),
+  deleteBeamMode: false,
+  setDeleteBeamMode: (active) => set({ deleteBeamMode: active }),
+  toggleDeleteBeamMode: () => set((s) => ({ deleteBeamMode: !s.deleteBeamMode })),
 }));

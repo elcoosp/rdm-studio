@@ -22,6 +22,13 @@ interface CameraControlsLike {
     targetZ: number,
     transition: boolean,
   ): Promise<boolean>;
+  /** v2.4.0: re-aim the orbit pivot at a raycast hit (cursor-anchored orbit). */
+  setTarget(
+    targetX: number,
+    targetY: number,
+    targetZ: number,
+    transition: boolean,
+  ): Promise<boolean>;
 }
 type CameraControlsImpl = CameraControlsLike;
 import { Trans } from "@lingui/react/macro";
@@ -30,7 +37,7 @@ import { useProjectStore } from "@/state/projectStore";
 import { useViewportStore, type CameraPreset } from "@/state/viewportStore";
 import { useViewportParams } from "@/hooks/useStudioQuery";
 import { LayerToolbar } from "./LayerToolbar";
-import { SegmentedControl } from "@/components/interior";
+import { SegmentedControl } from "@rdm-studio/ui/interior";
 import { modelBounds } from "./ProfileShapes";
 import { SnapOverlay, type ViewportRuntime } from "./SnapOverlay";
 import { KeycapHint } from "@/components/KeycapHints";
@@ -107,6 +114,53 @@ function CameraRig({
     void controls.setLookAt(x, y, z, 0, 0, 0.5, true);
     invalidate();
   }, [camera, invalidate, preset, controlsRef]);
+  return null;
+}
+
+/**
+ * v2.4.0: cursor-anchored orbit pivot. On right-button pointer-down (or a
+ * wheel zoom) we raycast the scene under the pointer and glide the
+ * CameraControls target to the hit point, so the orbit always rotates about
+ * the point the user is aiming at instead of a far-away fixed centre.
+ */
+function PivotToCursor({ controlsRef }: { controlsRef: RefObject<CameraControlsImpl | null> }) {
+  const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const dom = gl.domElement;
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const retarget = (clientX: number, clientY: number): void => {
+      const controls = controlsRef.current;
+      if (controls === null) {
+        return;
+      }
+      const rect = dom.getBoundingClientRect();
+      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      const hit = hits.find((h) => h.point !== undefined);
+      if (hit !== undefined) {
+        void controls.setTarget(hit.point.x, hit.point.y, hit.point.z, true);
+      }
+    };
+    const onPointerDown = (event: PointerEvent): void => {
+      if (event.button === 2) {
+        retarget(event.clientX, event.clientY);
+      }
+    };
+    const onWheel = (event: WheelEvent): void => {
+      retarget(event.clientX, event.clientY);
+    };
+    dom.addEventListener("pointerdown", onPointerDown);
+    dom.addEventListener("wheel", onWheel, { passive: true });
+    return () => {
+      dom.removeEventListener("pointerdown", onPointerDown);
+      dom.removeEventListener("wheel", onWheel);
+    };
+  }, [camera, gl, scene, controlsRef]);
   return null;
 }
 
@@ -261,6 +315,7 @@ export function ViewportCanvas({
   testId = "viewport-canvas",
   nodes,
   beams,
+  deleteMode = false,
 }: {
   children: ReactNode;
   showLayerToolbar?: boolean;
@@ -270,6 +325,8 @@ export function ViewportCanvas({
   nodes?: NodeData[];
   /** Model members for the snap reticle / cursor pill (§8.3/§8.4). */
   beams?: BeamData[];
+  /** v2.4.0: two-step beam deletion — crosshair cursor + helper banner. */
+  deleteMode?: boolean;
 }) {
   // v2.1.0: the camera preset is the URL `?view=` param — a shared link
   // restores the exact 3D viewpoint.
@@ -290,11 +347,10 @@ export function ViewportCanvas({
   const webglSupported = useMemo(() => {
     try {
       const probeCanvas = document.createElement("canvas");
-      const gl2 = probeCanvas.getContext("webgl2", { antialias: true });
-      if (gl2 === null) {
+      const gl2 = probeCanvas.getContext("webgl2") ?? probeCanvas.getContext("webgl");
+      if (gl2 === null || typeof gl2.getParameter(gl2.VERSION) !== "string") {
         return false;
       }
-      gl2.getExtension("WEBGL_lose_context")?.loseContext();
       return true;
     } catch {
       return false;
@@ -340,13 +396,25 @@ export function ViewportCanvas({
   }
 
   return (
-    <div className="relative h-full min-h-0 w-full" data-testid={testId}>
+    <div
+      className={`relative h-full min-h-0 w-full ${deleteMode ? "cursor-crosshair" : ""}`}
+      data-testid={testId}
+    >
       <ViewportErrorBoundary>
         {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
         {/* v1.6.0: compact `Iso | XY | XZ | YZ` presets, z-30 so they stay
             above the persistent stage overlay (fixed z-10) at 860 px with
             ≥ 24 px separation from the left toolbar. */}
         {viewPresets}
+        {/* v2.4.0: discreet deletion-mode banner (top-centre). */}
+        {deleteMode ? (
+          <div
+            className="pointer-events-none absolute left-1/2 top-2 z-30 -translate-x-1/2 rounded-[4px] border border-fea-max bg-fea-max/10 px-2.5 py-1 font-data text-[11px] font-medium text-fea-max backdrop-blur"
+            data-testid="delete-beam-banner"
+          >
+            <Trans>Cliquez une poutre pour la supprimer — Échap pour quitter</Trans>
+          </div>
+        ) : null}
         <Canvas
           dpr={[1, 2]}
           camera={{ position: PRESET_POSITIONS.iso, fov: 45 }}
@@ -381,19 +449,27 @@ export function ViewportCanvas({
             infiniteGrid
           />
           {children}
-          {/* Critically damped orbit/zoom/pan (§8.2, smoothTime 0.25). */}
+          {/* Critically damped orbit/zoom/pan (§8.2, smoothTime 0.25).
+              v2.4.0: polar + azimuth fully unlocked (no gimbal clamp) and
+              dolly-to-cursor so the zoom homes on the pointer. */}
           <CameraControls
             ref={controlsRef as never}
             makeDefault
             smoothTime={0.25}
             draggingSmoothTime={0.25}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI}
+            minAzimuthAngle={-Infinity}
+            maxAzimuthAngle={Infinity}
+            dollyToCursor
           />
+          {/* v2.4.0: cursor-anchored orbit pivot (right-click / wheel). */}
+          <PivotToCursor controlsRef={controlsRef} />
           {/* v1.3.0 defect 5: bottom-right so the top-right view-preset
               bar (3D Iso | Dessus XY | Face XZ | Côté YZ) stays clear. */}
-          {/* v2.0.2: anchored cleanly in the bottom-right corner (44px
-              margins) with a compact 0.75 scale — it no longer floats
-              over the viewport centre or overlaps the legend. */}
-          <GizmoHelper alignment="bottom-right" margin={[44, 44]}>
+          {/* v2.4.0: 72px margins keep the gizmo clear of the bottom-right
+              status bar and the left-side legends (fea/profile). */}
+          <GizmoHelper alignment="bottom-right" margin={[72, 72]}>
             <GizmoViewport
               scale={0.75}
               axisColors={["#DC2626", "#10b981", "#1D4ED8"]}

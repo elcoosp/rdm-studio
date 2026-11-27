@@ -347,8 +347,8 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
         let mut phi: Vec<f64> = (0..n_free).map(|_| next_random()).collect();
         for found in &modes {
             let dot: f64 = (0..n_free).map(|r| found.1.m_phi[r] * phi[r]).sum();
-            for r in 0..n_free {
-                phi[r] -= dot * found.1.phi[r];
+            for (r, phi_r) in phi.iter_mut().enumerate().take(n_free) {
+                *phi_r -= dot * found.1.phi[r];
             }
         }
         let mut omega_squared = f64::INFINITY;
@@ -366,8 +366,8 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
             // Deflate the iterate against the modes already found.
             for found in &modes {
                 let dot: f64 = (0..n_free).map(|r| found.1.m_phi[r] * x[r]).sum();
-                for r in 0..n_free {
-                    x[r] -= dot * found.1.phi[r];
+                for (r, x_r) in x.iter_mut().enumerate().take(n_free) {
+                    *x_r -= dot * found.1.phi[r];
                 }
             }
             // Generalized Rayleigh quotient ω² = φᵀ K φ / φᵀ M φ.
@@ -475,16 +475,16 @@ impl DenseCholesky {
         let mut y = vec![0.0f64; n];
         for i in 0..n {
             let mut acc = b[i];
-            for k in 0..i {
-                acc -= self.l[i * n + k] * y[k];
+            for (k, y_k) in y.iter().enumerate().take(i) {
+                acc -= self.l[i * n + k] * *y_k;
             }
             y[i] = acc / self.l[i * n + i];
         }
         let mut x = vec![0.0f64; n];
         for i in (0..n).rev() {
             let mut acc = y[i];
-            for k in (i + 1)..n {
-                acc -= self.l[k * n + i] * x[k];
+            for (k, x_k) in x.iter().enumerate().skip(i + 1).take(n - i - 1) {
+                acc -= self.l[k * n + i] * *x_k;
             }
             x[i] = acc / self.l[i * n + i];
         }

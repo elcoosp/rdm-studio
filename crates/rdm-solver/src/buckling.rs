@@ -209,8 +209,8 @@ pub fn buckling_analysis(
         // Deflate against the found modes.
         for found in &modes {
             let dot: f64 = (0..n_free).map(|r| found.shape[r] * phi[r]).sum();
-            for r in 0..n_free {
-                phi[r] -= dot * found.shape[r];
+            for (r, phi_r) in phi.iter_mut().enumerate().take(n_free) {
+                *phi_r -= dot * found.shape[r];
             }
         }
         let mut eigen = 1.0_f64;
@@ -226,8 +226,8 @@ pub fn buckling_analysis(
             let mut next: Vec<f64> = x.iter().copied().collect();
             for found in &modes {
                 let dot: f64 = (0..n_free).map(|r| found.shape[r] * next[r]).sum();
-                for r in 0..n_free {
-                    next[r] -= dot * found.shape[r];
+                for (r, next_r) in next.iter_mut().enumerate().take(n_free) {
+                    *next_r -= dot * found.shape[r];
                 }
             }
             let next_norm = nalgebra::DVector::from_vec(next.clone()).norm();

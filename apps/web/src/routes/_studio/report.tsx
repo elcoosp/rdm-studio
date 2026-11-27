@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Trans } from "@lingui/react/macro";
 import {
   DndContext,
@@ -18,13 +18,18 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Download, GripVertical } from "lucide-react";
+import { Download, GripVertical, FileText, Share2, Printer } from "lucide-react";
 import { encodeProject } from "@/lib/urlShare";
 import { useProjectStore, type ProjectData } from "@/state/projectStore";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { t } from "@lingui/core/macro";
-import { feaClient, getLastModalReport, getLastReport } from "@/wasmBridge/workerClient";
+import {
+  feaClient,
+  getLastModalReport,
+  getLastReport,
+  useLastReport,
+} from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
 import { downloadDocx, type DocxBlock, type CoverMeta } from "@/export/docxExport";
 import { saveSnapshot } from "@/state/snapshots";
@@ -32,13 +37,14 @@ import { exportResultsCsv } from "@/export/csvExport";
 import { exportStandaloneHtml3d } from "@/export/standaloneHtml3d";
 import { captureViewportPng } from "@/state/stageStore";
 import { StudioBaseSearchSchema } from "@/schemas/searchParams.schema";
-import { IconReport } from "@/components/icons";
+import { IconReport } from "@rdm-studio/ui/icons";
 import { useLicenseStore } from "@/state/licenseStore";
 import { downloadText } from "@/export/csvExport";
-import { CopyButton, LoadingButton, SegmentedControl } from "@/components/interior";
+import { CopyButton, LoadingButton, SegmentedControl } from "@rdm-studio/ui/interior";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 export const Route = createFileRoute("/_studio/report")({
   staticData: {
@@ -58,6 +64,8 @@ async function dataUrlToBytes(dataUrl: string): Promise<Uint8Array> {
   const response = await fetch(dataUrl);
   return new Uint8Array(await response.arrayBuffer());
 }
+
+const sessionStartMs = Date.now();
 
 function downloadBytes(filename: string, bytes: Uint8Array): void {
   const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
@@ -111,6 +119,9 @@ function ReportPage() {
   // v2.1.1: the Édition Découverte watermark (removed in Pro mode).
   const licenseTier = useLicenseStore((s) => s.tier);
   const [busy, setBusy] = useState(false);
+  const [hasSolved, setHasSolved] = useState(false);
+  const [hasExported, setHasExported] = useState(false);
+  const [wasemEmitted, setWasemEmitted] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   // v2.1.1: ReportBuilder registers its .docx exporter so the rail-top
   // `Word (.docx)` button shares the SAME cover/chapter payload.
@@ -147,6 +158,8 @@ function ReportPage() {
         .then((r) => {
           if (!cancelled) {
             void r;
+            setHasSolved(true);
+            tryFireWasem();
           }
         })
         .catch(() => undefined);
@@ -173,6 +186,9 @@ function ReportPage() {
     toast(t`Modèle .rdm exporté`, {
       description: t`Fichier canonique réimportable à l'identique (round-trip Valibot).`,
     });
+    void trackProductEvent("export_completed", { format: "rdm" });
+    setHasExported(true);
+    tryFireWasem();
   };
 
   /** v2.1.1: BIM / solver exports live in the top export rail. */
@@ -187,6 +203,9 @@ function ReportPage() {
         anchor.download = `rdm-model.${format === "ifc4" ? "ifc" : format}`;
         anchor.click();
         URL.revokeObjectURL(url);
+        void trackProductEvent("export_completed", { format });
+        setHasExported(true);
+        tryFireWasem();
       })
       .catch(() => undefined);
   };
@@ -237,15 +256,30 @@ function ReportPage() {
       );
       const pdf = await feaClient.renderReportPdf(html, images);
       downloadBytes(`${project.name.replace(/[^\w-]+/g, "_")}-rapport.pdf`, pdf);
+      void trackProductEvent("export_completed", { format: "pdf" });
+      setHasExported(true);
+      tryFireWasem();
     } finally {
       setBusy(false);
     }
   };
 
+  const tryFireWasem = useCallback(() => {
+    if (wasemEmitted) return;
+    if (hasSolved && hasExported) {
+      setWasemEmitted(true);
+      void trackProductEvent("wasem_achieved", {
+        elapsed_ms: Date.now() - sessionStartMs,
+        n_beams: project.structure.beams.length,
+        export_format: "any",
+      });
+    }
+  }, [hasSolved, hasExported, wasemEmitted, project.structure.beams.length]);
+
   return (
     <div className="h-full min-h-0 overflow-auto p-3 md:p-4">
       <div className="mx-auto flex max-w-[1140px] flex-col gap-4 md:flex-row md:items-start">
-        <section className="print-sheet mx-auto w-full max-w-[794px] space-y-5 rounded-panel border border-hairline bg-panel p-8">
+        <section className="print-sheet mx-auto min-w-0 flex-1 max-w-[794px] space-y-5 rounded-panel border border-hairline bg-panel p-6 lg:p-8">
           {/* A4 sheet header: logo + title + date. */}
           <div className="flex items-center justify-between border-b-2 border-accent pb-2">
             <div className="flex items-center gap-2">
@@ -327,11 +361,14 @@ function ReportPage() {
             and Word (.docx) (secondary outline) TOGETHER at the top, then
             the BIM/data formats, then the Report Builder + share block.
             v2.1.2: the two document buttons are interior.dev
-            `LoadingButton`s (locked width, idle → pending → success). */}
+            `LoadingButton`s (locked width, idle → pending → success).
+            v2.3.0: grouped into hairline sub-cards with 16px icons. */}
         <aside className="w-full shrink-0 space-y-3 self-start md:sticky md:top-4 md:w-80">
-          <div className="space-y-3 rounded-panel border border-hairline bg-panel p-4">
-            <h3 className="text-[15px] font-semibold">
-              <Trans>Exports (étape 5)</Trans>
+          {/* Documents sub-card */}
+          <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+            <h3 className="flex items-center gap-1.5 text-[13px] font-semibold mb-2">
+              <FileText size={16} strokeWidth={1.5} className="text-accent" aria-hidden />
+              <Trans>Documents</Trans>
             </h3>
             <LoadingButton
               testId="export-pdf"
@@ -345,15 +382,22 @@ function ReportPage() {
             </LoadingButton>
             <LoadingButton
               testId="export-docx"
-              className="min-h-11 w-full border-accent bg-panel text-accent hover:bg-accent-tint"
+              className="min-h-11 w-full border-accent bg-panel text-accent hover:bg-accent-tint mt-2"
               disabled={busy}
               onAction={() => docxExportRef.current()}
               successLabel={t`.docx téléchargé`}
             >
               {t`Word (.docx)`}
             </LoadingButton>
-            {/* BIM & data formats — secondary row under the 2 documents. */}
-            <div className="grid grid-cols-3 gap-1.5 border-t border-hairline pt-3">
+          </div>
+
+          {/* BIM & Data Formats sub-card */}
+          <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+            <h3 className="flex items-center gap-1.5 text-[13px] font-semibold mb-2">
+              <Download size={16} strokeWidth={1.5} className="text-accent" aria-hidden />
+              <Trans>Formats BIM & données</Trans>
+            </h3>
+            <div className="grid grid-cols-3 gap-1.5">
               {["ifc4", "saf", "opensees", "gltf"].map((format) => (
                 <button
                   key={format}
@@ -400,18 +444,16 @@ function ReportPage() {
                 <Download size={12} strokeWidth={1.5} aria-hidden />
                 HTML 3D
               </button>
-              <button
-                type="button"
-                data-testid="print-report"
-                className="col-span-2 flex items-center justify-center gap-1 rounded border border-hairline px-2 py-1.5 text-[11px] text-ink-secondary hover:border-accent hover:text-accent"
-                onClick={() => window.print()}
-              >
-                <Trans>Imprimer</Trans>
-              </button>
             </div>
-            {/* Share-by-URL (lz-string compressed, Valibot-validated).
-                v2.1.2: compacted payload + interior.dev CopyButton. */}
-            <div className="border-t border-hairline pt-3">
+          </div>
+
+          {/* Share & Print sub-card */}
+          <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+            <h3 className="flex items-center gap-1.5 text-[13px] font-semibold mb-2">
+              <Share2 size={16} strokeWidth={1.5} className="text-accent" aria-hidden />
+              <Trans>Partage & impression</Trans>
+            </h3>
+            <div className="space-y-2">
               <p className="text-[12px] text-ink-secondary">
                 <Trans>
                   Le modèle .rdm est compressé (lz-string) dans l'URL et validé par Valibot à la
@@ -420,15 +462,16 @@ function ReportPage() {
               </p>
               <Textarea
                 readOnly
-                className="font-data mt-2 h-20 text-[11px]"
+                className="font-data h-20 text-[11px]"
                 value={shareUrl}
                 aria-label={t`URL de partage`}
               />
               <CopyButton
                 value={shareUrl}
-                className="mt-2 h-9 w-full justify-center"
+                className="h-9 w-full justify-center"
                 label={t`Copier l'URL de partage`}
                 copiedLabel={t`Copie !`}
+                onCopy={() => void trackProductEvent("share_url_copied")}
               />
               {qrDataUrl !== null ? (
                 <img
@@ -438,8 +481,21 @@ function ReportPage() {
                   className="mx-auto mt-3 block h-28 w-28"
                 />
               ) : null}
+              <button
+                type="button"
+                data-testid="print-report"
+                className="flex items-center justify-center gap-1 rounded border border-hairline px-2 py-1.5 w-full text-[11px] text-ink-secondary hover:border-accent hover:text-accent"
+                onClick={() => {
+                  void trackProductEvent("print_clicked");
+                  window.print();
+                }}
+              >
+                <Printer size={12} strokeWidth={1.5} aria-hidden />
+                <Trans>Imprimer</Trans>
+              </button>
             </div>
           </div>
+
           <ReportBuilder registerDocxExport={(fn) => (docxExportRef.current = fn)} />
         </aside>
       </div>
@@ -493,7 +549,10 @@ function FingerprintFooter({ qrDataUrl }: { qrDataUrl: string | null }) {
 
 function ReportTables() {
   const project = useProjectStore((s) => s.project);
-  const report = getLastReport();
+  // v2.3.0: reactive last-report hook — the ELU reactions, EC3 and ELS
+  // tables re-render with live non-zero numbers the moment the auto-solve
+  // finishes, instead of staying frozen on the (null) first render.
+  const report = useLastReport();
   const uls = report?.combinations.find((c) => c.kind === "ULS");
   const sls = report?.combinations.find((c) => c.kind === "SLS");
   const beamById = new Map(project.structure.beams.map((b) => [b.id, b]));
@@ -544,6 +603,9 @@ function ReportTables() {
       let rx = 0;
       let ry = 0;
       let rz = 0;
+      let mx = 0;
+      let my = 0;
+      let mz = 0;
       const i = nodeIndex * 6;
       for (const [code, factor] of multipliers) {
         const reactions = byCode.get(code);
@@ -553,12 +615,26 @@ function ReportTables() {
         rx += factor * (reactions[i] ?? 0);
         ry += factor * (reactions[i + 1] ?? 0);
         rz += factor * (reactions[i + 2] ?? 0);
+        mx += factor * (reactions[i + 3] ?? 0);
+        my += factor * (reactions[i + 4] ?? 0);
+        mz += factor * (reactions[i + 5] ?? 0);
       }
-      return [`N${n.id}`, fr(rx / 1000, 2), fr(ry / 1000, 2), fr(rz / 1000, 2)];
+      return [
+        `N${n.id}`,
+        fr(rx / 1000, 2),
+        fr(ry / 1000, 2),
+        fr(rz / 1000, 2),
+        fr(mx / 1000, 2),
+        fr(my / 1000, 2),
+        fr(mz / 1000, 2),
+      ];
     });
   const totalRx = reactionRows.reduce((m, r) => m + Number((r[1] ?? "0").replace(",", ".")), 0);
   const totalRy = reactionRows.reduce((m, r) => m + Number((r[2] ?? "0").replace(",", ".")), 0);
   const totalRz = reactionRows.reduce((m, r) => m + Number((r[3] ?? "0").replace(",", ".")), 0);
+  const totalMx = reactionRows.reduce((m, r) => m + Number((r[4] ?? "0").replace(",", ".")), 0);
+  const totalMy = reactionRows.reduce((m, r) => m + Number((r[5] ?? "0").replace(",", ".")), 0);
+  const totalMz = reactionRows.reduce((m, r) => m + Number((r[6] ?? "0").replace(",", ".")), 0);
   // v1.4.0: modal table (f + T) — last computed eigen report.
   const modal = getLastModalReport();
   const modalRows = (modal?.modes ?? [])
@@ -587,9 +663,20 @@ function ReportTables() {
           rows: modalRows,
         },
         {
-          title: `${t`Réactions d'appuis ELU (kN)`}${uls !== undefined ? ` — ${uls.label}` : ""}`,
-          headers: [t`Appui`, "Rx", "Ry", "Rz"],
-          rows: [...reactionRows, ["Σ", fr(totalRx, 2), fr(totalRy, 2), fr(totalRz, 2)]],
+          title: `${t`Réactions d'appuis ELU (kN / kN·m)`}${uls !== undefined ? ` — ${uls.label}` : ""}`,
+          headers: [t`Appui`, "Rx", "Ry", "Rz", "Mx", "My", "Mz"],
+          rows: [
+            ...reactionRows,
+            [
+              "Σ",
+              fr(totalRx, 2),
+              fr(totalRy, 2),
+              fr(totalRz, 2),
+              fr(totalMx, 2),
+              fr(totalMy, 2),
+              fr(totalMz, 2),
+            ],
+          ],
         },
         {
           title: t`Vérification Eurocode 3`,

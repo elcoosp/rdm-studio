@@ -49,6 +49,58 @@ export function buildResultsCsv(project: ProjectData, report: SolveReport | null
     for (const c of report.combinations) {
       lines.push(`Combinaison;${c.kind};${c.label}`);
     }
+    // v2.4.0: support reactions with all 6 components (Rx..Rz in kN,
+    // Mx..Mz in kN·m) superposed over the ULS multipliers.
+    const uls = report.combinations.find((c) => c.kind === "ULS");
+    const multipliers: [string, number][] = uls?.multipliers ?? [
+      ["G", 1.35],
+      ["Q", 1.5],
+    ];
+    const byCode = new Map(report.cases.map((c) => [c.code, c.reactions as number[] | undefined]));
+    const supportNodes = project.structure.nodes.filter((n) =>
+      project.structure.supports.some((sp) => sp.node_id === n.id),
+    );
+    if (supportNodes.length > 0) {
+      lines.push("");
+      lines.push(
+        ["Appui", "Rx (kN)", "Ry (kN)", "Rz (kN)", "Mx (kN·m)", "My (kN·m)", "Mz (kN·m)"]
+          .map(csvEscape)
+          .join(";"),
+      );
+      for (const n of supportNodes) {
+        const nodeIndex = project.structure.nodes.findIndex((x) => x.id === n.id);
+        let rx = 0;
+        let ry = 0;
+        let rz = 0;
+        let mx = 0;
+        let my = 0;
+        let mz = 0;
+        const i = nodeIndex * 6;
+        for (const [code, factor] of multipliers) {
+          const reactions = byCode.get(code);
+          if (reactions === undefined) continue;
+          rx += factor * (reactions[i] ?? 0);
+          ry += factor * (reactions[i + 1] ?? 0);
+          rz += factor * (reactions[i + 2] ?? 0);
+          mx += factor * (reactions[i + 3] ?? 0);
+          my += factor * (reactions[i + 4] ?? 0);
+          mz += factor * (reactions[i + 5] ?? 0);
+        }
+        lines.push(
+          [
+            `N${n.id}`,
+            (rx / 1000).toFixed(2),
+            (ry / 1000).toFixed(2),
+            (rz / 1000).toFixed(2),
+            (mx / 1000).toFixed(2),
+            (my / 1000).toFixed(2),
+            (mz / 1000).toFixed(2),
+          ]
+            .map(csvEscape)
+            .join(";"),
+        );
+      }
+    }
   }
   // UTF-8 BOM: Excel reads accents without an import wizard.
   return `\ufeff${lines.join("\n")}\n`;

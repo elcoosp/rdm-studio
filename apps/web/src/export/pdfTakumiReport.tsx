@@ -122,8 +122,56 @@ export function buildReportHtml(
     caseG === undefined
       ? ""
       : `<div style="padding: 3px 12px; font-family: JetBrains Mono; font-size: 10px; color: #475569;">
-		Réactions max (G): ${fmt(Math.max(...caseG.reactions.map((r) => Math.abs(r))), 2)} kN
+	  Réactions max (G): ${fmt(Math.max(...caseG.reactions.map((r) => Math.abs(r))), 2)} (N / N·m)
 	</div>`;
+
+  // v2.4.0: per-support reaction table with all 6 components (Rx..Mz).
+  const supportReactions = (() => {
+    const multipliers = uls?.multipliers ?? [
+      ["G", 1.35],
+      ["Q", 1.5],
+    ];
+    const byCode = new Map(
+      (report?.cases ?? []).map((c) => [c.code, c.reactions as number[] | undefined]),
+    );
+    const rows = project.structure.nodes
+      .filter((n) => project.structure.supports.some((sp) => sp.node_id === n.id))
+      .map((n) => {
+        const nodeIndex = project.structure.nodes.findIndex((x) => x.id === n.id);
+        let rx = 0;
+        let ry = 0;
+        let rz = 0;
+        let mx = 0;
+        let my = 0;
+        let mz = 0;
+        const i = nodeIndex * 6;
+        for (const [code, factor] of multipliers) {
+          const reactions = byCode.get(code);
+          if (reactions === undefined) continue;
+          rx += factor * (reactions[i] ?? 0);
+          ry += factor * (reactions[i + 1] ?? 0);
+          rz += factor * (reactions[i + 2] ?? 0);
+          mx += factor * (reactions[i + 3] ?? 0);
+          my += factor * (reactions[i + 4] ?? 0);
+          mz += factor * (reactions[i + 5] ?? 0);
+        }
+        return `<div style="display: flex; gap: 12px; padding: 3px 12px; font-family: JetBrains Mono; font-size: 10px; border-bottom: 1px solid #F3F4F6;">
+		  <span style="width: 48px;">N${n.id}</span>
+		  <span style="width: 72px;">Rx ${fmt(rx / 1000, 2)}</span>
+		  <span style="width: 72px;">Ry ${fmt(ry / 1000, 2)}</span>
+		  <span style="width: 72px;">Rz ${fmt(rz / 1000, 2)}</span>
+		  <span style="width: 78px;">Mx ${fmt(mx / 1000, 2)}</span>
+		  <span style="width: 78px;">My ${fmt(my / 1000, 2)}</span>
+		  <span style="width: 78px;">Mz ${fmt(mz / 1000, 2)}</span>
+		</div>`;
+      })
+      .join("");
+    if (rows === "") return "";
+    return `<div style="display: flex; flex-direction: column; gap: 2px;">
+		<span style="font-size: 13px; font-weight: 600;">Réactions d'appuis ELU (kN / kN·m)</span>
+		${rows}
+	  </div>`;
+  })();
 
   const qrImage = qrPng ? `<img src="${qrPng.src}" style="width: 88px; height: 88px;" />` : "";
   // v1.6.0: live 3D snapshot of the persistent stage embedded in the PDF.
@@ -164,7 +212,8 @@ export function buildReportHtml(
 		<span style="font-size: 13px; font-weight: 600;">Deformations SLS — ${escape(sls?.label ?? "")}</span>
 		${slsRows}
 	  </div>
-	  ${reactions}`
+	  ${reactions}
+	  ${supportReactions}`
     }
 	  <div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 10px;">
 		${qrImage}

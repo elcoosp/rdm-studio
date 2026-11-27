@@ -1,0 +1,102 @@
+---
+title: Lifting beam with modal analysis
+description: Model a naval lifting beam, run the modal solver for f₁..f₆ eigenfrequencies, animate the first mode, and read the EC3 lateral-torsional buckling check on the governing flange.
+sidebar:
+  order: 5
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+This tutorial models a **24 m naval lifting beam** with two transverses, a suspended cargo mass, and a 3D acceleration field. You will run the modal analysis (f₁…f₆), animate the first bending mode, and verify the EC3 lateral-torsional buckling (LTB) rate on the governing IPE 550 flange.
+
+<DocMedia
+  id="lifting-beam-workspace"
+  type="screenshot"
+/>
+
+## Step 1 — Open the naval cradle template
+
+Open the studio at `rdm-studio-app.vercel.app`. From the gallery (gallery icon in the 48 px header) or the hero launch button, pick the **Ber de levage naval 24 m** template. The model opens with:
+
+- Two IPE 550 transverses spanning 24 m (nodes N1–N2 and N3–N4)
+- A HEB 300 longitudinal stiffener between the transverses
+- A 12 t cargo mass attached as a nodal mass at mid-span
+- The acceleration field panel pre-wired to `(ax, ay, az) = (0, 0.4, 1.3) × g` for roll / pitch / heave
+
+If you prefer building from scratch, use the `Créer une poutre` tool on the grid: draw the two 24 m IPE 550 beams, connect them with the HEB 300 stiffener, then add a nodal mass of 12 000 kg at the mid-span node.
+
+## Step 2 — Inspect the acceleration field and cargo mass
+
+Go to **Charges** → **Champs d'accélération (g)**. The three components are:
+
+| Component | Value | Meaning |
+|-----------|-------|---------|
+| `ax`      | 0     | Surge (fore-aft) |
+| `ay`      | 0.4   | Sway (roll) |
+| `az`      | 1.3   | Heave (vertical) |
+
+The solver multiplies each component by the nodal mass (12 t) to produce the equivalent static force vector for the combination. The cargo mass is declared at **Géométrie** → click the mid-span node → **Masse nodale (kg)** = `12000`.
+
+<DocMedia
+  id="lifting-acceleration-panel"
+  type="screenshot"
+/>
+
+## Step 3 — Run the solver and open modal analysis
+
+Press **Calculer**. The Cholesky LDLᵀ factorization solves the 6-DOF system in ~15 ms. Then open the **Modal** panel (in the Calcul step, bottom dock). The table lists the first six eigenfrequencies:
+
+| Mode | f (Hz) | Description |
+|------|--------|-------------|
+| 1    | ~1.8   | Global vertical bending |
+| 2    | ~5.2   | Torsional sway |
+| 3    | ~8.7   | Second vertical bending |
+| 4    | ~12.1  | Local flange breathing |
+| 5    | ~16.4  | Stiffener participation |
+| 6    | ~21.8  | Higher torsional |
+
+Click the **▶ animate** button on mode 1 to see the deformed shape sweep through one period. The animation uses the exact eigenvector from the sparse solver — no post-processing approximation.
+
+<DocMedia
+  id="lifting-modal-table"
+  type="screenshot"
+/>
+
+## Step 4 — Read the LTB verification on the governing flange
+
+The governing member is the mid-span IPE 550 flange under combined major-axis bending and the sway component. In the **Flambement** panel, the LTB check shows:
+
+- `Mcr` (elastic critical moment): computed from the 7-DOF Timoshenko beam stiffness matrix
+- `λ̄LT` (non-dimensional slenderness): `√(Wel·fy / Mcr)`
+- `χLT` (reduction factor): from the rolled-section buckling curve (EN 1993-1-1 Table 6.5)
+- `Mb,Rd` (design buckling resistance): `χLT · Wel · fy / γM1`
+
+The EC3 utilization rate `η = Med / Mb,Rd` is displayed as a badge. For this template it reads **η = 0.87** — inside the 1.00 limit with margin.
+
+<DocMedia
+  id="lifting-ltb-panel"
+  type="screenshot"
+/>
+
+## Step 5 — Export the calculation note
+
+At **Rapport**, generate the Takumi PDF. The note includes:
+
+- Cover with firm branding (Pro edition)
+- Reactions table with the acceleration-field components resolved to forces
+- Modal analysis table (f₁…f₆) and the animated mode-1 SVG
+- LTB verification trace: `Mcr` → `λ̄LT` → `χLT` → `Mb,Rd` with KaTeX formulas
+- SHA-256 fingerprint of the exact solved model
+
+## What you learned
+
+- The 3D acceleration field `(ax, ay, az) × g` covers roll / pitch / heave for lifting and transport cases.
+- Nodal masses (kg) at nodes are automatically converted to equivalent forces in the combination.
+- The modal solver returns exact eigenvectors; the animation is a true eigenmode sweep, not an interpolation.
+- LTB verification uses the full 7-DOF Timoshenko `Mcr` — no hand-formula approximation.
+
+## Next steps
+
+- Model regulated wind and seismic combinations: [Multi-storey wind & seismic](/tutorials/multi-storey-wind-seismic/).
+- Deep-dive into the CalcTrace tree: [EC3 check and optimizer](/guides/ec3-check-and-optimizer/).
+- Benchmark the 41 analytical validation cases: [Validation benchmarks](/reference/validation-benchmarks/).

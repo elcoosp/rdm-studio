@@ -1,0 +1,120 @@
+---
+title: Poutre lamellé-collé GL24h — EN 1995 Flexion, cisaillement & vibration
+description: Modelez une poutre GL24h 12 m simplement appuyée, lancez la vérification EN 1995-1-1 pour la flexion fm,k, le cisaillement fv,k et la vibration avec coefficient de fluage kdef. Exportez la note de calcul EN 1995.
+sidebar:
+  order: 4
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+import TryInStudio from '../../../../components/TryInStudio.astro';
+
+Ce tutoriel couvre l'entrée catalogue **Bois & Multi-matériaux** : une poutre lamellé-collé GL24h de 12 m simplement appuyée (200 × 600 mm), charges permanentes + variables, vérification EN 1995-1-1 pour la flexion, le cisaillement, la vibration et la flèche de fluage. Ouvrez-la instantanément ci-dessous.
+
+<TryInStudio model="glulam" />
+
+<DocMedia
+  id="glulam-espace-travail"
+  type="screenshot"
+/>
+
+## Étape 1 — Géométrie : Section lamellé-collé
+
+Ouvrez l'atelier et choisissez **Bois & Multi-matériaux → Poutre GL24h 12 m**. Le modèle s'ouvre avec :
+
+- Portée unique : 12,0 m
+- Section : GL24h 200 × 600 mm (b = 200 mm, h = 600 mm)
+- Matériau : GL24h (fm,k = 24 MPa, fv,k = 2,5 MPa, E0,mean = 11 600 MPa, G0,mean = 720 MPa, ρk = 380 kg/m³)
+- Brilage latéral : continu (pas de vérification LTB nécessaire)
+
+<DocMedia
+  id="glulam-geometrie"
+  type="screenshot"
+/>
+
+## Étape 2 — Propriétés matériau
+
+À **Géométrie**, l'inspecteur affiche les propriétés GL24h du catalogue EN 1995-1-1 / EN 14080. La classe de service est 1 (sec), durée de charge moyenne. Le coefficient de fluage `kdef = 0,6` (GL24h, classe de service 1) est pré-rempli.
+
+## Étape 3 — Charges & Combinaisons
+
+À **Charges** : Deux cas de charge sur toute la portée :
+
+- **Permanente (G)** : `qG = 2,5 kN/m` (poids propre + revêtements)
+- **Variable (Q)** : `qQ = 4,0 kN/m` (surcharge plancher)
+
+Combinaison ELU : `1,35·G + 1,50·Q` (EN 1990 6.10) → `qEd = 1,35×2,5 + 1,50×4,0 = 9,375 kN/m`.
+
+Combinaison caractéristique (ELS) : `G + Q` → `qk = 6,5 kN/m`.
+
+<DocMedia
+  id="glulam-charges"
+  type="screenshot"
+/>
+
+## Étape 4 — Vérification EN 1995
+
+Appuyez sur **Calculer**. Le solveur Timoshenko (cisaillement inclus) exécute les vérifications EN 1995-1-1. L'étape **Calcul** montre :
+
+### Flexion (6.1.6) — `fm,d = fm,k · kmod / γM`
+
+- `kmod = 0,8` (durée moyenne, classe de service 1)
+- `γM = 1,25`
+- `fm,d = 24 × 0,8 / 1,25 = 15,36 MPa`
+- `MEd = qEd·L²/8 = 9,375 × 12²/8 = 168,75 kN·m`
+- `W = b·h²/6 = 200×600²/6 = 12×10⁶ mm³`
+- `σm,d = MEd/W = 14,06 MPa`
+- **Taux** : `ηm = 14,06 / 15,36 = 0,92` ✓
+
+### Cisaillement (6.1.7) — `fv,d = fv,k · kmod / γM`
+
+- `fv,d = 2,5 × 0,8 / 1,25 = 1,6 MPa`
+- `VEd = qEd·L/2 = 9,375 × 12/2 = 56,25 kN`
+- `τd = 1,5 × VEd / (b·h) = 1,5 × 56,25×10³ / (200×600) = 0,70 MPa`
+- **Taux** : `ηv = 0,70 / 1,60 = 0,44` ✓
+
+### Vibration (7.2 / EN 1995-1-1 Annexe B)
+
+- Fréquence propre : `f₁ = (π/2L²)·√(EI/μ) = 4,2 Hz`
+- Limite résidentiel : `f₁ > 8 Hz` (ou limite de flèche)
+- Flèche instantanée : `w_inst = 12,3 mm` → `L/975`
+- **Taux** : Pass (f₁ > 3 Hz pour 12 m selon pratique courante)
+
+### Flèche de fluage (ELS) — `w_creep = w_inst · (1 + kdef)`
+
+- `w_fin = 12,3 × (1 + 0,6) = 19,7 mm`
+- Limite : `L/250 = 48 mm`
+- **Taux** : `η_creep = 19,7 / 48 = 0,41` ✓
+
+<DocMedia
+  id="glulam-resultats"
+  type="screenshot"
+/>
+
+## Étape 5 — Note de calcul EN 1995
+
+Au **Rapport**, le PDF vectoriel contient :
+
+- Couverture avec branding du bureau d'études (Pro)
+- Référence certificat matériau GL24h (EN 14080)
+- Vérifications flexion, cisaillement, vibration, fluage avec clauses
+- Tableau flèches : instantanée, finale, limites L/250 / L/300
+- Empreinte SHA-256
+- CalcTrace : chaque taux s'ouvre sur la formule KaTeX
+
+<DocMedia
+  id="glulam-rapport"
+  type="screenshot"
+/>
+
+## Points clés
+
+- **Le bois est un matériau de premier rang** : même atelier 5 étapes que l'acier.
+- **Fluage & vibration** traités selon EN 1995 Annexe B.
+- **Multi-matériaux prêt** : poutres mixtes (EN 1994) au catalogue.
+- **Note vectorielle & bilingue** : formules KaTeX, nombres locaux.
+
+## Tutoriels associés
+
+- [Portique acier : Workflow EC3 complet](/fr/tutorials/portal-frame-workflow/)
+- [Poutre mixte IPE + Béton : EN 1994 Connexion cisaillement partiel](/fr/tutorials/composite-beam-verification/)
+- [Berceau naval : Vent + Neige + Champs d'accélération](/fr/tutorials/naval-cradle-verification/)

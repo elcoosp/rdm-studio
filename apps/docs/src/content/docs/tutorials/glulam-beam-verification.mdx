@@ -1,0 +1,120 @@
+---
+title: Glulam GL24h Beam — EN 1995 Bending, Shear & Vibration
+description: Model a 12 m simply supported GL24h glulam beam, run EC5 verification for bending fm,k, shear fv,k, and vibration serviceability with creep factor kdef. Export EN 1995 calculation note.
+sidebar:
+  order: 4
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+import TryInStudio from '../../../components/TryInStudio.astro';
+
+This tutorial covers the **Timber & Multi-Material** catalog entry: a 12 m simply supported glulam beam GL24h (200 × 600 mm), permanent + variable loads, EN 1995-1-1 verification for bending, shear, vibration, and creep deflection. Open it instantly below.
+
+<TryInStudio model="glulam-beam" />
+
+<DocMedia
+  id="glulam-workspace"
+  type="screenshot"
+/>
+
+## Step 1 — Geometry: Glulam Section
+
+Open the studio and select **Timber & Multi-Material → Glulam Beam GL24h 12 m**. The model opens with:
+
+- Single span: 12.0 m
+- Section: GL24h 200 × 600 mm (b = 200 mm, h = 600 mm)
+- Material: GL24h (fm,k = 24 MPa, fv,k = 2.5 MPa, E0,mean = 11,600 MPa, G0,mean = 720 MPa, ρk = 380 kg/m³)
+- Lateral bracing: continuous (no LTB check needed)
+
+<DocMedia
+  id="glulam-geometry"
+  type="screenshot"
+/>
+
+## Step 2 — Material Properties
+
+At **Géométrie**, the inspector shows the GL24h properties from the EN 1995-1-1 / EN 14080 catalog. The service class is 1 (dry), load duration class is medium-term. The creep factor `kdef = 0.6` (GL24h, service class 1) is pre-filled.
+
+## Step 3 — Loads & Combinations
+
+At **Charges**: Two load cases on the full span:
+
+- **Permanent (G)**: `qG = 2.5 kN/m` (self-weight + finishes)
+- **Variable (Q)**: `qQ = 4.0 kN/m` (imposed floor load)
+
+Combination: `1.35·G + 1.50·Q` (EN 1990 6.10) → `qEd = 1.35×2.5 + 1.50×4.0 = 9.375 kN/m`.
+
+Characteristic combination (ELS): `G + Q` → `qk = 6.5 kN/m`.
+
+<DocMedia
+  id="glulam-loads"
+  type="screenshot"
+/>
+
+## Step 4 — EN 1995 Verification
+
+Press **Calculer**. The solver runs the Timoshenko beam formulation with shear deformation. The **Calcul** step shows EN 1995-1-1 checks:
+
+### Bending (6.1.6) — `fm,d = fm,k · kmod / γM`
+
+- `kmod = 0.8` (medium-term, service class 1)
+- `γM = 1.25`
+- `fm,d = 24 × 0.8 / 1.25 = 15.36 MPa`
+- `MEd = qEd·L²/8 = 9.375 × 12²/8 = 168.75 kN·m`
+- `W = b·h²/6 = 200×600²/6 = 12×10⁶ mm³`
+- `σm,d = MEd/W = 14.06 MPa`
+- **Rate**: `ηm = 14.06 / 15.36 = 0.92` ✓
+
+### Shear (6.1.7) — `fv,d = fv,k · kmod / γM`
+
+- `fv,d = 2.5 × 0.8 / 1.25 = 1.6 MPa`
+- `VEd = qEd·L/2 = 9.375 × 12/2 = 56.25 kN`
+- `τd = 1.5 × VEd / (b·h) = 1.5 × 56.25×10³ / (200×600) = 0.70 MPa`
+- **Rate**: `ηv = 0.70 / 1.60 = 0.44` ✓
+
+### Vibration (7.2 / EN 1995-1-1 Annex B)
+
+- Fundamental frequency: `f₁ = (π/2L²)·√(EI/μ) = 4.2 Hz`
+- Limit for residential: `f₁ > 8 Hz` (or deflection limit)
+- Instantaneous deflection: `w_inst = 12.3 mm` → `L/975`
+- **Rate**: Pass (f₁ > 3 Hz for 12 m span per common practice)
+
+### Creep Deflection (ELS) — `w_creep = w_inst · (1 + kdef)`
+
+- `w_fin = 12.3 × (1 + 0.6) = 19.7 mm`
+- Limit: `L/250 = 48 mm`
+- **Rate**: `η_creep = 19.7 / 48 = 0.41` ✓
+
+<DocMedia
+  id="glulam-results"
+  type="screenshot"
+/>
+
+## Step 5 — EN 1995 Calculation Note
+
+At **Rapport**, the vector PDF includes:
+
+- Cover with firm branding (Pro)
+- GL24h material certificate reference (EN 14080)
+- Bending, shear, vibration, creep checks with clause references
+- Deflection table: instantaneous, final, limits L/250 / L/300
+- SHA-256 fingerprint
+- CalcTrace: each rate expands to KaTeX formula
+
+<DocMedia
+  id="glulam-report"
+  type="screenshot"
+/>
+
+## Key Takeaways
+
+- **Timber is a first-class material**: same 5-step workflow as steel.
+- **Creep & vibration** are handled per EN 1995 Annex B.
+- **Multi-material ready**: composite beams (EN 1994) in the catalog.
+- **Report is vector & bilingual**: formulas render in KaTeX, locale-aware numbers.
+
+## Related Tutorials
+
+- [Portal Frame: Steel EC3 Full Workflow](/tutorials/portal-frame-workflow/)
+- [Composite IPE + Concrete: EN 1994 Partial Shear Connection](/tutorials/composite-beam-verification/)
+- [Naval Cradle: Wind + Snow + Acceleration Fields](/tutorials/naval-cradle-verification/)

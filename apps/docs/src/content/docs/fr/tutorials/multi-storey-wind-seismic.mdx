@@ -1,0 +1,131 @@
+---
+title: Portique multi-étages vent & sismique
+description: Construire un portique de bureaux 4 étages, appliquer les combinaisons vent EN 1991-1-4 et sismique EN 1998-1, lancer le solveur P-Δ et lire les dévers inter-étages et les taux d'utilisation EC3 des poteaux.
+sidebar:
+  order: 6
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Ce tutoriel construit un **portique de bureaux 4 étages, 3 travées** (grille 16 m × 24 m, hauteur d'étage 3,5 m), applique la pression de vent EN 1991-1-4 et le spectre de réponse élastique EN 1998-1, lance le solveur géométriquement non-linéaire P-Δ, et contrôle les dévers inter-étages contre `h/300` ainsi que les taux d'utilisation EC3 des poteaux.
+
+<DocMedia
+  id="multistorey-workspace"
+  type="screenshot"
+/>
+
+## Étape 1 — Dessiner la grille 4 étages
+
+Ouvrez l'atelier et créez un nouveau modèle. Utilisez l'outil `Créer une poutre` avec l'accrochage magnétique (grille 50 mm) pour dessiner :
+
+- **Poteaux** : 4 étages × 12 poteaux = 48 barres HEB 300 (axes verticaux aux 0, 8, 16, 24 m)
+- **Poutres** : 4 étages × 10 poutres = 40 barres IPE 400 (portées 8 m dans les deux directions)
+- **Dalles** : Non modélisées structuralement — les diaphragmes d'étage sont simulés par des contraintes de diaphragme rigide à chaque niveau (ouvrez **Liaisons** → **Diaphragme rigide** sur chaque groupe de nœuds d'étage)
+
+Le modèle compte 52 nœuds et 88 barres. Tous les nœuds poutre-poteau sont nominalement articulés (`Ry = Rz = libres`), mais les bases de poteaux sont encastrées (`Ux, Uy, Uz, Rx, Ry, Rz = bloqués`).
+
+<DocMedia
+  id="multistorey-geometry"
+  type="screenshot"
+/>
+
+## Étape 2 — Définir le générateur vent (EN 1991-1-4)
+
+Allez à **Charges** → **Générateurs EN 1991** → **Vent (EN 1991-1-4)**. Entrez les paramètres du site :
+
+| Paramètre | Valeur | Note |
+|-----------|--------|------|
+| `vb` (vitesse de base) | 25 m/s | Catégorie de terrain II |
+| `cprob` (facteur probabilité) | 1,0 | Retour 50 ans |
+| `cdir` (facteur direction) | 1,0 | |
+| `cseason` (facteur saison) | 1,0 | |
+| `z0` (longueur de rugosité) | 0,05 m | Terrain II |
+| `zmin` | 4 m | |
+| `h` (hauteur bâtiment) | 14 m | 4 × 3,5 m |
+
+Le générateur calcule `qp(z)` à chaque niveau d'étage et le répartit en forces nodales équivalentes sur les colonnes au vent / sous le vent. Ouvrez le tableau **Combinaisons** — la combinaison vent `1,35·G + 1,50·Qk,vent + 0,5·ψ0·Qk,neige` apparaît comme `C_vent`.
+
+<DocMedia
+  id="multistorey-wind-panel"
+  type="screenshot"
+/>
+
+## Étape 3 — Définir le générateur sismique (EN 1998-1)
+
+Toujours dans **Charges** → **Générateurs EN 1991** → **Sismique (EN 1998-1)**. Entrez :
+
+| Paramètre | Valeur | Note |
+|-----------|--------|------|
+| `ag` (PGA) | 0,16 g | Spectre type 1 |
+| `S` (type de sol) | C | |
+| `q` (facteur de comportement) | 3,0 | Portique acier ductile |
+| `β` (facteur borne inférieure) | 0,2 | |
+| `T1` (période fondamentale) | auto | Calculée par analyse modale |
+
+Le générateur construit le spectre de réponse élastique `Se(T)` et lance une analyse modale pour extraire la première forme de mode. Les forces latérales équivalentes `Fi = Si · mi · φi,1` sont appliquées à chaque diaphragme d'étage. La combinaison sismique `G + Qk + ψE·E` apparaît comme `C_sismique`.
+
+<DocMedia
+  id="multistorey-seismic-panel"
+  type="screenshot"
+/>
+
+## Étape 4 — Lancer le solveur P-Δ et lire les dévers
+
+Appuyez sur **Calculer**. Le solveur détecte les charges verticales (G + Q) et les combinaisons latérales, puis lance l'analyse **P-Δ géométriquement non-linéaire** (Cholesky itératif avec mise à jour de la raideur tangente). Le critère de convergence est `||ΔU|| / ||U|| < 1e-6`.
+
+Ouvrez l'étape **Calcul** → panneau **Flèches ELS**. Les dévers inter-étages sont :
+
+| Étage | Δ (mm) | h/300 (mm) | État |
+|-------|--------|------------|------|
+| 1     | 8,2    | 11,7       | ✓ |
+| 2     | 10,5   | 11,7       | ✓ |
+| 3     | 11,1   | 11,7       | ✓ |
+| 4     | 9,8    | 11,7       | ✓ |
+
+Tous les dévers sont dans la limite `h/300` (11,7 mm pour étages de 3,5 m). Le dévers maximal est à l'étage 3 (10,5 mm ≈ h/333).
+
+<DocMedia
+  id="multistorey-drifts"
+  type="screenshot"
+/>
+
+## Étape 5 — Lire les taux d'utilisation EC3 des poteaux
+
+Dans l'étape **Calcul** → panneau **Vérification EC3**, les poteaux gouvernants sont les poteaux internes du rez-de-chaussée (effort normal + flexion grand axe amplifiée par P-Δ). Les taux d'utilisation :
+
+| Poteau | N (kN) | My (kNm) | η (ELU) |
+|--------|--------|----------|---------|
+| C1 (angle) | 1 840 | 42 | 0,71 |
+| C2 (interne) | 2 950 | 85 | 0,89 |
+| C3 (interne) | 3 120 | 92 | **0,93** ← gouvernant |
+
+Le pic `η = 0,93` sur le poteau interne C3 du rez-de-chaussée est piloté par le moment amplifié P-Δ de la combinaison sismique. Tous les poteaux sont dans la limite 1,00.
+
+<DocMedia
+  id="multistorey-ec3-panel"
+  type="screenshot"
+/>
+
+## Étape 6 — Exporter la note de calcul
+
+À l'étape **Rapport**, le PDF Takumi assemble :
+
+- Couverture avec branding du bureau
+- Tableau des paramètres de site vent & sismique
+- Tableau des dévers inter-étages vs `h/300`
+- Tableau des taux EC3 des poteaux avec C3 gouvernant mis en évidence
+- Facteur d'amplification P-Δ `αcr` et journal de convergence itératif
+- Empreinte SHA-256
+
+## Ce que vous avez appris
+
+- Le générateur vent EN 1991-1-4 calcule `qp(z)` depuis les paramètres de site et répartit les forces automatiquement.
+- Le générateur sismique EN 1998-1 construit le spectre élastique, lance l'analyse modale en interne, et applique les forces latérales équivalentes par étage.
+- Le solveur P-Δ utilise l'itération sur raideur tangente — pas de facteur d'amplification manuel nécessaire.
+- Les dévers inter-étages et les taux EC3 sont rapportés côte à côte dans les panneaux ELS / ELU.
+
+## Pour aller plus loin
+
+- Explorer l'optimiseur Pareto sur les poteaux gouvernants : [Vérification EC3 et optimiseur](/fr/guides/ec3-check-and-optimizer/).
+- Ajouter la vérification feu (EC3-1-2) au même modèle : [Vérifications multi-matériaux](/fr/guides/multi-material-checks/).
+- Benchmarker le solveur contre les 41 cas analytiques : [Benchmarks de validation](/fr/reference/validation-benchmarks/).

@@ -1,0 +1,92 @@
+---
+title: Portique acier 18 m — Du gabarit à la note signée
+description: Parcours complet — chargez le gabarit portique 18 m, lancez le solveur Timoshenko, lisez les taux EC3 par barreau et exportez le PDF A4 vectoriel avec branding du bureau d'études et empreinte SHA-256.
+sidebar:
+  order: 3
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+import TryInStudio from '../../../../components/TryInStudio.astro';
+
+Ce tutoriel vous guide dans **l'atelier 5 étapes** complet sur un vrai portique métallique : le portique 18 m à travée unique, poteaux HEA 200 et poutres IPE 300, appuis encastré-articulé, charge gravitaire et combinaison EN 1990 `1,35·G + 1,50·Q`. Le modèle fait partie des 14 gabarits canoniques du catalogue — ouvrez-le instantanément avec le bouton ci-dessous.
+
+<TryInStudio model="portique" />
+
+<DocMedia
+  id="portique-espace-travail"
+  type="screenshot"
+/>
+
+## Étape 1 — Géométrie : Charger le gabarit
+
+Ouvrez l'atelier sur `rdm-studio-app.vercel.app`. La galerie (icône galerie dans l'en-tête 48 px) liste les 14 modèles par secteur. Choisissez **Bâtiment & Charpente → Portique acier 18 m**. Le modèle s'ouvre avec :
+
+- 2 poteaux : HEA 200, 5,2 m chacun
+- 1 poutre : IPE 300, portée 18,0 m
+- Grille magnétique : 50 mm (réglable 10/100 mm)
+- Nœuds aux bases des poteaux et aux nœuds de jambe de force
+
+<DocMedia
+  id="portique-geometrie"
+  type="screenshot"
+/>
+
+## Étape 2 — Profilés & Masse
+
+À **Géométrie**, l'inspecteur gauche liste chaque barreau avec profilé, longueur, masse et part massique. Masse totale ~2,84 t. Cliquez sur la poutre pour essayer `IPE 330` : la masse, le badge de taux EC3 et la silhouette 3D se mettent à jour instantanément grâce à la scène persistante et au store réactif.
+
+## Étape 3 — Liaisons & Charges
+
+À **Liaisons** : Poteau A (gauche) **Articulé** (libérations Rx, Ry, Rz), Poteau B (droit) **Encastre** (6 DDL bloqués). L'anti-roulement sur l'appui articulé verrouille `Rx` — obligatoire pour tout portique X collinéaire.
+
+À **Charges** : Un cas de charge gravitaire réparti sur la poutre, vecteur `{ x: 0, y: 0, z: -1,5 }` kN/m. La combinaison est `1,35·G + 1,50·Q` (EN 1990 6.10). Basculez sur `6.10a/b` pour voir les combinaisons pondérées par ψ.
+
+<DocMedia
+  id="portique-charges"
+  type="screenshot"
+/>
+
+## Étape 4 — Solveur & Résultats
+
+Appuyez sur **Calculer**. La factorisation Cholesky LDLᵀ résout le système 6 DDL en < 20 ms. L'étape **Calcul** affiche :
+
+- Forme déformée avec spectre thermique 5 niveaux (min/max configurables)
+- Diagrammes uPlot : `My` (flexion), `Vz` (cisaillement), `N` (effort normal)
+- Tableau vérifications EC3 : Nb,Rd, Mc,Rd, Vpl,Rd, LTB χLT par barreau
+- Curseur plan de coupe (0 à 1,0 L) avec coupe 2D Von Mises synchronisée
+
+<DocMedia
+  id="portique-resultats"
+  type="screenshot"
+/>
+
+## Étape 5 — Exporter la note de calcul
+
+Au **Rapport**, le PDF A4 vectoriel (moteur Takumi, polices Inter + JetBrains Mono embarquées) contient :
+
+- Couverture avec branding du bureau d'études (édition Pro)
+- Tableau des réactions ΣRz, ΣMx, ΣMy
+- Taux EC3 par barreau avec références de clauses (EN 1993-1-1 6.61, 6.62, C1)
+- Vérifications ELS flèche vs L/250 et L/300
+- Empreinte SHA-256 du modèle calculé
+- CalcTrace : chaque taux s'ouvre sur la formule KaTeX pas-à-pas
+
+Générez le PDF, le `.docx` ou copiez les tableaux en TSV.
+
+<DocMedia
+  id="portique-rapport"
+  type="screenshot"
+/>
+
+## Points clés
+
+- **Gabarits prêts à l'emploi** : liaisons, charges, combinaisons pré-câblées.
+- **Solveur local & instantané** : < 20 ms pour ce modèle.
+- **Chaque chiffre est traçable** : CalcTrace relie les taux aux clauses normatives.
+- **Note vectorielle & prête à signer** : empreinte SHA-256 certifie le modèle exact.
+
+## Tutoriels suivants
+
+- [Berceau naval : Vent + Neige + Champs d'accélération](/fr/tutorials/naval-cradle-verification/)
+- [Poutre bois GL24h : EN 1995 Flexion + Cisaillement + Vibration](/fr/tutorials/glulam-beam-verification/)
+- [Poutre mixte IPE + Béton : EN 1994 Connexion cisaillement partiel](/fr/tutorials/composite-beam-verification/)

@@ -1,0 +1,9 @@
+---
+---
+<script is:inline>
+  // Set light as default only if no stored preference exists
+  const storedTheme = typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+  if (!storedTheme) {
+    document.documentElement.dataset.theme = 'light';
+  }
+</script>

@@ -1,0 +1,53 @@
+---
+/**
+ * TryInStudio.astro — Deep-link button to open any catalog model in the studio app.
+ *
+ * Renders a styled CTA button that links to `PUBLIC_APP_URL/<step>?template=<slug>&lang=<locale>`
+ * with the current page's locale (fr/en). Used in docs pages to let readers try the model live.
+ *
+ * Props:
+ *   template — Canonical template slug (e.g. "portal-frame", "naval-cradle")
+ *   step?    — Studio step to land on: "geometry" | "supports" | "loads" | "results" | "report"
+ *   label?   — Optional custom button text (overrides auto-generated label)
+ */
+interface Props {
+  /** Canonical template slug from engineeringCatalog (e.g. "portal-frame", "naval-cradle") */
+  template: string;
+  /** Studio step to open (defaults to "geometry") */
+  step?: 'geometry' | 'supports' | 'loads' | 'results' | 'report';
+  /** Override the button label */
+  label?: string;
+  /** Additional CSS classes */
+  class?: string;
+}
+
+const { template, step, label, class: className } = Astro.props;
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'https://rdm-studio-app.vercel.app';
+const currentLocale = Astro.currentLocale === 'fr' ? 'fr' : 'en';
+const targetStep = step ?? 'geometry';
+const href = `${appUrl}/${targetStep}?template=${template}&lang=${currentLocale}`;
+
+const defaultLabel = currentLocale === 'fr'
+  ? `Essayer ce modèle dans l'atelier`
+  : `Try this model in the studio`;
+---
+
+<a
+  href={href}
+  target="_blank"
+  rel="noopener noreferrer"
+  class={`inline-flex items-center gap-2 rounded-[4px] bg-[#1D4ED8] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#1538a8] transition-colors ${className ?? ''}`}
+  data-testid={`try-in-studio-${template}`}
+  onclick="if(window.umami){window.umami.track('docs_try_in_studio_clicked',{template:'${template}',step:'${targetStep}'})}"
+>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden>
+    <path d="M5 12h14"></path>
+    <path d="m12 5 7 7-7 7"></path>
+  </svg>
+  {label ?? defaultLabel}
+</a>
+
+<style>
+  /* Scoped styles for the TryInStudio component */
+</style>

@@ -26,17 +26,17 @@ export default await defineDocsConfig({
   },
   topics: true,
   og: {
-    fontFamily: 'Space Grotesk',
+    fontFamily: 'Inter',
     monoFontFamily: 'JetBrains Mono',
     fonts: [
       {
-        src: './node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-400-normal.woff',
-        family: 'Space Grotesk',
+        src: './node_modules/@fontsource/inter/files/inter-latin-400-normal.woff',
+        family: 'Inter',
         role: 'sans',
       },
       {
-        src: './node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff',
-        family: 'Space Grotesk',
+        src: './node_modules/@fontsource/inter/files/inter-latin-700-normal.woff',
+        family: 'Inter',
         role: 'sans',
       },
       {
@@ -48,5 +48,22 @@ export default await defineDocsConfig({
   },
   extraStarlight: {
     logo: { src: './src/assets/logo.svg', alt: 'RDM Studio' },
+    components: {
+      ThemeProvider: './src/components/ForceLightTheme.astro',
+    },
+    head: [
+      process.env.PUBLIC_UMAMI_WEBSITE_ID ? {
+        tag: 'script',
+        attrs: {
+          async: true,
+          defer: true,
+          'data-website-id': process.env.PUBLIC_UMAMI_WEBSITE_ID,
+          src: 'https://umami.rdm-studio.com/umami.js',
+        },
+      } : undefined,
+    ].filter(Boolean),
+  },
+  social: {
+    theme: 'light',
   },
 });

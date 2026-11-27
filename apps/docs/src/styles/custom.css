@@ -1,16 +1,20 @@
 /* RDM Studio Docs — custom Starlight overrides.
- * Swiss Metrology daylight identity: Deep Cobalt accent (#1D4ED8), Inter /
- * Space Grotesk + JetBrains Mono, hairline borders. */
-@import '@fontsource-variable/space-grotesk';
+ * Swiss Metrology daylight identity: Deep Cobalt accent (#1D4ED8), Inter +
+ * JetBrains Mono, hairline borders. Starlight variables map directly onto
+ * the @rdm-studio/ui tokens.css single source of truth (imported first). */
+@import '@rdm-studio/ui/tokens.css';
+@import '@fontsource-variable/inter';
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/600.css';
 
 :root {
-  --sl-color-accent-low: hsl(224 76% 90%);
-  --sl-color-accent: #1d4ed8;
-  --sl-color-accent-high: hsl(224 76% 30%);
-  --sl-font: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
-  --sl-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --sl-color-accent-low: var(--color-accent-tint);
+  --sl-color-accent: var(--color-accent);
+  --sl-color-accent-high: var(--color-accent-strong);
+  --sl-color-bg: var(--color-canvas);
+  --sl-color-hairline: var(--color-hairline);
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
 }
 
 [data-theme='dark'] {

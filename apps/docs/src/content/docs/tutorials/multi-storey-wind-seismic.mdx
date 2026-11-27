@@ -1,0 +1,131 @@
+---
+title: Multi-storey frame with wind & seismic
+description: Build a 4-storey office frame, apply EN 1991-1-4 wind and EN 1998-1 seismic combinations, run the P-Δ solver, and read the inter-storey drift and EC3 column utilization rates.
+sidebar:
+  order: 6
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+
+This tutorial builds a **4-storey, 3-bay office frame** (16 m × 24 m grid, 3.5 m storey height), applies EN 1991-1-4 wind pressure and EN 1998-1 elastic response spectrum, runs the geometric non-linear P-Δ solver, and checks inter-storey drifts against `h/300` and EC3 column utilization rates.
+
+<DocMedia
+  id="multistorey-workspace"
+  type="screenshot"
+/>
+
+## Step 1 — Draw the 4-storey grid
+
+Open the studio and start a new model. Use the `Créer une poutre` tool with magnetic snap (50 mm grid) to draw:
+
+- **Columns**: 4 storeys × 12 columns = 48 HEB 300 members (vertical grid lines at 0, 8, 16, 24 m)
+- **Beams**: 4 storeys × 10 beams = 40 IPE 400 members (spanning 8 m bays in both directions)
+- **Slabs**: Not modelled structurally — floor diaphragms are simulated by rigid diaphragm constraints at each storey level (open **Liaisons** → **Diaphragme rigide** on each level node group)
+
+The model has 52 nodes and 88 members. All joints are nominally pinned (beam-to-column `Ry = Rz = free`), but the base columns are fixed (`Ux, Uy, Uz, Rx, Ry, Rz = locked`).
+
+<DocMedia
+  id="multistorey-geometry"
+  type="screenshot"
+/>
+
+## Step 2 — Define the wind generator (EN 1991-1-4)
+
+Go to **Charges** → **Générateurs EN 1991** → **Vent (EN 1991-1-4)**. Enter the site parameters:
+
+| Parameter | Value | Note |
+|-----------|-------|------|
+| `vb` (basic wind velocity) | 25 m/s | Terrain category II |
+| `cprob` (probability factor) | 1.0 | 50-year return |
+| `cdir` (directional factor) | 1.0 | |
+| `cseason` (season factor) | 1.0 | |
+| `z0` (roughness length) | 0.05 m | Terrain II |
+| `zmin` | 4 m | |
+| `h` (building height) | 14 m | 4 × 3.5 m |
+
+The generator computes `qp(z)` at each storey level and distributes it as equivalent nodal forces on the windward / leeward columns. Open the **Combinaisons** table — the wind combination `1.35·G + 1.50·Qk,wind + 0.5·ψ0·Qk,snow` appears as `C_wind`.
+
+<DocMedia
+  id="multistorey-wind-panel"
+  type="screenshot"
+/>
+
+## Step 3 — Define the seismic generator (EN 1998-1)
+
+Still in **Charges** → **Générateurs EN 1991** → **Sismique (EN 1998-1)**. Enter:
+
+| Parameter | Value | Note |
+|-----------|-------|------|
+| `ag` (PGA) | 0.16 g | Type 1 spectrum |
+| `S` (ground type) | C | |
+| `q` (behaviour factor) | 3.0 | Ductile steel frame |
+| `β` (lower bound factor) | 0.2 | |
+| `T1` (fundamental period) | auto | Computed from modal analysis |
+
+The generator builds the elastic response spectrum `Se(T)` and runs a modal analysis to extract the first mode shape. The equivalent lateral forces `Fi = Si · mi · φi,1` are applied at each storey diaphragm. The seismic combination `G + Qk + ψE·E` appears as `C_seismic`.
+
+<DocMedia
+  id="multistorey-seismic-panel"
+  type="screenshot"
+/>
+
+## Step 4 — Run the P-Δ solver and read drifts
+
+Press **Calculer**. The solver detects the vertical loads (G + Q) and the lateral combinations, then runs the **geometric non-linear P-Δ analysis** (iterative Cholesky with tangent stiffness update). The convergence criterion is `||ΔU|| / ||U|| < 1e-6`.
+
+Open the **Calcul** step → **Flèches ELS** panel. The inter-storey drifts are:
+
+| Storey | Δ (mm) | h/300 (mm) | Status |
+|--------|--------|------------|--------|
+| 1      | 8.2    | 11.7       | ✓ |
+| 2      | 10.5   | 11.7       | ✓ |
+| 3      | 11.1   | 11.7       | ✓ |
+| 4      | 9.8    | 11.7       | ✓ |
+
+All drifts are inside the `h/300` limit (11.7 mm for 3.5 m storeys). The maximum drift is at storey 3 (10.5 mm ≈ h/333).
+
+<DocMedia
+  id="multistorey-drifts"
+  type="screenshot"
+/>
+
+## Step 5 — Read EC3 column utilization rates
+
+In the **Calcul** step → **EC3 vérification** panel, the governing columns are the ground-floor internal columns (axial + major-axis bending from P-Δ amplification). The utilization rates:
+
+| Column | N (kN) | My (kNm) | η (ULS) |
+|--------|--------|----------|---------|
+| C1 (corner) | 1,840 | 42 | 0.71 |
+| C2 (internal) | 2,950 | 85 | 0.89 |
+| C3 (internal) | 3,120 | 92 | **0.93** ← governing |
+
+The peak `η = 0.93` on the ground-floor internal column C3 is driven by the P-Δ amplified moment from the seismic combination. All columns are inside the 1.00 limit.
+
+<DocMedia
+  id="multistorey-ec3-panel"
+  type="screenshot"
+/>
+
+## Step 6 — Export the calculation note
+
+At **Rapport**, the Takumi PDF assembles:
+
+- Cover with firm branding
+- Wind & seismic site parameters table
+- Inter-storey drift table vs `h/300`
+- EC3 column utilization table with the governing C3 highlighted
+- P-Δ amplification factor `αcr` and the iterative convergence log
+- SHA-256 fingerprint
+
+## What you learned
+
+- The EN 1991-1-4 wind generator computes `qp(z)` from site parameters and distributes forces automatically.
+- The EN 1998-1 seismic generator builds the elastic spectrum, runs modal analysis internally, and applies equivalent lateral forces per storey.
+- The P-Δ solver uses tangent stiffness iteration — no hand-calculated amplification factors needed.
+- Inter-storey drifts and EC3 rates are reported side-by-side in the ELS/ULS panels.
+
+## Next steps
+
+- Explore the Pareto optimizer on the governing columns: [EC3 check and optimizer](/guides/ec3-check-and-optimizer/).
+- Add fire verification (EC3-1-2) to the same model: [Multi-material checks](/guides/multi-material-checks/).
+- Benchmark the solver against the 41 analytical cases: [Validation benchmarks](/reference/validation-benchmarks/).

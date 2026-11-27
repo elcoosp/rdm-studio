@@ -19,7 +19,7 @@
       "caption": "The 5-step workspace right after the first quick-start template — geometry, sections, units.",
       "fallback": "/illustrations/tour-viewport-snap.png",
       "capture": {
-        "route": "/geometry?template=portique",
+        "route": "/geometry?template=portal-frame",
         "viewport": [1440, 900],
         "wait": "[data-testid=\"persistent-stage\"]"
       }
@@ -30,10 +30,10 @@
       "alt": "Animated capture of the Calcul button running the solver and the Results step appearing",
       "caption": "One click on Calculer: the Cholesky solve, deformed shape and EC3 rates render in under 20 ms.",
       "fallback": "/illustrations/tour-viewport-snap.png",
-      "capture": {
-        "route": "/geometry?template=portique",
+"capture": {
+        "route": "/geometry?template=portal-frame",
         "viewport": [1440, 900],
-        "actions": "click 'Calculer', wait 1200 ms, screenshot 3 frames at 400 ms interval"
+        "wait": "[data-testid=\"persistent-stage\"]"
       }
     },
     {
@@ -103,7 +103,7 @@
       "caption": "Results step: deformed shape, thermal spectrum, synchronized uPlot internal force diagrams.",
       "fallback": "/illustrations/tour-results-sectioncut.png",
       "capture": {
-        "route": "/geometry?template=portique",
+        "route": "/geometry?template=portal-frame",
         "viewport": [1440, 900],
         "actions": "solve, open Results step, scrub the cutting plane to 0.50 L"
       }
@@ -115,7 +115,7 @@
       "caption": "Section cut at x = 0,50 L: 2D Von Mises heatmap normalized by fy.",
       "fallback": "/illustrations/tour-results-sectioncut.png",
       "capture": {
-        "route": "/geometry?template=portique",
+        "route": "/geometry?template=portal-frame",
         "viewport": [1440, 900],
         "actions": "solve, Results step, cutting plane 0.50 L, section cut panel"
       }
@@ -127,7 +127,7 @@
       "caption": "CalcTrace: every EC3 clause unfolds into step-by-step KaTeX formulas with sources.",
       "fallback": "/illustrations/bento-ec3-calctrace.png",
       "capture": {
-        "route": "/geometry?template=portique",
+        "route": "/geometry?template=portal-frame",
         "viewport": [1440, 900],
         "actions": "solve, open the EC3 verification panel, expand clause 6.61"
       }
@@ -139,7 +139,7 @@
       "caption": "LTB verification: Mcr, λ̄LT and χLT on the rolled-section curve.",
       "fallback": "/illustrations/bento-ec3-calctrace.png",
       "capture": {
-        "route": "/geometry?template=travees",
+        "route": "/geometry?template=continuous-beam",
         "viewport": [1440, 900],
         "actions": "solve, open the LTB verification of the governing beam"
       }
@@ -151,7 +151,7 @@
       "caption": "Modal analysis: f₁…f₆ eigenfrequencies and the animated first mode.",
       "fallback": "/illustrations/bento-naval-dynamic.png",
       "capture": {
-        "route": "/geometry?template=warren",
+        "route": "/geometry?template=warren-truss",
         "viewport": [1440, 900],
         "actions": "solve, open Modal panel"
       }
@@ -163,7 +163,7 @@
       "caption": "Global linear buckling: λcr and the amplified first mode shape.",
       "fallback": "/illustrations/bento-solver-pdelta.png",
       "capture": {
-        "route": "/geometry?template=portique",
+        "route": "/geometry?template=portal-frame",
         "viewport": [1440, 900],
         "actions": "solve, open Flambement panel"
       }
@@ -235,9 +235,369 @@
       "caption": "The solver at work: < 20 ms Cholesky LDLᵀ factorization, all inside the browser tab.",
       "fallback": "/illustrations/bento-solver-pdelta.png",
       "capture": {
-        "route": "/geometry?template=warren",
+        "route": "/geometry?template=warren-truss",
         "viewport": [1440, 900],
         "actions": "solve with the performance panel open"
+      }
+    },
+    {
+      "id": "lifting-beam-workspace",
+      "type": "screenshot",
+      "alt": "RDM Studio workspace with the naval lifting beam template loaded",
+      "caption": "The naval lifting beam template: two IPE 550 transverses, HEB 300 stiffener, 12 t cargo mass.",
+      "fallback": "/illustrations/bento-naval-dynamic.png",
+      "capture": {
+        "route": "/geometry?template=naval-cradle",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "lifting-acceleration-panel",
+      "type": "screenshot",
+      "alt": "Acceleration field panel with (ax, ay, az) = (0, 0.4, 1.3) × g for roll/pitch/heave",
+      "caption": "3D acceleration field: roll 0.4g, pitch 0g, heave 1.3g — cargo mass 12 t.",
+      "fallback": "/illustrations/bento-naval-dynamic.png",
+      "capture": {
+        "route": "/geometry?template=naval-cradle",
+        "viewport": [1440, 900],
+        "actions": "open Loads step, expand Champs d'accélération (g)"
+      }
+    },
+    {
+      "id": "lifting-modal-table",
+      "type": "screenshot",
+      "alt": "Modal analysis table listing f1..f6 eigenfrequencies with animate button on mode 1",
+      "caption": "Modal analysis: f₁=1.8 Hz global bending, animate button sweeps the true eigenvector.",
+      "fallback": "/illustrations/bento-naval-dynamic.png",
+      "capture": {
+        "route": "/geometry?template=naval-cradle",
+        "viewport": [1440, 900],
+        "actions": "solve, open Modal panel"
+      }
+    },
+    {
+      "id": "lifting-ltb-panel",
+      "type": "screenshot",
+      "alt": "LTB verification panel showing Mcr, lambda-LT-bar, chi-LT and Mb,Rd for the governing IPE 550 flange",
+      "caption": "LTB check: Mcr, λ̄LT, χLT from rolled-section curve, η = 0.87 on governing flange.",
+      "fallback": "/illustrations/bento-ec3-calctrace.png",
+      "capture": {
+        "route": "/geometry?template=naval-cradle",
+        "viewport": [1440, 900],
+        "actions": "solve, open Flambement panel"
+      }
+    },
+    {
+      "id": "multistorey-workspace",
+      "type": "screenshot",
+      "alt": "4-storey 3-bay office frame with HEB 300 columns and IPE 400 beams",
+      "caption": "Multi-storey frame: 48 columns, 40 beams, rigid diaphragms at each level.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "multistorey-geometry",
+      "type": "screenshot",
+      "alt": "Geometry step showing the 4-storey grid with column and beam layout",
+      "caption": "Grid drawing: magnetic snap, 50 mm grid, HEB 300 / IPE 400 catalogs.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "draw 4-storey grid with magnetic snap"
+      }
+    },
+    {
+      "id": "multistorey-wind-panel",
+      "type": "screenshot",
+      "alt": "EN 1991-1-4 wind generator panel with vb=25 m/s, terrain II, qp(z) at each storey",
+      "caption": "Wind generator: vb=25 m/s, terrain II, qp(z) distributed to windward/leeward columns.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open Loads step, expand Générateurs EN 1991, select Vent"
+      }
+    },
+    {
+      "id": "multistorey-seismic-panel",
+      "type": "screenshot",
+      "alt": "EN 1998-1 seismic generator panel with ag=0.16g, ground C, q=3.0, elastic spectrum",
+      "caption": "Seismic generator: ag=0.16g, type 1 spectrum, ground C, q=3.0, modal forces per storey.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "open Loads step, expand Générateurs EN 1991, select Sismique"
+      }
+    },
+    {
+      "id": "multistorey-drifts",
+      "type": "screenshot",
+      "alt": "Inter-storey drift table showing Δ vs h/300 limit for all 4 storeys",
+      "caption": "Drifts: storey 3 governs at 10.5 mm (h/333), all inside h/300 = 11.7 mm.",
+      "fallback": "/illustrations/tour-results-sectioncut.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "solve, open Calcul step, Flèches ELS panel"
+      }
+    },
+    {
+      "id": "multistorey-ec3-panel",
+      "type": "screenshot",
+      "alt": "EC3 column utilization table with governing internal column C3 at η = 0.93",
+      "caption": "EC3 columns: ground-floor internal C3 governs at η = 0.93 from P-Δ amplified seismic moment.",
+      "fallback": "/illustrations/bento-ec3-calctrace.png",
+      "capture": {
+        "route": "/geometry",
+        "viewport": [1440, 900],
+        "actions": "solve, open EC3 verification panel"
+      }
+    },
+    {
+      "id": "glulam-espace-travail",
+      "type": "screenshot",
+      "alt": "RDM Studio workspace with the GL24h glulam beam template loaded",
+      "caption": "The GL24h 12 m simply-supported glulam beam template: 200×600 mm, timber catalog.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "glulam-geometrie",
+      "type": "screenshot",
+      "alt": "Geometry step showing the GL24h 200×600 mm section properties",
+      "caption": "GL24h section: b=200 mm, h=600 mm, E0,mean=11 600 MPa, G0,mean=720 MPa, ρk=380 kg/m³.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "actions": "open Geometry step, inspect section properties"
+      }
+    },
+    {
+      "id": "glulam-charges",
+      "type": "screenshot",
+      "alt": "Loads step with permanent G=2.5 kN/m and variable Q=4.0 kN/m on the glulam beam",
+      "caption": "Loads: G=2.5 kN/m, Q=4.0 kN/m, ELU combination 1.35G+1.50Q = 9.375 kN/m.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "actions": "open Loads step"
+      }
+    },
+    {
+      "id": "glulam-resultats",
+      "type": "screenshot",
+      "alt": "EN 1995 verification results showing bending ηm=0.92, shear ηv=0.44, vibration f1=4.2 Hz, creep η=0.41",
+      "caption": "EN 1995 checks: bending η=0.92, shear η=0.44, vibration 4.2 Hz, creep η=0.41 — all pass.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "actions": "solve, open Calcul step"
+      }
+    },
+    {
+      "id": "glulam-rapport",
+      "type": "screenshot",
+      "alt": "Generated EN 1995 calculation note PDF with material certificate, verifications and SHA-256",
+      "caption": "The EN 1995 calculation note: GL24h certificate, KaTeX formulas, SHA-256 fingerprint.",
+      "fallback": "/illustrations/bento-report-bim.png",
+      "capture": {
+        "route": "/report",
+        "viewport": [1440, 900],
+        "actions": "solve, open Report step, generate Takumi PDF preview"
+      }
+    },
+    {
+      "id": "portique-espace-travail",
+      "type": "screenshot",
+      "alt": "RDM Studio workspace with the 18 m steel portal frame template loaded",
+      "caption": "The 18 m portal frame template: HEA 200 columns, IPE 300 beam, fixed-pinned bases.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "portique-geometrie",
+      "type": "screenshot",
+      "alt": "Geometry step showing HEA 200 columns and IPE 300 beam with magnetic snap grid",
+      "caption": "Portal frame geometry: 2×HEA 200 (5.2 m), 1×IPE 300 (18 m), 50 mm magnetic grid.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "actions": "open Geometry step, inspect sections"
+      }
+    },
+    {
+      "id": "portique-charges",
+      "type": "screenshot",
+      "alt": "Loads step with gravity load -1.5 kN/m on beam and EN 1990 6.10 combination",
+      "caption": "Gravity load: -1.5 kN/m, combination 1.35G+1.50Q (6.10) and 6.10a/b toggle.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "actions": "open Loads step"
+      }
+    },
+    {
+      "id": "portique-resultats",
+      "type": "screenshot",
+      "alt": "Results step showing deformed shape, thermal spectrum, uPlot My/Vz/N and EC3 rates",
+      "caption": "Results: deformed shape, 5-tier thermal spectrum, uPlot diagrams, EC3 table.",
+      "fallback": "/illustrations/tour-results-sectioncut.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "actions": "solve, open Calcul step"
+      }
+    },
+    {
+      "id": "portique-rapport",
+      "type": "screenshot",
+      "alt": "Generated A4 vector PDF calculation note with firm branding, EC3 rates and SHA-256",
+      "caption": "The A4 calculation note: cover, reactions, EC3 rates, SHA-256, CalcTrace formulas.",
+      "fallback": "/illustrations/bento-report-bim.png",
+      "capture": {
+        "route": "/report",
+        "viewport": [1440, 900],
+        "actions": "solve, open Report step, generate Takumi PDF preview"
+      }
+    },
+    {
+      "id": "glulam-workspace",
+      "type": "screenshot",
+      "alt": "RDM Studio workspace with the GL24h glulam beam template loaded",
+      "caption": "The GL24h 12 m simply-supported glulam beam template: 200×600 mm, timber catalog.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "glulam-geometry",
+      "type": "screenshot",
+      "alt": "Geometry step showing the GL24h 200×600 mm section properties",
+      "caption": "GL24h section: b=200 mm, h=600 mm, E0,mean=11 600 MPa, G0,mean=720 MPa, ρk=380 kg/m³.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "actions": "open Geometry step, inspect section properties"
+      }
+    },
+    {
+      "id": "glulam-loads",
+      "type": "screenshot",
+      "alt": "Loads step with permanent G=2.5 kN/m and variable Q=4.0 kN/m on the glulam beam",
+      "caption": "Loads: G=2.5 kN/m, Q=4.0 kN/m, ELU combination 1.35G+1.50Q = 9.375 kN/m.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "actions": "open Loads step"
+      }
+    },
+    {
+      "id": "glulam-results",
+      "type": "screenshot",
+      "alt": "EN 1995 verification results showing bending ηm=0.92, shear ηv=0.44, vibration f1=4.2 Hz, creep η=0.41",
+      "caption": "EN 1995 checks: bending η=0.92, shear η=0.44, vibration 4.2 Hz, creep η=0.41 — all pass.",
+      "fallback": "/illustrations/bento-multimaterial.png",
+      "capture": {
+        "route": "/geometry?template=glulam-beam",
+        "viewport": [1440, 900],
+        "actions": "solve, open Calcul step"
+      }
+    },
+    {
+      "id": "glulam-report",
+      "type": "screenshot",
+      "alt": "Generated EN 1995 calculation note PDF with material certificate, verifications and SHA-256",
+      "caption": "The EN 1995 calculation note: GL24h certificate, KaTeX formulas, SHA-256 fingerprint.",
+      "fallback": "/illustrations/bento-report-bim.png",
+      "capture": {
+        "route": "/report",
+        "viewport": [1440, 900],
+        "actions": "solve, open Report step, generate Takumi PDF preview"
+      }
+    },
+    {
+      "id": "portal-frame-workspace",
+      "type": "screenshot",
+      "alt": "RDM Studio workspace with the 18 m steel portal frame template loaded",
+      "caption": "The 18 m portal frame template: HEA 200 columns, IPE 300 rafter, fixed-pinned bases.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "wait": "[data-testid=\"persistent-stage\"]"
+      }
+    },
+    {
+      "id": "portal-frame-geometry",
+      "type": "screenshot",
+      "alt": "Geometry step showing HEA 200 columns and IPE 300 rafter with magnetic snap grid",
+      "caption": "Portal frame geometry: 2×HEA 200 (5.2 m), 1×IPE 300 (18 m), 50 mm magnetic grid.",
+      "fallback": "/illustrations/tour-viewport-snap.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "actions": "open Geometry step, inspect sections"
+      }
+    },
+    {
+      "id": "portal-frame-loads",
+      "type": "screenshot",
+      "alt": "Loads step with gravity load -1.5 kN/m on rafter and EN 1990 6.10 combination",
+      "caption": "Gravity load: -1.5 kN/m, combination 1.35G+1.50Q (6.10) and 6.10a/b toggle.",
+      "fallback": "/illustrations/tour-loads-en1990.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "actions": "open Loads step"
+      }
+    },
+    {
+      "id": "portal-frame-results",
+      "type": "screenshot",
+      "alt": "Results step showing deformed shape, thermal spectrum, uPlot My/Vz/N and EC3 rates",
+      "caption": "Results: deformed shape, 5-tier thermal spectrum, uPlot diagrams, EC3 table.",
+      "fallback": "/illustrations/tour-results-sectioncut.png",
+      "capture": {
+        "route": "/geometry?template=portal-frame",
+        "viewport": [1440, 900],
+        "actions": "solve, open Calcul step"
+      }
+    },
+    {
+      "id": "portal-frame-report",
+      "type": "screenshot",
+      "alt": "Generated A4 vector PDF calculation note with firm branding, EC3 rates and SHA-256",
+      "caption": "The A4 calculation note: cover, reactions, EC3 rates, SHA-256, CalcTrace formulas.",
+      "fallback": "/illustrations/bento-report-bim.png",
+      "capture": {
+        "route": "/report",
+        "viewport": [1440, 900],
+        "actions": "solve, open Report step, generate Takumi PDF preview"
       }
     }
   ]

@@ -3,15 +3,14 @@
  * DocMedia — structured media slot for every RDM Studio documentation page.
  *
  * Renders a `<figure>` with either:
- *  1. the real captured screenshot / GIF at `/media/<id>.png` (or `.gif`),
+ *  1. the real captured media at `/media/<locale>/<id>.{mp4,gif,png}` (or without locale),
  *     when the file already exists in `public/media/` at build time, or
  *  2. the Stitch technical illustration declared as `fallback` in
- *     `apps/docs/media-manifest.json` today.
+ *     `apps/docs/media-manifest.json`.
  *
- * The next automated capture session (Session 21) walks
- * `media-manifest.json`, drives the routes in each item's `capture` block
- * through Playwright, writes `public/media/<id>.png|gif`, and every page
- * swaps to the real capture WITHOUT editing any MDX prose.
+ * Supported types: `screenshot` (png), `gif`, `video` (mp4).
+ * For video, renders `<video autoplay loop muted playsinline preload="metadata">` with a
+ * poster derived from the mp4 filename (`-poster.png`).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,8 +18,8 @@ import path from 'node:path';
 interface Props {
   /** Stable media id — must exist in apps/docs/media-manifest.json. */
   id: string;
-  /** `screenshot` resolves to /media/<id>.png, `gif` to /media/<id>.gif. */
-  type?: 'screenshot' | 'gif';
+  /** `screenshot` resolves to png, `gif` to gif, `video` to mp4. */
+  type?: 'screenshot' | 'gif' | 'video';
   /** Accessible description (overrides the manifest alt when given). */
   alt?: string;
   /** Visible caption (overrides the manifest caption when given). */
@@ -43,9 +42,16 @@ if (entry === undefined) {
   throw new Error(`[DocMedia] id "${id}" is not declared in media-manifest.json`);
 }
 
-const resolvedType = (type ?? entry['type'] ?? 'screenshot') as 'screenshot' | 'gif';
-const ext = resolvedType === 'gif' ? '.gif' : '.png';
-const captureCandidates = [`/media/${id}${ext}`, `/media/${id}.png`];
+const resolvedType = (type ?? entry['type'] ?? 'screenshot') as 'screenshot' | 'gif' | 'video';
+const ext = resolvedType === 'gif' ? '.gif' : resolvedType === 'video' ? '.mp4' : '.png';
+
+const locale = Astro.currentLocale === 'fr' ? 'fr' : 'en';
+const captureCandidates = [
+  `/media/${locale}/${id}${ext}`,
+  `/media/${locale}/${id}.png`,
+  `/media/${id}${ext}`,
+  `/media/${id}.png`,
+];
 const mediaDir = path.resolve(process.cwd(), 'public/media');
 let src = (fallback ?? (entry['fallback'] as string | undefined)) as string;
 for (const candidate of captureCandidates) {
@@ -58,10 +64,27 @@ for (const candidate of captureCandidates) {
 
 const resolvedAlt = (alt ?? (entry['alt'] as string | undefined)) as string;
 const resolvedCaption = (caption ?? (entry['caption'] as string | undefined)) as string | undefined;
+const isVideo = resolvedType === 'video' && src.endsWith('.mp4');
+const poster = isVideo ? src.replace(/\.mp4$/, '-poster.png') : undefined;
 ---
 
 <figure class="doc-media not-content">
-  <img src={src} alt={resolvedAlt} loading="lazy" decoding="async" width="1200" height="750" />
+  {isVideo ? (
+    <video
+      src={src}
+      poster={poster}
+      autoplay
+      loop
+      muted
+      playsinline
+      preload="metadata"
+      alt={resolvedAlt}
+      width="1200"
+      height="750"
+    />
+  ) : (
+    <img src={src} alt={resolvedAlt} loading="lazy" decoding="async" width="1200" height="750" />
+  )}
   {resolvedCaption !== undefined && <figcaption>{resolvedCaption}</figcaption>}
 </figure>
 
@@ -69,7 +92,8 @@ const resolvedCaption = (caption ?? (entry['caption'] as string | undefined)) as
   .doc-media {
     margin-block: 1.5rem;
   }
-  .doc-media img {
+  .doc-media img,
+  .doc-media video {
     width: 100%;
     height: auto;
     border: 1px solid var(--sl-color-hairline);

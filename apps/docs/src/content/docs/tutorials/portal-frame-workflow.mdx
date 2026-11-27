@@ -1,0 +1,92 @@
+---
+title: Steel Portal Frame — From Template to Signed Note
+description: Complete walkthrough — load the 18 m portal frame template, run the Timoshenko solver, read EC3 verification rates per member, and export a vector PDF A4 with firm branding and SHA-256 fingerprint.
+sidebar:
+  order: 3
+---
+
+import DocMedia from '../../../components/DocMedia.astro';
+import TryInStudio from '../../../components/TryInStudio.astro';
+
+This tutorial guides you through the **entire 5-step workspace** on a real steel portal frame: the 18 m single-span frame with HEA 200 columns and IPE 300 rafter, fixed-pinned bases, gravity load, and EN 1990 combination `1.35·G + 1.50·Q`. The model is one of the 14 canonical catalog entries — you can open it instantly with the button below.
+
+<TryInStudio model="portal-frame" />
+
+<DocMedia
+  id="portal-frame-workspace"
+  type="screenshot"
+/>
+
+## Step 1 — Geometry: Load the template
+
+Open the studio at `rdm-studio-app.vercel.app`. The gallery (header → gallery icon) lists all 14 catalog models by sector. Choose **Building & Framing → Steel Portal Frame 18 m**. The model opens with:
+
+- 2 columns: HEA 200, 5.2 m each
+- 1 rafter: IPE 300, 18.0 m span
+- Magnetic snap grid: 50 mm (adjustable to 10/100 mm)
+- Nodes at column bases and haunch connections
+
+<DocMedia
+  id="portal-frame-geometry"
+  type="screenshot"
+/>
+
+## Step 2 — Sections & Mass
+
+At **Géométrie**, the left inspector shows every member with profile, length, mass, and mass share. The total mass is ~2.84 t. Click the rafter to try `IPE 330` — the mass, EC3 rate badge, and 3D silhouette update instantly thanks to the persistent stage and reactive store.
+
+## Step 3 — Supports & Loads
+
+At **Liaisons**: Column A (left) is **Pinned** (releases Rx, Ry, Rz), Column B (right) is **Fixed** (all 6 DOF fixed). The anti-roll restraint on the pinned base locks `Rx` — required for any collinear X-frame.
+
+At **Charges**: One uniform gravity load case on the rafter, vector `{ x: 0, y: 0, z: -1.5 }` kN/m. The combination is `1.35·G + 1.50·Q` (EN 1990 6.10). Switch to `6.10a/b` to see ψ-weighted combinations.
+
+<DocMedia
+  id="portal-frame-loads"
+  type="screenshot"
+/>
+
+## Step 4 — Solver & Results
+
+Press **Calculer**. The Cholesky LDLᵀ factorization solves the 6-DOF system in < 20 ms. The **Calcul** step shows:
+
+- Deformed shape with 5-tier thermal spectrum (configurable min/max)
+- uPlot diagrams: `My` (bending), `Vz` (shear), `N` (axial)
+- EC3 verification table: Nb,Rd, Mc,Rd, Vpl,Rd, LTB χLT per member
+- Cutting plane slider (0 to 1.0 L) with synchronized 2D section cut
+
+<DocMedia
+  id="portal-frame-results"
+  type="screenshot"
+/>
+
+## Step 5 — Export Calculation Note
+
+At **Rapport**, the A4 vector PDF (Takumi renderer, embedded Inter + JetBrains Mono) contains:
+
+- Cover with firm branding (Pro edition)
+- Reactions table ΣRz, ΣMx, ΣMy
+- Member-by-member EC3 rates with clause references (EN 1993-1-1 6.61, 6.62, C1)
+- SLS deflection checks against L/250 and L/300
+- SHA-256 fingerprint of the solved model
+- CalcTrace: every rate expands to a KaTeX step-by-step formula
+
+Generate PDF, `.docx`, or copy tables as TSV.
+
+<DocMedia
+  id="portal-frame-report"
+  type="screenshot"
+/>
+
+## Key Takeaways
+
+- **Templates are production-ready**: supports, loads, combinations pre-wired.
+- **Solver is local & instant**: < 20 ms for this model size.
+- **Every number is traceable**: CalcTrace links rates to normative clauses.
+- **Report is vector & signed-ready**: SHA-256 fingerprint certifies the exact model.
+
+## Next Tutorials
+
+- [Naval Cradle: Wind + Snow + Acceleration Fields](/tutorials/naval-cradle-verification/)
+- [Timber GL24h Beam: EN 1995 Bending + Shear + Vibration](/tutorials/glulam-beam-verification/)
+- [Composite IPE + Concrete: EN 1994 Partial Shear Connection](/tutorials/composite-beam-verification/)

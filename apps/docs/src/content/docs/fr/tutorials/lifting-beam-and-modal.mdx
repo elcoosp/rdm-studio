@@ -1,0 +1,102 @@
+---
+title: Poutre de levage avec analyse modale
+description: Modéliser une ber de levage navale, lancer le solveur modal pour les fréquences f₁..f₆, animer le premier mode et lire la vérification EC3 de flambement latéral-torsion sur l'aile gouvernante.
+sidebar:
+  order: 5
+---
+
+import DocMedia from '../../../../components/DocMedia.astro';
+
+Ce tutoriel modélise une **ber de levage navale de 24 m** avec deux traverses, une masse de charge suspendue et un champ d'accélération 3D. Vous lancerez l'analyse modale (f₁…f₆), animerez le premier mode de flexion et vérifierez le taux EC3 de flambement latéral-torsion (FLT) sur l'aile gouvernante en IPE 550.
+
+<DocMedia
+  id="lifting-beam-workspace"
+  type="screenshot"
+/>
+
+## Étape 1 — Ouvrir le modèle ber de levage naval
+
+Ouvrez l'atelier sur `rdm-studio-app.vercel.app`. Depuis la galerie (icône dans l'en-tête 48 px) ou le bouton du hero, choisissez le modèle **Ber de levage naval 24 m**. Le modèle s'ouvre avec :
+
+- Deux traverses IPE 550 de 24 m (nœuds N1–N2 et N3–N4)
+- Un raidisseur longitudinal HEB 300 entre les traverses
+- Une masse de charge de 12 t attachée comme masse nodale au milieu de la portée
+- Le panneau champ d'accélération pré-câblé sur `(ax, ay, az) = (0, 0,4, 1,3) × g` pour roulis / tangage / levage
+
+Pour partir de zéro, utilisez l'outil `Créer une poutre` sur la grille : dessinez les deux poutres IPE 550 de 24 m, reliez-les avec le raidisseur HEB 300, puis ajoutez une masse nodale de 12 000 kg au nœud de milieu de portée.
+
+## Étape 2 — Inspecter le champ d'accélération et la masse de charge
+
+Allez à **Charges** → **Champs d'accélération (g)**. Les trois composantes sont :
+
+| Composante | Valeur | Signification |
+|------------|--------|---------------|
+| `ax`       | 0      | Roulis (avant-arrière) |
+| `ay`       | 0,4    | Tangage (latéral) |
+| `az`       | 1,3    | Levage (vertical) |
+
+Le solveur multiplie chaque composante par la masse nodale (12 t) pour produire le vecteur de force équivalent statique dans la combinaison. La masse de charge est déclarée à **Géométrie** → cliquez le nœud de milieu de portée → **Masse nodale (kg)** = `12000`.
+
+<DocMedia
+  id="lifting-acceleration-panel"
+  type="screenshot"
+/>
+
+## Étape 3 — Lancer le solveur et ouvrir l'analyse modale
+
+Appuyez sur **Calculer**. La factorisation Cholesky LDLᵀ résout le système 6 DDL en ~15 ms. Puis ouvrez le panneau **Modal** (dans l'étape Calcul, dock inférieur). Le tableau liste les six premières fréquences propres :
+
+| Mode | f (Hz) | Description |
+|------|--------|-------------|
+| 1    | ~1,8   | Flexion verticale globale |
+| 2    | ~5,2   | Dévier tangage (torsion) |
+| 3    | ~8,7   | Seconde flexion verticale |
+| 4    | ~12,1  | Respiration locale d'aile |
+| 5    | ~16,4  | Participation raidisseur |
+| 6    | ~21,8  | Torsion supérieure |
+
+Cliquez **▶ animer** sur le mode 1 pour voir la déformée balayer une période. L'animation utilise le vecteur propre exact du solveur creux — pas d'approximation post-traitée.
+
+<DocMedia
+  id="lifting-modal-table"
+  type="screenshot"
+/>
+
+## Étape 4 — Lire la vérification FLT sur l'aile gouvernante
+
+Le barreau gouvernant est l'aile d'IPE 550 à mi-portée sous flexion composée et composante de tangage. Dans le panneau **Flambement**, la vérification FLT affiche :
+
+- `Mcr` (moment critique élastique) : issu de la matrice de raideur 7 DDL poutre Timoshenko
+- `λ̄LT` (élancement réduit) : `√(Wel·fy / Mcr)`
+- `χLT` (coefficient de réduction) : courbe de flambement profilé laminé (EN 1993-1-1 Tableau 6.5)
+- `Mb,Rd` (résistance de flambement de calcul) : `χLT · Wel · fy / γM1`
+
+Le taux d'utilisation EC3 `η = Med / Mb,Rd` s'affiche en badge. Pour ce modèle d'ouverture il vaut **η = 0,87** — dans la limite 1,00 avec marge.
+
+<DocMedia
+  id="lifting-ltb-panel"
+  type="screenshot"
+/>
+
+## Étape 5 — Exporter la note de calcul
+
+À l'étape **Rapport**, générez le PDF Takumi. La note contient :
+
+- Couverture avec branding du bureau (édition Pro)
+- Tableau des réactions avec les composantes du champ d'accélération résolues en forces
+- Tableau d'analyse modale (f₁…f₆) et le SVG animé du mode 1
+- Traçabilité FLT : `Mcr` → `λ̄LT` → `χLT` → `Mb,Rd` avec formules KaTeX
+- Empreinte SHA-256 du modèle exact résolu
+
+## Ce que vous avez appris
+
+- Le champ d'accélération 3D `(ax, ay, az) × g` couvre roulis / tangage / levage pour le levage et le transport.
+- Les masses nodales (kg) aux nœuds sont converties automatiquement en forces équivalentes dans la combinaison.
+- Le solveur modal retourne les vecteurs propres exacts ; l'animation est un balayage vrai du mode propre, pas une interpolation.
+- La vérification FLT utilise le `Mcr` Timoshenko 7 DDL complet — pas d'approximation par formule manuelle.
+
+## Pour aller plus loin
+
+- Modéliser le vent et le sismique réglementaires : [Multi-étages vent & sismique](/fr/tutorials/multi-storey-wind-seismic/).
+- Approfondir l'arbre CalcTrace : [Vérification EC3 et optimiseur](/fr/guides/ec3-check-and-optimizer/).
+- Parcourir les 41 benchmarks analytiques de validation : [Benchmarks de validation](/fr/reference/validation-benchmarks/).

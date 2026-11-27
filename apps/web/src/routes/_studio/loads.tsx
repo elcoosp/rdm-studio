@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
 import { toast } from "sonner";
-import { IconTrash } from "@/components/icons";
-import { NumberFlowValue } from "@/components/NumberFlowValue";
+import { IconTrash } from "@rdm-studio/ui/icons";
+import { NumberFlowValue } from "@rdm-studio/ui/interior";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
 import {
@@ -15,9 +15,10 @@ import {
   SpanPointLoad,
   SelfWeightGravity,
   ThermalLoadIcon,
-} from "@/components/icons/EngineeringIcons";
+  TorqueMoment,
+} from "@rdm-studio/ui/icons";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button } from "@rdm-studio/ui/primitives";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import {
   ComboboxContent,
@@ -26,11 +27,11 @@ import {
   ComboboxItem,
   ComboboxRoot,
 } from "@/components/ui/combobox";
-import { ExpandablePanel, HoldToConfirm, StatusBadge } from "@/components/interior";
+import { ExpandablePanel, HoldToConfirm, StatusBadge } from "@rdm-studio/ui/interior";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { LoadsFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useUpdateSearch } from "@/hooks/useStudioQuery";
-import { IconLoad } from "@/components/icons";
+import { IconLoad } from "@rdm-studio/ui/icons";
 import { feaClient } from "@/wasmBridge/workerClient";
 import type { LoadData as LoadDataRow } from "@/state/projectStore";
 import {
@@ -39,6 +40,7 @@ import {
   type LoadData,
   type NodeData,
 } from "@/state/projectStore";
+import { trackProductEvent } from "@/lib/productTelemetry";
 
 export const Route = createFileRoute("/_studio/loads")({
   staticData: {
@@ -82,6 +84,38 @@ function memberLength(nodes: NodeData[], beam: { n1: number; n2: number }): numb
   return Math.hypot(n2.x - n1.x, n2.y - n1.y, n2.z - n1.z);
 }
 
+/** Explicit load direction label (v2.4.0 Direction column). */
+function directionLabel(load: LoadData): string {
+  const sign = (v: number): string => (v >= 0 ? "+" : "−");
+  if (load.kind === "Nodal") {
+    const { fx, fy, fz, mx, my, mz } = load.forces;
+    const parts: string[] = [];
+    if (fx !== 0) parts.push(`Fx (${sign(fx)}X)`);
+    if (fy !== 0) parts.push(`Fy (${sign(fy)}Y)`);
+    if (fz !== 0) parts.push(`Fz (${sign(fz)}Z)`);
+    if (mx !== 0) parts.push(`Mx (${sign(mx)}X)`);
+    if (my !== 0) parts.push(`My (${sign(my)}Y)`);
+    if (mz !== 0) parts.push(`Mz (${sign(mz)}Z)`);
+    return parts.length > 0 ? parts.join(", ") : "—";
+  }
+  if (load.kind === "PointOnSpan") {
+    const { fx, fy, fz } = load.forces;
+    const parts: string[] = [];
+    if (fx !== 0) parts.push(`Fx (${sign(fx)}X)`);
+    if (fy !== 0) parts.push(`Fy (${sign(fy)}Y)`);
+    if (fz !== 0) parts.push(`Fz (${sign(fz)}Z)`);
+    return parts.length > 0 ? `Global ${parts.join(", ")}` : "Global —";
+  }
+  if (load.kind === "Trapezoid" || load.kind === "Uniform") {
+    const d = load.direction ?? { x: 0, y: 0, z: -1 };
+    return `Global (${d.x.toFixed(0)} ; ${d.y.toFixed(0)} ; ${d.z.toFixed(0)})`;
+  }
+  if (load.kind === "AccelerationField") {
+    return `Champ 3D (${load.ax_g}, ${load.ay_g}, ${load.az_g})`;
+  }
+  return "—";
+}
+
 /**
  * Step 3 (DESIGN.md §4, mockups tape_3, v2.1.2): locked `md+` workstation —
  * 320px LEFT inspector (EN 1990 case tabs, g-acceleration quick scenarios
@@ -122,6 +156,14 @@ function LoadsPage() {
   };
   const [nodeId, setNodeId] = useState<number>(nodes[0]?.id ?? 1);
   const [beamId, setBeamId] = useState<number>(beams[0]?.id ?? 1);
+
+  // v2.3.0: sync beamId when beams updates from empty to populated
+  useEffect(() => {
+    const firstBeam = beams[0];
+    if (firstBeam && !beams.some((b) => b.id === beamId)) {
+      setBeamId(firstBeam.id);
+    }
+  }, [beams, beamId]);
   // v1.5.0: numeric fields ride the Base UI NumberField (locale parsing).
   const [fx, setFx] = useState(0);
   const [fy, setFy] = useState(0);
@@ -202,6 +244,7 @@ function LoadsPage() {
 
   const applyField = (ax: number, ay: number, az: number) => {
     addAccelerationField({ loadCase: "Acceleration", axG: ax, ayG: ay, azG: az });
+    void trackProductEvent("load_accel_set", { ax, ay, az });
   };
 
   // v2.1.1: an EN 1991 generator flips the active case tab (Q / S / W)
@@ -220,9 +263,9 @@ function LoadsPage() {
       if (px !== 0 || py !== 0 || pz !== 0) {
         addNodalLoad(nodeId, pz, caseId, px, py, moments);
       } else if (moments.mx !== 0 || moments.my !== 0 || moments.mz !== 0) {
-        // Pure moment load: zero forces, non-zero Mx/My/Mz.
         addNodalLoad(nodeId, 0, caseId, 0, 0, moments);
       }
+      void trackProductEvent("load_case_added", { case: caseId });
       return;
     }
     if (tab === "uniform") {
@@ -293,53 +336,83 @@ function LoadsPage() {
 
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Charges et combinaisons EN 1990</Trans>}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-data text-[11px] text-ink-muted">
-          {loads.length} charge(s) définie(s)
-        </span>
-        {/* v2.1.2: HoldToConfirm (800 ms) guards the destructive wipe;
-            keyboard Enter / E2E click commits instantly (webdriver). */}
-        <HoldToConfirm
-          onConfirm={clearLoads}
-          testId="clear-loads"
-          disabled={loads.length === 0}
-          confirmLabel={t`Vidées`}
-          title="Maintenir 800 ms pour vider les charges"
-        >
-          <Trans>Vider les charges</Trans>
-        </HoldToConfirm>
-      </div>
-      {/* G | Q | W | Acc tabs with the shared layoutId glider (§8.6). */}
-      <div className="flex items-center gap-1 border-b border-hairline" data-testid="case-tabs">
-        {CASES.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            className="relative flex min-h-8 items-center rounded px-2.5 text-[13px] data-[active=true]:text-accent"
-            data-active={caseId === c.id}
-            onClick={() => setCaseId(c.id)}
+      {/* v2.3.0: Inspector sections grouped into hairline sub-cards with 16px engineering icons. */}
+
+      {/* Load Count & Clear sub-card */}
+      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-data text-[11px] text-ink-muted">
+            {loads.length} charge(s) définie(s)
+          </span>
+          {/* v2.1.2: HoldToConfirm (800 ms) guards the destructive wipe;
+              keyboard Enter / E2E click commits instantly (webdriver). */}
+          <HoldToConfirm
+            onConfirm={clearLoads}
+            testId="clear-loads"
+            disabled={loads.length === 0}
+            confirmLabel={t`Vidées`}
+            title="Maintenir 800 ms pour vider les charges"
           >
-            {c.label}
-            {caseId === c.id ? (
-              <motion.span
-                layoutId="case-tab-underline"
-                className="absolute inset-x-1 -bottom-px h-[2px] bg-accent"
-                transition={{ type: "spring", stiffness: 520, damping: 40 }}
-              />
-            ) : null}
-          </button>
-        ))}
+            <Trans>Vider les charges</Trans>
+          </HoldToConfirm>
+        </div>
       </div>
 
-      {/* v2.0.1: EN 1991 generators + thermal action, wired to
-          generate_env_loads_json — docked below the EN 1990 case tabs.
-          v2.1.1: clicking Imposée / Neige sk / Vent vb auto-switches the
-          active case tab (Q / S / W) with a concise confirmation toast. */}
-      <EnvLoadGenerators onCaseSwitch={switchCaseForGenerator} beams={beams} />
+      {/* EN 1990 Case Tabs sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        {/* G | Q | W | Acc tabs with the shared layoutId glider (§8.6). */}
+        <div
+          className="flex items-center gap-1 border-b border-hairline pb-2"
+          data-testid="case-tabs"
+        >
+          {CASES.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="relative flex min-h-8 items-center rounded px-2.5 text-[13px] data-[active=true]:text-accent"
+              data-active={caseId === c.id}
+              onClick={() => setCaseId(c.id)}
+            >
+              {c.label}
+              {caseId === c.id ? (
+                <motion.span
+                  layoutId="case-tab-underline"
+                  className="absolute inset-x-1 -bottom-px h-[2px] bg-accent"
+                  transition={{ type: "spring", stiffness: 520, damping: 40 }}
+                />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* g-acceleration quick scenarios (RDM 7 parity). */}
-      <section className="border-t border-hairline pt-3" data-testid="accel-field">
-        <h3 className="text-xs font-medium text-ink-secondary">Champs d'accélération (g)</h3>
+      {/* EN 1991 Generators sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <ThermalLoadIcon size={16} />
+          <Trans>Générateurs EN 1991</Trans>
+        </h3>
+        {/* v2.0.1: EN 1991 generators + thermal action, wired to
+            generate_env_loads_json — docked below the EN 1990 case tabs.
+            v2.1.1: clicking Imposée / Neige sk / Vent vb auto-switches the
+            active case tab (Q / S / W) with a concise confirmation toast. */}
+        <EnvLoadGenerators
+          onCaseSwitch={switchCaseForGenerator}
+          beams={beams}
+          beamId={beamId}
+          onBeamChange={setBeamId}
+        />
+      </div>
+
+      {/* g-Acceleration sub-card */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="accel-field"
+      >
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <SelfWeightGravity size={16} />
+          <Trans>Champs d'accélération (g)</Trans>
+        </h3>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           <Button
             variant="outline"
@@ -409,241 +482,247 @@ function LoadsPage() {
             Appliquer
           </Button>
         </div>
-      </section>
-
-      {/* Load-form tabs: 18px engineering icons per action family. */}
-      <div className="flex flex-wrap gap-1">
-        {LOAD_TABS.map((tl) => (
-          <button
-            key={tl.id}
-            type="button"
-            className={`flex items-center gap-1 rounded px-1.5 py-1 text-[12px] ${tab === tl.id ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
-            onClick={() => setTab(tl.id)}
-          >
-            <tl.icon size={18} />
-            {tl.label}
-          </button>
-        ))}
       </div>
 
-      <section className="border-t border-hairline pt-3">
-        {tab === "nodal" ? (
-          <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
-            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-node">
-              <Trans>Nœud</Trans>
-            </label>
-            {/* v2.1.2: searchable node Combobox (NodePin + coordinates). */}
-            <ComboboxRoot
-              items={nodes.map((n) => n.id)}
-              value={nodeId}
-              onValueChange={(next: number | null) => {
-                if (next !== null) setNodeId(next);
-              }}
-              itemToStringValue={(id: number) => `N${id}`}
+      {/* Load Form sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <TorqueMoment size={16} />
+          <Trans>Formulaire de charge</Trans>
+        </h3>
+        {/* Load-form tabs: 18px engineering icons per action family. */}
+        <div className="flex flex-wrap gap-1 mb-2">
+          {LOAD_TABS.map((tl) => (
+            <button
+              key={tl.id}
+              type="button"
+              className={`flex items-center gap-1 rounded px-1.5 py-1 text-[12px] ${tab === tl.id ? "bg-accent-tint text-accent" : "text-ink-secondary"}`}
+              onClick={() => setTab(tl.id)}
             >
-              <ComboboxInput id="load-node" aria-label={t`Nœud`} className="h-8 font-data" />
-              <ComboboxContent
-                renderItem={(id: number) => {
-                  const node = nodes.find((n) => n.id === id);
-                  return (
-                    <ComboboxItem key={id} value={id}>
-                      <span className="font-data flex-1">
-                        N{id}
-                        {node !== undefined
-                          ? ` · (${node.x.toFixed(2)} ; ${node.y.toFixed(2)} ; ${node.z.toFixed(2)})`
-                          : ""}
-                      </span>
-                    </ComboboxItem>
-                  );
+              <tl.icon size={18} />
+              {tl.label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
+          {tab === "nodal" ? (
+            <>
+              <label className="text-xs font-medium text-ink-secondary" htmlFor="load-node">
+                <Trans>Nœud</Trans>
+              </label>
+              {/* v2.1.2: searchable node Combobox (NodePin + coordinates). */}
+              <ComboboxRoot
+                items={nodes.map((n) => n.id)}
+                value={nodeId}
+                onValueChange={(next: number | null) => {
+                  if (next !== null) setNodeId(next);
                 }}
+                itemToStringValue={(id: number) => `N${id}`}
               >
-                <ComboboxEmpty>Aucun nœud</ComboboxEmpty>
-              </ComboboxContent>
-            </ComboboxRoot>
-            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fx">
-              Fx (kN)
-            </label>
-            <NumberFieldRoot
-              id="load-fx"
-              value={fx}
-              step={0.5}
-              onValueChange={(v) => {
-                if (v !== null) setFx(v);
-              }}
-            >
-              <NumberFieldInput className="h-8" />
-            </NumberFieldRoot>
-            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fy">
-              Fy (kN)
-            </label>
-            <NumberFieldRoot
-              id="load-fy"
-              value={fy}
-              step={0.5}
-              onValueChange={(v) => {
-                if (v !== null) setFy(v);
-              }}
-            >
-              <NumberFieldInput className="h-8" />
-            </NumberFieldRoot>
-            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fz">
-              Fz (kN)
-            </label>
-            <NumberFieldRoot
-              id="load-fz"
-              value={fz}
-              step={0.5}
-              onValueChange={(v) => {
-                if (v !== null) setFz(v);
-              }}
-            >
-              <NumberFieldInput className="h-8" />
-            </NumberFieldRoot>
-          </div>
-        ) : (
-          <div className="grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-2">
-            <label className="text-xs font-medium text-ink-secondary" htmlFor="load-beam">
-              <Trans>Poutre</Trans>
-            </label>
-            {/* v2.1.2: searchable member Combobox (BeamSegment + length). */}
-            <ComboboxRoot
-              items={beams.map((b) => b.id)}
-              value={beamId}
-              onValueChange={(next: number | null) => {
-                if (next !== null) setBeamId(next);
-              }}
-              itemToStringValue={(id: number) => `B${id}`}
-            >
-              <ComboboxInput id="load-beam" aria-label={t`Poutre`} className="h-8 font-data" />
-              <ComboboxContent
-                renderItem={(id: number) => {
-                  const beam = beams.find((b) => b.id === id);
-                  const length =
-                    beam !== undefined
-                      ? memberLength(nodes, beam).toFixed(2).replace(".", ",")
-                      : null;
-                  return (
-                    <ComboboxItem key={id} value={id}>
-                      <span className="font-data flex-1">B{id}</span>
-                      {length !== null ? (
-                        <span className="font-data text-right text-[10px] text-ink-muted">
-                          L = {length} m
+                <ComboboxInput id="load-node" aria-label={t`Nœud`} className="h-8 font-data" />
+                <ComboboxContent
+                  renderItem={(id: number) => {
+                    const node = nodes.find((n) => n.id === id);
+                    return (
+                      <ComboboxItem key={id} value={id}>
+                        <span className="font-data flex-1">
+                          N{id}
+                          {node !== undefined
+                            ? ` · (${node.x.toFixed(2)} ; ${node.y.toFixed(2)} ; ${node.z.toFixed(2)})`
+                            : ""}
                         </span>
-                      ) : null}
-                    </ComboboxItem>
-                  );
+                      </ComboboxItem>
+                    );
+                  }}
+                >
+                  <ComboboxEmpty>Aucun nœud</ComboboxEmpty>
+                </ComboboxContent>
+              </ComboboxRoot>
+              <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fx">
+                Fx (kN)
+              </label>
+              <NumberFieldRoot
+                id="load-fx"
+                value={fx}
+                step={0.5}
+                onValueChange={(v) => {
+                  if (v !== null) setFx(v);
                 }}
               >
-                <ComboboxEmpty>Aucune poutre</ComboboxEmpty>
-              </ComboboxContent>
-            </ComboboxRoot>
-            {tab === "uniform" ? (
-              <>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qx">
-                  qx (kN/m)
-                </label>
-                <NumberFieldRoot
-                  id="load-qx"
-                  value={qx}
-                  step={0.5}
-                  onValueChange={(v) => {
-                    if (v !== null) setQx(v);
+                <NumberFieldInput className="h-8" />
+              </NumberFieldRoot>
+              <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fy">
+                Fy (kN)
+              </label>
+              <NumberFieldRoot
+                id="load-fy"
+                value={fy}
+                step={0.5}
+                onValueChange={(v) => {
+                  if (v !== null) setFy(v);
+                }}
+              >
+                <NumberFieldInput className="h-8" />
+              </NumberFieldRoot>
+              <label className="text-xs font-medium text-ink-secondary" htmlFor="load-fz">
+                Fz (kN)
+              </label>
+              <NumberFieldRoot
+                id="load-fz"
+                value={fz}
+                step={0.5}
+                onValueChange={(v) => {
+                  if (v !== null) setFz(v);
+                }}
+              >
+                <NumberFieldInput className="h-8" />
+              </NumberFieldRoot>
+            </>
+          ) : (
+            <>
+              <label className="text-xs font-medium text-ink-secondary" htmlFor="load-beam">
+                <Trans>Poutre</Trans>
+              </label>
+              {/* v2.1.2: searchable member Combobox (BeamSegment + length). */}
+              <ComboboxRoot
+                items={beams.map((b) => b.id)}
+                value={beamId}
+                onValueChange={(next: number | null) => {
+                  if (next !== null) setBeamId(next);
+                }}
+                itemToStringValue={(id: number) => `B${id}`}
+              >
+                <ComboboxInput id="load-beam" aria-label={t`Poutre`} className="h-8 font-data" />
+                <ComboboxContent
+                  renderItem={(id: number) => {
+                    const beam = beams.find((b) => b.id === id);
+                    const length =
+                      beam !== undefined
+                        ? memberLength(nodes, beam).toFixed(2).replace(".", ",")
+                        : null;
+                    return (
+                      <ComboboxItem key={id} value={id}>
+                        <span className="font-data flex-1">B{id}</span>
+                        {length !== null ? (
+                          <span className="font-data text-right text-[10px] text-ink-muted">
+                            L = {length} m
+                          </span>
+                        ) : null}
+                      </ComboboxItem>
+                    );
                   }}
                 >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qy">
-                  qy (kN/m)
-                </label>
-                <NumberFieldRoot
-                  id="load-qy"
-                  value={qy}
-                  step={0.5}
-                  onValueChange={(v) => {
-                    if (v !== null) setQy(v);
-                  }}
-                >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qz">
-                  qz (kN/m)
-                </label>
-                <NumberFieldRoot
-                  id="load-qz"
-                  value={qz}
-                  step={0.5}
-                  onValueChange={(v) => {
-                    if (v !== null) setQz(v);
-                  }}
-                >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-              </>
-            ) : null}
-            {tab === "trapezoid" ? (
-              <>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-q1">
-                  q1 (kN/m)
-                </label>
-                <NumberFieldRoot
-                  id="load-q1"
-                  value={qz}
-                  step={0.5}
-                  onValueChange={(v) => {
-                    if (v !== null) setQz(v);
-                  }}
-                >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-q2">
-                  q2 (kN/m)
-                </label>
-                <NumberFieldRoot
-                  id="load-q2"
-                  value={q2z}
-                  step={0.5}
-                  onValueChange={(v) => {
-                    if (v !== null) setQ2z(v);
-                  }}
-                >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-              </>
-            ) : null}
-            {tab === "point" ? (
-              <>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-span-fz">
-                  Fz (kN)
-                </label>
-                <NumberFieldRoot
-                  id="load-span-fz"
-                  value={fz}
-                  step={0.5}
-                  onValueChange={(v) => {
-                    if (v !== null) setFz(v);
-                  }}
-                >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-                <label className="text-xs font-medium text-ink-secondary" htmlFor="load-ratio">
-                  a/L (%)
-                </label>
-                <NumberFieldRoot
-                  id="load-ratio"
-                  value={ratio}
-                  step={5}
-                  min={0}
-                  max={100}
-                  onValueChange={(v) => {
-                    if (v !== null) setRatio(v);
-                  }}
-                >
-                  <NumberFieldInput className="h-8" />
-                </NumberFieldRoot>
-              </>
-            ) : null}
-          </div>
-        )}
+                  <ComboboxEmpty>Aucune poutre</ComboboxEmpty>
+                </ComboboxContent>
+              </ComboboxRoot>
+              {tab === "uniform" ? (
+                <>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qx">
+                    qx (kN/m)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-qx"
+                    value={qx}
+                    step={0.5}
+                    onValueChange={(v) => {
+                      if (v !== null) setQx(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qy">
+                    qy (kN/m)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-qy"
+                    value={qy}
+                    step={0.5}
+                    onValueChange={(v) => {
+                      if (v !== null) setQy(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-qz">
+                    qz (kN/m)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-qz"
+                    value={qz}
+                    step={0.5}
+                    onValueChange={(v) => {
+                      if (v !== null) setQz(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                </>
+              ) : null}
+              {tab === "trapezoid" ? (
+                <>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-q1">
+                    q1 (kN/m)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-q1"
+                    value={qz}
+                    step={0.5}
+                    onValueChange={(v) => {
+                      if (v !== null) setQz(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-q2">
+                    q2 (kN/m)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-q2"
+                    value={q2z}
+                    step={0.5}
+                    onValueChange={(v) => {
+                      if (v !== null) setQ2z(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                </>
+              ) : null}
+              {tab === "point" ? (
+                <>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-span-fz">
+                    Fz (kN)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-span-fz"
+                    value={fz}
+                    step={0.5}
+                    onValueChange={(v) => {
+                      if (v !== null) setFz(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                  <label className="text-xs font-medium text-ink-secondary" htmlFor="load-ratio">
+                    a/L (%)
+                  </label>
+                  <NumberFieldRoot
+                    id="load-ratio"
+                    value={ratio}
+                    step={5}
+                    min={0}
+                    max={100}
+                    onValueChange={(v) => {
+                      if (v !== null) setRatio(v);
+                    }}
+                  >
+                    <NumberFieldInput className="h-8" />
+                  </NumberFieldRoot>
+                </>
+              ) : null}
+            </>
+          )}
+        </div>
         <Button
           className="mt-2 w-full"
           disabled={tab === "nodal" ? nodes.length === 0 : beams.length === 0}
@@ -651,11 +730,13 @@ function LoadsPage() {
         >
           <Trans>Ajouter la charge</Trans>
         </Button>
-      </section>
+      </div>
 
-      {/* v2.1.2: concentrated moments (Mx, My, Mz) as an ExpandablePanel
-          (smooth height + opacity — replaces the raw <details>). */}
-      <div className="border-t border-hairline pt-3" data-testid="moments-section">
+      {/* Concentrated Moments sub-card */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="moments-section"
+      >
         <ExpandablePanel
           open={momentsOpen}
           onOpenChange={setMomentsOpen}
@@ -686,33 +767,38 @@ function LoadsPage() {
         </ExpandablePanel>
       </div>
 
-      {/* Live force resultants — rolling tabular digits (§8.1). */}
-      <dl
-        className="grid grid-cols-3 gap-2 border-t border-hairline pt-3"
-        data-testid="resultant-summary"
-      >
-        {(
-          [
-            ["ΣFx", resultant.fx],
-            ["ΣFy", resultant.fy],
-            ["ΣFz", resultant.fz],
-          ] as const
-        ).map(([label, value]) => (
-          <div key={label}>
-            <dt className="font-data text-[10px] text-ink-muted">{label} (kN)</dt>
-            <dd className="text-[15px] text-ink-primary">
-              <NumberFlowValue value={value} format={{ maximumFractionDigits: 2 }} />
-            </dd>
-          </div>
-        ))}
-      </dl>
+      {/* Live Force Resultants sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+        <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
+          <SelfWeightGravity size={16} />
+          <Trans>Résultantes globales</Trans>
+        </h3>
+        <dl className="grid grid-cols-3 gap-2" data-testid="resultant-summary">
+          {(
+            [
+              ["ΣFx", resultant.fx],
+              ["ΣFy", resultant.fy],
+              ["ΣFz", resultant.fz],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label}>
+              <dt className="font-data text-[10px] text-ink-muted">{label} (kN)</dt>
+              <dd className="text-[15px] text-ink-primary">
+                <NumberFlowValue value={value} format={{ maximumFractionDigits: 2 }} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
 
-      <div className="border-t border-hairline pt-3">
+      {/* Self-Weight & Equilibrium sub-card */}
+      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
         <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
           <Switch
             checked={selfWeight}
             onCheckedChange={(checked) => {
               if (checked !== selfWeight) toggleSelfWeight();
+              void trackProductEvent("self_weight_toggled", { enabled: checked });
             }}
           />
           <SelfWeightGravity size={18} />
@@ -745,7 +831,7 @@ function LoadsPage() {
       {/* Primary CTA: runs the worker solve and moves to Step 4. */}
       <Button
         size="lg"
-        className="w-full"
+        className="mt-2 w-full"
         data-testid="cta-solve"
         onClick={() => void navigate({ to: "/results" })}
       >
@@ -755,10 +841,10 @@ function LoadsPage() {
   );
 
   const main = (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-3">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div
         ref={slotRef}
-        className="relative min-h-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel"
+        className="relative min-h-0 flex-1 overflow-hidden bg-canvas"
         data-testid="loads-stage-slot"
       />
       <StageContent k="loads" options={{ wireframe: false }}>
@@ -778,6 +864,9 @@ function LoadsPage() {
                 <th>
                   <Trans>Cible</Trans>
                 </th>
+                <th>
+                  <Trans>Direction</Trans>
+                </th>
                 <th>Intensité</th>
                 <th />
               </tr>
@@ -796,6 +885,7 @@ function LoadsPage() {
                           ? `B${l.beam_id}`
                           : "3D"}
                   </td>
+                  <td className="font-data text-[11px] text-ink-secondary">{directionLabel(l)}</td>
                   <td>
                     {l.kind === "Trapezoid" || l.kind === "Uniform"
                       ? `${((l.q_start ?? 0) / 1000).toFixed(2)} → ${((l.q_end ?? 0) / 1000).toFixed(2)} kN/m`
@@ -808,7 +898,7 @@ function LoadsPage() {
                   <td className="text-right">
                     <button
                       type="button"
-                      aria-label="remove load"
+                      aria-label={t`Supprimer la charge`}
                       className="mr-2 text-ink-muted hover:text-fea-max"
                       onClick={() => removeLoad(index)}
                     >
@@ -840,17 +930,21 @@ function LoadsPage() {
  * all appended through the wasm `generate_env_loads_json` lane.
  * v2.1.2: the member target is a searchable Combobox (BeamSegment icon)
  * and the ΔT field a NumberField — zero raw inputs.
+ * v2.3.0: beamId now synced with parent inspector state.
  */
 function EnvLoadGenerators({
   onCaseSwitch,
   beams,
+  beamId,
+  onBeamChange,
 }: {
   onCaseSwitch: (caseId: LoadCaseId, label: string) => void;
   beams: { id: number }[];
+  beamId: number;
+  onBeamChange: (id: number) => void;
 }): React.ReactElement {
   const project = useProjectStore((st) => st.project);
   const loadProject = useProjectStore((st) => st.loadProject);
-  const [beamId, setBeamId] = useState(beams[0]?.id ?? 0);
   // v2.0.2: realistic Eurocode defaults — imposed cat. B 3.0 kN/m²,
   // snow sk 0.45 kN/m² (guide values) and wind vb 26 m/s.
   const [imposedCat] = useState(2);
@@ -883,39 +977,39 @@ function EnvLoadGenerators({
           ],
         },
       });
+      void trackProductEvent("env_load_set", { type: "thermal" });
       return;
     }
     void feaClient
       .engineCall("generate_env_loads_json", kind, beamId, numeric, 3.0)
       .then((payload: unknown) => {
-        // v2.1.1: the wasm lane returns a serde_json STRING (the internally
-        // tagged `Load` enum cannot cross serde_wasm_bindgen).
         const loads = typeof payload === "string" ? (JSON.parse(payload) as LoadDataRow[]) : [];
         loadProject({
           ...project,
           structure: { ...project.structure, loads: [...project.structure.loads, ...loads] },
         });
-        // v2.1.1: the matching EN 1990 case tab lights up + a toast.
         if (caseTarget !== undefined && caseLabel !== undefined) {
           onCaseSwitch(caseTarget, caseLabel);
         }
+        void trackProductEvent("env_load_set", { type: kind });
       })
       .catch(() => undefined);
   };
 
   return (
     <div
-      className="mb-3 rounded-lg border border-hairline p-3 text-xs"
+      className="mb-3 rounded-[8px] border border-hairline p-3 text-xs"
       aria-label="Générateurs EN 1991"
     >
       <p className="mb-2 font-semibold">Générateurs EN 1991 & thermique</p>
       <div className="flex flex-wrap items-center gap-2">
-        {/* v2.1.2: member target = searchable Combobox (was a raw select). */}
+        {/* v2.1.2: member target = searchable Combobox (was a raw select).
+            v2.3.0: beamId now controlled from parent inspector. */}
         <ComboboxRoot
           items={beams.map((b) => b.id)}
           value={beamId}
           onValueChange={(next: number | null) => {
-            if (next !== null) setBeamId(next);
+            if (next !== null) onBeamChange(next);
           }}
           itemToStringValue={(id: number) => `B${id}`}
         >

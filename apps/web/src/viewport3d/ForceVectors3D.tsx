@@ -3,10 +3,115 @@ import * as THREE from "three";
 import type { BeamData, LoadData, NodeData } from "@/state/projectStore";
 
 /**
- * Oriented 3D force arrows (ARCHITECTURE.md section 5, `ForceVectors3D.tsx`).
- * Arrow length scales with |Fz| within the case; color is the neutral ink
- * tone — the thermal spectrum stays reserved for FEA fields.
+ * Oriented 3D force arrows + moment arcs (ARCHITECTURE.md section 5,
+ * `ForceVectors3D.tsx`; v2.4.0 rewrite).
+ *
+ * - Forces (Fx, Fy, Fz and distributed/point resultants) render as a thin
+ *   cylindrical shaft + cone tip oriented EXACTLY along the effort direction
+ *   (global or per-beam local), the cone tip touching the application point.
+ * - Moments / torsion couples (Mx, My, Mz) render as a 270° torus rim +
+ *   tangent cone at the arc end, normal to the moment axis (right-hand rule).
+ *
+ * Arrow length scales with the resultant magnitude within the case; the
+ * thermal spectrum stays reserved for FEA fields.
  */
+
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+/** Quaternion rotating the local +Y (cylinder axis) onto `dir`. */
+function quatFromY(dir: THREE.Vector3): THREE.Quaternion {
+  return new THREE.Quaternion().setFromUnitVectors(Y_AXIS, dir.clone().normalize());
+}
+
+/** A single force arrow: shaft + cone tip at the application point. */
+function ForceArrow({
+  at,
+  direction,
+  length,
+  color,
+  radius = 0.02,
+}: {
+  at: [number, number, number];
+  direction: [number, number, number];
+  length: number;
+  color: string;
+  radius?: number;
+}) {
+  const dir = useMemo(
+    () => new THREE.Vector3(direction[0], direction[1], direction[2]).normalize(),
+    [direction],
+  );
+  const quat = useMemo(() => quatFromY(dir), [dir]);
+  // The cone tip sits at `at`; the shaft extends backwards along -dir.
+  const headLen = Math.min(0.12, length * 0.4);
+  const shaftLen = Math.max(length - headLen, 1e-3);
+  const shaftCenter: [number, number, number] = [
+    at[0] - dir.x * (headLen + shaftLen / 2),
+    at[1] - dir.y * (headLen + shaftLen / 2),
+    at[2] - dir.z * (headLen + shaftLen / 2),
+  ];
+  const headCenter: [number, number, number] = [
+    at[0] - dir.x * (headLen / 2),
+    at[1] - dir.y * (headLen / 2),
+    at[2] - dir.z * (headLen / 2),
+  ];
+  return (
+    <group>
+      <mesh position={shaftCenter} quaternion={[quat.x, quat.y, quat.z, quat.w]}>
+        <cylinderGeometry args={[radius, radius, shaftLen, 8]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+      <mesh position={headCenter} quaternion={[quat.x, quat.y, quat.z, quat.w]}>
+        <coneGeometry args={[radius * 2.4, headLen, 10]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+    </group>
+  );
+}
+
+/** A moment couple: 270° torus rim normal to `axis` + tangent cone tip. */
+function MomentArc({
+  at,
+  axis,
+  radius,
+  color,
+}: {
+  at: [number, number, number];
+  axis: [number, number, number];
+  radius: number;
+  color: string;
+}) {
+  const quat = useMemo(() => {
+    // Torus lies in its local X-Y plane with normal +Z; align +Z to `axis`.
+    const n = new THREE.Vector3(axis[0], axis[1], axis[2]).normalize();
+    return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+  }, [axis]);
+  const arc = Math.PI * 1.5; // 270°
+  // Tangent cone at the arc end (local X-Y plane).
+  const endAngle = arc;
+  const coneR = radius;
+  const conePos: [number, number, number] = [
+    Math.cos(endAngle) * coneR,
+    Math.sin(endAngle) * coneR,
+    0,
+  ];
+  // Tangent direction at the arc end (derivative of the circle).
+  const tangent = new THREE.Vector3(-Math.sin(endAngle), Math.cos(endAngle), 0).normalize();
+  const coneQuat = new THREE.Quaternion().setFromUnitVectors(Y_AXIS, tangent);
+  return (
+    <group position={[at[0], at[1], at[2]]} quaternion={[quat.x, quat.y, quat.z, quat.w]}>
+      <mesh>
+        <torusGeometry args={[radius, radius * 0.16, 8, 24, arc]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+      <mesh position={conePos} quaternion={[coneQuat.x, coneQuat.y, coneQuat.z, coneQuat.w]}>
+        <coneGeometry args={[radius * 0.3, radius * 0.5, 10]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+    </group>
+  );
+}
+
 export function ForceVectors3D({
   nodes,
   beams,
@@ -17,21 +122,32 @@ export function ForceVectors3D({
   loads: LoadData[];
 }) {
   const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes]);
-  const maxAbs = useMemo(
+
+  const maxForce = useMemo(
     () =>
       loads.reduce((m, l) => {
-        const intensity =
-          l.kind === "Nodal" || l.kind === "PointOnSpan"
-            ? Math.abs(l.forces.fz)
-            : l.kind === "Trapezoid" || l.kind === "Uniform"
-              ? Math.abs((l.q_start ?? 0) + (l.q_end ?? 0)) / 2
-              : 0;
+        let intensity = 0;
+        if (l.kind === "Nodal" || l.kind === "PointOnSpan") {
+          intensity = Math.hypot(l.forces.fx, l.forces.fy, l.forces.fz);
+        } else if (l.kind === "Trapezoid" || l.kind === "Uniform") {
+          intensity = Math.abs((l.q_start ?? 0) + (l.q_end ?? 0)) / 2;
+        }
         return Math.max(m, intensity);
       }, 1),
     [loads],
   );
+  const maxMoment = useMemo(
+    () =>
+      loads.reduce((m, l) => {
+        if (l.kind === "Nodal" || l.kind === "PointOnSpan") {
+          return Math.max(m, Math.hypot(l.forces.mx, l.forces.my, l.forces.mz));
+        }
+        return m;
+      }, 1),
+    [loads],
+  );
 
-  // Beam geometry lookup for span/distributed arrows (member midpoints).
+  // Beam geometry lookup for span/distributed arrows (member points).
   const beamSpan = useCallback(
     (
       beamId: number,
@@ -51,26 +167,51 @@ export function ForceVectors3D({
     [beams, nodeById],
   );
 
-  const spanArrow = (
+  /** Renders the moment arcs for a load's concentrated moments (if any). */
+  const momentArcs = (
     at: [number, number, number],
-    length: number,
-    downward: boolean,
-    index: number,
-  ) => (
-    <group key={index} position={[at[0], at[1], at[2] + (downward ? length / 2 : -length / 2)]}>
-      <mesh>
-        <cylinderGeometry args={[0.015, 0.015, length, 8]} />
-        <meshStandardMaterial color="#DC2626" />
-      </mesh>
-      <mesh
-        position={[0, 0, downward ? -length / 2 : length / 2]}
-        rotation={[downward ? Math.PI : 0, 0, 0]}
-      >
-        <coneGeometry args={[0.045, 0.11, 10]} />
-        <meshStandardMaterial color="#DC2626" />
-      </mesh>
-    </group>
-  );
+    mx: number,
+    my: number,
+    mz: number,
+    keyPrefix: string,
+  ) => {
+    const arcs = [];
+    const baseR = 0.18;
+    if (mx !== 0) {
+      arcs.push(
+        <MomentArc
+          key={`${keyPrefix}-mx`}
+          at={at}
+          axis={[1, 0, 0]}
+          radius={baseR * (0.6 + 0.4 * Math.min(1, Math.abs(mx) / maxMoment))}
+          color="#7C3AED"
+        />,
+      );
+    }
+    if (my !== 0) {
+      arcs.push(
+        <MomentArc
+          key={`${keyPrefix}-my`}
+          at={at}
+          axis={[0, 1, 0]}
+          radius={baseR * (0.6 + 0.4 * Math.min(1, Math.abs(my) / maxMoment))}
+          color="#0891B2"
+        />,
+      );
+    }
+    if (mz !== 0) {
+      arcs.push(
+        <MomentArc
+          key={`${keyPrefix}-mz`}
+          at={at}
+          axis={[0, 0, 1]}
+          radius={baseR * (0.6 + 0.4 * Math.min(1, Math.abs(mz) / maxMoment))}
+          color="#059669"
+        />,
+      );
+    }
+    return arcs;
+  };
 
   return (
     <>
@@ -80,30 +221,25 @@ export function ForceVectors3D({
           if (node === undefined) {
             return null;
           }
-          const magnitude = Math.abs(load.forces.fz) / maxAbs;
-          const length = 0.2 + 0.8 * magnitude;
-          const downward = load.forces.fz < 0;
+          const { fx, fy, fz, mx, my, mz } = load.forces;
+          const mag = Math.hypot(fx, fy, fz);
+          const at: [number, number, number] = [node.x, node.y, node.z];
+          const length = 0.2 + 0.8 * (mag / maxForce);
           return (
-            <group
-              key={index}
-              position={[node.x, node.y, node.z + (downward ? length / 2 : -length / 2)]}
-            >
-              <mesh>
-                <cylinderGeometry args={[0.02, 0.02, length, 8]} />
-                <meshStandardMaterial color="#111827" />
-              </mesh>
-              <mesh
-                position={[0, 0, downward ? -length / 2 : length / 2]}
-                rotation={[downward ? Math.PI : 0, 0, 0]}
-              >
-                <coneGeometry args={[0.05, 0.12, 10]} />
-                <meshStandardMaterial color="#111827" />
-              </mesh>
+            <group key={index}>
+              {mag > 0 ? (
+                <ForceArrow
+                  at={at}
+                  direction={[fx, fy, fz]}
+                  length={length}
+                  color="#111827"
+                  radius={0.02}
+                />
+              ) : null}
+              {momentArcs(at, mx, my, mz, `n${index}`)}
             </group>
           );
         }
-        // v1.4.0: PointOnSpan + Trapezoid render in the viewport (crimson
-        // arrow array along the member + a top tie bar for distributed).
         if (load.kind === "PointOnSpan") {
           const span = beamSpan(load.beam_id);
           if (span === null) {
@@ -115,23 +251,34 @@ export function ForceVectors3D({
             span.a[1] + (span.b[1] - span.a[1]) * t,
             span.a[2] + (span.b[2] - span.a[2]) * t,
           ];
-          const magnitude = Math.abs(load.forces.fz) / maxAbs;
-          return spanArrow(at, 0.2 + 0.8 * magnitude, load.forces.fz < 0, index);
+          const { fx, fy, fz, mx, my, mz } = load.forces;
+          const mag = Math.hypot(fx, fy, fz);
+          const length = 0.2 + 0.8 * (mag / maxForce);
+          return (
+            <group key={index}>
+              {mag > 0 ? (
+                <ForceArrow
+                  at={at}
+                  direction={[fx, fy, fz]}
+                  length={length}
+                  color="#DC2626"
+                  radius={0.018}
+                />
+              ) : null}
+              {momentArcs(at, mx, my, mz, `p${index}`)}
+            </group>
+          );
         }
-        // v2.1.2 (audit 519229b): Uniform loads (EN 1991 Snow / Wind /
-        // imposed generators) render as the SAME crimson arrow array as
-        // the Trapezoid case — they used to be invisible in 3D.
         if (load.kind === "Uniform") {
           const span = beamSpan(load.beam_id);
           if (span === null) {
             return null;
           }
-          const arrows = [];
           const count = 5;
-          const magnitude = Math.abs(((load.q_start ?? 0) + (load.q_end ?? 0)) / 2) / maxAbs;
+          const magnitude = Math.abs(((load.q_start ?? 0) + (load.q_end ?? 0)) / 2) / maxForce;
           const shaft = 0.15 + 0.7 * magnitude;
-          const meanDirection = load.direction ?? { x: 0, y: 0, z: -1 };
-          const downward = meanDirection.z < 0 || (meanDirection.z === 0 && meanDirection.y < 0);
+          const dir = load.direction ?? { x: 0, y: 0, z: -1 };
+          const arrows = [];
           for (let i = 0; i < count; i++) {
             const t = i / (count - 1);
             const at: [number, number, number] = [
@@ -140,49 +287,16 @@ export function ForceVectors3D({
               span.a[2] + (span.b[2] - span.a[2]) * t,
             ];
             arrows.push(
-              <group
+              <ForceArrow
                 key={`${index}-${i}`}
-                position={[at[0], at[1], at[2] + (downward ? shaft / 2 : -shaft / 2)]}
-              >
-                <mesh>
-                  <cylinderGeometry args={[0.012, 0.012, shaft, 8]} />
-                  <meshStandardMaterial color="#DC2626" />
-                </mesh>
-                <mesh
-                  position={[0, 0, downward ? -shaft / 2 : shaft / 2]}
-                  rotation={[downward ? Math.PI : 0, 0, 0]}
-                >
-                  <coneGeometry args={[0.035, 0.09, 10]} />
-                  <meshStandardMaterial color="#DC2626" />
-                </mesh>
-              </group>,
+                at={at}
+                direction={[dir.x, dir.y, dir.z]}
+                length={shaft}
+                color="#DC2626"
+                radius={0.012}
+              />,
             );
           }
-          // Top tie bar linking the arrow tails, oriented ALONG the member.
-          const tieY = (downward ? shaft : -shaft) + (downward ? 0.05 : -0.05);
-          const dir = new THREE.Vector3(
-            span.b[0] - span.a[0],
-            span.b[1] - span.a[1],
-            span.b[2] - span.a[2],
-          ).normalize();
-          const tieQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            new THREE.Vector3(1, 0, 0),
-            dir,
-          );
-          arrows.push(
-            <mesh
-              key={`${index}-tie`}
-              position={[
-                (span.a[0] + span.b[0]) / 2,
-                (span.a[1] + span.b[1]) / 2,
-                (span.a[2] + span.b[2]) / 2 + tieY / 2,
-              ]}
-              quaternion={[tieQuaternion.x, tieQuaternion.y, tieQuaternion.z, tieQuaternion.w]}
-            >
-              <boxGeometry args={[span.length, 0.012, 0.012]} />
-              <meshStandardMaterial color="#DC2626" />
-            </mesh>,
-          );
           return <group key={index}>{arrows}</group>;
         }
         if (load.kind === "Trapezoid") {
@@ -190,11 +304,11 @@ export function ForceVectors3D({
           if (span === null) {
             return null;
           }
-          const arrows = [];
           const count = 5;
-          const magnitude = Math.abs(load.q_start) / maxAbs;
+          const magnitude = Math.abs(load.q_start) / maxForce;
           const shaft = 0.15 + 0.7 * magnitude;
-          const downward = (load.q_start + load.q_end) / 2 < 0;
+          const dir = load.direction ?? { x: 0, y: 0, z: -1 };
+          const arrows = [];
           for (let i = 0; i < count; i++) {
             const t = i / (count - 1);
             const at: [number, number, number] = [
@@ -203,52 +317,16 @@ export function ForceVectors3D({
               span.a[2] + (span.b[2] - span.a[2]) * t,
             ];
             arrows.push(
-              <group
+              <ForceArrow
                 key={`${index}-${i}`}
-                position={[at[0], at[1], at[2] + (downward ? shaft / 2 : -shaft / 2)]}
-              >
-                <mesh>
-                  <cylinderGeometry args={[0.012, 0.012, shaft, 8]} />
-                  <meshStandardMaterial color="#DC2626" />
-                </mesh>
-                <mesh
-                  position={[0, 0, downward ? -shaft / 2 : shaft / 2]}
-                  rotation={[downward ? Math.PI : 0, 0, 0]}
-                >
-                  <coneGeometry args={[0.035, 0.09, 10]} />
-                  <meshStandardMaterial color="#DC2626" />
-                </mesh>
-              </group>,
+                at={at}
+                direction={[dir.x, dir.y, dir.z]}
+                length={shaft}
+                color="#DC2626"
+                radius={0.012}
+              />,
             );
           }
-          // Top tie bar linking the arrow tails: oriented ALONG the member
-          // vector (v1.5.0 defect — diagonal and vertical members used to
-          // stick out along global X because the box ran on the local X axis
-          // with no orientation quaternion).
-          const tieY = (downward ? shaft : -shaft) + (downward ? 0.05 : -0.05);
-          const dir = new THREE.Vector3(
-            span.b[0] - span.a[0],
-            span.b[1] - span.a[1],
-            span.b[2] - span.a[2],
-          ).normalize();
-          const tieQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            new THREE.Vector3(1, 0, 0),
-            dir,
-          );
-          arrows.push(
-            <mesh
-              key={`${index}-tie`}
-              position={[
-                (span.a[0] + span.b[0]) / 2,
-                (span.a[1] + span.b[1]) / 2,
-                (span.a[2] + span.b[2]) / 2 + tieY / 2,
-              ]}
-              quaternion={[tieQuaternion.x, tieQuaternion.y, tieQuaternion.z, tieQuaternion.w]}
-            >
-              <boxGeometry args={[span.length, 0.012, 0.012]} />
-              <meshStandardMaterial color="#DC2626" />
-            </mesh>,
-          );
           return <group key={index}>{arrows}</group>;
         }
         return null;

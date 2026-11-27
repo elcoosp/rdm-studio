@@ -1,12 +1,18 @@
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
+import { Trans } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { docsHref, studioHref } from "../lib/env";
+import { currentSiteLocale } from "../i18n/i18n";
+import { trackSiteEvent } from "../lib/productTelemetry";
 
 /**
  * Shared building blocks for the 4 programmatic Eurocode SEO landing pages:
  * a "HowTo"-style method with mono formula blocks, a worked-example table
  * computed from the engine's own EN 10365 / EN 10025 catalogs, a static FAQ
- * (crawlable HTML) and the studio CTA deep-link.
+ * (crawlable HTML) and the studio CTA deep-link. All user-facing strings
+ * are Lingui runtime calls (`<Trans>` / `i18n._`, explicit IDs) so the EN
+ * routes render the translated catalog.
  */
 
 export function SeoCta({ template, label }: { template?: string; label?: string }) {
@@ -14,14 +20,20 @@ export function SeoCta({ template, label }: { template?: string; label?: string 
   return (
     <div className="my-8 flex flex-wrap items-center gap-3 rounded-[8px] border border-accent bg-accent-tint p-4">
       <p className="min-w-0 flex-1 text-[13px] leading-5 text-ink-secondary">
-        {label ?? "Reproduisez ce modèle dans l'atelier : profilés EN 10365, combinaisons EN 1990 et vérification EC3 6.61/6.62 prêts à calculer, 100 % sur votre poste."}
+        {label ??
+          i18n._({
+            id: "site.seo.cta.defaultLabel",
+            message:
+              "Reproduisez ce modèle dans l'atelier : profilés EN 10365, combinaisons EN 1990 et vérification EC3 6.61/6.62 prêts à calculer, 100 % sur votre poste.",
+          })}
       </p>
       <a
         href={href}
         data-testid="seo-cta"
         className="flex shrink-0 items-center gap-1.5 rounded bg-accent px-4 py-2 text-[13px] font-semibold text-white hover:bg-accent-strong"
+        onClick={() => void trackSiteEvent("seo_page_cta_clicked", { template: template ?? "default" })}
       >
-        Ouvrir dans l'atelier 3D
+        <Trans id="site.seo.cta.open" message="Ouvrir dans l'atelier 3D" />
         <ArrowRight size={14} strokeWidth={1.5} aria-hidden />
       </a>
     </div>
@@ -51,10 +63,14 @@ export function FaqList({ items }: { items: { q: string; a: string }[] }) {
 }
 
 export function Breadcrumb({ page }: { page: string }) {
+  const home = currentSiteLocale() === "en" ? "/en" : "/";
   return (
-    <nav aria-label="fil d'ariane" className="font-data mb-4 text-[11px] text-ink-muted">
-      <a href="/" className="hover:text-accent">
-        Accueil
+    <nav
+      aria-label={i18n._({ id: "site.seo.breadcrumb.aria", message: "fil d'ariane" })}
+      className="font-data mb-4 text-[11px] text-ink-muted"
+    >
+      <a href={home} className="hover:text-accent">
+        <Trans id="site.seo.breadcrumb.home" message="Accueil" />
       </a>
       <span aria-hidden> / </span>
       <span className="text-ink-secondary">{page}</span>
@@ -65,7 +81,10 @@ export function Breadcrumb({ page }: { page: string }) {
 export function DocsHandoff({ path }: { path: string }) {
   return (
     <p className="mt-6 text-[13px] text-ink-secondary">
-      Méthode complète, hypothèses et limites normatives dans la documentation :{" "}
+      <Trans
+        id="site.seo.docsHandoff.text"
+        message="Méthode complète, hypothèses et limites normatives dans la documentation :"
+      />{" "}
       <a
         href={docsHref(path)}
         target="_blank"

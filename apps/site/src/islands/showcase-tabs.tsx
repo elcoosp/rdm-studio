@@ -1,221 +1,227 @@
-import { useState } from "react";
-import {
-  ContinuousBeamIcon,
-  PortalFrameIcon,
-  WarrenTrussIcon,
-} from "../components/icons";
+import { useMemo, useState } from "react";
+import { I18nProvider, Trans } from "@lingui/react";
+import { i18n } from "../i18n/i18n";
+import { SegmentedControl } from "@rdm-studio/ui/interior";
+import { Button } from "@rdm-studio/ui/primitives";
 import { studioHref } from "../lib/env";
+import {
+  ENGINEERING_CATALOG,
+  type EngineeringModel,
+  type Sector,
+} from "@rdm-studio/ui/templates";
+import { StatusBadge, Tooltip, TooltipGroup } from "@rdm-studio/ui/interior";
+import { trackSiteEvent, trackShowcaseFilterChanged, trackShowcaseModelViewed, trackShowcaseLaunchStudio } from "../lib/productTelemetry";
 
 /**
- * ShowcaseTabs island (v2.2.0): the interactive 3-model showcase ported
- * verbatim from the v2.1.2 landing (`buildShowcase()` — Portique 18 m,
- * Treillis Warren 24 m, Poutre 3 travées) with the architectural linework,
- * the telemetry column and the 1-click studio launch CTAs wired to
- * PUBLIC_APP_URL. Static prerender renders the first model; hydration
- * enables the tab switcher.
+ * ShowcaseTabs island (v2.3.0): the 15-model sector-filtered interactive
+ * gallery. Replaces the 3-model static list with every canonical model from
+ * `@rdm-studio/ui/templates` (`ENGINEERING_CATALOG`), including the naval &
+ * lifting flagships. Renders rich architectural SVG previews, section /
+ * mass / Eurocode telemetry and 1-click launch buttons to canonical English
+ * `?template=<slug>` studio deep links.
+ *
+ * i18n: the island renders in its own React root (outside the layout's
+ * `<I18nProvider>`), so it wraps itself in the provider over the shared
+ * singleton. The catalog (`ENGINEERING_CATALOG`) is the SSOT for the French
+ * descriptions and English titles; the island holds the French display
+ * titles (`FR_TITLE`) and the English descriptions (`EN_DESCRIPTION`) keyed
+ * by slug, and picks the pair for the active locale at render time.
  */
 
-type ShowcaseModel = {
-  kind: "portique" | "warren" | "travees";
-  name: string;
-  description: string;
-  sections: string;
-  norm: string;
-  massKg: number;
-  members: number;
-  art: React.ReactElement;
+type Filter = "all" | Sector;
+
+const FILTERS: { value: Filter; labelId: string; label: string }[] = [
+  { value: "all", labelId: "site.showcase.filter.all", label: "Tous (15)" },
+  { value: "Naval & Lifting", labelId: "site.showcase.filter.naval", label: "Naval & Levage" },
+  { value: "Building & Framing", labelId: "site.showcase.filter.building", label: "Bâtiment & Charpente" },
+  { value: "Bridges & Frames", labelId: "site.showcase.filter.bridges", label: "Passerelles & Ossatures" },
+  { value: "Timber & Multi-Material", labelId: "site.showcase.filter.timber", label: "Bois & Multi-matériaux" },
+];
+
+/** French display names for the gallery (canonical English slugs stay in URLs). */
+const FR_TITLE: Record<string, string> = {
+  "portal-frame": "Portique acier 18 m",
+  "warren-truss": "Treillis Warren 24 m",
+  "continuous-beam": "Poutre continue 3 travées 18 m",
+  "cantilever": "Potence acier HEA 200",
+  "pitched-portal": "Portique toit en pente 15 m",
+  "pratt-truss": "Pont treillis Pratt 30 m",
+  "howe-truss": "Treillis Howe industriel 28 m",
+  "braced-frame": "Cadre contreventé 3 étages",
+  "cantilever-canopy": "Potence d'atelier 5 t",
+  "pedestrian-bridge": "Passerelle piétonne 40 m",
+  "naval-cradle": "Berceau de transport naval DNV",
+  "lifting-beam": "Palonnier de levage 20 t EN 13155",
+  "offshore-skid": "Châssis offshore",
+  "glulam-beam": "Poutre lamellé-collé GL24h 12 m",
+  "composite-beam": "Poutre mixte acier-béton",
 };
 
-function buildShowcase(): ShowcaseModel[] {
-  return [
-    {
-      kind: "portique",
-      name: "Portique 18 m",
-      description:
-        "Portique encastré-articulé en HEA 200, traversé IPE 300 — le cas d'école de la transmission M/N au nœud rigide.",
-      sections: "HEA 200 + IPE 300",
-      norm: "EN 1993-1-1",
-      massKg: 1183,
-      members: 3,
-      art: (
-        <svg viewBox="0 0 220 130" className="h-full w-full" role="img" aria-hidden>
-          <g stroke="#1D4ED8" strokeWidth="2" fill="none" strokeLinecap="round">
-            <path d="M40 118 V38 H180 V118" />
-          </g>
-          <g stroke="#94A3B8" strokeWidth="1">
-            <line x1="30" y1="118" x2="190" y2="118" />
-            <line x1="40" y1="38" x2="180" y2="38" strokeDasharray="3 3" />
-          </g>
-          <g fill="#0F172A">
-            <circle cx="40" cy="38" r="3.5" />
-            <circle cx="180" cy="38" r="3.5" />
-          </g>
-          <g fill="#1D4ED8">
-            <rect x="31" y="116" width="18" height="4" />
-            <rect x="146" y="116" width="18" height="4" />
-          </g>
-          <g stroke="#DC2626" strokeWidth="1.5" fill="none">
-            <path d="M110 30 V38 M106 34 L110 38 L114 34" />
-          </g>
-          <text x="110" y="127" textAnchor="middle" fontSize="9" fill="#475569" className="font-data">
-            18,0 m
-          </text>
-        </svg>
-      ),
-    },
-    {
-      kind: "warren",
-      name: "Treillis Warren 24 m",
-      description:
-        "Diagonales alternées sans montants : certains barreaux sont sans effort selon le chargement — articulez et comparez.",
-      sections: "IPE 200",
-      norm: "EN 1993-1-1",
-      massKg: 877,
-      members: 11,
-      art: (
-        <svg viewBox="0 0 220 130" className="h-full w-full" role="img" aria-hidden>
-          <g stroke="#1D4ED8" strokeWidth="2" fill="none" strokeLinejoin="round">
-            <path d="M20 40 H200" />
-            <path d="M40 100 H180" />
-            <path d="M20 40 L40 100 L60 40 L80 100 L100 40 L120 100 L140 40 L160 100 L180 40 L200 100" />
-          </g>
-          <g fill="#0F172A">
-            {[
-              [20, 40],
-              [60, 40],
-              [100, 40],
-              [140, 40],
-              [180, 40],
-              [200, 40],
-              [40, 100],
-              [80, 100],
-              [120, 100],
-              [160, 100],
-            ].map(([x, y]) => (
-              <circle key={`${x}-${y}`} cx={x} cy={y} r="3" />
-            ))}
-          </g>
-          <g stroke="#94A3B8" strokeWidth="1">
-            <line x1="12" y1="100" x2="208" y2="100" />
-          </g>
-          <text x="110" y="124" textAnchor="middle" fontSize="9" fill="#475569" className="font-data">
-            24,0 m
-          </text>
-        </svg>
-      ),
-    },
-    {
-      kind: "travees",
-      name: "Poutre 3 travées",
-      description:
-        "Poutre continue 3 × 4 m : moments négatifs sur appuis et redistribution — comparez 6.10 et 6.10a/b ici.",
-      sections: "IPE 300",
-      norm: "EN 1993-1-1",
-      massKg: 268,
-      members: 3,
-      art: (
-        <svg viewBox="0 0 220 130" className="h-full w-full" role="img" aria-hidden>
-          <g stroke="#1D4ED8" strokeWidth="2" fill="none">
-            <line x1="20" y1="56" x2="200" y2="56" />
-          </g>
-          <g stroke="#94A3B8" strokeWidth="1">
-            <line x1="20" y1="62" x2="200" y2="62" strokeDasharray="3 3" />
-          </g>
-          <g fill="#1D4ED8">
-            {[20, 80, 140, 200].map((x) => (
-              <path key={x} d={`M${x - 8} 118 L${x + 8} 118 L${x} 104 Z`} />
-            ))}
-          </g>
-          <g fill="#0F172A">
-            {[20, 80, 140, 200].map((x) => (
-              <circle key={x} cx={x} cy="56" r="3.5" />
-            ))}
-          </g>
-          <g stroke="#DC2626" strokeWidth="1.5" fill="none">
-            <path d="M64 44 V56 M60 48 L64 44 L68 48" />
-            <path d="M112 44 V56 M108 48 L112 44 L116 48" />
-            <path d="M166 44 V56 M162 48 L166 44 L170 48" />
-          </g>
-          <text x="110" y="128" textAnchor="middle" fontSize="9" fill="#475569" className="font-data">
-            3 × 4,0 m
-          </text>
-        </svg>
-      ),
-    },
-  ];
-}
+/** English descriptions (the catalog holds the French ones). */
+const EN_DESCRIPTION: Record<string, string> = {
+  "portal-frame":
+    "Single-bay portal with HEA 200 columns and IPE 300 rafter, fixed-pinned bases. Flexural buckling χy, interaction 6.61 and second-order P-Δ effects to EN 1993-1-1.",
+  "warren-truss":
+    "Simply supported Warren truss, 24 m span, 3 m deep, CHS 139.7×5 diagonals. Chord buckling χz, lateral-torsional buckling χLT and nodal load distribution to EN 1993-1-1.",
+  "continuous-beam":
+    "Three equal 6 m spans, continuous IPE 300 on columns. Moment redistribution, support reactions and SLS deflection L/250 to EN 1993-1-1.",
+  "cantilever":
+    "6 m HEA 200 cantilever fixed at the base. Lateral-torsional buckling χLT, tip deflection and moment/shear check at the fixity to EN 1993-1-1.",
+  "pitched-portal":
+    "Pitched-roof portal, 15 m span, 15° pitch, tapered IPE sections. Snow to EN 1991-1-3, wind to EN 1991-1-4 and plastic class-1 design to EC3.",
+  "pratt-truss":
+    "Simply supported 30 m Pratt truss for a pedestrian and cycle bridge. Bridge rules to EN 1993-2, fatigue check and LM1 traffic load to EN 1991-2.",
+  "howe-truss":
+    "28 m Howe truss supporting a crane runway. Crane-supporting structures to EN 1993-6, dynamic amplification φ and lateral buckling of compressed chords.",
+  "braced-frame":
+    "Three-storey office steel frame with concentric bracing. Seismic to EN 1998-1 (CQC/SRSS), wind to EN 1991-1-4, member checks to EN 1993-1-1 and one-click Pareto optimizer.",
+  "cantilever-canopy":
+    "8 m architectural cantilever canopy, tapered CHS 219.1×8 section. Wind suction to EN 1991-1-4, snow drift and SLS vibration f₁ > 3 Hz.",
+  "pedestrian-bridge":
+    "40 m tied-arch footbridge, S355 J2. Fatigue to EN 1993-2, crowd load to EN 1991-2 and vertical acceleration comfort limit 0.5 m/s².",
+  "naval-cradle":
+    "120 t launching cradle on 3-axle rail bogies. Member checks to EN 1993-1-1, rail loads to EN 1991-2 and (ax, ay, az) × g acceleration field for transport.",
+  "lifting-beam":
+    "20 t lifting beam, 6 m span, IPE 500 with stiffeners. Lateral-torsional buckling χLT to EN 1993-1-1, modal natural frequencies f₁..f₆ and dynamic amplification for crane hooks.",
+  "offshore-skid":
+    "12×6 m offshore module skid, multi-material (steel + grating). Stainless 304L to EN 1993-1-4, wind to EN 1991-1-4, seismic to EN 1998-1 and modal analysis.",
+  "glulam-beam":
+    "Simply supported 12 m GL24h glulam beam. Bending fm,k, shear fv,k, SLS vibration and creep kdef to EN 1995-1-1.",
+  "composite-beam":
+    "Composite beam IPE 300 + 150 mm concrete slab, headed studs. Partial connection, effective width and construction stages to EN 1994-1-1.",
+};
 
 export default function ShowcaseTabsIsland(): React.ReactElement {
-  const showcaseItems = buildShowcase();
-  const [activeShowcase, setActiveShowcase] = useState(0);
-  const showcase = showcaseItems[activeShowcase] ?? showcaseItems[0];
-  if (showcase === undefined) {
-    return <div />;
-  }
+  const [sector, setSector] = useState<Filter>("all");
+  const locale = i18n.locale === "en" ? "en" : "fr";
+  const models = useMemo<EngineeringModel[]>(() => {
+    if (sector === "all") return ENGINEERING_CATALOG;
+    return ENGINEERING_CATALOG.filter((m) => m.sector === sector);
+  }, [sector]);
+  const count = models.length;
+  const filterOptions = useMemo(
+    () => FILTERS.map((f) => ({ value: f.value, label: i18n._({ id: f.labelId, message: f.label }) })),
+    // Re-resolve when the locale changes (the provider re-renders on change).
+    [i18n.locale],
+  );
+  const numberFormat = useMemo(
+    () => new Intl.NumberFormat(locale === "en" ? "en-US" : "fr-FR"),
+    [locale],
+  );
+
   return (
-    <div className="grid gap-4 md:grid-cols-[260px_1fr]">
-      {/* Model selector — flat hairline rows, no nested cards. */}
-      <div
-        className="flex flex-row gap-2 overflow-x-auto md:flex-col"
-        role="tablist"
-        aria-label="Modèles d'ouverture"
-      >
-        {showcaseItems.map((model, index) => {
-          const Icon =
-            model.kind === "portique"
-              ? PortalFrameIcon
-              : model.kind === "warren"
-                ? WarrenTrussIcon
-                : ContinuousBeamIcon;
-          return (
-            <button
-              key={model.kind}
-              role="tab"
-              aria-selected={index === activeShowcase}
-              data-testid={`showcase-${model.kind}`}
-              onClick={() => setActiveShowcase(index)}
-              className={`flex min-w-[190px] items-center gap-2 rounded-[4px] border px-3 py-2.5 text-left text-[13px] font-medium transition-colors ${
-                index === activeShowcase
-                  ? "border-accent bg-accent-tint text-accent"
-                  : "border-hairline bg-panel text-ink-secondary hover:border-border-subtle hover:text-ink-primary"
-              }`}
-            >
-              <Icon size={22} />
-              {model.name}
-            </button>
-          );
-        })}
-      </div>
-      {/* Active model: architectural linework + telemetry. */}
-      <div className="grid gap-0 overflow-hidden rounded-[8px] border border-hairline bg-panel md:grid-cols-[1fr_220px]">
-        <div className="min-h-[220px] bg-canvas p-6">{showcase.art}</div>
-        <div className="border-t border-hairline p-4 md:border-t-0 md:border-l">
-          <dl className="font-data space-y-2.5 text-[12px]">
-            <div className="flex items-baseline justify-between gap-2">
-              <dt className="text-ink-muted">Masse</dt>
-              <dd className="text-ink-primary tabular-nums">{showcase.massKg} kg</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-2">
-              <dt className="text-ink-muted">Profilés</dt>
-              <dd className="text-ink-primary tabular-nums">
-                {showcase.members} barreaux · {showcase.sections}
-              </dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-2">
-              <dt className="text-ink-muted">Norme</dt>
-              <dd className="text-ink-primary">{showcase.norm}</dd>
-            </div>
-          </dl>
-          <p className="mt-3 text-[12px] leading-5 text-ink-secondary">{showcase.description}</p>
-          <a
-            href={studioHref(`/geometry?template=${showcase.kind}`)}
-            data-testid={`launch-${showcase.kind}`}
-            className="mt-4 flex items-center justify-center gap-1.5 rounded bg-accent px-3 py-2 text-[13px] font-semibold text-white hover:bg-accent-strong"
-          >
-            Ouvrir dans l'atelier
-          </a>
+    <I18nProvider i18n={i18n}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-3 border-b border-hairline pb-2">
+          <SegmentedControl
+            data-testid="showcase-filter"
+            options={filterOptions}
+            value={sector}
+            onValueChange={(next) => {
+              const f = next as Filter;
+              setSector(f);
+              void trackShowcaseFilterChanged(f);
+            }}
+          />
+          <span className="font-data shrink-0 text-[11px] text-ink-muted">
+            {i18n._({
+              id: "site.showcase.count",
+              message: "{count, plural, one {# modèle} other {# modèles}}",
+              values: { count },
+            })}
+          </span>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {models.map((model) => {
+            const preview = model.previewSvg.replace(
+              '<svg ',
+              '<svg width="100%" height="100%" ',
+            );
+            const title = locale === "en" ? model.title : (FR_TITLE[model.slug] ?? model.title);
+            const sectorLabel =
+              locale === "en"
+                ? model.sector
+                : (FILTERS.find((f) => f.value === model.sector)?.label ?? model.sector);
+            const description =
+              locale === "en" ? (EN_DESCRIPTION[model.slug] ?? model.description) : model.description;
+            return (
+                <article
+                  key={model.slug}
+                  className="rounded-[8px] border border-hairline bg-panel p-4 flex flex-col h-full"
+                  data-testid={`showcase-${model.slug}`}
+                  onClick={() => void trackShowcaseModelViewed(model.slug)}
+                >
+                <div
+                  className="h-32 w-full flex items-center justify-center bg-canvas border border-hairline rounded-[6px] p-2 text-accent"
+                  dangerouslySetInnerHTML={{ __html: preview }}
+                />
+                <h3 className="mt-2 text-[14px] font-semibold text-ink-primary">{title}</h3>
+                <StatusBadge tone="accent" mono className="mt-1.5 shrink-0">
+                  {sectorLabel}
+                </StatusBadge>
+                <p className="mt-1.5 text-[12px] leading-5 text-ink-secondary">{description}</p>
+                <dl className="mt-3 font-data grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+                  <div>
+                    <dt className="text-ink-muted">
+                      <Trans id="site.showcase.mass" message="Masse" />
+                    </dt>
+                    <dd className="mt-0.5 text-ink-primary tabular-nums">
+                      {numberFormat.format(model.massKg)} kg
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-ink-muted">
+                      <Trans id="site.showcase.section" message="Profil" />
+                    </dt>
+                    <dd className="mt-0.5 text-ink-primary">{model.primarySection}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt className="text-ink-muted">
+                      <Trans id="site.showcase.eurocodes" message="Eurocodes" />
+                    </dt>
+                    <dd className="mt-1 text-ink-secondary">
+                      <TooltipGroup openDelay={300} skipDelay={400} className="flex flex-wrap items-center gap-1">
+                        {model.eurocodes.map((ec) => (
+                          <Tooltip
+                            key={ec}
+                            label={i18n._({
+                              id: "site.showcase.eurocode.tooltip",
+                              message: "Vérifications {ec} intégrées (classes 1-4, χ, Nb,Rd, Mc,Rd)",
+                              values: { ec },
+                            })}
+                            side="top"
+                          >
+                            <span className="whitespace-nowrap rounded-[2px] border border-hairline bg-panel px-1 py-0.5 text-[10px]">{ec}</span>
+                          </Tooltip>
+                        ))}
+                      </TooltipGroup>
+                    </dd>
+                  </div>
+                </dl>
+                <Button
+                  asChild
+                  variant="primary"
+                  size="sm"
+                  className="mt-auto"
+                >
+                  <a
+                    href={studioHref(`/geometry?template=${model.slug}`)}
+                    data-testid={`launch-${model.slug}`}
+                    className="flex items-center justify-center gap-1.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void trackShowcaseLaunchStudio(model.slug);
+                    }}
+                  >
+                    <Trans id="site.showcase.open" message="Ouvrir dans l'atelier →" />
+                  </a>
+                </Button>
+              </article>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </I18nProvider>
   );
 }

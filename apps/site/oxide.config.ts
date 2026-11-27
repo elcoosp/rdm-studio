@@ -17,15 +17,13 @@ import { defineConfig } from "@oxide-fw/core";
 // static config extractor reads this string literal directly, so the beta
 // `.vercel.app` default stays inline; page/link URLs resolve through
 // `src/lib/env.ts` (PUBLIC_SITE_URL / PUBLIC_APP_URL / PUBLIC_DOCS_URL).
+const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://rdm-studio-site.vercel.app";
 export default defineConfig({
-  siteUrl: process.env.PUBLIC_SITE_URL ?? "https://rdm-studio-site.vercel.app",
+  siteUrl,
   // §6.6 / D5: Tailwind v4 native plugin — compiles src/styles/app.css
   // (the DESIGN.md Swiss Metrology daylight tokens) with Tailwind's own
   // Rust scanner over src/.
   plugins: [tailwind()],
-
-  // §16.3: origin used by the emitted sitemap.xml and robots.txt.
-  siteUrl,
 
   framework: react({
     ssr: "real",
@@ -46,6 +44,16 @@ export default defineConfig({
   routes: { dir: "src/routes" },
 
   render: { default: "auto" },
+
+  // §3.3 dev prebundle: none — the prebundle list is auto-derived by the
+  // oxide dev server from the bare imports of src/ (collect_auto_prebundle
+  // in crates/cli/src/esm_dev.rs) plus the framework defaults. No manual
+  // list: a new dependency only needs an `import`. The explicit
+  // `dev.prebundle` remains available as an override/extra if ever needed.
+  // (The former manual list lived in oxide.config.development.ts, removed
+  // 2026-11-27 once the generic mechanism was verified; the dormant copy
+  // of it that used to sit here was removed at the same time so it can
+  // never silently become operative if upstream BUG-11 is ever fixed.)
 
   build: { target: "baseline-widely-available", sourcemap: "hidden" },
 

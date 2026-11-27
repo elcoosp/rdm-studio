@@ -1,0 +1,1474 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-11-27 15:47+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.count"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.copyright"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.backHome"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.price"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.metric"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.diagram"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.cloud"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s1.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s1.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s1.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s1.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.offline"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.local"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s2.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s2.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s2.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s2.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s3.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s3.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s3.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s3.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s4.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s4.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s5.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.legacy.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.kmod.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.breadcrumb.home"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.steel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s4.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.alu"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.legacy.topic"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.docs.api"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.tagline"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f7"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f5"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.benchmarks"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.concrete"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.timber"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.breadcrumb"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.h1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.breadcrumb"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.h1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.breadcrumb"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.h1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.breadcrumb"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.h1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.legacy.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.p1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.cgu"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.naval.note"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.combine.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s2.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.load.label"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.slider.label"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.showcase.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.row.shear"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.row.shear"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.row.shear"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.liability.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s1.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.combine.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.pdelta.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.solver.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.deflection.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.legal.privacy"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.rgpd"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.copied"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.copy.copied"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.copyFormula"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.copy.label"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.tag.cqc"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.storage.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s1.body2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.cta"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.bullet.1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.updated"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.p2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.p3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+#: src/routes/legal/page.tsx
+msgid "site.header.nav.docs"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.col.docs"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.tag.import"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.ec3.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.standards.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.eurocodes"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.tag.lm1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.eurocodes"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.explore"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.report.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.fire"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.breadcrumb.aria"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.bullet.2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.row.buckling"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s5.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.row.deflection"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.row.deflection"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.readout.deflection"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.row.bending"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.row.bending"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.row.bending"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.row.bending"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.features"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s2.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.bullet.2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.free.topic"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.subtitle"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.docs.guides"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.offline.topic"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.import.topic"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s3.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.h1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.stainless"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.row.interaction"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s3.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.kmod.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.material.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s3.body2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.deflection.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.deflection.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.interaction.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s3.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.ltb.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.language.label"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.h1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s3.body2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s4.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s4.body2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.solver.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s3.body2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.web.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.legal"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.col.legal"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.p1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.readout.mass"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.mass"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f5"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f4"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.legal.notices"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.editeur"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.docsHandoff.text"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.tag.modal"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.model.label"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.models"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s2.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.standards"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f5"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.standards.topic"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.report.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.openSource"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.h2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.storage.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.import.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.ltb.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.offline.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.free.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.open"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.open"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.cta.open"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.cta.openStudio"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.cta"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.cta"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.pdelta.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.tag.pareto"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.report.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s1.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.curve.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.accel.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.bullet.1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.web.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s1.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s1.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s2.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.solver.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.aria"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.aria"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.col.product"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.section"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.offline.tip"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.tag.sections"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.import.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.interaction.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.curve.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.wel.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.accel.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.deflection.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.standards.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.faq.h2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.faq.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.liability.p1"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.free.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.offline.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.recap.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.recap.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.recap.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.recap.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.likeActive"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.ctaLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.cta.defaultLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.resistance"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s3.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.legal.liability"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.liability"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.solver"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.material.q"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.realtime"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.ec3.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.aria"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.p3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.demand"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.solver"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.solver.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.solver.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.solver.tip"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.like"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.cta"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.subtitle"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.storage.topic"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.bullet.3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.subtitle"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.readout.eta"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.rate"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.eurocodes.tip"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.4"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.showcase.h2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f7"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.h2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.body"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s4.body2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f4"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f5"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.p2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.check"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.liability.p2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.eurocode.tooltip"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.ec3.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.intro"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.bullet.3"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p4"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f6"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f7"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f8"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.wel.a"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f6"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.metricLabel"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.5"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f6"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f6"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f4"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f2"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f4"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f3"
+msgstr ""

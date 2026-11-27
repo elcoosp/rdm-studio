@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Grid, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import { spectrumColor } from "../lib/spectrum";
+import { spectrumColor } from "@rdm-studio/ui/viewport";
 
 /**
  * HeroViewport3D (v2.1.2): the single-context Three.js / R3F structural
@@ -16,7 +16,7 @@ import { spectrumColor } from "../lib/spectrum";
  * to the crisp architectural SVG when WebGL is unavailable.
  */
 
-export type HeroModel = "portique" | "warren" | "travees";
+export type HeroModel = "portal-frame" | "warren-truss" | "continuous-beam" | "naval-cradle";
 
 type HeroNode = { x: number; y: number; z: number };
 type HeroBeam = { a: HeroNode; b: HeroNode; kind: "column" | "girder" | "chord" | "diagonal" };
@@ -25,7 +25,7 @@ type HeroBeam = { a: HeroNode; b: HeroNode; kind: "column" | "girder" | "chord" 
  * the quick-start templates, drawn as real members. */
 function buildModel(model: HeroModel): { beams: HeroBeam[]; loads: number[] } {
   const n = (x: number, y: number, z: number): HeroNode => ({ x, y, z });
-  if (model === "portique") {
+  if (model === "portal-frame") {
     // Portique 18 m — HEA 200 columns, IPE 300 girder.
     const beams: HeroBeam[] = [
       { a: n(0, 0, 0), b: n(0, 0, 5), kind: "column" },
@@ -34,7 +34,7 @@ function buildModel(model: HeroModel): { beams: HeroBeam[]; loads: number[] } {
     ];
     return { beams, loads: [3, 6, 9, 12, 15] };
   }
-  if (model === "warren") {
+  if (model === "warren-truss") {
     // Treillis Warren 24 m — bottom + top chords, alternating diagonals.
     const bottom = [0, 6, 12, 18, 24].map((x) => n(x, 0, 0));
     const top = [3, 9, 15, 21].map((x) => n(x, 0, 3));
@@ -67,6 +67,27 @@ function buildModel(model: HeroModel): { beams: HeroBeam[]; loads: number[] } {
     }
     return { beams, loads: [3, 9, 15, 21] };
   }
+  if (model === "naval-cradle") {
+    // Berceau naval de transport — châssis skid 10 × 4 m avec longerons,
+    // berces et cornières de pont, champ d’accélération (ax, ay, az) × g.
+    const beams: HeroBeam[] = [
+      { a: n(-5, 0, -2), b: n(5, 0, -2), kind: "girder" },
+      { a: n(5, 0, -2), b: n(5, 0, 2), kind: "girder" },
+      { a: n(5, 0, 2), b: n(-5, 0, 2), kind: "girder" },
+      { a: n(-5, 0, 2), b: n(-5, 0, -2), kind: "girder" },
+      { a: n(-5, 0, -2), b: n(-5, 1.1, -2), kind: "column" },
+      { a: n(5, 0, -2), b: n(5, 1.1, -2), kind: "column" },
+      { a: n(-5, 0, 2), b: n(-5, 1.1, 2), kind: "column" },
+      { a: n(5, 0, 2), b: n(5, 1.1, 2), kind: "column" },
+      { a: n(-5, 1.1, -2), b: n(5, 1.1, -2), kind: "girder" },
+      { a: n(-5, 1.1, 2), b: n(5, 1.1, 2), kind: "girder" },
+      { a: n(-2.5, 1.1, -2), b: n(-2.5, 1.6, -2), kind: "column" },
+      { a: n(2.5, 1.1, -2), b: n(2.5, 1.6, -2), kind: "column" },
+      { a: n(-2.5, 1.1, 2), b: n(-2.5, 1.6, 2), kind: "column" },
+      { a: n(2.5, 1.1, 2), b: n(2.5, 1.6, 2), kind: "column" },
+    ];
+    return { beams, loads: [] };
+  }
   // Poutre 3 travées — 3 × 6 m continue.
   const beams: HeroBeam[] = [];
   const xs = [0, 6, 12, 18];
@@ -98,6 +119,15 @@ const MEMBER_SIZE: Record<HeroBeam["kind"], [number, number]> = {
 
 /** Shared unit axis for the segment quaternion (allocation-free). */
 const X_AXIS = new THREE.Vector3(1, 0, 0);
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+/** Naval cradle acceleration field (ax, ay, az) × g: lateral 0,8 g,
+ * vertical 0,6 g, longitudinal −1,5 g, drawn as three colored arrows. */
+const ACCEL_ARROWS: { dir: THREE.Vector3; length: number; color: string }[] = [
+  { dir: new THREE.Vector3(1, 0, 0), length: 2.6, color: "#F59E0B" },
+  { dir: new THREE.Vector3(0, 1, 0), length: 2.2, color: "#10B981" },
+  { dir: new THREE.Vector3(0, 0, -1), length: 3.1, color: "#DC2626" },
+];
 
 /** One extruded member. Horizontal girders bow with a 5-segment discrete
  * parabolic deflection (ends pinned to the joints, midspan breathing);
@@ -279,6 +309,37 @@ function LoadArrow({
   );
 }
 
+/** Acceleration arrow for the naval cradle: cylinder shaft + cone head
+ * aligned to an arbitrary 3D direction, length in metres. */
+function AccelArrow({
+  origin,
+  dir,
+  length,
+  color,
+}: {
+  origin: HeroNode;
+  dir: THREE.Vector3;
+  length: number;
+  color: string;
+}) {
+  const quat = useMemo(() => new THREE.Quaternion().setFromUnitVectors(Y_AXIS, dir), [dir]);
+  return (
+    <group
+      position={[origin.x, origin.y, origin.z]}
+      quaternion={[quat.x, quat.y, quat.z, quat.w]}
+    >
+      <mesh>
+        <cylinderGeometry args={[0.035, 0.035, length, 10]} />
+        <meshStandardMaterial color={color} roughness={0.4} />
+      </mesh>
+      <mesh position={[0, 0, length]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.14, 0.3, 10]} />
+        <meshStandardMaterial color={color} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
 /** Scene root: model members + joints + supports + load arrows + grid. */
 function HeroScene({ model, loadKN }: { model: HeroModel; loadKN: number }) {
   const { beams, loads } = useMemo(() => buildModel(model), [model]);
@@ -291,24 +352,32 @@ function HeroScene({ model, loadKN }: { model: HeroModel; loadKN: number }) {
     return [...seen.values()];
   }, [beams]);
   const supports = useMemo(() => {
-    if (model === "portique") {
+    if (model === "portal-frame") {
       return [
         { node: { x: 0, y: 0, z: 0 }, fixed: true },
         { node: { x: 18, y: 0, z: 0 }, fixed: false },
       ];
     }
-    if (model === "warren") {
+    if (model === "warren-truss") {
       return [
         { node: { x: 0, y: 0, z: 0 }, fixed: true },
         { node: { x: 24, y: 0, z: 0 }, fixed: false },
+      ];
+    }
+    if (model === "naval-cradle") {
+      return [
+        { node: { x: -5, y: 0, z: -2 }, fixed: true },
+        { node: { x: 5, y: 0, z: -2 }, fixed: true },
+        { node: { x: 5, y: 0, z: 2 }, fixed: true },
+        { node: { x: -5, y: 0, z: 2 }, fixed: true },
       ];
     }
     return [0, 6, 12, 18].map((x) => ({ node: { x, y: 0, z: 0 }, fixed: x === 0 }));
   }, [model]);
   const intensity = loadKN / 120;
   // Arrow altitude: just above the loaded member (girder top / top chord).
-  const arrowBase = model === "portique" ? 5.34 : model === "warren" ? 3.34 : 0.34;
-  const arrowTip = model === "portique" ? 5.06 : model === "warren" ? 3.06 : 0.06;
+  const arrowBase = model === "portal-frame" ? 5.34 : model === "warren-truss" ? 3.34 : 0.34;
+  const arrowTip = model === "portal-frame" ? 5.06 : model === "warren-truss" ? 3.06 : 0.06;
   return (
     <>
       <color attach="background" args={["#F8FAFC"]} />
@@ -346,6 +415,16 @@ function HeroScene({ model, loadKN }: { model: HeroModel; loadKN: number }) {
           intensity={intensity}
         />
       ))}
+      {model === "naval-cradle" &&
+        ACCEL_ARROWS.map((a, i) => (
+          <AccelArrow
+            key={`a-${i}`}
+            origin={{ x: 0, y: 0.85, z: 0 }}
+            dir={a.dir}
+            length={a.length}
+            color={a.color}
+          />
+        ))}
       <OrbitControls enableZoom={false} enablePan={false} makeDefault target={[9, 0, 1.4]} />
     </>
   );
@@ -368,9 +447,10 @@ function useWebGLAvailable(): boolean {
 
 /** Camera identity per model so every shape lands framed. */
 const CAMERA: Record<HeroModel, { position: [number, number, number]; fov: number }> = {
-  portique: { position: [24, -21, 10], fov: 40 },
-  warren: { position: [30, -25, 13], fov: 40 },
-  travees: { position: [26, -22, 12], fov: 40 },
+  "portal-frame": { position: [24, -21, 10], fov: 40 },
+  "warren-truss": { position: [30, -25, 13], fov: 40 },
+  "continuous-beam": { position: [26, -22, 12], fov: 40 },
+  "naval-cradle": { position: [16, -14, 10], fov: 40 },
 };
 
 export function HeroViewport3D({
@@ -455,13 +535,13 @@ export function HeroFallbackSvg({
           ))}
         </g>
         <g stroke={stroke} strokeWidth="3" fill="none" strokeLinecap="round">
-          {model === "portique" ? <path d="M110 210 V80 H300 V210" /> : null}
-          {model === "warren" ? (
+          {model === "portal-frame" ? <path d="M110 210 V80 H300 V210" /> : null}
+          {model === "warren-truss" ? (
             <path d="M40 60 H380 M60 170 H360 M40 60 L60 170 L100 60 L140 170 L180 60 L220 170 L260 60 L300 170 L340 60 L360 170" />
           ) : null}
-          {model === "travees" ? <path d="M40 130 H380" /> : null}
+          {model === "continuous-beam" ? <path d="M40 130 H380" /> : null}
         </g>
-        {model === "travees"
+        {model === "continuous-beam"
           ? [40, 155, 270, 380].map((x) => (
               <g key={x} stroke="#1D4ED8" fill="#1D4ED8">
                 <path d={`M${x - 9} 212 L${x + 9} 212 L${x} 198 Z`} />

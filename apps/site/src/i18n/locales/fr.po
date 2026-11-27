@@ -1,0 +1,1474 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-11-27 15:47+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: fr\n"
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.count"
+msgstr "{count, plural, one {# modèle} other {# modèles}}"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.copyright"
+msgstr "© {year} RDM Studio — fonctionne entièrement sur votre poste."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.backHome"
+msgstr "← Retour à l'accueil"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.price"
+msgstr "0 €"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.metric"
+msgstr "0 octet"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.diagram"
+msgstr "0 octet"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.cloud"
+msgstr "0 octet cloud"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s1.title"
+msgstr "1. Données"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s1.title"
+msgstr "1. Données du problème"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s1.title"
+msgstr "1. Du champ d'accélération aux actions ELU"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s1.title"
+msgstr "1. Modèle et charges"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.1"
+msgstr "100 % du solveur 3D Timoshenko (EC3, P-Δ, flambement)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.offline"
+msgstr "100 % hors-ligne & zéro cloud"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.local"
+msgstr "100 % local-first"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge"
+msgstr "100 % OPEN SOURCE · GRATUIT & HORS-LIGNE"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s2.title"
+msgstr "2. Efforts internes (ELU)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s2.title"
+msgstr "2. Flambement d'axe fort — §6.3.1"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s2.title"
+msgstr "2. Sollicitations du transverse (IPE 200 S355, L = 2,40 m)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s2.title"
+msgstr "2. Sollicitations et résistances (ELU)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s3.title"
+msgstr "3. Flèches ELS — instantanée et finale (fluage kdef)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s3.title"
+msgstr "3. Interaction flexion-compression — équation 6.61"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s3.title"
+msgstr "3. Résistance en flexion — EN 1993-1-1 §6.2.5"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s3.title"
+msgstr "3. Vérification EN 1993-1-1 (S355J2, γM0 = 1,0)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s4.title"
+msgstr "4. Résistance en effort tranchant — §6.2.6"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s4.title"
+msgstr "4. Sensibilité au 2nd ordre (P-Δ)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s5.title"
+msgstr "5. Flèche ELS"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.legacy.q"
+msgstr "À quoi sert le Pass Projet 48 h ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.kmod.q"
+msgstr "À quoi servent kmod et γM dans l'Eurocode 5 ?"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.body"
+msgstr "Accrochage magnétique 10/50/100 mm, import DXF / STEP / IGES, sections personnalisées PRS / RHS / CHS et optimiseur Pareto EC3 en un clic — annulable instantanément."
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.breadcrumb.home"
+msgstr "Accueil"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.steel"
+msgstr "Acier S235–S460"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.title"
+msgstr "Acier, inox, alu, bois, béton, boulons, feu"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.metricLabel"
+msgstr "actions navales & levage"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s4.body"
+msgstr "Aire de cisaillement de l'âme chargée (η = 1,2 en comparaison conservative), puis résistance plastique :"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.alu"
+msgstr "Alu EN 1999"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.legacy.topic"
+msgstr "Ancien produit"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.docs.api"
+msgstr "API & validation"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.tagline"
+msgstr "Atelier de calcul de structures 3D local-first — solveur Rust/WASM, Eurocodes EN 1990 → 1999, zéro cloud."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p1"
+msgstr "Aucune donnée envoyée sur un serveur. Vos modèles, sections, charges, résultats et notes de calcul sont traités et stockés exclusivement dans votre navigateur (IndexedDB, localStorage). RDM Studio ne comporte aucun outil de mesure télémétrique, aucun traceur tiers et aucun transfert vers un pays tiers : le responsable de traitement de vos données d'ingénierie, c'est vous."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f7"
+msgstr "Av = 1 400 mm² → Vpl,Rd = 286,9 kN → η cisaillement = 0,13 ≤ 1,00"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f5"
+msgstr "Av = A − 2·b·tf + (tw + 2r)·tf = 2 568 mm² (≥ η·hw·tw)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.benchmarks"
+msgstr "benchmarks analytiques"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.concrete"
+msgstr "Béton EN 1992"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.timber"
+msgstr "Bois GL24h"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.breadcrumb"
+msgstr "Calcul de berceau de levage naval"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.h1"
+msgstr "Calcul de berceau de levage naval — accélérations (ax, ay, az) × g et S355"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.breadcrumb"
+msgstr "Calcul de portique Eurocode 3"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.h1"
+msgstr "Calcul de portique selon l'Eurocode 3 — poteau en flexion-compression (6.61/6.62)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.breadcrumb"
+msgstr "Calcul de poutre bois Eurocode 5"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.h1"
+msgstr "Calcul de poutre bois selon l'Eurocode 5 — GL24h, kmod, flèches et fluage"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.breadcrumb"
+msgstr "Calcul de poutre IPE"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.h1"
+msgstr "Calcul de poutre IPE selon l'Eurocode 3 — flexion, cisaillement et flèche"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.title"
+msgstr "CAO 3D interactive + optimiseur EC3"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.legacy.a"
+msgstr "Ce produit n’existe plus : l’édition Open Source couvre déjà tous les besoins, 100 % gratuitement. Pour un déploiement intranet fermé ou des vérifications métiers sur mesure (EN 13155, DNV-ST-N001), contactez-nous via la page de contact du projet."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.p1"
+msgstr "Ce site et le logiciel RDM Studio sont édités dans le cadre d'un projet open source. Le logiciel est gratuit et libre : il n'y a ni boutique, ni vente, ni abonnement. Les coordonnées complètes de l'éditeur — raison sociale, siège, numéro d'immatriculation et adresse de courrier électronique — seront publiées sur la présente page dès la création de la structure éditrice, conformément à l'article 6 III 1° de la LCEN."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.cgu"
+msgstr "CGU & CGV"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.naval.note"
+msgstr "Champ d’accélération (ax, ay, az) = (0,8 g ; 0,6 g ; −1,5 g)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.body"
+msgstr "Champs d'accélération 3D roulis / tangage / levage, analyse modale f₁..f₆, combinaisons CQC / SRSS (EN 1998-1) et charges mobiles EN 1991-2 LM1 — l'atelier couvre les structures qui bougent."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.combine.a"
+msgstr "Chaque accélération devient une action variable : la combinaison fondamentale type devient G + az·g + ψ0,1·ay·g (+ ψ0,2·ax·g), avec les ψ0 issus des règles de transport ou fixés par l'ingénieur. L'atelier les traite comme des cas de charge classiques : 6.10, 6.10a/b avec groupes d'actions, y compris l'inversion de signe (deux gisements par accélération)."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s2.body"
+msgstr "Charge concentrée Fd au milieu d'un transverse isostatique de 2,40 m :"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.load.label"
+msgstr "Charge q · {load} kN"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.slider.label"
+msgstr "Charge répartie (kN)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.showcase.intro"
+msgstr "Choisissez un secteur, puis un modèle : il s’ouvre profilé, appuyé et prêt à calculer dans l’atelier via le slug canonique (ex. `?template=naval-cradle`)."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.row.shear"
+msgstr "Cisaillement §6.13"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.row.shear"
+msgstr "Cisaillement §6.62"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.row.shear"
+msgstr "Cisaillement §6.62 (ay = 0,4 g)"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.liability.title"
+msgstr "Clause de Responsabilité Technique Ingénieur"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s1.body"
+msgstr "Colis de m = 12 t posé sur deux transverses (un berceau = 2 appuis linéiques), levage avec coefficient dynamique az = 1,3 g et roulis de manutention ay = 0,4 g. Chaque transverse reprend la moitié du poids colis, amplifiée :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.combine.q"
+msgstr "Comment combiner les accélérations entre elles ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.pdelta.q"
+msgstr "Comment le P-Δ est-il pris en compte dans un portique ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.solver.q"
+msgstr "Comment le solveur vérifie-t-il le bois ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.deflection.q"
+msgstr "Comment vérifier la flèche d'une poutre IPE selon l'Eurocode 3 ?"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.title"
+msgstr "Conditions Générales d'Utilisation & de Vente"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.legal.privacy"
+msgstr "Confidentialité RGPD"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.rgpd"
+msgstr "Confidentialité RGPD"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.copied"
+msgstr "Copié"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.copy.copied"
+msgstr "Copié"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.copyFormula"
+msgstr "Copier la formule"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.copy.label"
+msgstr "Copier le lien"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.tag.cqc"
+msgstr "CQC / SRSS"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.storage.a"
+msgstr "Dans IndexedDB, sur votre poste uniquement. Aucune base de données distante, aucun compte obligatoire. Le partage se fait par une URL contenant le modèle compressé (lz-string) revalidé par Valibot à la relecture, ou par fichier .rdm."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s1.body2"
+msgstr "Dans l'atelier, ces mêmes valeurs naissent du champ volumique : (0 ; 0,4 ; 1,3) × g appliqué au berceau complet — la masse propre des profilés est donc automatiquement majorée elle aussi, sans charge fictive."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.cta"
+msgstr "Demander un déploiement ↗"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.bullet.1"
+msgstr "Déploiement sur réseau interne fermé sans internet (DSI / chantiers)"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.updated"
+msgstr "Dernière mise à jour : novembre 2026 — v2.2.0."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.intro"
+msgstr "Dimensionner un berceau de transport/levage, c'est transformer un champ d'accélération en charges ELU puis vérifier les transverses en flexion. Méthode EN 1990 + EN 1993-1-1 avec l'exemple chiffré d'un colis de 12 t levé à az = 1,3 g — le type de modèle que RDM Studio résout localement, accélération volumique comprise."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.p2"
+msgstr "Directeur de la publication : le responsable éditorial du projet RDM Studio. Hébergeur du site et de la documentation : l'hébergeur statique du projet, dont les coordonnées seront publiées à la même date. Le logiciel lui-même, une fois installé comme PWA, s'exécute intégralement sur votre poste et n'est plus hébergé par qui que ce soit."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.p3"
+msgstr "Disponibilité. Le service étant local-first, aucune disponibilité serveur n'est requise pour calculer : les mises à jour, la documentation et le support sont les seuls services en ligne. L'éditeur s'engage à publier chaque version avec son journal de modifications et ses 41 benchmarks de validation."
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+#: src/routes/legal/page.tsx
+msgid "site.header.nav.docs"
+msgstr "Documentation"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.col.docs"
+msgstr "Documentation"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p2"
+msgstr "Données traitées localement : le projet courant (géométrie, profilés, charges, résultats), vos préférences d'affichage (perspective, calques, accrochage — conservées dans l'URL), votre préférence de langue et, si vous les saisissez, les métadonnées de branding de la couverture de rapport. Effacer les données du navigateur efface définitivement l'ensemble — aucune copie existe ailleurs."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.tag.import"
+msgstr "DXF / STEP / IGES"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.ec3.title"
+msgstr "EC3 complet + CalcTrace traçable"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.title"
+msgstr "Édition Open Source"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.standards.a"
+msgstr "EN 1990 (combinaisons), EN 1991 (actions), EN 1993-1-1 (acier, vérifications 6.61/6.62 + C1), EN 1992 / 1995 / 1998 / 1999 pour béton, bois, alu et mixte. Les 41 benchmarks analytiques intégrés vérifient le solveur à chaque mise à jour."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.eurocodes"
+msgstr "EN 1990 / 1991 / 1992 / 1993 / 1995 / 1998 / 1999"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.tag.lm1"
+msgstr "EN 1991-2 LM1"
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.eurocodes"
+msgstr "Eurocodes"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.explore"
+msgstr "Explorer les 15 modèles"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.report.metricLabel"
+msgstr "exports vectoriels"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f1"
+msgstr "Fd = (m/2) · az = 6 000 × 1,3 × 9,81 = 76,5 kN"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.fire"
+msgstr "Feu R30–R120"
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.breadcrumb.aria"
+msgstr "fil d'ariane"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.bullet.2"
+msgstr "Financer le développement ouvert de RDM Studio"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.row.buckling"
+msgstr "Flambement §6.3.1"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s5.body"
+msgstr "Flèche élastique maximale à mi-portée sous la combinaison caractéristique :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.row.deflection"
+msgstr "Flèche ELS (L/500)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.row.deflection"
+msgstr "Flèche winst (L/300)"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.readout.deflection"
+msgstr "Flèche δ"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.row.bending"
+msgstr "Flexion §6.11"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.row.bending"
+msgstr "Flexion §6.2.5"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.row.bending"
+msgstr "Flexion §6.61"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.row.bending"
+msgstr "Flexion §6.61 (az = 1,3 g)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f1"
+msgstr "fm,d = kmod · fm,k / γM = 0,8 × 24 / 1,3 = 14,77 MPa"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.features"
+msgstr "Fonctionnalités"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s2.body"
+msgstr "Force critique d'Euler, élancement normalisé (courbe b, α = 0,34), puis abaque de Perry :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f2"
+msgstr "fvd = kmod · fvk / γM = 0,8 × 3,5 / 1,3 = 2,15 MPa"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f2"
+msgstr "Fy = (m/2) · ay = 6 000 × 0,4 × 9,81 = 23,5 kN (cisaillement / roulis)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.bullet.2"
+msgstr "Gabarits et vérifications métiers sur mesure (EN 13155, DNV-ST-N001)"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.free.topic"
+msgstr "Gratuit"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.subtitle"
+msgstr "Gratuit à vie · Illimité"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.docs.guides"
+msgstr "Guides & tutoriels"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.offline.topic"
+msgstr "Hors-ligne"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.import.topic"
+msgstr "Import"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s3.body"
+msgstr "Inertie I = b·h³/12 = 4 369 cm⁴, flèche instantanée sous combinaison caractéristique, puis flèche finale intégrant le fluage (kdef = 0,8 sur la part quasi-permanente) :"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.h1"
+msgstr "Informations légales & confidentialité"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.tag.stainless"
+msgstr "Inox 304L"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.row.interaction"
+msgstr "Interaction 6.61 (kyy = 1,0)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s3.body"
+msgstr "IPE 200 (Wpl,y = 220,6 cm³) en S355, section de classe 1 en flexion forte axe (semelle c/t = 10,5 ≤ 33ε, âme c/t = 23 ≤ 72ε avec ε = √(235/355)) :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.kmod.a"
+msgstr "kmod (EN 1995-1-1 §3.1.3, tableau 3.1) réduit la résistance selon la classe de service (humidité) et la durée de charge : 0,8 pour du GL24h en classe 1 à charge moyenne-terme. γM (tableau 2.3) vaut 1,3 pour le bois lamellé-collé. La résistance de calcul devient fm,d = kmod·fm,k/γM = 0,8 × 24 / 1,3 = 14,8 MPa — deux poutres identiques en classe 1 ou classe 3 n'ont pas la même résistance."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.material.a"
+msgstr "L'acier S355 offre une limite élastique de 355 MPa et une bonne résilience à froid (J2/K2) ; l'alu 6082-T6 (EN 1999-1-1, fo = 250 MPa, fu = 290 MPa) s'impose quand la masse embarquée prime (pont, structure soudable TIG/MIG). RDM Studio vérifie les deux dans le même modèle : EN 1993-1-1 pour l'acier, EN 1999-1-1 (sections classes, soudabilité, facteurs ω) pour l'aluminium."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s3.body2"
+msgstr "L'arbitrage final se joue sur la part quasi-permanente réelle des charges (la formule exacte sépare G·(1 + kdef) et Q·(1 + ψ2·kdef)) : c'est précisément le genre de vérification où le CalcTrace de l'atelier affiche chaque coefficient source."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.intro"
+msgstr "L’édition Open Source est complète, gratuite à vie et illimitée : aucun compte, aucun bridage, zéro cloud. Le projet est financé par le sponsoring des bureaux d’études et par les prestations B2B / intranet fermé sur demande."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.deflection.a"
+msgstr "L'EN 1993-1-1 ne fixe pas de limite numérique : le tableau 7.2 de l'EN 1993-1-1 renvoie à l'Annexe nationale. En pratique courante en France, on retient w ≤ L/250 (éléments standard) à L/500 (éléments fragiles, matériaux de couverture sensibles) sous combinaison caractéristique ELS. RDM Studio affiche ces deux limites avec le rapport w/L calculé."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.deflection.a"
+msgstr "L'EN 1995-1-1 tableau 7.2 recommande (valeurs indicatives de l'Annexe Nationale) : winst ≤ L/300 à L/500, et wnet,fin ≤ L/150 à L/250 selon la sensibilité des finitions. La flèche finale ufin intègre le fluage via kdef (0,8 pour le GL en classe 1) appliqué aux parts quasi-permanentes des charges."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.interaction.a"
+msgstr "L'équation 6.61 (NEd/MEd, profilés laminés, torsion négligeable) couvre le déversement pour sections bi-symétriques en flexion simple axe, la 6.62 la flexion bi-axiale. On choisit la plus défavorable des deux ; RDM Studio calcule les deux taux et retient le maximum, avec le détail kyy/kyz et les facteurs d'équivalence Cmy,C0 traçables dans le CalcTrace."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s3.body"
+msgstr "L'IPE 300 laminé est de classe 1 en flexion forte axe : le moment résistant plastique s'applique (γM0 = 1,0) :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.ltb.q"
+msgstr "La poutre IPE doit-elle être vérifiée au déversement ?"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.language.label"
+msgstr "Langue"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.h1"
+msgstr "Le calcul de structures 3D aux Eurocodes, entièrement sur votre poste."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.s3.body2"
+msgstr "Le déversement est ici empêché par les longerons du berceau ; sur un transverse libre, la vérification χLT (§6.3.2) s'ajoute automatiquement. En aluminium 6082-T6, la même géométrie serait vérifiée selon l'EN 1999-1-1 avec les propriétés fo = 250 MPa."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s4.body"
+msgstr "Le portique contreventé en encastré-articulé doit montrer αcr ≥ 10 pour s'affranchir du 2nd ordre :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s4.body2"
+msgstr "Le solveur calcule le flambement linéaire global λcr (premier mode du système complet : poteaux + traverse) et, si nécessaire, reformule la raideur en [Ke + Kg(N)] pour intégrer le 2nd ordre géométrique directement dans la matrice."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.solver.a"
+msgstr "Le solveur calcule les efforts internes (N, V, M) indépendamment du matériau ; la vérification applique ensuite les formules EN 1995-1-1 (6.11 σm,d ≤ fm,d, 6.13 τd ≤ fv.d) avec les propriétés du GL24h/GL28h/GL32h intégrées au catalogue. Le même modèle peut mélanger barreaux acier (EC3), poutres bois (EC5) et poteaux béton (EC2)."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s3.body2"
+msgstr "Le taux de travail de 46 % laisse une réserve confortable ; le passage au S275 ou l'IPE 240 deviennent des candidats d'optimisation — l'optimiseur Pareto de l'atelier les classe par masse et taux EC3 en un clic."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.web.q"
+msgstr "Le voilement de l'âme doit-il être vérifié pour un IPE ?"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.legal"
+msgstr "Légal"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.col.legal"
+msgstr "Légal"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.3"
+msgstr "Les 15 modèles métiers (naval, levage, charpente, bois, mixte)"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.p1"
+msgstr "Licence d'utilisation. RDM Studio est un logiciel libre, fourni gratuitement — pour un usage professionnel ou pédagogique — sous les termes de sa licence open source. Une seule édition, complète, gratuite à vie, sans compte, sans bridage et sans clé d'activation : il n'existe ni édition Pro payante, ni abonnement, ni licence perpétuelle à acheter."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.title"
+msgstr "Local-first, RGPD par conception"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.readout.mass"
+msgstr "Masse"
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.mass"
+msgstr "Masse"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f5"
+msgstr "Mc,Rd = Wpl,y · fy / γM0 = 220,6 cm³ × 355 MPa = 78,3 kN·m"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f4"
+msgstr "Mc,Rd = Wpl,y · fy / γM0 = 430 cm³ × 235 MPa = 101,1 kN·m"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f3"
+msgstr "Mc,Rd = Wpl,y · fy / γM0 = 628,4 cm³ × 235 MPa = 147,7 kN·m"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f3"
+msgstr "MEd = Fd · L / 4 = 76,5 × 2,40 / 4 = 45,9 kN·m"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f1"
+msgstr "MEd = q·L² / 8 = 15 × 6,00² / 8 = 67,50 kN·m"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f3"
+msgstr "MEd = q·L²/8 = 6,0 × 6,00²/8 = 27,0 kN·m → σm,d = MEd/Wel = 9,89 MPa"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.legal.notices"
+msgstr "Mentions légales (LCEN)"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.editeur"
+msgstr "Mentions légales (LCEN)"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.title"
+msgstr "Mentions légales (LCEN)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.intro"
+msgstr "Méthode complète de vérification d'une poutre métallique IPE (catalogue EN 10365) en flexion simple : résistance plastique Mc,Rd, effort tranchant Vpl,Rd et flèche ELS, avec un exemple chiffré de bout en bout — exactement ce que reproduit RDM Studio sur votre poste, sans cloud."
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.docsHandoff.text"
+msgstr "Méthode complète, hypothèses et limites normatives dans la documentation :"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.intro"
+msgstr "Méthode de vérification d'un poteau de portique HEA 200 en compression et flexion : flambement χy (§6.3.1), résistance plastique Mc,Rd, interaction 6.61, sensibilité P-Δ (αcr) — avec l'exemple chiffré complet que l'atelier RDM Studio recalcule en moins de 20 ms dans votre navigateur."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.tag.modal"
+msgstr "Modal f₁..f₆"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.model.label"
+msgstr "Modèle"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.models"
+msgstr "Modèles"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s2.body"
+msgstr "Module de flexion Wel = b·h²/6 = 2 731 cm³, effort tranchant sur appui, contraintes de calcul :"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.metricLabel"
+msgstr "multi-matériaux"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.standards"
+msgstr "multi-matériaux"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.naval.title"
+msgstr "Naval, levage & dynamique"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f1"
+msgstr "Ncr,y = π²·E·Iy / Lcr² = π² × 210 000 × 3 690 cm⁴ / 4,00² = 4 778 kN"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f5"
+msgstr "NEd / Nb,Rd + kyy · MEd / Mc,Rd = 0,16 + 1,0 × 45 / 101,1 = 0,61 ≤ 1,00 → conforme"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.standards.topic"
+msgstr "Normes"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.report.title"
+msgstr "Note de calcul vectorielle & BIM"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.openSource"
+msgstr "Open Source"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.h2"
+msgstr "Open Source — 0 €, pour toujours"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.metricLabel"
+msgstr "optimiseur 1-clic"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.storage.q"
+msgstr "Où sont stockés mes projets ?"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.import.a"
+msgstr "Oui — glissez-déposez un .dxf, .step ou .igs dans l’atelier : la géométrie filaire devient nœuds et poutres, prête à être profilée et chargée. L’export .rdm est canonique et réimportable à l’identique."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.ltb.a"
+msgstr "Oui dès que la compression n'est pas bridée latéralement : la vérification §6.3.2 avec χLT s'applique (LTB). Sur la poutre d'exemple, un pontage ou un béton de dallage connecté empêche le déversement ; sans bridage, RDM Studio calcule automatiquement Mcr, λ̄LT et χLT avec la méthode 1 ou 2 au choix."
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.offline.a"
+msgstr "Oui. L'application est une PWA : le solveur Rust compilé en WASM, les catalogues de profilés et les polices d'impression sont mis en cache par le service worker. Une fois chargée, elle démarre et calcule sans aucune connexion — en bureau, en atelier comme sur site."
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.free.a"
+msgstr "Oui. L'édition Open Source est complète et gratuite à vie : solveur, Eurocodes, modèles et exports — aucun compte, aucun bridage, aucune donnée envoyée sur un serveur. Le projet est financé par le sponsoring des bureaux d'études (GitHub Sponsors) et par les prestations B2B / intranet fermé sur demande (déploiement sans internet, gabarits sur mesure, support ingénieur dédié)."
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.open"
+msgstr "Ouvrir dans l'atelier →"
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.open"
+msgstr "Ouvrir dans l'atelier →"
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.cta.open"
+msgstr "Ouvrir dans l'atelier 3D"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.cta.openStudio"
+msgstr "Ouvrir l'atelier 3D"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.cta"
+msgstr "Ouvrir l'atelier 3D →"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.cta"
+msgstr "Ouvrir l'atelier 3D →"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.pdelta.a"
+msgstr "Par le coefficient αcr = Fcr/FEd (EN 1993-1-1 §5.2.1) : si αcr ≥ 10 (portiques contreventés) l'analyse du 1er ordre suffit ; entre 3 et 10, l'EN 1990 §5.1.4 (H) ou une analyse du 2nd ordre s'impose. Le solveur RDM Studio calcule λcr (flambement linéaire global) et l'option P-Δ ajoute la raideur géométrique [Kg(N)] au système [Ke + Kg(N)]·u = F."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.tag.pareto"
+msgstr "Pareto EC3"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p3"
+msgstr "Partage par URL : si vous utilisez le lien de partage, le modèle est compressé dans l'URL elle-même. Ne transmettez ce lien qu'aux destinataires visés ; il ne transite par aucun serveur de RDM Studio, mais il figure dans l'historique de votre navigateur et celui de vos correspondants."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.report.body"
+msgstr "PDF A4 vectoriel Takumi (polices embarquées), .docx structuré, BIM IFC4 / SAF / OpenSees / glTF et maquette 3D HTML autonome — la note de calcul sort prête à signer."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.title"
+msgstr "Politique de Confidentialité RGPD"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s1.body"
+msgstr "Portique 18 m encastré-articulé : traverse IPE 300, poteaux HEA 200 (S235JR, catalogue EN 10365 : A = 53,8 cm², Iy = 3 690 cm⁴, Wpl,y = 430 cm³). Élancement effectif du poteau Lcr,y = 4,00 m (vent brisé par le panneau rigide). Sollicitations ELU au pied de poteau encastré : NEd = 180 kN (compression), MEd = 45 kN·m en tête."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.curve.a"
+msgstr "Pour le flambement d'axe fort (y-y) d'un laminé en S235 avec h/b ≤ 1,2 (cas du HEA 200 : 190/200), l'annexe tabulaire du §6.3.1.2 donne la courbe b (αimp = 0,34) pour t ≤ 100 mm ; l'axe faible (z-z) prend la courbe c. RDM Studio sélectionne la courbe automatiquement selon h/b, tf et l'acier."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.accel.a"
+msgstr "Pour le levage, l'EN 13001 ou les coefficients d'amplification dynamique du manutentionnaire (φ = 1,2 à 1,4 selon la grue et le marnage) majorent g selon l'axe vertical. Pour le transport maritime, les règles de transport (DNV-ST-N001, Cargo Resistance) donnent (ax, ay, az) en fraction de g selon la zone de mer. RDM Studio modélise ces champs comme des accélérations volumiques (ax, ay, az) × g appliquées à toute la structure, puis génère les combinaisons EN 1990 associées."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.bullet.1"
+msgstr "Pour les bureaux d’études et indépendants utilisateurs quotidiens"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.web.a"
+msgstr "Pour un IPE laminé soumis à la flexion simple, les âmes restent dans le domaine non-voilé (limites de classe respectées pour fy ≤ 460 MPa) sauf charges localisées très élevées ou cisaillement dominant : la vérification VEd/Vpl,Rd et la ripage de l'âme (§6.2.7) restent néanmoins calculées par l'atelier."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.s1.body"
+msgstr "Poutre isostatique GL24h (fm,k = 24 MPa, fvk = 3,5 MPa, E0,mean = 11 500 MPa) section 160 × 320 mm, portée L = 6,00 m, classe de service 1 (couvert, chauffé), charge moyenne-terme (kmod = 0,8, γM = 1,3, kdef = 0,8). ELU q = 6,0 kN/m, ELS caractéristique q = 4,0 kN/m."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s1.body"
+msgstr "Poutre isostatique IPE 300 en S235JR (fy = 235 MPa, E = 210 GPa, catalogue EN 10365 : Wpl,y = 628,4 cm³, Iy = 8 356 cm⁴), portée L = 6,00 m, appuis simples, pontage latéral continu (pas de déversement). Charges réparties : ELU q = 15 kN/m, ELS caractéristique q = 10 kN/m."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s2.body"
+msgstr "Poutre sur deux appuis sous charge uniforme — moment sur appui nul, moment maximal à mi-portée :"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.solver.body"
+msgstr "Poutres 3D 6 DDL en Rust/WASM (Cholesky creuse faer) : cisaillement Timoshenko, second ordre géométrique P-Δ et flambement linéaire global λcr — résolus localement dans votre navigateur."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.title"
+msgstr "Prestations B2B & Intranet"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.aria"
+msgstr "Preuves techniques"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.header.nav.aria"
+msgstr "principale"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.col.product"
+msgstr "Produit"
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.section"
+msgstr "Profil"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.body"
+msgstr "Projets chiffrés dans IndexedDB, partage par URL compressée, service worker hors-ligne : aucune donnée d'ingénierie ne quitte votre poste."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.offline.tip"
+msgstr "Projets chiffrés dans IndexedDB, solveur Rust/WASM dans votre navigateur, aucune donnée ne quitte votre poste."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.cad.tag.sections"
+msgstr "PRS / RHS / CHS"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.import.q"
+msgstr "Puis-je importer mes plans DXF ou STEP ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.interaction.q"
+msgstr "Quand l'interaction 6.61 ou 6.62 s'applique-t-elle ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.faq.curve.q"
+msgstr "Quelle courbe de flambement pour un HEA laminé ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.wel.q"
+msgstr "Quelle différence entre Wel,y et Wpl,y pour une poutre IPE ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.accel.q"
+msgstr "Quelles accélérations retenir pour un transport naval ou un levage ?"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.faq.deflection.q"
+msgstr "Quelles limites de flèche pour une poutre en bois ?"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.standards.q"
+msgstr "Quelles normes sont couvertes ?"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.faq.h2"
+msgstr "Questions d'ingénieurs"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.faq.title"
+msgstr "Questions fréquentes"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.intro"
+msgstr "RDM Studio est un logiciel d'ingénierie local-first : cette page décrit le cadre juridique de son édition unique, gratuite et open source, et la manière dont vos données de calcul — qui ne quittent jamais votre poste — sont traitées."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.liability.p1"
+msgstr "RDM Studio est un outil d'aide au calcul : les hypothèses, le dimensionnement des sections, les charges introduites et l'interprétation des résultats relèvent de la responsabilité professionnelle de l'ingénieur qui signe la note de calcul. Le logiciel reproduit les formules des normes citées, y compris leurs limites d'application ; hors de ces limites (élancement excessif, assemblages non modélisés, effets dynamiques non couverts), le résultat doit être invalidé par une expertise."
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.free.q"
+msgstr "RDM Studio est-il vraiment gratuit, sans limite ?"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.offline.q"
+msgstr "RDM Studio fonctionne-t-il vraiment hors-ligne ?"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.intro"
+msgstr "RDM Studio réunit le solveur poutres 3D Timoshenko, la CAO interactive et les vérifications EN 1990 → 1999 dans un atelier local-first : vos projets restent dans votre navigateur, le solveur Rust tourne en WASM, aucun serveur ne voit vos données."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.recap.title"
+msgstr "Récapitulatif"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.recap.title"
+msgstr "Récapitulatif"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.recap.title"
+msgstr "Récapitulatif"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.recap.title"
+msgstr "Récapitulatif"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.likeActive"
+msgstr "Recommandé"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.ctaLabel"
+msgstr "Reproduisez ce modèle dans l'atelier : poutre GL24h, kmod et γM, vérifications EN 1995-1-1 (flexion §6.11, cisaillement §6.13) et flèches winst/ufin avec fluage kdef, prêtes à calculer, 100 % sur votre poste."
+
+#. js-lingui-explicit-id
+#: src/components/seo.tsx
+msgid "site.seo.cta.defaultLabel"
+msgstr "Reproduisez ce modèle dans l'atelier : profilés EN 10365, combinaisons EN 1990 et vérification EC3 6.61/6.62 prêts à calculer, 100 % sur votre poste."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.resistance"
+msgstr "Résistance"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.s3.body"
+msgstr "Résistance plastique de traverse/poteau et interaction simplifiée (facteur d'équivalence et moment du 2nd ordre pris à kyy = 1,0 par prudence ; le CalcTrace détaille la valeur exacte de Cmy,C0 et kyy) :"
+
+#. js-lingui-explicit-id
+#: src/routes/layout.tsx
+msgid "site.footer.legal.liability"
+msgstr "Responsabilité de l'ingénieur"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.liability"
+msgstr "Responsabilité de l'ingénieur"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.solver"
+msgstr "Rust + WASM · < 20 ms"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.faq.material.q"
+msgstr "S355 ou aluminium 6082-T6 pour un berceau de levage ?"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.realtime"
+msgstr "Scène temps réel · WebGL"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.ec3.body"
+msgstr "Sections classes 1–4, χy / χz / χLT, Nb,Rd, Mc,Rd : chaque clause s'ouvre en formule KaTeX pas-à-pas, vérifiable par le contresignateur, avec empreinte SHA-256 du modèle."
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.aria"
+msgstr "Sections légales"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.editeur.p3"
+msgstr "Signalement d'un contenu illicite : un courrier électronique de contact sera publié sur la présente page ; les demandes reçoivent une réponse dans un délai raisonnable conformément à la LCEN."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.demand"
+msgstr "Sollicitation"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.proof.solver"
+msgstr "solveur Cholesky WASM"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.solver.metricLabel"
+msgstr "solveur par pas de temps"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.solver.title"
+msgstr "Solveur Timoshenko 3D + P-Δ + flambement"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.solver.tip"
+msgstr "Solveur Timoshenko 3D compilé en WASM, résolution Cholesky creuse < 20 ms par pas de temps, exécutée localement."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.like"
+msgstr "Soutenir"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.title"
+msgstr "Soutenir le Projet"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.cta"
+msgstr "Soutenir sur GitHub ↗"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.subtitle"
+msgstr "Sponsoring & mécénat BET"
+
+#. js-lingui-explicit-id
+#: src/lib/content.ts
+msgid "site.faq.storage.topic"
+msgstr "Stockage"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.bullet.3"
+msgstr "Support ingénieur dédié et contrat de maintenance"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.nav.title"
+msgstr "Sur cette page"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.b2b.subtitle"
+msgstr "Sur demande — déploiement fermé"
+
+#. js-lingui-explicit-id
+#: src/islands/hero-3d.tsx
+msgid "site.hero.readout.eta"
+msgstr "Taux EC3 η"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.rate"
+msgstr "Taux η"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.2"
+msgstr "Tous les Eurocodes (EN 1990 → 1999)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.hero.badge.eurocodes.tip"
+msgstr "Tous les Eurocodes structurels : actions, acier, béton, bois, aluminium, seismic et feu."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.4"
+msgstr "Tous les exports (PDF A4, .docx, IFC4, SAF, CSV, .rdm)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.showcase.h2"
+msgstr "Tous les modèles métiers — lancez-les en un clic."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f7"
+msgstr "ufin ≈ winst × (1 + kdef) = 24,2 mm ≈ L/250 = 24,0 mm — en limite, à arbitrer"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.h2"
+msgstr "Un bureau d’études complet, du modèle à la note de calcul."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.multimaterial.body"
+msgstr "Un même modèle traverse les matériaux : profils EN 10365 / 10210 / 10056, S235–S460, inox 304L, alu 6061/6082-T6 (EN 1999), lamellé-collé GL24h (EN 1995), béton armé (EN 1992), assemblages boulonnés (EC3-1-8) et feu R30–R120 (EC3-1-2)."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.s4.body2"
+msgstr "VEd = 45 kN < 0,5·Vpl,Rd : pas d'interaction flexion-cisaillement §6.2.8 à vérifier."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f4"
+msgstr "VEd = Fd / 2 = 38,3 kN (+ 23,5 kN suivant l'axe de roulis)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f2"
+msgstr "VEd = q·L / 2 = 15 × 6,00 / 2 = 45,0 kN"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f5"
+msgstr "VEd = q·L/2 = 18,0 kN → τd = 1,5·VEd/(b·h) = 0,53 MPa ≤ fv,d = 2,15 MPa (§6.13)"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.cgu.p2"
+msgstr "Vente. Le logiciel étant gratuit et libre, aucune commande ni aucun paiement n'est requis pour l'utiliser. Les seules prestations facturées sont les services optionnels proposés sur demande — déploiement sur réseau interne fermé, gabarits et vérifications métiers sur mesure, support ingénieur dédié — qui font l'objet d'un devis ; leurs conditions (prix, délai, rétractation) figurent dans le devis accepté par le client."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.table.check"
+msgstr "Vérification"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.liability.p2"
+msgstr "Vérification croisée. Les 41 benchmarks analytiques embarqués vérifient le solveur à chaque version, et chaque note de calcul porte l'empreinte SHA-256 du modèle calculé. L'éditeur ne saurait être tenu responsable d'une utilisation hors du périmètre normatif, de données d'entrée erronées ou de l'omission des vérifications incombant au concepteur."
+
+#. js-lingui-explicit-id
+#: src/islands/showcase-tabs.tsx
+msgid "site.showcase.eurocode.tooltip"
+msgstr "Vérifications {ec} intégrées (classes 1-4, χ, Nb,Rd, Mc,Rd)"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.ec3.metricLabel"
+msgstr "vérifications EC3"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.intro"
+msgstr "Vérifier une poutre en lamellé-collé GL24h selon l'EN 1995-1-1 : résistance en flexion fm,d (kmod × fm,k / γM), cisaillement fv,d, flèches instantanée winst et finale ufin avec fluage kdef. Exemple chiffré complet — le multi-matériaux que RDM Studio vérifie dans le même modèle que l'acier et le béton."
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.sponsor.bullet.3"
+msgstr "Visibilité mécène sur le dépôt et la documentation"
+
+#. js-lingui-explicit-id
+#: src/routes/legal/page.tsx
+msgid "site.legal.rgpd.p4"
+msgstr "Vos droits (accès, rectification, effacement, portabilité) s'exercent directement sur votre poste : export .rdm pour la portabilité, suppression du stockage local pour l'effacement. Pour toute question relative à cette page, les coordonnées de contact publiées aux mentions légales s'appliquent."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f6"
+msgstr "Vpl,Rd = Av · fy / (√3 · γM0) = 348,4 kN → η cisaillement = 0,13 ≤ 1,00"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f7"
+msgstr "w = 5·q·L⁴ / (384·E·Iy) = 5 × 10 × 6,00⁴ / (384 × 210 000 × 8 356 cm⁴) = 9,62 mm"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f8"
+msgstr "w/L = 1/624 ≤ 1/500 → conforme (1/250 = 24,0 mm)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.faq.wel.a"
+msgstr "Wel,y (module élastique) pilote la contrainte élastique σ = M/Wel, utilisée pour les classes 3 et 4 ou la vérification ELS. Wpl,y (module plastique) pilote Mc,Rd = Wpl,y·fy/γM0 pour les sections de classe 1 ou 2 — c'est le cas des IPE laminés en flexion forte axe : la fibre tendue peut plastifier, le moment résistant est d'environ 13 à 15 % supérieur."
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f6"
+msgstr "winst = 5·q·L⁴/(384·E0,mean·I) = 13,4 mm ≤ L/300 = 20,0 mm → conforme"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.bento.localFirst.metricLabel"
+msgstr "zéro cloud"
+
+#. js-lingui-explicit-id
+#: src/routes/index/page.tsx
+msgid "site.landing.opensource.edition.bullet.5"
+msgstr "Zéro compte, zéro bridage, zéro cloud"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f6"
+msgstr "αcr = Fcr / FEd — si αcr ≥ 10 : analyse 1er ordre ; si 3 ≤ αcr < 10 : P-Δ requis"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-berceau-levage-naval/page.tsx
+msgid "site.calc.naval.f6"
+msgstr "η flexion = 45,9 / 78,3 = 0,59 ≤ 1,00 → conforme"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-ipe/page.tsx
+msgid "site.calc.ipe.f4"
+msgstr "η flexion = MEd / Mc,Rd = 67,50 / 147,7 = 0,46 ≤ 1,00 → conforme"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f2"
+msgstr "λ̄y = √(A·fy / Ncr,y) = √(53,8 × 23 500 / 4 778 000) ≈ 0,51"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-poutre-bois-eurocode-5/page.tsx
+msgid "site.calc.timber.f4"
+msgstr "σm,d ≤ fm,d : 9,89 ≤ 14,77 MPa → η = 0,67 ≤ 1,00 → conforme (§6.11)"
+
+#. js-lingui-explicit-id
+#: src/routes/calcul-portique-eurocode-3/page.tsx
+msgid "site.calc.portal.f3"
+msgstr "χy = 0,878 (courbe b) → Nb,Rd = χy·A·fy/γM1 = 1 109,8 kN → ηN = 180 / 1 110 = 0,16"

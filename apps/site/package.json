@@ -9,14 +9,19 @@
     "build": "oxide build",
     "start": "oxide start",
     "routes": "oxide routes",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "i18n:extract": "lingui extract",
+    "i18n:compile": "lingui compile --typescript"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@lingui/core": "6.12.0",
+    "@lingui/react": "6.12.0",
     "@number-flow/react": "^0.6.2",
     "@oxide-fw/core": "^0.18.0",
     "@oxide-fw/react": "^0.18.0",
     "@oxide-fw/tailwind": "^0.18.0",
+    "@rdm-studio/ui": "workspace:*",
     "@react-three/drei": "10.7.9",
     "@react-three/fiber": "9.8.2",
     "clsx": "2.1.1",
@@ -30,6 +35,8 @@
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@lingui/cli": "6.11.0",
+    "@lingui/format-po": "6.12.0",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

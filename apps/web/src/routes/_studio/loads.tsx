@@ -1086,7 +1086,6 @@ function EnvLoadGenerators({
   );
 }
 
-
 /**
  * M10.5 — Step 3 "Cas de charges & Combinaisons EN 1990" manager
  * (`data-testid="load-case-manager"`): add / rename elementary cases
@@ -1126,27 +1125,63 @@ interface LoadCaseRow {
 
 /** Canonical schema-v2 seed (mirrors `rdm_model::canonical_load_cases`). */
 const CANONICAL_CASES: LoadCaseRow[] = [
-  { id: 1, code: "G", category: "Permanent", psi0: 1.0, psi1: 1.0, psi2: 1.0, include_self_weight: true },
-  { id: 2, code: "Q", category: "Variable", psi0: 0.7, psi1: 0.5, psi2: 0.3, include_self_weight: false },
-  { id: 3, code: "W", category: "Wind", psi0: 0.6, psi1: 0.2, psi2: 0.0, include_self_weight: false },
-  { id: 4, code: "S", category: "Snow", psi0: 0.5, psi1: 0.2, psi2: 0.0, include_self_weight: false },
-  { id: 5, code: "Acc", category: "Accidental", psi0: 1.0, psi1: 1.0, psi2: 1.0, include_self_weight: false },
+  {
+    id: 1,
+    code: "G",
+    category: "Permanent",
+    psi0: 1.0,
+    psi1: 1.0,
+    psi2: 1.0,
+    include_self_weight: true,
+  },
+  {
+    id: 2,
+    code: "Q",
+    category: "Variable",
+    psi0: 0.7,
+    psi1: 0.5,
+    psi2: 0.3,
+    include_self_weight: false,
+  },
+  {
+    id: 3,
+    code: "W",
+    category: "Wind",
+    psi0: 0.6,
+    psi1: 0.2,
+    psi2: 0.0,
+    include_self_weight: false,
+  },
+  {
+    id: 4,
+    code: "S",
+    category: "Snow",
+    psi0: 0.5,
+    psi1: 0.2,
+    psi2: 0.0,
+    include_self_weight: false,
+  },
+  {
+    id: 5,
+    code: "Acc",
+    category: "Accidental",
+    psi0: 1.0,
+    psi1: 1.0,
+    psi2: 1.0,
+    include_self_weight: false,
+  },
 ];
 
 function LoadCaseManager(): React.ReactElement {
   const loadCases = useProjectStore((s) => s.project.structure.load_cases);
   const setLoadCases = useProjectStore((s) => s.setLoadCases);
   const project = useProjectStore((s) => s.project);
-  const [combos, setCombos] = useState<
-    { kind: string; label: string }[] | null
-  >(null);
+  const [combos, setCombos] = useState<{ kind: string; label: string }[] | null>(null);
   const [newCode, setNewCode] = useState("Q2");
   const [newCategory, setNewCategory] = useState("Variable");
 
   const rows: LoadCaseRow[] =
-    loadCases && loadCases.length > 0
-      ? (loadCases as LoadCaseRow[])
-      : CANONICAL_CASES;
+    loadCases && loadCases.length > 0 ? (loadCases as LoadCaseRow[]) : CANONICAL_CASES;
 
   const commit = (next: LoadCaseRow[]) => {
     setLoadCases(next);
@@ -1160,7 +1195,10 @@ function LoadCaseManager(): React.ReactElement {
     }
     const nextId = Math.max(...rows.map((r) => r.id), 0) + 1;
     const [psi0, psi1, psi2] = CATEGORY_PSI[newCategory] ?? [1.0, 1.0, 1.0];
-    commit([...rows, { id: nextId, code, category: newCategory, psi0, psi1, psi2, include_self_weight: false }]);
+    commit([
+      ...rows,
+      { id: nextId, code, category: newCategory, psi0, psi1, psi2, include_self_weight: false },
+    ]);
     void trackProductEvent("load_case_added", { case: code });
   };
 
@@ -1193,8 +1231,8 @@ function LoadCaseManager(): React.ReactElement {
       >
         <p className="mt-1 text-[11px] text-ink-muted">
           <Trans>
-            Cas élémentaires et facteurs ψ (Annexe A1). Un cas ajouté ici alimente les
-            combinaisons 6.10 / 6.10a+6.10b et les enveloppes Min/Max.
+            Cas élémentaires et facteurs ψ (Annexe A1). Un cas ajouté ici alimente les combinaisons
+            6.10 / 6.10a+6.10b et les enveloppes Min/Max.
           </Trans>
         </p>
         <div className="mt-2 max-h-44 overflow-auto">

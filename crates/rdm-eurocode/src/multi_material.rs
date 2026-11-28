@@ -297,6 +297,7 @@ pub fn ec3_fire_check(
             rating_minutes,
             theta_cr,
             section_temperature_c,
+            utilization_mu0: utilization_mu0.clamp(0.02, 1.0),
         }
         .into_node(),
     ]
@@ -307,6 +308,9 @@ struct CalcNodeFire {
     rating_minutes: u32,
     theta_cr: f64,
     section_temperature_c: f64,
+    /// v2.1.0 audit fix: the actual utilization `μ0` is reported in the
+    /// substituted line instead of a hardcoded `0.5`.
+    utilization_mu0: f64,
 }
 
 impl CalcNodeFire {
@@ -317,7 +321,7 @@ impl CalcNodeFire {
             "\\theta_{a,cr} = 39.19 \\ln\\!\\left(\\tfrac{1}{0.9674\\,\\mu_0^{3.833}}\\right) + 482",
             format!(
                 "R{} · μ0 = {:.2} · θ(section) = {:.0} °C",
-                self.rating_minutes, 0.5, self.section_temperature_c
+                self.rating_minutes, self.utilization_mu0, self.section_temperature_c
             ),
             self.section_temperature_c,
             self.theta_cr,

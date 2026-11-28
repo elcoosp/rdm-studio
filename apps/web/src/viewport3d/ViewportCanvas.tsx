@@ -29,6 +29,8 @@ interface CameraControlsLike {
     targetZ: number,
     transition: boolean,
   ): Promise<boolean>;
+  /** Synchronize camera-controls spherical space after changing camera.up to Z-up. */
+  updateCameraUp(): void;
 }
 type CameraControlsImpl = CameraControlsLike;
 import { Trans } from "@lingui/react/macro";
@@ -102,6 +104,7 @@ function CameraRig({
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     const controls = controlsRef.current;
+    controls?.updateCameraUp();
     if (controls === null) {
       // Fallback until the controls mount (first frame).
       const [x, y, z] = PRESET_POSITIONS[preset];
@@ -152,7 +155,7 @@ function PivotToCursor({ controlsRef }: { controlsRef: RefObject<CameraControlsI
           h.object.type !== "GridHelper",
       );
       if (hit !== undefined) {
-        void controls.setTarget(hit.point.x, hit.point.y, hit.point.z, true);
+        void controls.setTarget(hit.point.x, hit.point.y, hit.point.z, false);
       }
     };
     dom.addEventListener("pointerdown", onPointerDown);
@@ -425,6 +428,7 @@ export function ViewportCanvas({
           onCreated={({ gl, camera }) => {
             gl.toneMapping = THREE.NoToneMapping;
             camera.up.set(0, 0, 1);
+            controlsRef.current?.updateCameraUp();
           }}
         >
           <color attach="background" args={["#F8FAFC"]} />

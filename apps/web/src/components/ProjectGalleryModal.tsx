@@ -3,7 +3,7 @@ import { get, set } from "idb-keyval";
 import { toast } from "sonner";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
-import { quickStartProject, useProjectStore, type ProjectData } from "@/state/projectStore";
+import { useProjectStore, type ProjectData } from "@/state/projectStore";
 import { downloadText } from "@/export/csvExport";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "@/components/ui/select";
@@ -507,45 +507,8 @@ export function ProjectGalleryModal({
               <Trans>+ Nouveau projet vierge</Trans>
             </button>
           </div>
-          {/* v2.3.0: naval & lifting flagships — 1-click quick-start pills
-              beside the parametric / engineering templates. */}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-medium text-ink-secondary">
-              <Trans>Naval & levage —</Trans>
-            </span>
-            {(
-              [
-                ["naval-cradle", "Berceau de transport naval DNV"],
-                ["lifting-beam", "Palonnier de levage 20 t"],
-                ["workshop-jib", "Potence d'atelier 5 t"],
-              ] as const
-            ).map(([kind, label]) => (
-              <button
-                key={kind}
-                type="button"
-                data-testid={`gallery-quick-${kind}`}
-                className="rounded-[4px] border border-hairline px-2.5 py-1 text-[12px] text-ink-secondary hover:border-accent hover:text-accent"
-                onClick={() => {
-                  const project = quickStartProject(kind);
-                  loadProject(project);
-                  void trackProductEvent("template_opened", {
-                    kind: "quick_start",
-                    template: kind,
-                  });
-                  toast(t`Modèle chargé`, {
-                    description: t`${project.name} — prêt à calculer.`,
-                    duration: 4_000,
-                  });
-                  onClose();
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2.5 grid grid-cols-2 gap-2">
             {PARAMETRIC_TEMPLATES.map((tpl) => {
-              // v1.4.0: rich metadata cards (node/beam counts, span, tags).
               const preview = buildTemplate(tpl.kind);
               const nodeCount = preview.structure.nodes.length;
               const beamCount = preview.structure.beams.length;
@@ -557,7 +520,7 @@ export function ProjectGalleryModal({
                 <button
                   key={tpl.kind}
                   type="button"
-                  className="rounded border border-hairline p-2 text-left text-[12px] hover:border-accent hover:bg-accent-tint"
+                  className="flex flex-col justify-between rounded-[6px] border border-hairline bg-panel p-2.5 text-left transition-colors hover:border-accent hover:bg-accent-tint/50"
                   data-testid={`gallery-${tpl.kind}`}
                   onClick={() => {
                     loadProject(preview);
@@ -568,29 +531,40 @@ export function ProjectGalleryModal({
                     onClose();
                   }}
                 >
-                  <span className="flex items-center gap-1.5 font-medium text-ink-primary">
-                    {templateIcon(tpl.kind)}
-                    {tpl.label}
-                  </span>
-                  <span className="font-data mt-1 block text-[11px] text-ink-muted">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-primary">
+                      {templateIcon(tpl.kind)}
+                      {tpl.label}
+                    </span>
+                    <span className="font-data shrink-0 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-accent">
+                      EN 1993
+                    </span>
+                  </div>
+                  <span className="font-data mt-1.5 block text-[11px] text-ink-muted">
                     {nodeCount} nœuds · {beamCount} poutres · portée {span.toFixed(0)} m
                     {height > 0 ? ` · h ${height.toFixed(1)} m` : ""}
                   </span>
-                  <span className="mt-1 block text-[11px] text-accent">EN 1993 · S235JR</span>
                 </button>
               );
             })}
-            {/* v2.0.0: the 12 validated engineering templates with
-                "Pourquoi ce modèle" notes. v2.1.2 audit fix: gravity
-                direction { x: 0, y: 0, z: -1 }, onClose() + toast. */}
-            {ENGINEERING_TEMPLATES.map((template) => (
-              <div key={template.id} className="rounded-[8px] border border-hairline p-3">
-                <p className="text-sm font-semibold">{template.name}</p>
-                <p className="mt-1 text-xs italic text-ink-secondary">
-                  « Pourquoi ce modèle » — {template.why}
-                </p>
+            {ENGINEERING_TEMPLATES.map((template) => {
+              const xs = template.nodes.map((n) => n.x);
+              const zs = template.nodes.map((n) => n.z);
+              const span = xs.length > 0 ? Math.max(...xs) - Math.min(...xs) : 0;
+              const height = zs.length > 0 ? Math.max(...zs) - Math.min(...zs) : 0;
+              const normTag = template.id.includes("naval")
+                ? "DNV / EC3"
+                : template.id.includes("glulam") || template.id.includes("timber")
+                  ? "EN 1995"
+                  : template.id.includes("concrete")
+                    ? "EN 1992"
+                    : "EN 1993";
+              return (
                 <button
+                  key={template.id}
                   type="button"
+                  data-testid={`gallery-engineering-${template.id}`}
+                  className="flex flex-col justify-between rounded-[6px] border border-hairline bg-panel p-2.5 text-left transition-colors hover:border-accent hover:bg-accent-tint/50"
                   onClick={() => {
                     const structure = {
                       nodes: template.nodes,
@@ -602,11 +576,6 @@ export function ProjectGalleryModal({
                         k_buckling_y: 1.0,
                         k_buckling_z: 1.0,
                       })),
-                      // v2.0.2: canonical per-template restraints (stable,
-                      // solvable models straight from the gallery) — an
-                      // explicit seed `supports` list wins (v2.3.0: the
-                      // naval cradle and the lifting beam do not sit on
-                      // the ground).
                       supports: (template.supports ?? canonicalSupports(template)).map((sup) => ({
                         ...sup,
                         spring_stiffness: [0, 0, 0, 0, 0, 0] as number[],
@@ -636,9 +605,6 @@ export function ProjectGalleryModal({
                                 my: 0,
                                 mz: 0,
                               },
-                              // v2.1.2 (audit 519229b): gravity is −Z in the
-                              // Z-up scene — the old { x: 0, y: -1, z: 0 } aimed
-                              // distributed loads sideways in 3D.
                               direction: load.direction ?? { x: 0, y: 0, z: -1 },
                             },
                       ),
@@ -657,13 +623,25 @@ export function ProjectGalleryModal({
                     });
                     onClose();
                   }}
-                  className="mt-2 w-full rounded bg-accent py-1 text-xs font-semibold text-white"
-                  data-testid={`gallery-engineering-${template.id}`}
                 >
-                  Charger
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[12px] font-semibold text-ink-primary">
+                      {template.name}
+                    </span>
+                    <span className="font-data shrink-0 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-accent">
+                      {normTag}
+                    </span>
+                  </div>
+                  <span className="font-data mt-1 block text-[11px] text-ink-muted">
+                    {template.nodes.length} nœuds · {template.beams.length} poutres · portée{" "}
+                    {span.toFixed(0)} m{height > 0 ? ` · h ${height.toFixed(1)} m` : ""}
+                  </span>
+                  <span className="mt-1 line-clamp-2 text-[11px] leading-snug text-ink-secondary">
+                    {template.why}
+                  </span>
                 </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {/* v1.4.0: direct file import (.rdm / CAD). */}
           <label className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded border border-hairline px-2 py-1 text-[11px] text-ink-secondary hover:border-accent hover:text-accent">

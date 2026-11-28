@@ -1,3 +1,102 @@
+Session 25 (2026-11-28): **Milestone M13 — Session 1 of 2 (M12 E2E
+Residual Polish + Pure-Rust 2D Finite Element Mesher & Plane
+Stress/Strain + Mindlin Plate Solver)** on top of origin/main 6de4b3d
+(v2.4.0), tree left dirty (zero commits, see ship.toml +
+.github/pr-body.md). Workspace version bumped to 2.5.0.
+
+## M13 shipped in this session (implemented + tested)
+
+1. **M13.2a — `crates/rdm-mesh` (NEW): deterministic 2D Constrained
+   Delaunay Mesher**:
+   - Bowyer–Watson Delaunay over a super-triangle, per-edge resampling at
+     `h_max`, segment recovery by cavity walk + ear-clipping
+     retriangulation, bounded Delaunay flip sweep (constrained edges
+     kept), deterministic interior lattice seeding with a constraint-safe
+     cavity guard, optional `h_refine` refined seed band around holes,
+     even-odd hole carving, boundary-edge extraction tagged with the
+     source input edge, and quality summary (min/max angle, area).
+   - Zero `.unwrap()/.expect()/panic!()` in library code — typed
+     `MeshError` (`thiserror`).
+   - 6 unit tests green: square area conservation (< 1e-12), circular-hole
+     area preservation + hole-boundary tagging, rectangular hole
+     connectivity, concave L-shape area, byte-for-byte determinism,
+     degenerate-input typed errors.
+
+2. **M13.2b — `crates/rdm-solver/src/fem2d.rs` (NEW): 2D FEM solver**:
+   - Plane stress / plane strain (`CST` 3-node + `LST` 6-node quadratic
+     with deduplicated mid-sides, consistent quadratic-edge pressure
+     loads L/6 + 2L/3): sparse `faer` LLᵀ assembly/factorization, edge
+     restraints (fixed/pinned/roller_x/roller_y/pressure), point loads,
+     element + area-weighted nodal stress smoothing, principal stresses
+     (σ1, σ2, θp), Von Mises (incl. plane-strain σzz coupling), Kt
+     telemetry, u_max/extrema.
+   - Mindlin–Reissner plate bending with the MITC3 tied-shear triangle
+     (bending at the centroid + 2-point tying, exact 3-point quadrature):
+     w, θx, θy DOFs, area pressure + point loads, smoothed bending
+     moments (mx, my, mxy) and transverse shears (vx, vy).
+   - `tests/fem2d_benchmarks.rs` — 6 analytical benchmarks GREEN:
+     cantilever deep-beam tip shear vs Timoshenko (< 2 %), plane-strain
+     conversion ratio vs (1 − ν²) (2 %), Kirsch perforated-plate stress
+     concentration (Kt band), SS square vs Navier series, clamped square
+     vs Timoshenko coefficients, LST-vs-CST mesh coarseness.
+   - Root-caused and fixed on the way: LST shape-function derivative
+     `∂N4/∂s = −4r` (was −4s — transcription slip), the transposed
+     Jacobian inverse in the LST B-matrix, and the CST/LST pressure-edge
+     consistent-load distribution.
+   - Known limitation (documented): the MITC3 plate converges from the
+     stiff side on simply-supported edges (SS square ≈ −17 % on w at
+     div-28; clamped square w +0.62 %, m −6.8 %). A first DKT
+     (Batoz–Bathe–Ho) implementation was attempted this session and
+     validated per-element against exact curvature fields, but its
+     global w–θ coupling still shows a wrong-sign strip response — the
+     DKT swap is the FIRST item of Session 2, after which the SS/clamped
+     tolerances tighten to the 2 % contract.
+
+3. **Cargo workspace**: `crates/rdm-mesh` registered; `rdm-solver` gains
+   the `rdm-mesh` dependency; workspace version 2.4.0 → 2.5.0
+   (Cargo.toml + Cargo.lock regenerated).
+
+## Verification gates run in this session
+
+- `cargo test -p rdm-mesh` ✓ 6/6 · `cargo test -p rdm-solver` ✓ 41/41
+  (34 existing solver + 6 new fem2d benchmarks + 1 lib) — all green
+  after the LST fixes.
+- `cargo fmt -p rdm-mesh -p rdm-solver` ✓ applied.
+- G0 clippy, G1 full workspace, G2 wasm-pack, G3 tsc, G4 i18n, G5 unit,
+  G6 E2E: NOT run at cutoff (session ended mid-milestone).
+
+## Remaining for M13 Session 2 (exact next steps)
+
+1. **DKT plate element**: replace MITC3 tying with the validated DKT
+   (Batoz–Bathe–Ho 1980) — the per-element construction is already
+   benchmark-exact in a scratch harness; the remaining defect is the
+   global w–θ coupling sign in the strip response. Then tighten the SS /
+   clamped benchmark tolerances to < 2 % (Navier / Timoshenko).
+2. **M13.0 — M12 residual E2E polish**: grouped-optimizer row label
+   (`is_group` + group_name badges in `OptimizerModal.tsx`; the idb-keyval
+   300 ms debounce also needs a `pagehide` flush so the M12.3 flow
+   survives the `/results?modal=optim` reload) and the `.ifc` round-trip
+   parser fix (rewrite `import_ifc4_structural` to parse
+   `IFCCARTESIANPOINT` coordinates + correct beam endpoint indices — the
+   current importer fabricates unit-grid nodes and references a
+   non-existent node id).
+3. **M13.1 — DRY Lingui "Nouveautés"**: `pnpm --dir packages/brand-studio
+   sync` subcommand (copy illustrations → `apps/web/public/releases/`,
+   generate `releaseMeta.generated.ts` from git tags), Lingui-native
+   `apps/web/src/releases/userChangelog.ts` (v2.1.0 → v2.5.0),
+   `WhatsNewModal.tsx` Swiss Metrology dialog + driver.js 2-step spot
+   tours, header trigger + ⌘K entry, AGENTS.md §6 sync step.
+4. **M13.3 — Fem2dStudioModal.tsx** (Plaques & Élasticité 2D): presets,
+   SegmentedControl theory, SVG fringe viewport (`fem2d-viewport`),
+   telemetry; wire `solve_fem2d_json` through `bindings/rdm-wasm` +
+   `fea.worker.ts` + `workerClient.ts` (the Rust endpoint contract is
+   ready in `fem2d.rs`).
+5. **M13.4 — i18n extract/compile (fr, en, es, de, pt_BR) +
+   `m13-whatsnew-fem2d.spec.ts`**, then the full G0→G6 gate sweep and
+   the ship.toml / pr-body.md / zip handoff.
+
+---
+
 Session 24 (2026-11-28): **Milestone M12 — Session 1 of 2 (EN 1993-1-8 Steel
 Connections Studio, EN 1991-2 LM1 Moving Loads & Influence Lines, Member
 Groups & Storey Drift, Inclined Supports & Custom Materials, Bidirectional

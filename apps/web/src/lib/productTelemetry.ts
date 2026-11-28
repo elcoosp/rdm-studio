@@ -24,6 +24,7 @@ export type TelemetryEventKind =
   // Geometry modeling
   | "node_placed"
   | "beam_connected"
+  | "composite_section_applied"
   | "section_searched"
   | "section_zero_results"
   | "search_zero_results"
@@ -90,6 +91,7 @@ const ALLOWLIST: Record<TelemetryEventKind, string[]> = {
   locale_switched: ["from", "to"],
   node_placed: ["n_nodes"],
   beam_connected: ["n_beams"],
+  composite_section_applied: ["beams", "elements"],
   section_searched: ["query"],
   section_zero_results: ["query"],
   search_zero_results: ["query"],

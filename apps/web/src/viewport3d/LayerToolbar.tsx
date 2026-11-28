@@ -35,7 +35,7 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
   const { t } = useLingui();
   return (
     <div
-      className="absolute top-2 left-2 z-30 flex max-w-[calc(100%-220px)] flex-nowrap overflow-x-auto whitespace-nowrap items-center gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
+      className="absolute top-2 left-2 z-30 flex max-w-[46%] flex-wrap items-center gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
       data-testid="layer-toolbar"
     >
       <TooltipGroup>

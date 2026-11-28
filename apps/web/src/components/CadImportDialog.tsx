@@ -43,7 +43,8 @@ export function CadImportDialog({
           <DialogDescription>
             <Trans>
               Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités
-              mm converties en m.
+              mm converties en m. BIM bidirectionnel : IFC4 structurel (.ifc) et SAF (.saf.json)
+              exportés depuis l'étape Rapport sont réimportés en projets complets.
             </Trans>
           </DialogDescription>
         </DialogHeader>
@@ -54,7 +55,7 @@ export function CadImportDialog({
         <input
           ref={fileRef}
           type="file"
-          accept=".dxf,.step,.stp,.igs,.iges"
+          accept=".dxf,.step,.stp,.iges,.igs,.ifc,.json"
           className="hidden"
           data-testid="cad-file-input"
           onChange={(e) => {

@@ -369,7 +369,7 @@ export function ViewportCanvas({
   // shared spring pill glides between Iso | XY | XZ | YZ (zero layout
   // jump), contract test ids view-* preserved on each option button.
   const viewPresets = (
-    <div className="absolute top-2 right-2 z-30 shadow-xs">
+    <div className="pointer-events-auto ml-auto shrink-0 shadow-xs">
       <SegmentedControl
         size="sm"
         label="Vue caméra"
@@ -392,8 +392,10 @@ export function ViewportCanvas({
   if (!webglSupported) {
     return (
       <div className="relative h-full min-h-0 w-full" data-testid={testId}>
-        {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
-        {viewPresets}
+        <div className="pointer-events-none absolute inset-x-2 top-2 z-30 flex flex-wrap items-start justify-between gap-1.5">
+          {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
+          {viewPresets}
+        </div>
         <ViewportFallback />
       </div>
     );
@@ -405,11 +407,10 @@ export function ViewportCanvas({
       data-testid={testId}
     >
       <ViewportErrorBoundary>
-        {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
-        {/* v1.6.0: compact `Iso | XY | XZ | YZ` presets, z-30 so they stay
-            above the persistent stage overlay (fixed z-10) at 860 px with
-            ≥ 24 px separation from the left toolbar. */}
-        {viewPresets}
+        <div className="pointer-events-none absolute inset-x-2 top-2 z-30 flex flex-wrap items-start justify-between gap-1.5">
+          {showLayerToolbar ? <LayerToolbar lastSelectionMs={pickLatency} /> : null}
+          {viewPresets}
+        </div>
         {/* v2.4.0: discreet deletion-mode banner (top-centre). */}
         {deleteMode ? (
           <div

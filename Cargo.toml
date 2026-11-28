@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/rdm-model",
     "crates/rdm-eurocode",
+    "crates/rdm-mesh",
     "crates/rdm-solver",
     "crates/rdm-cad",
     "bindings/rdm-wasm",

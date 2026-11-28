@@ -19,8 +19,9 @@ import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { UtilizationProgress } from "@/components/ui/progress";
 import { ArrowLeftRight, SlidersHorizontal, AlertTriangle } from "lucide-react";
-import { 
-  feaClient, type BeamEnvelopeDto,
+import {
+  feaClient,
+  type BeamEnvelopeDto,
   type ModalReport,
   type SolveFault,
   type SolveReport,
@@ -208,9 +209,6 @@ function ResultsPage() {
   const viewKey = search.combo ?? "SLS:0";
   const setViewKey = (next: string) => {
     updateSearch((prev) => ({ ...prev, combo: next === "SLS:0" ? undefined : next }));
-
-
-
   };
   // M10.5 (EN 1990 envelopes): the Min/Max envelope engine runs in the
   // worker lane on demand — only when an `ENV:ULS` / `ENV:SLS` view is
@@ -935,9 +933,7 @@ function ResultsPage() {
           scaleMode={scaleMode}
           onScaleModeChange={(next) => setScaleMode(next)}
           envelope={
-            isEnvelopeView
-              ? (envelopes?.find((e) => e.beam_id === cutBeamId) ?? null)
-              : null
+            isEnvelopeView ? (envelopes?.find((e) => e.beam_id === cutBeamId) ?? null) : null
           }
         />
       ) : null}
@@ -1299,11 +1295,32 @@ function DockedInspector({
         ...(envMy !== null && envVz !== null && envN !== null
           ? [
               { label: "My min", stroke: "rgba(29,78,216,0.55)", width: 1, dash: [4, 3] },
-              { label: "My max", stroke: "#1d4ed8", width: 1, dash: [4, 3], fill: "rgba(29,78,216,0.12)", band: envStart },
+              {
+                label: "My max",
+                stroke: "#1d4ed8",
+                width: 1,
+                dash: [4, 3],
+                fill: "rgba(29,78,216,0.12)",
+                band: envStart,
+              },
               { label: "Vz min", stroke: "rgba(29,78,216,0.55)", width: 1, dash: [4, 3] },
-              { label: "Vz max", stroke: "#1d4ed8", width: 1, dash: [4, 3], fill: "rgba(29,78,216,0.12)", band: envStart + 2 },
+              {
+                label: "Vz max",
+                stroke: "#1d4ed8",
+                width: 1,
+                dash: [4, 3],
+                fill: "rgba(29,78,216,0.12)",
+                band: envStart + 2,
+              },
               { label: "N min", stroke: "rgba(29,78,216,0.55)", width: 1, dash: [4, 3] },
-              { label: "N max", stroke: "#1d4ed8", width: 1, dash: [4, 3], fill: "rgba(29,78,216,0.12)", band: envStart + 4 },
+              {
+                label: "N max",
+                stroke: "#1d4ed8",
+                width: 1,
+                dash: [4, 3],
+                fill: "rgba(29,78,216,0.12)",
+                band: envStart + 4,
+              },
             ]
           : []),
       ] as uPlot.Series[],

@@ -1,8 +1,8 @@
 Task: ://github.com. Maximum-velocity, plan-aligned implementation following `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `./mockups/`.
 
 1. **Bootstrap & Sync (< 3 tool calls):**
-   - If `rdm-studio` is not cloned locally, `git clone https://://github.com.git && cd rdm-studio`; if it already exists, `cd rdm-studio && git fetch origin && git reset --hard origin/main` so `HEAD` matches your latest pushed `main`.
-   - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com`) are installed, then read `STATUS.md` and `git log -5 --oneline` to confirm `HEAD` (`4189cbb`) and prepare **Milestone M9 (Session 1 of 4 — RDM7 CAD Power Tools, Parametric Structure Library & Synchronized Metrology Spreadsheet)**.
+   - If `rdm-studio` is not cloned locally, `git clone https://://github.com.git && cd rdm-studio`; if it already exists, `cd rdm-studio && git fetch origin && git reset --hard origin/main` so `HEAD` matches your latest pushed `main` (`d8d856d`).
+   - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com`) are installed, then read `STATUS.md` and `git log -5 --oneline` to confirm `HEAD` (`d8d856d`) and prepare **Milestone M9 (Session 1 of 4 — RDM7 CAD Power Tools, Parametric Structure Library & Synchronized Metrology Spreadsheet)**.
 
 2. **Ship Complete Milestone M9 (CAD Power Tools, Parametric Frame Generators & Astonishing Step 1 UI):**
    Implement all 4 deliverables below direct-to-green with full unit + E2E tests (zero stubs, zero `.unwrap()`/`.expect()` in Rust, zero raw HTML primitives `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">` in `apps/web/src/`, zero ALL-CAPS text, strict SI units in state/WASM):

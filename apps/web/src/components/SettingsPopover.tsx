@@ -89,7 +89,7 @@ export function SettingsPopover(): React.ReactElement {
           />
         </div>
 
-        <div className="border-t border-hairline pt-2.5">
+        <div className="border-t border-hairline pt-2.5" data-testid="combination-method-toggle">
           <p className="mb-1.5 text-[12px] font-medium text-ink-secondary">
             <Trans>Combinaisons EN 1990</Trans>
           </p>
@@ -102,8 +102,16 @@ export function SettingsPopover(): React.ReactElement {
               })
             }
             options={[
-              { value: "Eq610", label: "6.10 (fondamentale)" },
-              { value: "Eq610ab", label: "6.10a / 6.10b" },
+              {
+                value: "Eq610",
+                label: "6.10 (fondamentale)",
+                testId: "combination-method-610",
+              },
+              {
+                value: "Eq610ab",
+                label: "6.10a / 6.10b",
+                testId: "combination-method-610ab",
+              },
             ]}
           />
         </div>

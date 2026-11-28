@@ -390,14 +390,17 @@ function SupportsPage() {
         className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
         data-testid="settlement-section"
       >
-        <ExpandablePanel testId="support-settlement-panel" title={
-          <Trans>
-            <span className="inline-flex items-center gap-1.5">
-              <SupportReaction size={16} />
-              Déplacement imposé (Δ)
-            </span>
-          </Trans>
-        }>
+        <ExpandablePanel
+          testId="support-settlement-panel"
+          title={
+            <Trans>
+              <span className="inline-flex items-center gap-1.5">
+                <SupportReaction size={16} />
+                Déplacement imposé (Δ)
+              </span>
+            </Trans>
+          }
+        >
           <p className="mt-1 text-[11px] text-ink-muted">
             <Trans>
               Déplacements imposés sur les DDL bloqués (Δu en mm, Δθ en degrés). Le tassement
@@ -708,10 +711,8 @@ function SettlementFields({
 }) {
   // Display units: mm for translations (1e3), degrees for rotations
   // (180/π). The store holds strict SI values (m, rad).
-  const toDisplay = (i: number): number =>
-    (settlement[i] ?? 0) * (i < 3 ? 1e3 : 180 / Math.PI);
-  const fromDisplay = (i: number, v: number): number =>
-    v * (i < 3 ? 1e-3 : Math.PI / 180);
+  const toDisplay = (i: number): number => (settlement[i] ?? 0) * (i < 3 ? 1e3 : 180 / Math.PI);
+  const fromDisplay = (i: number, v: number): number => v * (i < 3 ? 1e-3 : Math.PI / 180);
   const [values, setValues] = useState<number[]>(() => [0, 1, 2, 3, 4, 5].map(toDisplay));
   const anyLocked = locked.some(Boolean);
   return (
@@ -744,7 +745,9 @@ function SettlementFields({
       </div>
       {!anyLocked ? (
         <p className="mt-1 text-[10px] text-ink-muted">
-          <Trans>Bloquez d'abord un DDL : le déplacement imposé s'applique aux DDL verrouillés.</Trans>
+          <Trans>
+            Bloquez d'abord un DDL : le déplacement imposé s'applique aux DDL verrouillés.
+          </Trans>
         </p>
       ) : null}
       <button

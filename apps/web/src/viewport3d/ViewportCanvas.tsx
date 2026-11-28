@@ -369,7 +369,7 @@ export function ViewportCanvas({
   // shared spring pill glides between Iso | XY | XZ | YZ (zero layout
   // jump), contract test ids view-* preserved on each option button.
   const viewPresets = (
-    <div className="absolute top-2 right-2 z-30 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur">
+    <div className="absolute top-2 right-2 z-30 shadow-xs">
       <SegmentedControl
         size="sm"
         label="Vue caméra"

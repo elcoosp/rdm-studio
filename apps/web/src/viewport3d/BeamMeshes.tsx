@@ -235,11 +235,12 @@ export function buildBeamGeometry(
 
     const ratio = options.colorRatios?.get(beam.id) ?? 0.5;
     const familyRgb = options.beamColors?.get(beam.id);
-    const [r, g, b] = options.inactiveBeamIds?.has(beam.id) ?? false
-      ? hexToRgb("#64748B")
-      : options.colorRatios?.has(beam.id) || familyRgb === undefined
-        ? spectrumColor(ratio)
-        : familyRgb;
+    const [r, g, b] =
+      (options.inactiveBeamIds?.has(beam.id) ?? false)
+        ? hexToRgb("#64748B")
+        : options.colorRatios?.has(beam.id) || familyRgb === undefined
+          ? spectrumColor(ratio)
+          : familyRgb;
     // M10.3: tension-only members render as slender rods (the RDM 7
     // tirant is a rod, not a framed profile); the turnbuckle cylinder is
     // overlaid separately by `TurnbuckleMarkers`.
@@ -626,7 +627,6 @@ export function BeamMeshes({
   );
 }
 
-
 /**
  * M10.3 (RDM 7 _tirants_): slender tension-rod turnbuckles — one thin
  * rod along the member axis plus a short wider barrel cylinder at
@@ -690,10 +690,7 @@ export function TurnbuckleMarkers({
         continue;
       }
       const dir = new THREE.Vector3(dx / length, dy / length, dz / length);
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        dir,
-      );
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
       out.push({
         key: beam.id,
         position: [(ax + bx) / 2, (ay + by) / 2, (az + bz) / 2],
@@ -720,7 +717,7 @@ export function TurnbuckleMarkers({
           <mesh
             geometry={TURNBUCKLE_BARREL_GEO}
             material={TURNBUCKLE_MATERIAL}
-            position={[0, marker.length * 0.0, 0]}
+            position={[0, 0, 0]}
           />
         </group>
       ))}

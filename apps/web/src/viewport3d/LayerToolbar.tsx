@@ -40,50 +40,43 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
     >
       <TooltipGroup>
         {LAYERS.map(([key, label]) => (
-          <Tooltip key={key} label={label} side="bottom">
-            <button
-              type="button"
-              data-testid={`layer-${key}`}
-              aria-label={label}
-              className={`rounded px-1.5 py-1 text-[11px] ${layers[key] ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-              onClick={() => toggleLayer(key)}
-            >
-              {label}
-            </button>
-          </Tooltip>
+          <button
+            key={key}
+            type="button"
+            data-testid={`layer-${key}`}
+            aria-label={label}
+            className={`rounded px-1.5 py-1 text-[11px] ${layers[key] ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+            onClick={() => toggleLayer(key)}
+          >
+            {label}
+          </button>
         ))}
         <span className="mx-0.5 w-px self-stretch bg-hairline" />
         {/* v1.6.0 metrology toggles (requirement 3). */}
-        <Tooltip label={<Trans>Repères N/P</Trans>} side="bottom">
-          <button
-            type="button"
-            data-testid="layer-labels"
-            className={`rounded px-1.5 py-1 text-[11px] ${layers.labels ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-            onClick={() => toggleLayer("labels")}
-          >
-            <Trans>Repères N/P</Trans>
-          </button>
-        </Tooltip>
-        <Tooltip label={<Trans>Cotes</Trans>} side="bottom">
-          <button
-            type="button"
-            data-testid="layer-dims"
-            className={`rounded px-1.5 py-1 text-[11px] ${layers.dims ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-            onClick={() => toggleLayer("dims")}
-          >
-            <Trans>Cotes</Trans>
-          </button>
-        </Tooltip>
-        <Tooltip label={<Trans>Réactions</Trans>} side="bottom">
-          <button
-            type="button"
-            data-testid="layer-reactions"
-            className={`rounded px-1.5 py-1 text-[11px] ${layers.reactions ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-            onClick={() => toggleLayer("reactions")}
-          >
-            <Trans>Réactions</Trans>
-          </button>
-        </Tooltip>
+        <button
+          type="button"
+          data-testid="layer-labels"
+          className={`rounded px-1.5 py-1 text-[11px] ${layers.labels ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+          onClick={() => toggleLayer("labels")}
+        >
+          <Trans>Repères N/P</Trans>
+        </button>
+        <button
+          type="button"
+          data-testid="layer-dims"
+          className={`rounded px-1.5 py-1 text-[11px] ${layers.dims ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+          onClick={() => toggleLayer("dims")}
+        >
+          <Trans>Cotes</Trans>
+        </button>
+        <button
+          type="button"
+          data-testid="layer-reactions"
+          className={`rounded px-1.5 py-1 text-[11px] ${layers.reactions ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+          onClick={() => toggleLayer("reactions")}
+        >
+          <Trans>Réactions</Trans>
+        </button>
         <span className="mx-0.5 w-px self-stretch bg-hairline" />
         {/* Compact icon-led render mode (≥ 24 px separation, 860 px safe). */}
         <Tooltip label={t`Rendu volumique 3D`} side="bottom">

@@ -35,9 +35,9 @@ const RESPONSES = [
 ] as const;
 
 const PRESETS = [
-  { value: "lm1", label: t`EN 1991-2 LM1` },
-  { value: "pont_roulant", label: t`Pont roulant (2 galets)` },
-  { value: "custom", label: t`Convoi personnalisé` },
+  { value: "lm1", label: t`LM1` },
+  { value: "pont_roulant", label: t`Pont roulant` },
+  { value: "custom", label: t`Perso` },
 ] as const;
 
 /** French decimal comma formatting. */
@@ -216,18 +216,16 @@ export function MovingLoadPanel() {
   }, [influence, trainX]);
 
   return (
-    <div
-      data-testid="moving-load-panel"
-      className="rounded-panel border border-hairline bg-panel p-3"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-[13px] font-semibold text-ink-secondary">
-          <Trans>Convois & Lignes d'influence</Trans>
-        </h3>
+    <div data-testid="moving-load-panel" className="border-b border-hairline py-3.5">
+      <h3 className="text-[12px] font-semibold text-ink-secondary">
+        <Trans>Convois & Lignes d'influence</Trans>
+      </h3>
+      <div className="mt-2">
         <SegmentedControl
           label={t`Convoi`}
           value={preset}
           onValueChange={setPreset}
+          className="w-full"
           options={PRESETS.map((p) => ({
             value: p.value,
             label: p.label,

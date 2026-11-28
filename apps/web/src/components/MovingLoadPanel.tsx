@@ -136,15 +136,21 @@ export function MovingLoadPanel() {
     };
   }, [project, beamId, response, trainSpec]);
 
-  // Play/Pause animation: the train walks the member at ~8 %/tick.
+  // 60 fps requestAnimationFrame delta-time loop (4.5 s full span traversal).
   useEffect(() => {
     if (!playing) {
       return;
     }
-    const timer = setInterval(() => {
-      setTrainX((x) => (x + 0.04) % 1);
-    }, 160);
-    return () => clearInterval(timer);
+    let rafId = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      setTrainX((x) => (x + dt * 0.22) % 1);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [playing]);
 
   // Interpolated ordinate at the scrubber (cached engine values).
@@ -298,72 +304,137 @@ export function MovingLoadPanel() {
               </>
             ) : null}
           </div>
-          {/* Train position scrubber + play/pause + axle arrows. */}
-          <div className="mt-3" data-testid="train-scrubber">
-            <SliderDetents
-              label={t`Position du convoi`}
-              value={trainX}
-              onValueChange={setTrainX}
-              min={0}
-              max={1}
-              step={0.01}
-              detents={[0, 0.25, 0.5, 0.75, 1]}
-              formatValue={(v) => `x = ${fr(v * (influence?.span_m ?? 1), 2)} m`}
-            />
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <button
-              type="button"
-              className="rounded border border-hairline px-2 py-0.5 text-[11px] text-ink-secondary"
-              data-testid="train-play"
-              onClick={() => setPlaying((p) => !p)}
-            >
-              {playing ? "⏸ Pause" : "▶ Play convoi"}
-            </button>
-            {/* Mini axle-arrow strip: the train advances with the scrubber. */}
-            <svg viewBox="0 0 220 26" className="h-6 flex-1" aria-hidden>
+          {/* Swiss Metrology convoy elevation & 60 fps scrubber */}
+          <div className="mt-2.5 rounded-[6px] border border-hairline bg-canvas/65 p-2.5">
+            <div data-testid="train-scrubber">
+              <SliderDetents
+                label={t`Position du convoi`}
+                value={trainX}
+                onValueChange={(v) => {
+                  setPlaying(false);
+                  setTrainX(v);
+                }}
+                min={0}
+                max={1}
+                step={0.002}
+                detents={[0, 0.25, 0.5, 0.75, 1]}
+                formatValue={(v) => `${fr(v * (influence?.span_m ?? 1), 2)} m`}
+              />
+            </div>
+
+            {/* Rolling trolley & girder elevation SVG */}
+            <svg viewBox="0 0 260 44" className="mt-2 h-11 w-full overflow-visible" aria-hidden>
+              {/* Girder beam + quarter ticks + end supports */}
+              <line x1={14} y1={33} x2={246} y2={33} stroke="#334155" strokeWidth={2.2} />
+              {[0, 0.25, 0.5, 0.75, 1].map((q) => {
+                const tx = 14 + q * 232;
+                return (
+                  <line
+                    key={q}
+                    x1={tx}
+                    y1={33}
+                    x2={tx}
+                    y2={36.5}
+                    stroke="#94A3B8"
+                    strokeWidth={1}
+                  />
+                );
+              })}
+              <polygon
+                points="14,34 9.5,41 18.5,41"
+                fill="none"
+                stroke="#475569"
+                strokeWidth={1.2}
+              />
+              <polygon
+                points="246,34 241.5,40 250.5,40"
+                fill="none"
+                stroke="#475569"
+                strokeWidth={1.2}
+              />
+              <line x1={241} y1={42.2} x2={251} y2={42.2} stroke="#475569" strokeWidth={1.2} />
+
               {(() => {
+                const span = Math.max(influence?.span_m ?? 6, 0.1);
                 const arrows =
                   preset === "lm1"
-                    ? [{ dx: 0, load: 150 }]
+                    ? [
+                        { dx: 0, load: 150 },
+                        { dx: 1.2 / span, load: 150 },
+                      ]
                     : preset === "pont_roulant"
                       ? [
                           { dx: 0, load: wheelKn },
-                          { dx: 0.06, load: wheelKn },
-                          { dx: spacingM / Math.max(influence?.span_m ?? 6, 0.1), load: wheelKn },
-                          {
-                            dx: spacingM / Math.max(influence?.span_m ?? 6, 0.1) + 0.06,
-                            load: wheelKn,
-                          },
+                          { dx: spacingM / span, load: wheelKn },
                         ]
                       : [
                           { dx: 0, load: wheelKn * 2 },
-                          {
-                            dx: spacingM / Math.max(influence?.span_m ?? 6, 0.1),
-                            load: wheelKn * 2,
-                          },
+                          { dx: spacingM / span, load: wheelKn * 2 },
                         ];
-                return arrows.map((a, i) => {
-                  const px =
-                    10 +
-                    (trainX * (influence?.span_m ?? 1) + a.dx * (influence?.span_m ?? 1)) *
-                      (200 / Math.max(influence?.span_m ?? 1, 0.1));
-                  const x = Math.min(214, Math.max(4, px));
-                  return (
-                    <g key={i}>
-                      <line x1={x} y1={4} x2={x} y2={18} stroke="#DC2626" strokeWidth={1.6} />
-                      <polygon points={`${x - 3},18 ${x + 3},18 ${x},24`} fill="#DC2626" />
-                      <text x={x - 8} y={9} fontSize={7} fill="#DC2626" className="font-data">
-                        {a.load} kN
-                      </text>
-                    </g>
-                  );
-                });
+                const xs = arrows.map((a) =>
+                  Math.min(246, Math.max(14, 14 + (trainX + a.dx) * 232)),
+                );
+                const minX = Math.min(...xs);
+                const maxX = Math.max(...xs);
+                return (
+                  <g>
+                    {/* Trolley chassis bar connecting bogie wheels */}
+                    {xs.length > 1 ? (
+                      <line
+                        x1={minX}
+                        y1={24}
+                        x2={maxX}
+                        y2={24}
+                        stroke="#1D4ED8"
+                        strokeWidth={2.5}
+                        strokeLinecap="round"
+                      />
+                    ) : null}
+                    {arrows.map((a, i) => {
+                      const x = xs[i] ?? 14;
+                      return (
+                        <g key={i}>
+                          <line x1={x} y1={10} x2={x} y2={26} stroke="#DC2626" strokeWidth={1.6} />
+                          <polygon points={`${x - 3},25 ${x + 3},25 ${x},30`} fill="#DC2626" />
+                          <circle cx={x} cy={30.8} r={2} fill="#0F172A" />
+                          <text
+                            x={x}
+                            y={7.5}
+                            textAnchor="middle"
+                            fontSize={7.5}
+                            fontWeight={600}
+                            fill="#DC2626"
+                            className="font-data"
+                          >
+                            {a.load} kN
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </g>
+                );
               })()}
-              <line x1={4} y1={21} x2={216} y2={21} stroke="#94A3B8" strokeWidth={1} />
             </svg>
+
+            <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-hairline/80 pt-2">
+              <button
+                type="button"
+                className={`inline-flex h-6.5 shrink-0 items-center gap-1.5 rounded-[4px] border px-2.5 text-[11px] font-medium transition-colors ${
+                  playing
+                    ? "border-accent bg-accent-tint text-accent"
+                    : "border-hairline bg-panel text-ink-secondary hover:border-accent hover:text-accent"
+                }`}
+                data-testid="train-play"
+                onClick={() => setPlaying((p) => !p)}
+              >
+                {playing ? "⏸ Pause" : "▶ Play"}
+              </button>
+              <span className="font-data whitespace-nowrap text-[11px] font-medium text-ink-primary [font-variant-numeric:tabular-nums]">
+                {`η(${fr(trainX, 2)} L) = ${fr(etaAtTrain, 4)} ${etaUnit(response)}`}
+              </span>
+            </div>
           </div>
-          {/* uPlot influence line + cursor. */}
+
           <div className="relative mt-3" data-testid="influence-line-plot">
             <div ref={plotRef} className="w-full" />
             {cursorLeft !== null ? (
@@ -374,9 +445,7 @@ export function MovingLoadPanel() {
               />
             ) : null}
           </div>
-          <p className="font-data mt-1 text-[11px] text-ink-secondary">
-            {`η(${fr(trainX, 2)} L) = ${fr(etaAtTrain, 4)} ${etaUnit(response)}`}
-          </p>
+
           {/* Governing moving-load envelope. */}
           {envelope !== null ? (
             <dl

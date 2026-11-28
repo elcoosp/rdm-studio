@@ -18,7 +18,7 @@ import type { SectionDims, SpanForceSample, StressGrid } from "@/wasmBridge/work
 import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { UtilizationProgress } from "@/components/ui/progress";
-import { ArrowLeftRight, SlidersHorizontal, AlertTriangle } from "lucide-react";
+import { ArrowLeftRight, SlidersHorizontal, AlertTriangle, Wrench } from "lucide-react";
 import {
   feaClient,
   type BeamEnvelopeDto,
@@ -31,6 +31,9 @@ import { ForceDiagrams3DPanel } from "@/viewport3d/ForceDiagrams3D";
 import { OptimizerModal } from "@/components/OptimizerModal";
 import { AdvancedPanels } from "@/components/AdvancedPanels";
 import { ScenarioCompareModal } from "@/components/ScenarioCompareModal";
+import { ConnectionStudioModal } from "@/components/ConnectionStudioModal";
+import { MovingLoadPanel } from "@/components/MovingLoadPanel";
+import type { StoreyDriftResult } from "@/wasmBridge/workerClient";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { spectrumColor } from "@rdm-studio/ui/viewport";
 import {
@@ -270,6 +273,33 @@ function ResultsPage() {
   const setScenarioOpen = (open: boolean) => {
     updateSearch((prev) => ({ ...prev, modal: open ? "compare" : undefined }));
   };
+  // M12.1: Studio Assemblages EC3-1-8 rides `?modal=connection` so the
+  // ⌘K palette entry deep-links straight into the dialog.
+  const connectionOpen = search.modal === "connection";
+  const setConnectionOpen = (open: boolean) => {
+    updateSearch((prev) => ({ ...prev, modal: open ? "connection" : undefined }));
+  };
+  // M12.3: SLS inter-storey drift of the storey levels (1/300 or 1/500).
+  const [drift, setDrift] = useState<StoreyDriftResult | null>(null);
+  const [driftLimit, setDriftLimit] = useState<300 | 500>(300);
+  useEffect(() => {
+    if ((project.structure.levels?.length ?? 0) < 2) {
+      setDrift(null);
+      return;
+    }
+    let cancelled = false;
+    feaClient
+      .storeyDrift(project, driftLimit)
+      .then((report) => {
+        if (!cancelled) setDrift(report);
+      })
+      .catch(() => {
+        if (!cancelled) setDrift(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [project, driftLimit]);
   // v2.1.0: the true 3D on-member ForceDiagrams3D layer mounts in the
   // persistent stage when `diagrams=1` (the docked panel stays below).
   const diagramsOpen = search.diagrams === 1;
@@ -713,6 +743,63 @@ function ResultsPage() {
           />
         </div>
       ) : null}
+      {/* M12.3 — SLS inter-storey drift of the storey levels. */}
+      {drift !== null && drift.levels.length > 0 ? (
+        <div
+          className="shrink-0 rounded-panel border border-hairline bg-panel p-2.5"
+          data-testid="storey-drift-panel"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-[13px] font-semibold text-ink-secondary">
+              <Trans>Déplacement inter-étages (ELS)</Trans>
+            </h3>
+            <SegmentedControl
+              size="sm"
+              label={t`Limite de drift`}
+              value={String(driftLimit)}
+              onValueChange={(next) => setDriftLimit(Number(next) as 300 | 500)}
+              options={[
+                { value: "300", label: "d_r / h ≤ 1/300", testId: "drift-limit-300" },
+                { value: "500", label: "d_r / h ≤ 1/500", testId: "drift-limit-500" },
+              ]}
+            />
+          </div>
+          <table className="font-data mt-1.5 w-full text-[11px] [font-variant-numeric:tabular-nums]">
+            <thead>
+              <tr className="text-left text-[10px] text-ink-muted">
+                <th className="py-0.5 font-medium">
+                  <Trans>Niveau</Trans>
+                </th>
+                <th className="py-0.5 font-medium">h (m)</th>
+                <th className="py-0.5 font-medium">d_r (mm)</th>
+                <th className="py-0.5 font-medium">d_r / h</th>
+                <th className="py-0.5 font-medium">
+                  <Trans>Statut</Trans>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {drift.levels.map((level) => (
+                <tr key={level.elevation} className="border-t border-hairline">
+                  <td className="py-0.5 text-ink-primary">{level.name}</td>
+                  <td className="py-0.5">{level.storey_height_m.toFixed(2).replace(".", ",")}</td>
+                  <td className="py-0.5">{(level.drift_m * 1000).toFixed(2).replace(".", ",")}</td>
+                  <td className="py-0.5">{`1/${Math.max(1, Math.round(1 / Math.max(level.ratio / driftLimit, 1e-9)))}`}</td>
+                  <td className="py-0.5">
+                    <StatusBadge
+                      tone={level.passed ? "pass" : "fail"}
+                      mono
+                      testId={`drift-badge-${level.elevation}`}
+                    >
+                      {level.passed ? "Conforme" : "Dépassement"}
+                    </StatusBadge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       {/* Zone 2 — viewport row: persistent stage slot + 340px EC3 rail. */}
       <div className="flex min-h-0 flex-1 gap-2">
         <section className="relative min-w-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
@@ -903,10 +990,32 @@ function ResultsPage() {
                         Scénarios
                       </button>
                     </Tooltip>
+                    {/* M12.1: EN 1993-1-8 connection studio entry. */}
+                    <Tooltip
+                      label={t`Vérifier les assemblages boulonnés / soudés (EN 1993-1-8)`}
+                      side="top"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setConnectionOpen(true)}
+                        className="flex items-center gap-1.5 rounded-[4px] border border-hairline px-3 py-1.5 text-xs font-semibold"
+                        data-testid="open-connection-studio"
+                      >
+                        <Wrench size={14} strokeWidth={1.5} aria-hidden />
+                        Studio Assemblages EC3-1-8
+                      </button>
+                    </Tooltip>
                   </div>
                 </>
               ) : (
-                <AdvancedPanels />
+                <>
+                  <AdvancedPanels />
+                  {/* M12.2: moving loads & influence lines stay reachable
+                      in the advanced tab of the diagnostic rail. */}
+                  <div className="mt-2.5">
+                    <MovingLoadPanel />
+                  </div>
+                </>
               )}
             </div>
           </aside>
@@ -969,11 +1078,21 @@ function ResultsPage() {
             {report !== null ? `${report.n_nodes} nœuds / ${report.n_beams} poutres` : ""}
           </p>
           {/* v2.0.1: advanced analyses stay reachable on phones. */}
-          {report !== null ? <AdvancedPanels /> : null}
+          {report !== null ? (
+            <>
+              <AdvancedPanels />
+              <div className="mt-2.5">
+                <MovingLoadPanel />
+              </div>
+            </>
+          ) : null}
         </BottomSheet>
       ) : null}
       {optimizerOpen ? <OptimizerModal onClose={() => setOptimizerOpen(false)} /> : null}
       {scenarioOpen ? <ScenarioCompareModal onClose={() => setScenarioOpen(false)} /> : null}
+      {connectionOpen ? (
+        <ConnectionStudioModal open onClose={() => setConnectionOpen(false)} />
+      ) : null}
     </div>
   );
 }

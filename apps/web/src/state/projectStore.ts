@@ -7,6 +7,7 @@ import {
   canonicalSupports,
   type TemplateSeed,
 } from "@/lib/engineeringTemplates";
+import { subdivideBeam as subdivideBeamModel } from "@/modeling/modelCleanup";
 
 /**
  * Model store (ARCHITECTURE.md section 5, `store.ts`): Zustand + Zundo
@@ -940,107 +941,14 @@ export const useProjectStore = create<ProjectState>()(
         })),
       subdivideBeam: (beamId, segments) =>
         set((st) => {
-          // v1.6.0: N equal collinear segments; intermediate nodes inherit
-          // nothing, members keep section / material / roll / k_buckling.
-          const n = Math.min(24, Math.max(2, Math.round(segments)));
-          const beam = st.project.structure.beams.find((b) => b.id === beamId);
-          if (beam === undefined) {
+          // M9.2 (Ossatures §3.8.13): the pure `modelCleanup` transform
+          // owns the geometry — N equal tronçons (2–50), outer releases
+          // preserved, interior junctions rigid, loads remapped.
+          const result = subdivideBeamModel(st.project, beamId, segments);
+          if (result.project === st.project) {
             return st;
           }
-          const n1 = st.project.structure.nodes.find((p) => p.id === beam.n1);
-          const n2 = st.project.structure.nodes.find((p) => p.id === beam.n2);
-          if (n1 === undefined || n2 === undefined) {
-            return st;
-          }
-          let nextId = st.project.structure.nodes.reduce((m, p) => Math.max(m, p.id), 0) + 1;
-          const innerNodes: NodeData[] = [];
-          for (let i = 1; i < n; i++) {
-            const t = i / n;
-            innerNodes.push({
-              id: nextId,
-              x: n1.x + (n2.x - n1.x) * t,
-              y: n1.y + (n2.y - n1.y) * t,
-              z: n1.z + (n2.z - n1.z) * t,
-            });
-            nextId += 1;
-          }
-          const chain = [n1.id, ...innerNodes.map((p) => p.id), n2.id];
-          let nextBeamId = st.project.structure.beams.reduce((m, b) => Math.max(m, b.id), 0) + 1;
-          const segments2: BeamData[] = [];
-          for (let i = 0; i < chain.length - 1; i++) {
-            const start = chain[i];
-            const end = chain[i + 1];
-            if (start === undefined || end === undefined) {
-              continue;
-            }
-            segments2.push({
-              ...beam,
-              id: nextBeamId,
-              n1: start,
-              n2: end,
-              // Outer ends keep the original releases; interior joints are
-              // rigid so the subdivided member behaves as one continuous bar.
-              releases_start:
-                i === 0 ? [...beam.releases_start] : [false, false, false, false, false, false],
-              releases_end:
-                i === chain.length - 2
-                  ? [...beam.releases_end]
-                  : [false, false, false, false, false, false],
-            });
-            nextBeamId += 1;
-          }
-          // v1.6.0: span loads follow the subdivided member — a trapezoid
-          // is re-sampled per segment (exact for the linear variation), a
-          // point-on-span is re-targeted onto its host segment.
-          const remappedLoads: LoadData[] = [];
-          for (const load of st.project.structure.loads) {
-            if (load.kind === "Trapezoid" && load.beam_id === beamId) {
-              for (let i = 0; i < n; i++) {
-                const host = segments2[i];
-                if (host === undefined) {
-                  continue;
-                }
-                const q1 = load.q_start + (load.q_end - load.q_start) * (i / n);
-                const q2 = load.q_start + (load.q_end - load.q_start) * ((i + 1) / n);
-                remappedLoads.push({
-                  case: load.case,
-                  kind: "Trapezoid",
-                  beam_id: host.id,
-                  q_start: q1,
-                  q_end: q2,
-                  direction: { ...load.direction },
-                });
-              }
-              continue;
-            }
-            if (load.kind === "PointOnSpan" && load.beam_id === beamId && n > 1) {
-              const globalT = load.position_ratio * n;
-              const segmentIndex = Math.min(n - 1, Math.floor(globalT));
-              const host = segments2[segmentIndex];
-              if (host === undefined) {
-                remappedLoads.push(load);
-                continue;
-              }
-              remappedLoads.push({
-                ...load,
-                beam_id: host.id,
-                position_ratio: globalT - segmentIndex,
-              });
-              continue;
-            }
-            remappedLoads.push(load);
-          }
-          return {
-            project: {
-              ...st.project,
-              structure: {
-                ...st.project.structure,
-                nodes: [...st.project.structure.nodes, ...innerNodes],
-                beams: [...st.project.structure.beams.filter((b) => b.id !== beamId), ...segments2],
-                loads: remappedLoads,
-              },
-            },
-          };
+          return { project: result.project };
         }),
       removeLoad: (index) =>
         set((st) => ({

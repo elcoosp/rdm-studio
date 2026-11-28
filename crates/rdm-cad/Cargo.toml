@@ -9,6 +9,7 @@ dxf = "0.6.2"
 thiserror = "2"
 serde = { workspace = true }
 rdm-model = { path = "../rdm-model" }
+rdm-eurocode = { path = "../rdm-eurocode" }
 
 [dev-dependencies]
 approx = { workspace = true }

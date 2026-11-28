@@ -7,6 +7,7 @@
 //! to `rdm-eurocode` (linear superposition, ARCHITECTURE.md §4).
 
 pub mod buckling;
+pub mod drift;
 pub mod envelopes;
 pub mod internal_forces;
 pub mod loads;
@@ -21,6 +22,7 @@ pub mod stiffness;
 pub mod validation;
 
 pub use buckling::{BucklingMode, BucklingReport, buckling_analysis, geometric_stiffness_local};
+pub use drift::{LevelDrift, StoreyDriftReport, interstorey_drift};
 pub use envelopes::{BeamEnvelope, compute_envelopes};
 pub use internal_forces::{STATIONS, StationForces, station_envelope, station_forces};
 pub use loads::{
@@ -28,7 +30,10 @@ pub use loads::{
     build_case_element, build_elements, scatter_element_load,
 };
 pub use modal::{ModalError, ModalReport, ModeShape, modal_analysis};
-pub use moving_loads::{Lm1Loads, ResponseKind, influence_line, lm1_deck_loads, tandem_envelope};
+pub use moving_loads::{
+    AxleTrain, Lm1Loads, ResponseKind, TrainEnvelope, influence_line, lm1_deck_loads,
+    tandem_envelope, train_envelope,
+};
 pub use p_delta::{PDeltaReport, p_delta_solve};
 pub use results::{SpanLoads, beam_deflection_at, midspan_deflection_metric, span_loads_local};
 pub use section_cut::{

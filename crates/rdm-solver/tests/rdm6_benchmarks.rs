@@ -13,7 +13,7 @@ use rdm_model::{
     Beam, Direction, GlobalForces, Load, LoadCase, LoadKind, MaterialProperties, Node,
     SectionProperties, SectionShape, Structure, Support,
 };
-use rdm_solver::{stiffness::STANDARD_GRAVITY, solve_model};
+use rdm_solver::{solve_model, stiffness::STANDARD_GRAVITY};
 
 const TOL: f64 = 0.005;
 
@@ -103,10 +103,12 @@ fn rdm6_01_four_span_continuous_beam() {
     );
     let step = 0.175_f64;
     for i in 0..17_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..16_u32 {
-        s.beams.push(Beam::frame(i + 1, i + 1, i + 2, "RECT", "E200"));
+        s.beams
+            .push(Beam::frame(i + 1, i + 1, i + 2, "RECT", "E200"));
     }
     s.supports.push(Support::fixed(1));
     for x in [0.7, 1.4, 2.1] {
@@ -148,7 +150,7 @@ fn rdm6_02_triangular_span_continuous_beam() {
             shape: SectionShape::DoubleSymmetricI,
             a: 1.74e-3,
             iy: 4.42728e-6,
-            iz: 1.001125e-6,
+            iz: 1.001_125e-6,
             it: 1.89e-8,
             iw: Some(1.2746e-8),
             wel_y: 7.3788e-5,
@@ -164,10 +166,12 @@ fn rdm6_02_triangular_span_continuous_beam() {
     );
     let step = 0.3_f64;
     for i in 0..17_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..16_u32 {
-        s.beams.push(Beam::frame(i + 1, i + 1, i + 2, "RDM6-I", "E200"));
+        s.beams
+            .push(Beam::frame(i + 1, i + 1, i + 2, "RDM6-I", "E200"));
     }
     s.supports.push(Support::fixed(1));
     for x in [1.2, 3.6, 4.8] {
@@ -246,7 +250,8 @@ fn rdm6_03_internal_hinge_double_triangular() {
     );
     let step = 0.05_f64;
     for i in 0..17_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..16_u32 {
         let mut b = Beam::frame(i + 1, i + 1, i + 2, "RDM6-CHS", "S235");
@@ -323,10 +328,12 @@ fn rdm6_04_elastic_translational_support() {
     );
     let step = 0.15_f64;
     for i in 0..17_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..16_u32 {
-        s.beams.push(Beam::frame(i + 1, i + 1, i + 2, "IPE100", "E200"));
+        s.beams
+            .push(Beam::frame(i + 1, i + 1, i + 2, "IPE100", "E200"));
     }
     s.supports.push(Support::fixed(1));
     s.supports.push(Support::fixed(17));
@@ -341,7 +348,11 @@ fn rdm6_04_elastic_translational_support() {
     for i in 0..16_u32 {
         let a = step * f64::from(i);
         let b = a + step;
-        s.loads.push(gravity_load(i + 1, -p * (1.0 + a / 2.4), -p * (1.0 + b / 2.4)));
+        s.loads.push(gravity_load(
+            i + 1,
+            -p * (1.0 + a / 2.4),
+            -p * (1.0 + b / 2.4),
+        ));
     }
     s.self_weight_enabled = false;
     s.settings.shear_deformation = false;
@@ -449,15 +460,24 @@ fn rdm6_06_elastic_rotational_support() {
     );
     let step = 0.05625_f64;
     for i in 0..17_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..16_u32 {
-        s.beams.push(Beam::frame(i + 1, i + 1, i + 2, "HEA100", "E200"));
+        s.beams
+            .push(Beam::frame(i + 1, i + 1, i + 2, "HEA100", "E200"));
     }
     s.supports.push(Support {
         node_id: 1,
         locked_dofs: [true, true, true, true, false, false],
-        spring_stiffness: [0.0, 0.0, 0.0, 0.0, 50e3 * 180.0 / core::f64::consts::PI, 0.0],
+        spring_stiffness: [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            50e3 * 180.0 / core::f64::consts::PI,
+            0.0,
+        ],
         incline: None,
         settlement: [0.0; 6],
     });
@@ -512,10 +532,12 @@ fn rdm6_07_t_section_cantilever_stresses() {
     );
     let step = 0.125_f64;
     for i in 0..9_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..8_u32 {
-        s.beams.push(Beam::frame(i + 1, i + 1, i + 2, "RDM6-T", "E200"));
+        s.beams
+            .push(Beam::frame(i + 1, i + 1, i + 2, "RDM6-T", "E200"));
     }
     s.supports.push(Support::fixed(1));
     for i in 0..8_u32 {
@@ -582,10 +604,12 @@ fn rdm6_08_self_weight_propped_cantilever() {
     );
     let step = 0.1_f64;
     for i in 0..101_u32 {
-        s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+        s.nodes
+            .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
     }
     for i in 0..100_u32 {
-        s.beams.push(Beam::frame(i + 1, i + 1, i + 2, "RDM6-ROUND", "RDM6-8"));
+        s.beams
+            .push(Beam::frame(i + 1, i + 1, i + 2, "RDM6-ROUND", "RDM6-8"));
     }
     s.supports.push(Support::fixed(1));
     s.supports.push(roller(101));
@@ -617,10 +641,7 @@ fn rdm6_08_self_weight_propped_cantilever() {
     );
     // The discrete argmax node brackets the exact x* = 5.78465 m.
     let argmax = (1..100_usize)
-        .min_by(|a, b| {
-            g.displacements[a * 6 + 2]
-                .total_cmp(&g.displacements[b * 6 + 2])
-        })
+        .min_by(|a, b| g.displacements[a * 6 + 2].total_cmp(&g.displacements[b * 6 + 2]))
         .expect("interior nodes");
     let x_argmax = step * argmax as f64;
     assert!(

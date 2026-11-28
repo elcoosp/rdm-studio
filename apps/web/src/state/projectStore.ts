@@ -51,6 +51,38 @@ export interface SupportData {
   settlement?: number[];
 }
 
+/**
+ * M11.1 (mirrors `rdm_model::CompositeSectionDef`, strict SI): a persisted
+ * built-up cross-section. Beams reference it through
+ * `section_id === name`; the WASM bridge resolves the exact mechanical
+ * properties into the section table before validation and solving.
+ */
+export interface CompositeElementData {
+  kind:
+    | { kind: "plate"; length: number; thickness: number }
+    | { kind: "profile"; designation: string }
+    | { kind: "chs"; diameter: number; thickness: number }
+    | { kind: "rhs"; height: number; width: number; thickness: number };
+  /** Centroid offset along the composite y axis (m). */
+  dy: number;
+  /** Centroid offset along the composite z axis (m). */
+  dz: number;
+  /** In-plane rotation about the element centroid (rad). */
+  theta: number;
+  /** Mirrors the element about its own local z axis before rotating. */
+  mirror_y: boolean;
+  /** Mirrors the element about its own local y axis before rotating. */
+  mirror_z: boolean;
+}
+
+export interface CompositeSectionDefData {
+  /** Unique section name (the `section_id` beams reference). */
+  name: string;
+  /** Steel grade driving the EN 1993-1-1 Table 5.2 classification. */
+  grade: "S235" | "S275" | "S355" | "S460";
+  elements: CompositeElementData[];
+}
+
 export interface GlobalForcesData {
   fx: number;
   fy: number;
@@ -146,6 +178,8 @@ export interface ProjectData {
     }[];
     groups?: { id: number; name: string; beam_ids: number[] }[];
     levels?: { id: number; elevation: number; name?: string }[];
+    /** M11.1: user-authored built-up cross-sections (schema v2). */
+    custom_sections?: CompositeSectionDefData[];
   };
 }
 
@@ -235,6 +269,14 @@ interface ProjectState {
       include_self_weight: boolean;
     }[],
   ) => void;
+  /**
+   * M11.1: persists (or replaces by name) a composite section definition
+   * on the model state and optionally assigns it to the given beams — the
+   * WASM solver then resolves the section natively.
+   */
+  upsertCompositeSection: (def: CompositeSectionDefData, beamIds?: number[]) => void;
+  /** M11.1: removes one composite section definition from the model. */
+  removeCompositeSection: (name: string) => void;
   /** v1.6.0: removes the support on one node (Step 2 `×` button). */
   removeSupport: (nodeId: number) => void;
   /** Removes every support (v1.3.0 "Tout supprimer", undoable upstream). */
@@ -972,6 +1014,38 @@ export const useProjectStore = create<ProjectState>()(
             structure: {
               ...st.project.structure,
               load_cases: cases,
+            },
+          },
+        })),
+      // M11.1: persist the composite definition and re-target the beams.
+      upsertCompositeSection: (def, beamIds) =>
+        set((st) => {
+          const others = (st.project.structure.custom_sections ?? []).filter(
+            (d) => d.name !== def.name,
+          );
+          const selected = new Set(beamIds ?? []);
+          return {
+            project: {
+              ...st.project,
+              structure: {
+                ...st.project.structure,
+                custom_sections: [...others, def],
+                beams: st.project.structure.beams.map((b) =>
+                  selected.has(b.id) ? { ...b, section_id: def.name } : b,
+                ),
+              },
+            },
+          };
+        }),
+      removeCompositeSection: (name) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            structure: {
+              ...st.project.structure,
+              custom_sections: (st.project.structure.custom_sections ?? []).filter(
+                (d) => d.name !== name,
+              ),
             },
           },
         })),

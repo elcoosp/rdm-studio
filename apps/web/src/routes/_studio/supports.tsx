@@ -152,6 +152,7 @@ function SupportsPage() {
   const setSupport = useProjectStore((s) => s.setSupport);
   const setSupportSprings = useProjectStore((s) => s.setSupportSprings);
   const setSupportSettlement = useProjectStore((s) => s.setSupportSettlement);
+  const setSupportIncline = useProjectStore((s) => s.setSupportIncline);
   const removeSupport = useProjectStore((s) => s.removeSupport);
   const clearSupports = useProjectStore((s) => s.clearSupports);
   // v2.1.0: the node selection is URL-backed (`?node=`).
@@ -418,6 +419,49 @@ function SupportsPage() {
               locked={lockedFor(selectedNodeId)}
               settlement={settlementFor(selectedNodeId)}
               onApply={(next) => setSupportSettlement(selectedNodeId, next)}
+            />
+          )}
+        </ExpandablePanel>
+      </div>
+
+      {/* M12.4 — inclined roller angle (Support.incline unit normal). */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="incline-section"
+      >
+        <ExpandablePanel
+          testId="support-incline-panel"
+          title={
+            <Trans>
+              <span className="inline-flex items-center gap-1.5">
+                <SupportReaction size={16} />
+                Appui incliné (α)
+              </span>
+            </Trans>
+          }
+        >
+          <p className="mt-1 text-[11px] text-ink-muted">
+            <Trans>
+              Oriente la normale d'un appui glissant : la retenue agit selon (sin α ; 0 ; cos α)
+              dans le plan XZ — vérifié par le benchmark analytique RDM6-08.
+            </Trans>
+          </p>
+          {selectedNodeId === null ? (
+            <p className="mt-2 text-[12px] text-ink-muted">
+              <Trans>Sélectionnez un nœud pour incliner son appui.</Trans>
+            </p>
+          ) : (
+            <InclineFields
+              key={selectedNodeId}
+              nodeId={selectedNodeId}
+              incline={supports.find((s) => s.node_id === selectedNodeId)?.incline}
+              onApply={(angleDeg) => {
+                setSupportIncline(selectedNodeId, angleDeg);
+                void trackProductEvent("support_inclined", { angle_deg: angleDeg });
+                toast(
+                  `Appui de N${selectedNodeId} incliné à α = ${angleDeg.toFixed(1).replace(".", ",")}°`,
+                );
+              }}
             />
           )}
         </ExpandablePanel>
@@ -698,6 +742,61 @@ function SpringFields({
  * A field is enabled only when its DOF is locked by the support (a free
  * DOF cannot carry a prescribed displacement).
  */
+/** M12.4 — inclined-roller angle fields (deck angle α in degrees). The
+ * store persists the unit normal `(sin α, 0, cos α)` consumed by
+ * `Support.incline` in `boundary.rs` (`roller_inclined`, RDM6-08). */
+function InclineFields({
+  nodeId,
+  incline,
+  onApply,
+}: {
+  nodeId: number;
+  incline?: { x: number; y: number; z: number };
+  onApply: (angleDeg: number) => void;
+}) {
+  const currentDeg = incline ? (Math.atan2(incline.x, incline.z) * 180) / Math.PI : 0;
+  const [angle, setAngle] = useState<number>(Math.round(currentDeg * 10) / 10);
+  return (
+    <div className="mt-2" data-testid={`incline-fields-${nodeId}`}>
+      <div className="grid grid-cols-[112px_1fr_28px] items-center gap-x-2">
+        <label className="text-[11px] text-ink-secondary" htmlFor={`incline-${nodeId}`}>
+          <Trans>Angle d'appui incliné α</Trans>
+        </label>
+        <NumberFieldRoot
+          id={`incline-${nodeId}`}
+          value={angle}
+          min={-89}
+          max={89}
+          step={1}
+          onValueChange={(v) => {
+            if (v !== null) setAngle(v);
+          }}
+        >
+          <NumberFieldInput
+            className="font-data h-7 w-full text-right text-[12px]"
+            inputMode="decimal"
+            data-testid="support-incline-angle"
+          />
+        </NumberFieldRoot>
+        <span className="text-[11px] text-ink-muted">°</span>
+      </div>
+      {incline !== undefined ? (
+        <p className="font-data mt-1 text-[10px] text-ink-muted">
+          {`n = (${incline.x.toFixed(3).replace(".", ",")} ; ${incline.y.toFixed(1)} ; ${incline.z.toFixed(3).replace(".", ",")})`}
+        </p>
+      ) : null}
+      <Button
+        size="sm"
+        className="mt-2"
+        data-testid="support-incline-apply"
+        onClick={() => onApply(angle)}
+      >
+        <Trans>Appliquer l'inclinaison</Trans>
+      </Button>
+    </div>
+  );
+}
+
 function SettlementFields({
   nodeId,
   locked,

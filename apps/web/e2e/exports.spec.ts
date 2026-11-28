@@ -36,7 +36,7 @@ test("CSV export carries the UTF-8 BOM", async ({ page }) => {
 test("standalone 3D HTML report embeds three.js offline", async ({ page }) => {
   await page.goto("/report");
   const downloadPromise = page.waitForEvent("download", { timeout: 30_000 });
-  await page.getByTestId("export-html3d").click();
+  await page.getByTestId("export-html-btn").click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/-rapport-3d\.html$/);
   const path = await download.path();

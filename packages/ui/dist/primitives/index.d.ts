@@ -30,7 +30,7 @@ export declare const Badge: ForwardRefExoticComponent<BadgeProps & RefAttributes
   displayName: string;
 };
 /**
- * BrandMark — the official RDM Studio lockup using `/logo-rdm-studio.svg`.
+ * BrandMark — the official RDM Studio lockup using `/logo-rdm-studio.png`.
  */
 export declare function BrandMark({ size, showTagline, className, wordmarkClassName }: {
   size?: "sm" | "md";

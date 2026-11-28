@@ -23,7 +23,7 @@ function MarketingHeader() {
     <header className="sticky top-0 z-40 border-b border-hairline bg-panel/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2 text-accent">
-          <img src="/logo-rdm-studio.svg" alt="" className="h-7 w-7 shrink-0" />
+          <img src="/logo-rdm-studio.png" alt="" className="h-7 w-7 shrink-0" />
           <span className="font-semibold tracking-tight text-ink-primary">RDM Studio</span>
         </Link>
         <nav
@@ -99,7 +99,7 @@ function MarketingFooter() {
     <footer className="border-t border-hairline bg-panel">
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 md:grid-cols-[1fr_auto_auto_auto]">
         <div className="flex items-start gap-2 text-accent">
-          <img src="/logo-rdm-studio.svg" alt="" className="h-7 w-7 shrink-0" />
+          <img src="/logo-rdm-studio.png" alt="" className="h-7 w-7 shrink-0" />
           <div>
             <p className="font-semibold tracking-tight text-ink-primary">RDM Studio</p>
             <p className="mt-1 max-w-xs text-[12px] leading-4 text-ink-secondary">

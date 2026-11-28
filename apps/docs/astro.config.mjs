@@ -18,7 +18,7 @@ export default await defineDocsConfig({
   description:
     'Official documentation of RDM Studio — the local-first 3D structural Eurocode workstation: tutorials, guides, normative reference and solver architecture.',
   logoPath: './src/assets/logo.png',
-  favicon: '/logo.svg',
+  favicon: '/logo.png',
   defaultLocale: 'root',
   locales: {
     root: { label: 'English', lang: 'en' },
@@ -47,7 +47,7 @@ export default await defineDocsConfig({
     ],
   },
   extraStarlight: {
-    logo: { src: './src/assets/logo.svg', alt: 'RDM Studio' },
+    logo: { src: './src/assets/logo.png', alt: 'RDM Studio' },
     components: {
       ThemeProvider: './src/components/ForceLightTheme.astro',
     },

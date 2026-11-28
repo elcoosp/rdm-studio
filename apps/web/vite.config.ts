@@ -24,7 +24,7 @@ export default defineConfig({
     wasm(),
     VitePWA({
       registerType: "prompt",
-      includeAssets: ["logo-rdm-studio.svg"],
+      includeAssets: ["logo-rdm-studio.png"],
       manifest: {
         name: "RDM Studio",
         short_name: "RDM",

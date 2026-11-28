@@ -283,7 +283,7 @@ function ReportPage() {
           {/* A4 sheet header: logo + title + date. */}
           <div className="flex items-center justify-between border-b-2 border-accent pb-2">
             <div className="flex items-center gap-2">
-              <img src="/logo-rdm-studio.svg" alt="" className="h-7 w-7" />
+              <img src="/logo-rdm-studio.png" alt="" className="h-7 w-7" />
               <h2 className="text-[17px] font-semibold">
                 <Trans>RDM Studio — Rapport de calcul</Trans>
               </h2>
@@ -299,7 +299,7 @@ function ReportPage() {
             data-testid="report-3d-snapshot"
           >
             <img
-              src={captureViewportPng() ?? "/logo-rdm-studio.svg"}
+              src={captureViewportPng() ?? "/logo-rdm-studio.png"}
               alt={t`Vue 3D du modèle`}
               className="max-h-[220px] w-full rounded bg-canvas object-contain"
             />

@@ -40,7 +40,7 @@ interface Props {
 
 export const meta = {
   meta: [{ name: "theme-color", content: "#F8FAFC" }],
-  link: [{ rel: "icon", type: "image/svg+xml", href: "/logo-rdm-studio.svg" }],
+  link: [{ rel: "icon", type: "image/png", href: "/logo-rdm-studio.png" }],
 };
 
 /** Prefix a site path with the EN locale segment (FR is the root). */

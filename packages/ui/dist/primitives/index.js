@@ -48,16 +48,16 @@ const Badge = Object.assign((({ className, variant = "neutral", mono = false, si
 })), { displayName: "Badge" });
 // src/primitives/BrandMark.tsx
 /**
-* BrandMark — the official RDM Studio lockup using `/logo-rdm-studio.svg`.
+* BrandMark — the official RDM Studio lockup using `/logo-rdm-studio.png`.
 */
 function BrandMark({ size = "sm", showTagline = false, className, wordmarkClassName }) {
 	const dim = size === "sm" ? "h-7 w-7" : "h-8 w-8";
 	return /* @__PURE__ */ jsxs("span", {
 		className: cn("inline-flex shrink-0 items-center gap-2", className),
 		children: [/* @__PURE__ */ jsx("img", {
-			src: "/logo-rdm-studio.svg",
+			src: "/logo-rdm-studio.png",
 			alt: "RDM Studio",
-			className: cn(dim, "shrink-0")
+			className: cn(dim, "shrink-0 object-contain")
 		}), /* @__PURE__ */ jsxs("span", {
 			className: "flex min-w-0 flex-col leading-none",
 			children: [/* @__PURE__ */ jsx("span", {

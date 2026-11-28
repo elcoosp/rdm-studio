@@ -177,7 +177,6 @@ function ResultsPage() {
 
   const run = () => {
     setBusy(true);
-    setFault(null);
     void trackProductEvent("solve_attempted", {
       n_nodes: project.structure.nodes.length,
       n_beams: project.structure.beams.length,
@@ -656,7 +655,23 @@ function ResultsPage() {
           </LoadingButton>
         </div>
       </div>
-      {fault !== null ? <SolverFaultCard fault={fault} onRerun={run} /> : null}
+      {fault !== null ? (
+        <SolverFaultCard fault={fault} onRerun={run} />
+      ) : report === null ? (
+        <div
+          className="flex h-[34px] shrink-0 items-center justify-between rounded-[5px] border border-hairline bg-panel-subtle/40 px-3 text-[11.5px] text-ink-muted"
+          data-testid="solve-idle-bar"
+        >
+          <span>
+            <Trans>
+              Prêt à calculer — vérifiez les appuis et les charges puis lancez le solveur.
+            </Trans>
+          </span>
+          <span className="font-data text-[11px]">
+            {`${project.structure.nodes.length} nœuds · ${project.structure.beams.length} poutres`}
+          </span>
+        </div>
+      ) : null}
       {/* M10.3: buckled tension-only / compression-only members — the
           solver deactivated them (residual axial force < 1e-3 N). */}
       {(report?.inactive_beam_ids?.length ?? 0) > 0 ? (

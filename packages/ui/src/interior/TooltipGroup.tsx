@@ -4,9 +4,12 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
+  useState,
   useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 /**
@@ -418,70 +421,107 @@ export function Tooltip({
     onKeyDown: chain(children.props.onKeyDown, triggerProps.onKeyDown),
   });
 
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
+  const [coords, setCoords] = useState<{ left: number; top: number; bottom: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open || anchorRef.current === null) return;
+    const update = () => {
+      const el = anchorRef.current;
+      if (el === null) return;
+      const r = el.getBoundingClientRect();
+      const centerX = r.left + r.width / 2;
+      // Clamp horizontal center so a max-w-[240px] tooltip never clips against viewport edges.
+      const clampedLeft = Math.max(128, Math.min(window.innerWidth - 128, centerX));
+      setCoords({
+        left: clampedLeft,
+        top: r.bottom + 7,
+        bottom: window.innerHeight - r.top + 7,
+      });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
   const lift = side === "top" ? 7 : -7;
 
-  return (
-    <span className={`relative inline-flex ${className}`}>
-      {trigger}
-      <span
-        aria-hidden={!open}
-        className="pointer-events-none absolute left-1/2 z-50 flex w-0 justify-center"
-        style={side === "top" ? { bottom: "calc(100% + 7px)" } : { top: "calc(100% + 7px)" }}
-      >
-        <AnimatePresence>
-          {open && (
+  const popup = (
+    <span
+      aria-hidden={!open}
+      className="pointer-events-none fixed z-[80] flex w-0 justify-center"
+      style={
+        coords === null
+          ? { left: -9999, top: -9999 }
+          : side === "top"
+            ? { left: coords.left, bottom: coords.bottom }
+            : { left: coords.left, top: coords.top }
+      }
+    >
+      <AnimatePresence>
+        {open && coords !== null && (
+          <motion.span
+            role="tooltip"
+            id={tooltipId}
+            layoutId={reduced ? undefined : seat}
+            initial={
+              reduced
+                ? false
+                : skipped
+                  ? { opacity: 0, scale: 1, y: 0, filter: "blur(0px)" }
+                  : { opacity: 0, scale: 0.9, y: lift, filter: "blur(4px)" }
+            }
+            animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+            exit={
+              reduced
+                ? { opacity: 0, transition: { duration: 0 } }
+                : {
+                    opacity: 0,
+                    scale: 0.96,
+                    y: lift * 0.35,
+                    filter: "blur(2px)",
+                    transition: { duration: 0.12, ease: LEAVE },
+                  }
+            }
+            transition={reduced ? { duration: 0 } : { ...(skipped ? WARM : RISE), layout: GLIDE }}
+            style={{ transformOrigin: side === "top" ? "50% 100%" : "50% 0%" }}
+            className={`relative w-max max-w-[240px] shrink-0 overflow-hidden ${contentClassName}`}
+          >
             <motion.span
-              role="tooltip"
-              id={tooltipId}
-              layoutId={reduced ? undefined : seat}
+              aria-hidden
+              layout={!reduced}
+              transition={reduced ? { duration: 0 } : GLIDE}
+              className="absolute inset-0 rounded-[8px] border border-hairline bg-panel shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
+            />
+            <motion.span
+              layout={reduced ? false : "position"}
               initial={
                 reduced
                   ? false
                   : skipped
-                    ? { opacity: 0, scale: 1, y: 0, filter: "blur(0px)" }
-                    : { opacity: 0, scale: 0.9, y: lift, filter: "blur(4px)" }
+                    ? { opacity: 0, x: travel * 14, y: 0 }
+                    : { opacity: 0, x: 0, y: 9 }
               }
-              animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-              exit={
-                reduced
-                  ? { opacity: 0, transition: { duration: 0 } }
-                  : {
-                      opacity: 0,
-                      scale: 0.96,
-                      y: lift * 0.35,
-                      filter: "blur(2px)",
-                      transition: { duration: 0.12, ease: LEAVE },
-                    }
-              }
-              transition={reduced ? { duration: 0 } : { ...(skipped ? WARM : RISE), layout: GLIDE }}
-              style={{ transformOrigin: side === "top" ? "50% 100%" : "50% 0%" }}
-              className={`relative w-max max-w-[240px] shrink-0 overflow-hidden ${contentClassName}`}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={reduced ? { duration: 0 } : SWAP}
+              className="relative block px-2 py-1 text-[11px] font-medium leading-snug text-ink-primary"
             >
-              <motion.span
-                aria-hidden
-                layout={!reduced}
-                transition={reduced ? { duration: 0 } : GLIDE}
-                className="absolute inset-0 rounded-[8px] border border-hairline bg-panel shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
-              />
-              <motion.span
-                layout={reduced ? false : "position"}
-                initial={
-                  reduced
-                    ? false
-                    : skipped
-                      ? { opacity: 0, x: travel * 14, y: 0 }
-                      : { opacity: 0, x: 0, y: 9 }
-                }
-                animate={{ opacity: 1, x: 0, y: 0 }}
-                transition={reduced ? { duration: 0 } : SWAP}
-                className="relative block px-2 py-1 text-[11px] font-medium leading-snug text-ink-primary"
-              >
-                {label}
-              </motion.span>
+              {label}
             </motion.span>
-          )}
-        </AnimatePresence>
-      </span>
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+
+  return (
+    <span ref={anchorRef} className={`relative inline-flex ${className}`}>
+      {trigger}
+      {typeof document !== "undefined" ? createPortal(popup, document.body) : null}
     </span>
   );
 }

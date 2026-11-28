@@ -147,7 +147,7 @@ export function MovingLoadPanel() {
 
   // Interpolated ordinate at the scrubber (cached engine values).
   const etaAtTrain = useMemo(() => {
-    if (influence === null || influence.values.length < 2) {
+    if (influence === null || !Array.isArray(influence.values) || influence.values.length < 2) {
       return 0;
     }
     const n = influence.values.length - 1;
@@ -162,7 +162,13 @@ export function MovingLoadPanel() {
   // uPlot influence line + train-position cursor.
   useEffect(() => {
     const host = plotRef.current;
-    if (host === null || influence === null || influence.ratios.length < 2) {
+    if (
+      host === null ||
+      influence === null ||
+      !Array.isArray(influence.ratios) ||
+      !Array.isArray(influence.values) ||
+      influence.ratios.length < 2
+    ) {
       return;
     }
     const ys = influence.values.map((v) => etaDisplay(v, influence.response));

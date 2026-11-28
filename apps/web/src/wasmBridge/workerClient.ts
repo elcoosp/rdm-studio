@@ -201,7 +201,84 @@ export type EngineFn =
   | "export_bim"
   | "multi_material_check_json"
   | "moving_loads_envelope_json"
-  | "migrate_project_json";
+  | "migrate_project_json"
+  | "compute_composite_section";
+
+/**
+ * M11.1: exact analytical result of a composite cross-section (mirrors
+ * `rdm_cad::CompositeSectionResult`, strict SI) — outlines for the studio
+ * canvas plus every mechanical property and the projected section props.
+ */
+export interface CompositeClassificationPart {
+  label: string;
+  c_over_t: number;
+  limit_class1: number;
+  class: number;
+  internal: boolean;
+  pure_compression: boolean;
+}
+
+export interface CompositeOutline {
+  label: string;
+  paths: [number, number][][];
+}
+
+export interface CompositeSectionResult {
+  name: string;
+  grade_code: string;
+  a: number;
+  mass_per_m: number;
+  y_g: number;
+  z_g: number;
+  iy: number;
+  iz: number;
+  iyz: number;
+  iu: number;
+  iv: number;
+  alpha_rad: number;
+  i_radius_y: number;
+  i_radius_z: number;
+  z_min: number;
+  z_max: number;
+  y_min: number;
+  y_max: number;
+  wel_y_sup: number;
+  wel_y_inf: number;
+  wel_z_left: number;
+  wel_z_right: number;
+  wel_y: number;
+  wel_z: number;
+  wpl_y: number;
+  wpl_z: number;
+  pna_for_my: number;
+  pna_for_mz: number;
+  a_vy: number;
+  a_vz: number;
+  it: number;
+  iw: number;
+  class_bending: number;
+  class_compression: number;
+  classification: CompositeClassificationPart[];
+  elements: CompositeOutline[];
+  bounds: [number, number, number, number];
+  section_properties: {
+    shape: string;
+    a: number;
+    iy: number;
+    iz: number;
+    it: number;
+    iw: number | null;
+    wel_y: number;
+    wel_z: number;
+    wpl_y: number | null;
+    wpl_z: number | null;
+    h: number | null;
+    b: number | null;
+    tw: number | null;
+    tf: number | null;
+    r: number | null;
+  };
+}
 
 interface LanePending {
   resolve: (value: unknown) => void;
@@ -489,6 +566,14 @@ class FeaClient {
   /** v2.0.2: legacy v1 `.rdm` migration through the worker. */
   migrateProjectJson(projectJson: string): Promise<string> {
     return this.engineCall("migrate_project_json", projectJson) as Promise<string>;
+  }
+
+  /**
+   * M11.1: exact analytical preview of a composite cross-section — the
+   * studio canvas telemetry runs through the same engine the solver uses.
+   */
+  computeCompositeSection(defJson: string): Promise<CompositeSectionResult> {
+    return this.engineCall("compute_composite_section", defJson) as Promise<CompositeSectionResult>;
   }
 
   /** v1.8.0/v1.9.0: named engine call over the generic lane.

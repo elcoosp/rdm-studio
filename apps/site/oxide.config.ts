@@ -36,6 +36,7 @@ export default defineConfig({
     // lags behind this runtime surface, hence the cast.
     islands: {
       Hero3D: "src/islands/hero-3d.tsx",
+      SpectralLogoCube: "src/islands/spectral-logo-cube.tsx",
       ShowcaseTabs: "src/islands/showcase-tabs.tsx",
       FaqAccordion: "src/islands/faq-accordion.tsx",
     },

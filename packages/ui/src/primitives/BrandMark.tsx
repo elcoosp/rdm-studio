@@ -17,7 +17,7 @@ export function BrandMark({
   const dim = size === "sm" ? "h-7 w-7" : "h-8 w-8";
   return (
     <span className={cn("inline-flex shrink-0 items-center gap-2", className)}>
-      <img src="/logo-rdm-studio.png" alt="RDM Studio" className={cn(dim, "shrink-0 object-contain")} />
+      <img src="/logo-rdm-studio.png" width={size === "sm" ? 24 : 32} height={size === "sm" ? 24 : 32} style={{ width: size === "sm" ? 24 : 32, height: size === "sm" ? 24 : 32 }} alt="RDM Studio" className={cn(dim, "shrink-0 object-contain")} />
       <span className="flex min-w-0 flex-col leading-none">
         <span
           className={cn(

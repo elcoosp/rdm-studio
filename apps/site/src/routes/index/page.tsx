@@ -202,9 +202,12 @@ export default function LandingPage(): React.ReactElement {
           className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[1.05fr_0.95fr] md:items-start md:py-20"
         >
           <div>
-            <span className="inline-flex items-center rounded-[2px] border border-hairline bg-canvas px-2 py-0.5 text-[10px] font-semibold text-accent">
-              <Trans id="site.landing.hero.badge" message="100 % OPEN SOURCE · GRATUIT & HORS-LIGNE" />
-            </span>
+            <div className="mb-4 flex items-center gap-3.5">
+              <div className="shrink-0" style={{ width: 96, height: 96 }}><Island component="SpectralLogoCube" chunk="SpectralLogoCube" strategy="visible" /></div>
+              <span className="inline-flex items-center rounded-[2px] border border-hairline bg-canvas px-2 py-0.5 text-[10px] font-semibold text-accent">
+                <Trans id="site.landing.hero.badge" message="100 % OPEN SOURCE · GRATUIT & HORS-LIGNE" />
+              </span>
+            </div>
             <h1 className="text-balance text-[clamp(1.9rem,4.5vw,3rem)] font-semibold leading-[1.15] tracking-tight text-ink-primary">
               <Trans
                 id="site.landing.hero.h1"

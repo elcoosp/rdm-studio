@@ -56,6 +56,12 @@ function BrandMark({ size = "sm", showTagline = false, className, wordmarkClassN
 		className: cn("inline-flex shrink-0 items-center gap-2", className),
 		children: [/* @__PURE__ */ jsx("img", {
 			src: "/logo-rdm-studio.png",
+			width: size === "sm" ? 24 : 32,
+			height: size === "sm" ? 24 : 32,
+			style: {
+				width: size === "sm" ? 24 : 32,
+				height: size === "sm" ? 24 : 32
+			},
 			alt: "RDM Studio",
 			className: cn(dim, "shrink-0 object-contain")
 		}), /* @__PURE__ */ jsxs("span", {

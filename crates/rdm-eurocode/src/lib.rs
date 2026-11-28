@@ -42,10 +42,13 @@ pub use interaction::{
     c1_from_moment_ratio, class4_reduction, interaction_6_61_6_62, torsional_buckling_ncr,
 };
 pub use multi_material::{
-    AluminiumAlloy, ConcreteClass, LoadDuration, TimberProduct, aluminium_properties, concrete_fcd,
-    concrete_fck, ec2_flexure_as, ec2_shear, ec3_fillet_weld, ec3_fire_check,
-    ec3_fire_critical_temperature, ec3_joint_bolt_shear, ec5_timber_bending, ec9_aluminium_check,
-    timber_kmod, timber_properties,
+    AluminiumAlloy, BoltGrade, BoltSize, ConcreteClass, ConnectionInput, ConnectionResult,
+    JointTopology, LoadDuration, TimberProduct, aluminium_properties, concrete_fcd, concrete_fck,
+    ec2_flexure_as, ec2_shear, ec3_beta_w, ec3_block_tearing_net_shear_area,
+    ec3_block_tearing_resistance, ec3_bolt_bearing_resistance, ec3_bolt_combined_shear_tension,
+    ec3_bolt_shear_resistance, ec3_bolt_tension_resistance, ec3_connection_check, ec3_fillet_weld,
+    ec3_fillet_weld_strength, ec3_fire_check, ec3_fire_critical_temperature, ec3_joint_bolt_shear,
+    ec3_steel_fu, ec5_timber_bending, ec9_aluminium_check, timber_kmod, timber_properties,
 };
 pub use optimizer::{
     CARBON_KG_PER_KG_STEEL, COST_EUR_PER_KG_STEEL, CandidateCheck, GroupDemand, GroupOptimization,

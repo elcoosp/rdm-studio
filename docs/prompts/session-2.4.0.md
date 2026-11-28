@@ -1,4 +1,4 @@
-Task: ://github.com. Maximum-velocity, plan-aligned implementation following `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `./mockups/`.
+Task: : github.com/elcoosp/rdm-studio. Maximum-velocity, plan-aligned implementation following `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `./mockups/`.
 
 1. **Bootstrap & Sync (< 3 tool calls):**
    - If `rdm-studio` is not cloned locally, `git clone https://://github.com.git && cd rdm-studio`; if it already exists, `cd rdm-studio && git fetch origin && git reset --hard origin/main` so `HEAD` matches your latest pushed `main` (`d8d856d`).

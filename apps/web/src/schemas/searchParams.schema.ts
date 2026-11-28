@@ -135,7 +135,7 @@ export const ResultsSearchSchema = v.object({
   scale: v.fallback(v.optional(v.picklist(["ec3", "svm", "auto"])), undefined),
   sls: v.fallback(v.optional(v.union([v.literal(200), v.literal(250), v.literal(300)])), undefined),
   diagrams: v.fallback(v.optional(v.union([v.literal(0), v.literal(1)])), undefined),
-  modal: v.fallback(v.optional(v.picklist(["optim", "compare"])), undefined),
+  modal: v.fallback(v.optional(v.picklist(["optim", "compare", "connection"])), undefined),
 });
 
 export type ResultsSearch = v.InferOutput<typeof ResultsSearchSchema>;

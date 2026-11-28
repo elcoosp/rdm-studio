@@ -1,0 +1,15 @@
+[package]
+name = "rdm-mesh"
+description = "Deterministic 2D constrained Delaunay mesher (M13.2) for RDM Studio"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }
+
+[lints]
+workspace = true

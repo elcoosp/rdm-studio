@@ -32,7 +32,13 @@ import {
 } from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
 import { downloadDocx, type DocxBlock, type DocxTable, type CoverMeta } from "@/export/docxExport";
-import type { CompositeSectionResult } from "@/wasmBridge/workerClient";
+import type { CompositeSectionResult, StoreyDriftResult } from "@/wasmBridge/workerClient";
+import {
+  getConnectionCheck,
+  getMovingEnvelope,
+  subscribeConnectionCheck,
+  subscribeMovingEnvelope,
+} from "@/export/sessionChecks";
 import { StatusBadge } from "@rdm-studio/ui/interior";
 import { BrandMark } from "@rdm-studio/ui/primitives";
 import { saveSnapshot } from "@/state/snapshots";
@@ -383,6 +389,10 @@ function ReportPage() {
               SVG diagram, full geometric property table and the EN 1993-1-1
               Table 5.2 classification, whenever composite sections exist. */}
           <CompositeReportChapter />
+          {/* M12.5: advanced analyses chapters render whenever present. */}
+          <ConnectionReportChapter />
+          <MovingReportChapter />
+          <DriftReportChapter />
           <ReportTables />
           <FingerprintFooter qrDataUrl={qrDataUrl} />
           {/* v2.1.1: subtle Édition Découverte watermark (Pro removes it). */}
@@ -616,6 +626,200 @@ function useCompositeResults(defs: { name: string }[]): Record<string, Composite
 
 const fr3 = (v: number, digits = 3): string => v.toFixed(digits).replace(".", ",");
 const EMPTY_CUSTOM_SECTIONS: never[] = [];
+
+/**
+ * M12.5: shared hook over the session registry — the report chapters
+ * re-render whenever the Studio Assemblages / Convois panel runs a new
+ * verification (module singleton + version counter).
+ */
+function useSessionChecks(): {
+  connection: ReturnType<typeof getConnectionCheck>;
+  moving: ReturnType<typeof getMovingEnvelope>;
+} {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const notify = () => bump((v) => v + 1);
+    const offA = subscribeConnectionCheck(notify);
+    const offB = subscribeMovingEnvelope(notify);
+    return () => {
+      offA();
+      offB();
+    };
+  }, []);
+  return { connection: getConnectionCheck(), moving: getMovingEnvelope() };
+}
+
+/** M12.3: SLS inter-storey drift report (fetches once per project). */
+function useStoreyDrift(limit: number): StoreyDriftResult | null {
+  const project = useProjectStore((s) => s.project);
+  const [drift, setDrift] = useState<StoreyDriftResult | null>(null);
+  useEffect(() => {
+    if ((project.structure.levels?.length ?? 0) < 2) {
+      setDrift(null);
+      return;
+    }
+    let cancelled = false;
+    feaClient
+      .storeyDrift(project, limit)
+      .then((report) => {
+        if (!cancelled) setDrift(report);
+      })
+      .catch(() => {
+        if (!cancelled) setDrift(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [project, limit]);
+  return drift;
+}
+
+/** M12.5: «Assemblages EC3-1-8» chapter — the last connection check. */
+function ConnectionReportChapter(): React.ReactElement | null {
+  const { connection } = useSessionChecks();
+  if (connection === null) {
+    return null;
+  }
+  const { result, beamLabel } = connection;
+  return (
+    <section className="mt-4" data-testid="report-connections-chapter">
+      <h3 className="text-[15px] font-semibold">
+        <Trans>Assemblages EC3-1-8</Trans>
+      </h3>
+      <p className="mt-0.5 text-[12px] text-ink-secondary">
+        <Trans>
+          Vérification EN 1993-1-8 du studio Assemblages (Table 3.4, §3.10.2, §4.5.3) — membre{" "}
+          {beamLabel}.
+        </Trans>
+      </p>
+      <table className="font-data mt-2 w-full text-[11px] [font-variant-numeric:tabular-nums]">
+        <thead>
+          <tr className="text-left text-[10px] text-ink-muted">
+            <th className="py-1 font-medium">
+              <Trans>Clause</Trans>
+            </th>
+            <th className="py-1 font-medium">
+              <Trans>Vérification</Trans>
+            </th>
+            <th className="py-1 font-medium">η (%)</th>
+            <th className="py-1 font-medium">
+              <Trans>Statut</Trans>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {result.trace.map((node) => (
+            <tr key={`${node.clause}-${node.title}`} className="border-t border-hairline">
+              <td className="py-1 pr-2 text-ink-muted">{node.clause}</td>
+              <td className="py-1 pr-2 text-ink-primary">{node.title}</td>
+              <td className="py-1 pr-2">{fr3(node.value * 100, 1)}</td>
+              <td className="py-1">
+                <StatusBadge tone={node.passed ? "pass" : "fail"} mono>
+                  {node.passed ? "Conforme" : "Dépassement"}
+                </StatusBadge>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="font-data mt-1 text-[11px] text-ink-secondary">
+        {`η global = ${fr3(result.utilization, 2)} · ${result.n_bolts} boulons ${result.grade} (${result.size}) · ${result.topology_label}`}
+      </p>
+    </section>
+  );
+}
+
+/** M12.5: «Enveloppe Convois Mobiles» chapter — the last train envelope. */
+function MovingReportChapter(): React.ReactElement | null {
+  const { moving } = useSessionChecks();
+  if (moving === null) {
+    return null;
+  }
+  const { envelope, trainLabel, beamId } = moving;
+  return (
+    <section className="mt-4" data-testid="report-moving-chapter">
+      <h3 className="text-[15px] font-semibold">
+        <Trans>Enveloppe Convois Mobiles</Trans>
+      </h3>
+      <p className="mt-0.5 text-[12px] text-ink-secondary">
+        <Trans>
+          Convoi {trainLabel} sur le membre P{beamId} — positions balayées par le moteur WASM (EN
+          1991-2).
+        </Trans>
+      </p>
+      <table className="font-data mt-2 w-full text-[11px] [font-variant-numeric:tabular-nums]">
+        <thead>
+          <tr className="text-left text-[10px] text-ink-muted">
+            <th className="py-1 font-medium">M max (kN·m)</th>
+            <th className="py-1 font-medium">M min (kN·m)</th>
+            <th className="py-1 font-medium">V max (kN)</th>
+            <th className="py-1 font-medium">Rz max (kN)</th>
+            <th className="py-1 font-medium">uz max (mm)</th>
+            <th className="py-1 font-medium">x gov.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-t border-hairline">
+            <td className="py-1">{fr3(envelope.my_max / 1000, 1)}</td>
+            <td className="py-1">{fr3(envelope.my_min / 1000, 1)}</td>
+            <td className="py-1">{fr3(envelope.vz_max / 1000, 1)}</td>
+            <td className="py-1">{fr3(envelope.rz_max / 1000, 1)}</td>
+            <td className="py-1">{fr3(envelope.uz_max * 1000, 2)}</td>
+            <td className="py-1">{fr3(envelope.governing_ratio, 2)} L</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/** M12.5: «Déplacement Inter-Étages» chapter — storey drift table. */
+function DriftReportChapter(): React.ReactElement | null {
+  const drift = useStoreyDrift(300);
+  if (drift === null || drift.levels.length === 0) {
+    return null;
+  }
+  return (
+    <section className="mt-4" data-testid="report-drift-chapter">
+      <h3 className="text-[15px] font-semibold">
+        <Trans>Déplacement Inter-Étages</Trans>
+      </h3>
+      <p className="mt-0.5 text-[12px] text-ink-secondary">
+        <Trans>Drift SLS d_r / h ≤ 1/300 — appariement vertical des nœuds entre niveaux.</Trans>
+      </p>
+      <table className="font-data mt-2 w-full text-[11px] [font-variant-numeric:tabular-nums]">
+        <thead>
+          <tr className="text-left text-[10px] text-ink-muted">
+            <th className="py-1 font-medium">
+              <Trans>Niveau</Trans>
+            </th>
+            <th className="py-1 font-medium">h (m)</th>
+            <th className="py-1 font-medium">d_r (mm)</th>
+            <th className="py-1 font-medium">d_r / h</th>
+            <th className="py-1 font-medium">
+              <Trans>Statut</Trans>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {drift.levels.map((level) => (
+            <tr key={level.elevation} className="border-t border-hairline">
+              <td className="py-1 text-ink-primary">{level.name}</td>
+              <td className="py-1">{fr3(level.storey_height_m, 2)}</td>
+              <td className="py-1">{fr3(level.drift_m * 1000, 2)}</td>
+              <td className="py-1">{`1/${Math.max(1, Math.round(1 / Math.max(level.ratio / level.limit_denominator, 1e-9)))}`}</td>
+              <td className="py-1">
+                <StatusBadge tone={level.passed ? "pass" : "fail"} mono>
+                  {level.passed ? "Conforme" : "Dépassement"}
+                </StatusBadge>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
 
 /**
  * M11.3: dedicated «Sections Droites Composées» chapter — for every custom
@@ -990,6 +1194,11 @@ function ReportBuilder({
     (st) => st.project.structure.custom_sections ?? EMPTY_CUSTOM_SECTIONS,
   );
   const compositeResults = useCompositeResults(customDefs);
+  // M12.5: the advanced analyses chapters ride the .docx payload whenever
+  // present (connection checks + moving envelope from the session
+  // registry, drift fetched live for the storey levels).
+  const { connection: sessionConnection, moving: sessionMoving } = useSessionChecks();
+  const driftReport = useStoreyDrift(300);
   // v2.1.0: the cover metadata pre-fills from the local-first license
   // store (Offline Pro firm branding — LicenseModal keeps it in sync).
   const licenseFirm = useLicenseStore((s) => s.firmName);
@@ -1127,6 +1336,46 @@ function ReportBuilder({
             (b.midspan_deflection * 1000).toFixed(1).replace(".", ","),
           ]),
         });
+        // M12.5: Enveloppe Convois Mobiles — the last train envelope.
+        if (sessionMoving !== null) {
+          out.push({
+            kind: "table",
+            caption: `Enveloppe Convois Mobiles — ${sessionMoving.trainLabel} sur P${sessionMoving.beamId}`,
+            header: [
+              "M max (kN·m)",
+              "M min (kN·m)",
+              "V max (kN)",
+              "Rz max (kN)",
+              "uz max (mm)",
+              "x gov.",
+            ],
+            rows: [
+              [
+                (sessionMoving.envelope.my_max / 1000).toFixed(1).replace(".", ","),
+                (sessionMoving.envelope.my_min / 1000).toFixed(1).replace(".", ","),
+                (sessionMoving.envelope.vz_max / 1000).toFixed(1).replace(".", ","),
+                (sessionMoving.envelope.rz_max / 1000).toFixed(1).replace(".", ","),
+                (sessionMoving.envelope.uz_max * 1000).toFixed(2).replace(".", ","),
+                `${sessionMoving.envelope.governing_ratio.toFixed(2).replace(".", ",")} L`,
+              ],
+            ],
+          });
+        }
+        // M12.5: Déplacement Inter-Étages — SLS storey drift.
+        if (driftReport !== null && driftReport.levels.length > 0) {
+          out.push({
+            kind: "table",
+            caption: "Déplacement Inter-Étages (SLS, d_r / h ≤ 1/300)",
+            header: ["Niveau", "h (m)", "d_r (mm)", "d_r / h", "Statut"],
+            rows: driftReport.levels.map((level) => [
+              level.name,
+              level.storey_height_m.toFixed(2).replace(".", ","),
+              (level.drift_m * 1000).toFixed(2).replace(".", ","),
+              `1/${Math.max(1, Math.round(1 / Math.max(level.ratio / level.limit_denominator, 1e-9)))}`,
+              level.passed ? "vérifié" : "NON VERIFIÉ",
+            ]),
+          });
+        }
       }
       if (chapter.id === "checks" && enabled.has("checks")) {
         out.push({
@@ -1143,6 +1392,20 @@ function ReportBuilder({
             b.utilization > 1 ? "NON VERIFIÉ" : "vérifié",
           ]),
         });
+        // M12.5: Assemblages EC3-1-8 — the last connection verification.
+        if (sessionConnection !== null) {
+          out.push({
+            kind: "table",
+            caption: `Assemblages EC3-1-8 — ${sessionConnection.beamLabel} (${sessionConnection.result.n_bolts} boulons ${sessionConnection.result.grade}, ${sessionConnection.result.topology_label})`,
+            header: ["Clause", "Vérification", "η (%)", "Statut"],
+            rows: sessionConnection.result.trace.map((n) => [
+              n.clause,
+              n.title,
+              (n.value * 100).toFixed(1).replace(".", ","),
+              n.passed ? "vérifié" : "NON VERIFIÉ",
+            ]),
+          });
+        }
       }
     }
     out.push({

@@ -1,22 +1,37 @@
+import { Ruler, Tag } from "lucide-react";
 import { useViewportParams } from "@/hooks/useStudioQuery";
-import { MagneticSnap, VolumetricMesh, WireframeMesh } from "@rdm-studio/ui/icons";
-import { Trans, useLingui } from "@lingui/react/macro";
+import {
+  BeamSegment,
+  DeflectionLimit,
+  MagneticSnap,
+  NodalPointLoad,
+  NodePin,
+  SupportPinned,
+  SupportReaction,
+  VolumetricMesh,
+  WireframeMesh,
+} from "@rdm-studio/ui/icons";
+import { useLingui } from "@lingui/react/macro";
 import { Tooltip, TooltipGroup } from "@rdm-studio/ui/interior";
 
 /**
- * Floating layer toolbar (ARCHITECTURE.md section 5, `LayerToolbar.tsx`;
- * section 8.8): selective visibility (Nodes, Beams, Loads, Supports,
- * Deformed), the v1.6.0 metrology toggles (`Repères N/P`, `Cotes`,
- * `Réactions`), the `10 | 50 | 100 mm` magnetic snap grid selector and
- * compact icon-led volumetric / wireframe rendering, plus the live M4
- * picking latency readout when provided.
+ * Compact Swiss Metrology floating layer toolbar (ARCHITECTURE.md §5, §8.8):
+ * icon-led toggles inside a TooltipGroup (300 ms initial delay, 0 ms sibling
+ * scrub) so the entire bar stays on 1 single line alongside `Iso | XY | XZ | YZ`
+ * even on narrow tablet viewports (zero wrapping, zero scrollbar).
  */
 const LAYERS = [
-  ["nodes", "Nœuds"],
-  ["beams", "Poutres"],
-  ["loads", "Charges"],
-  ["supports", "Appuis"],
-  ["deformed", "Déformée"],
+  ["nodes", "Nœuds", NodePin],
+  ["beams", "Poutres", BeamSegment],
+  ["loads", "Charges", NodalPointLoad],
+  ["supports", "Appuis", SupportPinned],
+  ["deformed", "Déformée", DeflectionLimit],
+] as const;
+
+const METROLOGY_LAYERS = [
+  ["labels", "Repères N/P", Tag],
+  ["dims", "Cotes", Ruler],
+  ["reactions", "Réactions", SupportReaction],
 ] as const;
 
 const SNAP_STEPS = [
@@ -26,103 +41,118 @@ const SNAP_STEPS = [
 ] as const;
 
 export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) {
-  // v2.1.0: layer flags (`?layers=`), render mode (`?render=`) and the
-  // snap grid (`?snap=`) all live in the URL — shareable per keystroke.
   const { layers, toggleLayer, render, setRender, snapStep, setSnapStep } = useViewportParams();
-
-  // v2.1.2: the strip is a TooltipGroup (300 ms first tooltip, then
-  // 0 ms instant switching across siblings) with bottom tooltips.
   const { t } = useLingui();
+
   return (
     <div
-      className="pointer-events-auto flex max-w-full flex-wrap items-center gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
+      className="pointer-events-auto flex items-center gap-0.5 rounded-panel border border-hairline bg-panel/92 p-1 shadow-2xs backdrop-blur"
       data-testid="layer-toolbar"
     >
       <TooltipGroup>
-        {LAYERS.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            data-testid={`layer-${key}`}
-            aria-label={label}
-            className={`rounded px-1.5 py-1 text-[11px] ${layers[key] ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-            onClick={() => toggleLayer(key)}
-          >
-            {label}
-          </button>
+        {LAYERS.map(([key, label, Icon]) => (
+          <Tooltip key={key} label={label} side="bottom">
+            <button
+              type="button"
+              data-testid={`layer-${key}`}
+              aria-label={label}
+              aria-pressed={layers[key]}
+              className={`flex h-6.5 w-6.5 items-center justify-center rounded-[4px] transition-colors ${
+                layers[key]
+                  ? "bg-accent/15 text-accent"
+                  : "text-ink-muted hover:bg-panel-subtle hover:text-ink-primary"
+              }`}
+              onClick={() => toggleLayer(key)}
+            >
+              <Icon size={15} />
+            </button>
+          </Tooltip>
         ))}
-        <span className="mx-0.5 w-px self-stretch bg-hairline" />
-        {/* v1.6.0 metrology toggles (requirement 3). */}
-        <button
-          type="button"
-          data-testid="layer-labels"
-          className={`rounded px-1.5 py-1 text-[11px] ${layers.labels ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-          onClick={() => toggleLayer("labels")}
-        >
-          <Trans>Repères N/P</Trans>
-        </button>
-        <button
-          type="button"
-          data-testid="layer-dims"
-          className={`rounded px-1.5 py-1 text-[11px] ${layers.dims ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-          onClick={() => toggleLayer("dims")}
-        >
-          <Trans>Cotes</Trans>
-        </button>
-        <button
-          type="button"
-          data-testid="layer-reactions"
-          className={`rounded px-1.5 py-1 text-[11px] ${layers.reactions ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
-          onClick={() => toggleLayer("reactions")}
-        >
-          <Trans>Réactions</Trans>
-        </button>
-        <span className="mx-0.5 w-px self-stretch bg-hairline" />
-        {/* Compact icon-led render mode (≥ 24 px separation, 860 px safe). */}
+
+        <span className="mx-0.5 h-4 w-px bg-hairline" aria-hidden />
+
+        {METROLOGY_LAYERS.map(([key, label, Icon]) => (
+          <Tooltip key={key} label={label} side="bottom">
+            <button
+              type="button"
+              data-testid={`layer-${key}`}
+              aria-label={label}
+              aria-pressed={layers[key]}
+              className={`flex h-6.5 w-6.5 items-center justify-center rounded-[4px] transition-colors ${
+                layers[key]
+                  ? "bg-accent/15 text-accent"
+                  : "text-ink-muted hover:bg-panel-subtle hover:text-ink-primary"
+              }`}
+              onClick={() => toggleLayer(key)}
+            >
+              <Icon size={14} strokeWidth={1.7} />
+            </button>
+          </Tooltip>
+        ))}
+
+        <span className="mx-0.5 h-4 w-px bg-hairline" aria-hidden />
+
         <Tooltip label={t`Rendu volumique 3D`} side="bottom">
           <button
             type="button"
             data-testid="render-volumetric"
             aria-label={t`Rendu volumique 3D`}
-            className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${render === "volumetric" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+            aria-pressed={render === "volumetric"}
+            className={`flex h-6.5 w-6.5 items-center justify-center rounded-[4px] transition-colors ${
+              render === "volumetric"
+                ? "bg-accent/15 text-accent"
+                : "text-ink-muted hover:bg-panel-subtle hover:text-ink-primary"
+            }`}
             onClick={() => setRender("volumetric")}
           >
-            <VolumetricMesh size={16} />
+            <VolumetricMesh size={15} />
           </button>
         </Tooltip>
+
         <Tooltip label={t`Rendu filaire`} side="bottom">
           <button
             type="button"
             data-testid="render-wireframe"
             aria-label={t`Rendu filaire`}
-            className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${render === "wireframe" ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+            aria-pressed={render === "wireframe"}
+            className={`flex h-6.5 w-6.5 items-center justify-center rounded-[4px] transition-colors ${
+              render === "wireframe"
+                ? "bg-accent/15 text-accent"
+                : "text-ink-muted hover:bg-panel-subtle hover:text-ink-primary"
+            }`}
             onClick={() => setRender("wireframe")}
           >
-            <WireframeMesh size={16} />
+            <WireframeMesh size={15} />
           </button>
         </Tooltip>
-        <span className="mx-0.5 w-px self-stretch bg-hairline" />
-        {/* v1.6.0: metric snap grid selector (Grille : 10 | 50 | 100 mm). */}
+
+        <span className="mx-0.5 h-4 w-px bg-hairline" aria-hidden />
+
         <Tooltip label={t`Grille d'accrochage magnétique`} side="bottom">
-          <span className="flex items-center gap-0.5 rounded border border-hairline px-1 py-0.5">
-            <MagneticSnap size={16} />
+          <span className="flex h-6.5 items-center gap-0.5 rounded-[4px] bg-canvas/80 px-1.5">
+            <MagneticSnap size={14} className="text-ink-muted" />
             {SNAP_STEPS.map(([value, label]) => (
               <button
                 key={value}
                 type="button"
                 data-testid={`snap-${label}`}
-                className={`font-data rounded px-1 py-0.5 text-[10px] ${snapStep === value ? "bg-accent/15 text-accent" : "text-ink-muted"}`}
+                className={`font-data rounded-[3px] px-1 py-0.5 text-[10px] font-medium transition-colors ${
+                  snapStep === value
+                    ? "bg-accent/15 text-accent"
+                    : "text-ink-muted hover:text-ink-primary"
+                }`}
                 onClick={() => setSnapStep(value)}
               >
                 {label}
               </button>
             ))}
-            <span className="font-data text-[10px] text-ink-muted">mm</span>
+            <span className="font-data text-[9.5px] text-ink-muted">mm</span>
           </span>
         </Tooltip>
+
         {lastSelectionMs !== undefined ? (
           <span
-            className="font-data shrink-0 rounded px-1.5 py-1 text-[11px] text-ink-muted"
+            className="font-data hidden shrink-0 px-1 text-[10px] text-ink-muted xl:inline"
             data-testid="pick-latency"
           >
             {lastSelectionMs < 0.01 ? "<0.01" : lastSelectionMs.toFixed(2)} ms

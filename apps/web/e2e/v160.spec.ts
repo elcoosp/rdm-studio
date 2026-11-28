@@ -139,7 +139,7 @@ test.describe("v1.6.0 — parametric & metrology", () => {
     await page.getByTestId("dock-tab-beams").click();
     await page.locator('[data-testid="data-dock"] table tbody tr').first().click();
     await page.getByTestId("subdivide-beam").click();
-    await expect(page.getByText(/subdivisée en 4 tronçons/)).toBeVisible();
+    await expect(page.getByText(/discrétisée en 4 tronçons/)).toBeVisible();
     await expect(page.getByText(/Poutres \(5\)/)).toBeVisible();
   });
 

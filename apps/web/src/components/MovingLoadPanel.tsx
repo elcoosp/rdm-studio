@@ -42,7 +42,7 @@ const PRESETS = [
 
 /** French decimal comma formatting. */
 function fr(value: number, digits = 2): string {
-  return value.toFixed(digits).replace(".", ",");
+  return Number.isFinite(value) ? value.toFixed(digits).replace(".", ",") : "—";
 }
 
 /** Scales an influence ordinate into its display unit (per kN of load). */
@@ -103,7 +103,17 @@ export function MovingLoadPanel() {
     feaClient
       .influenceLine(project, beamId, trainX, response)
       .then((line) => {
-        if (!cancelled) setInfluence(line);
+        if (cancelled) return;
+        if (
+          line !== null &&
+          typeof line === "object" &&
+          Array.isArray(line.values) &&
+          Array.isArray(line.ratios)
+        ) {
+          setInfluence(line);
+        } else {
+          setInfluence(null);
+        }
       })
       .catch(() => {
         if (!cancelled) setInfluence(null);
@@ -111,7 +121,15 @@ export function MovingLoadPanel() {
     feaClient
       .movingLoadTrain(project, beamId, trainSpec, 24)
       .then((env) => {
-        if (!cancelled) {
+        if (cancelled) return;
+        if (
+          env !== null &&
+          typeof env === "object" &&
+          typeof env.my_min === "number" &&
+          typeof env.vz_max === "number" &&
+          typeof env.rz_max === "number" &&
+          typeof env.uz_max === "number"
+        ) {
           setEnvelope(env);
           // M12.5: feed the Step 5 report chapter (last run wins).
           recordMovingEnvelope({
@@ -124,6 +142,8 @@ export function MovingLoadPanel() {
                   : "Convoi personnalisé",
             envelope: env,
           });
+        } else {
+          setEnvelope(null);
         }
       })
       .catch(() => {

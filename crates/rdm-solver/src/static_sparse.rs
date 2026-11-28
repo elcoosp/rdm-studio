@@ -49,6 +49,11 @@ pub struct SolvedModel {
     pub n_beams: usize,
     /// One solution per elementary case, in canonical order (G, Q, W, S, Acc).
     pub cases: Vec<(LoadCase, CaseSolution)>,
+    /// v2.1.0: ids of the `TensionOnly` / `CompressionOnly` members the
+    /// outer behavior iteration deactivated — their final residual axial
+    /// force collapsed to near-zero (`|N| < 1e-3 N`) under the opposite
+    /// sign of strain (buckled cable / braced strut).
+    pub inactive_beam_ids: Vec<u32>,
 }
 
 /// Solver errors with pedagogical messages.
@@ -112,6 +117,7 @@ pub fn solve_model_with_diagnostics(
                     n_nodes: structure.nodes.len(),
                     n_beams: structure.beams.len(),
                     cases,
+                    inactive_beam_ids: Vec::new(),
                 },
                 p_delta_report,
             ));
@@ -125,11 +131,19 @@ pub fn solve_model_with_diagnostics(
     // Budget exhausted: return the last pass (validator-style convergence
     // note surfaces through the envelopes instead of an error).
     let (cases, _) = solve_once(structure, &active, &mut p_delta_report)?;
+    let inactive_beam_ids: Vec<u32> = structure
+        .beams
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| !active[*index])
+        .map(|(_, beam)| beam.id)
+        .collect();
     Ok((
         SolvedModel {
             n_nodes: structure.nodes.len(),
             n_beams: structure.beams.len(),
             cases,
+            inactive_beam_ids,
         },
         p_delta_report,
     ))

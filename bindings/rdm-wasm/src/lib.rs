@@ -146,7 +146,10 @@ impl From<&SolveError> for SolveFault {
 
 /// Resolves the section/material tables of a structure from the embedded
 /// catalogs (mutates `sections`/`materials` only when a designation is
-/// known; unknown ids stay and validation reports them).
+/// known; unknown ids stay and validation reports them). M11.1: composite
+/// sections declared on `Structure::custom_sections` resolve natively into
+/// the same table so beams referencing them solve and verify like any
+/// catalog profile.
 pub fn resolve_properties(structure: &mut Structure) {
     let profiles = rdm_eurocode::profile_catalog();
     let materials = rdm_eurocode::material_catalog();
@@ -154,6 +157,11 @@ pub fn resolve_properties(structure: &mut Structure) {
     for beam in &structure.beams {
         if let Ok(props) = profiles.properties(&beam.section_id) {
             sections.insert(beam.section_id.clone(), props);
+        }
+    }
+    for def in &structure.custom_sections {
+        if let Ok(result) = rdm_cad::compute_composite_section(def) {
+            sections.insert(def.name.clone(), result.section_properties);
         }
     }
     let mut mats: BTreeMap<String, MaterialProperties> = BTreeMap::new();
@@ -895,6 +903,105 @@ mod tests {
         assert!(beam.m_rd > 0.0, "governing bending resistance > 0");
     }
 
+    /// M11.1: a beam referencing a composite section solves natively —
+    /// the persisted definition resolves into the section table before
+    /// validation and the EN 1993-1-1 pass verifies the projected dims.
+    #[test]
+    fn composite_section_beam_solves_natively() {
+        let mut s = Structure::default();
+        s.nodes.push(Node::new(1, 0.0, 0.0, 0.0));
+        s.nodes.push(Node::new(2, 4.0, 0.0, 0.0));
+        s.beams.push(Beam::frame(1, 1, 2, "PRS-300", "S235JR"));
+        s.supports.push(Support {
+            node_id: 1,
+            locked_dofs: [true, true, true, true, false, false],
+            spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
+        });
+        s.supports.push(Support {
+            node_id: 2,
+            locked_dofs: [false, true, true, false, false, false],
+            spring_stiffness: [0.0; 6],
+            incline: None,
+            settlement: [0.0; 6],
+        });
+        s.loads.push(rdm_model::Load {
+            case: LoadCase::Variable,
+            kind: rdm_model::LoadKind::PointOnSpan {
+                beam_id: 1,
+                position_ratio: 0.5,
+                forces: rdm_model::GlobalForces::vertical(-10_000.0),
+            },
+        });
+        s.custom_sections.push(rdm_model::CompositeSectionDef {
+            name: "PRS-300".to_owned(),
+            grade: rdm_model::SteelGrade::S355,
+            elements: vec![
+                rdm_model::CompositeElement {
+                    kind: rdm_model::CompositeElementKind::Plate {
+                        length: 0.2,
+                        thickness: 0.012,
+                    },
+                    dy: 0.0,
+                    dz: 0.144,
+                    theta: 0.0,
+                    mirror_y: false,
+                    mirror_z: false,
+                },
+                rdm_model::CompositeElement {
+                    kind: rdm_model::CompositeElementKind::Plate {
+                        length: 0.2,
+                        thickness: 0.012,
+                    },
+                    dy: 0.0,
+                    dz: -0.144,
+                    theta: 0.0,
+                    mirror_y: false,
+                    mirror_z: false,
+                },
+                rdm_model::CompositeElement {
+                    kind: rdm_model::CompositeElementKind::Plate {
+                        length: 0.276,
+                        thickness: 0.008,
+                    },
+                    dy: 0.0,
+                    dz: 0.0,
+                    theta: core::f64::consts::FRAC_PI_2,
+                    mirror_y: false,
+                    mirror_z: false,
+                },
+            ],
+        });
+        let json = serde_json::to_string(&rdm_model::ProjectFile::new("composite", s)).unwrap();
+
+        // No unknown_section diagnostic: the composite resolves natively.
+        let mut structure = rdm_model::ProjectFile::load_json(json.as_bytes())
+            .unwrap()
+            .structure;
+        resolve_properties(&mut structure);
+        assert!(
+            rdm_model::validate_model(&structure).is_ok(),
+            "composite model must validate"
+        );
+        assert!(structure.sections.contains_key("PRS-300"));
+
+        let report = build_solve_report(&json).unwrap();
+        assert_eq!(report.n_beams, 1);
+        let uls = report
+            .combinations
+            .iter()
+            .find(|c| c.kind == "ULS")
+            .expect("ULS combination present");
+        let beam = &uls.beams[0];
+        assert!(
+            beam.utilization > 0.0,
+            "EC3 check must run on the composite"
+        );
+        assert!(beam.class_index.is_some(), "classification present");
+        assert!(beam.m_rd > 0.0, "bending resistance present");
+    }
+
     /// v1.4.0: the canonical SHA-256 fingerprint is a 64-char hex string.
     #[test]
     fn project_fingerprint_returns_64_char_hex() {
@@ -1281,7 +1388,11 @@ pub fn validate_model_issues(project_json: &str) -> Result<JsValue, JsValue> {
             serde_json::from_str(project_json).map_err(|e| SolveError::InvalidModel {
                 message: format!("malformed .rdm payload: {e}"),
             })?;
-        let issues = rdm_model::validate_model(&project.structure)
+        // M11.1: resolve catalog + composite sections first so beams
+        // referencing a custom composite don't raise `unknown_section`.
+        let mut structure = project.structure;
+        resolve_properties(&mut structure);
+        let issues = rdm_model::validate_model(&structure)
             .err()
             .unwrap_or_default();
         Ok(issues
@@ -1395,6 +1506,7 @@ fn import_cad_structure(
         load_cases: Vec::new(),
         groups: Vec::new(),
         levels: Vec::new(),
+        custom_sections: Vec::new(),
         self_weight_enabled: true,
     };
     let project = rdm_model::ProjectFile {
@@ -1720,6 +1832,35 @@ pub fn custom_section_preview(
         }
     };
     serde_wasm_bindgen::to_value(&section).map_err(Into::into)
+}
+
+/// M11.1: exact analytical preview of a composite cross-section
+/// (`def_json` = a serialized `CompositeSectionDef`). Returns the full
+/// [`rdm_cad::CompositeSectionResult`] — geometry outlines for the studio
+/// canvas, every mechanical property and the projected
+/// `SectionProperties` the solver consumes.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn compute_composite_section(def_json: &str) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<rdm_cad::CompositeSectionResult, SolveError> {
+        let def: rdm_model::CompositeSectionDef =
+            serde_json::from_str(def_json).map_err(|e| SolveError::InvalidModel {
+                message: format!("malformed composite section payload: {e}"),
+            })?;
+        rdm_cad::compute_composite_section(&def).map_err(|err| SolveError::InvalidModel {
+            message: err.to_string(),
+        })
+    })();
+    match outcome {
+        Ok(result) => serde_wasm_bindgen::to_value(&result).map_err(Into::into),
+        Err(err) => {
+            let fault: SolveFault = SolveFault::from(&err);
+            serde_wasm_bindgen::to_value(&fault).map_err(Into::into)
+        }
+    }
 }
 
 /// v1.8.0: EN 1991 action generators (`kind`: `imposed|snow|wind`),

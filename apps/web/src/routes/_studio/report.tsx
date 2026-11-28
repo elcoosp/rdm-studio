@@ -31,7 +31,10 @@ import {
   useLastReport,
 } from "@/wasmBridge/workerClient";
 import { buildReportHtml } from "@/export/pdfTakumiReport";
-import { downloadDocx, type DocxBlock, type CoverMeta } from "@/export/docxExport";
+import { downloadDocx, type DocxBlock, type DocxTable, type CoverMeta } from "@/export/docxExport";
+import type { CompositeSectionResult } from "@/wasmBridge/workerClient";
+import { StatusBadge } from "@rdm-studio/ui/interior";
+import { BrandMark } from "@rdm-studio/ui/primitives";
 import { saveSnapshot } from "@/state/snapshots";
 import { exportResultsCsv } from "@/export/csvExport";
 import { exportStandaloneHtml3d } from "@/export/standaloneHtml3d";
@@ -118,6 +121,9 @@ function ReportPage() {
   const project = useProjectStore((s) => s.project);
   // v2.1.1: the Édition Découverte watermark (removed in Pro mode).
   const licenseTier = useLicenseStore((s) => s.tier);
+  // M11.3: cover title block reads the licensed engineer / checker names.
+  const licenseEngineer = useLicenseStore((s) => s.engineerName);
+  const licenseChecker = useLicenseStore((s) => s.checkerName);
   const [busy, setBusy] = useState(false);
   const [hasSolved, setHasSolved] = useState(false);
   const [hasExported, setHasExported] = useState(false);
@@ -280,18 +286,46 @@ function ReportPage() {
     <div className="h-full min-h-0 overflow-auto p-3 md:p-4">
       <div className="mx-auto flex max-w-[1140px] flex-col gap-4 md:flex-row md:items-start">
         <section className="print-sheet mx-auto min-w-0 flex-1 max-w-[794px] space-y-5 rounded-panel border border-hairline bg-panel p-6 lg:p-8">
-          {/* A4 sheet header: logo + title + date. */}
-          <div className="flex items-center justify-between border-b-2 border-accent pb-2">
-            <div className="flex items-center gap-2">
-              <img src="/logo-rdm-studio.png" alt="" className="h-7 w-7" />
-              <h2 className="text-[17px] font-semibold">
-                <Trans>RDM Studio — Rapport de calcul</Trans>
-              </h2>
+          {/* M11.3: official branded cover header — BrandMark lockup,
+              engineer title block, Eurocode scope, solver badge and the
+              certified 49/49 benchmark seal. */}
+          <header className="border-b-2 border-accent pb-3" data-testid="report-cover">
+            <div className="flex items-start justify-between gap-3">
+              <BrandMark size="md" showTagline />
+              <div className="font-data text-right text-[11px] text-ink-muted">
+                <p>{new Date().toLocaleDateString("fr-FR")}</p>
+                <p data-testid="report-solver-badge">
+                  <Trans>Solveur 3D Timoshenko — WASM</Trans>
+                </p>
+              </div>
             </div>
-            <span className="font-data text-[11px] text-ink-muted">
-              {new Date().toISOString().slice(0, 10)}
-            </span>
-          </div>
+            <h2 className="mt-2 text-[19px] font-semibold">
+              {project.name} — <Trans>Note de calcul</Trans>
+            </h2>
+            <dl className="mt-1 grid grid-cols-2 gap-x-6 gap-y-0.5 font-data text-[11px] text-ink-secondary">
+              <dt>
+                <Trans>Auteur</Trans>
+              </dt>
+              <dd className="text-right">{licenseEngineer === "" ? "—" : licenseEngineer}</dd>
+              <dt>
+                <Trans>Vérificateur</Trans>
+              </dt>
+              <dd className="text-right">{licenseChecker === "" ? "—" : licenseChecker}</dd>
+              <dt>
+                <Trans>Périmètre normatif</Trans>
+              </dt>
+              <dd className="text-right">EN 1990 – EN 1999 (Eurocodes)</dd>
+            </dl>
+            <p
+              className="mt-1.5 font-data text-[10px] text-ink-muted"
+              data-testid="report-benchmark-seal"
+            >
+              <Trans>
+                Suite de validation certifiée — 49 / 49 benchmarks analytiques RDM6/RDM7 · 0 octet
+                cloud
+              </Trans>
+            </p>
+          </header>
           {/* v1.6.0 live 3D snapshot — v2.1.1: constrained to 220px on the
               bg-canvas plate so the A4 sheet never balloons. */}
           <figure
@@ -345,6 +379,10 @@ function ReportPage() {
               ))}
             </ul>
           </div>
+          {/* M11.3: dedicated Sections Droites Composées chapter — vector
+              SVG diagram, full geometric property table and the EN 1993-1-1
+              Table 5.2 classification, whenever composite sections exist. */}
+          <CompositeReportChapter />
           <ReportTables />
           <FingerprintFooter qrDataUrl={qrDataUrl} />
           {/* v2.1.1: subtle Édition Découverte watermark (Pro removes it). */}
@@ -381,7 +419,7 @@ function ReportPage() {
               {t`PDF Takumi`}
             </LoadingButton>
             <LoadingButton
-              testId="export-docx"
+              testId="export-docx-btn"
               className="min-h-11 w-full border-accent bg-panel text-accent hover:bg-accent-tint mt-2"
               disabled={busy}
               onAction={() => docxExportRef.current()}
@@ -432,7 +470,7 @@ function ReportPage() {
               </button>
               <button
                 type="button"
-                data-testid="export-html3d"
+                data-testid="export-html-btn"
                 disabled={busy}
                 className="flex items-center justify-center gap-1 rounded bg-panel-subtle px-2 py-1.5 font-data text-[11px] text-ink-secondary hover:text-accent"
                 onClick={() =>
@@ -544,6 +582,190 @@ function FingerprintFooter({ qrDataUrl }: { qrDataUrl: string | null }) {
         <img src={qrDataUrl} alt="" aria-hidden className="h-16 w-16 shrink-0" />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * M11.3: shared engine hook — the exact composite results of every custom
+ * section, keyed by name (the report chapter and the .docx payload share
+ * ONE fetch through the worker lane).
+ */
+function useCompositeResults(defs: { name: string }[]): Record<string, CompositeSectionResult> {
+  const [results, setResults] = useState<Record<string, CompositeSectionResult>>({});
+  const key = JSON.stringify(defs);
+  useEffect(() => {
+    let cancelled = false;
+    const defsParsed = JSON.parse(key) as Parameters<typeof feaClient.computeCompositeSection>[0][];
+    for (const defJson of defsParsed) {
+      const name = (JSON.parse(defJson) as { name: string }).name;
+      void feaClient
+        .computeCompositeSection(defJson)
+        .then((res) => {
+          if (!cancelled) {
+            setResults((prev) => ({ ...prev, [name]: res }));
+          }
+        })
+        .catch(() => undefined);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+  return results;
+}
+
+const fr3 = (v: number, digits = 3): string => v.toFixed(digits).replace(".", ",");
+
+/**
+ * M11.3: dedicated «Sections Droites Composées» chapter — for every custom
+ * composite section: the exact vector SVG cross-section, the full
+ * geometric property table (A, Iy, Iz, Wel, Wpl, It, Iw, Av) and the
+ * EN 1993-1-1 Table 5.2 classification badges.
+ */
+function CompositeReportChapter(): React.ReactElement | null {
+  const defs = useProjectStore((s) => s.project.structure.custom_sections ?? []);
+  const results = useCompositeResults(defs);
+  if (defs.length === 0) {
+    return null;
+  }
+  return (
+    <section data-testid="report-composite-chapter">
+      <h3 className="text-[15px] font-semibold">
+        <Trans>Sections Droites Composées</Trans>
+      </h3>
+      <p className="mt-0.5 text-[12px] text-ink-secondary">
+        <Trans>
+          Sections construites résolues nativement par le solveur WASM — mécanique exacte,
+          classification EN 1993-1-1 Table 5.2.
+        </Trans>
+      </p>
+      {defs.map((def) => {
+        const res = results[def.name];
+        return (
+          <figure
+            key={def.name}
+            className="mt-3 rounded-panel border border-hairline bg-panel-subtle p-3"
+            data-testid={`composite-report-${def.name.replace(/[^\w-]+/g, "_")}`}
+          >
+            <figcaption className="font-data mb-1 flex flex-wrap items-center justify-between gap-2 text-[12px] font-medium text-ink-primary">
+              <span>
+                {def.name} — {def.elements.length} élément(s) — acier {def.grade}
+              </span>
+              {res !== undefined ? (
+                <span className="flex gap-1.5">
+                  <StatusBadge
+                    tone={
+                      res.class_bending <= 2 ? "pass" : res.class_bending === 3 ? "warn" : "fail"
+                    }
+                    mono
+                  >
+                    <Trans>Classe flexion</Trans> {res.class_bending}
+                  </StatusBadge>
+                  <StatusBadge
+                    tone={
+                      res.class_compression <= 2
+                        ? "pass"
+                        : res.class_compression === 3
+                          ? "warn"
+                          : "fail"
+                    }
+                    mono
+                  >
+                    <Trans>Classe compression</Trans> {res.class_compression}
+                  </StatusBadge>
+                </span>
+              ) : null}
+            </figcaption>
+            {res !== undefined ? (
+              <CompositeSectionSvg result={res} />
+            ) : (
+              <p className="font-data text-[11px] text-ink-muted">Calcul exact en cours…</p>
+            )}
+            {res !== undefined ? (
+              <dl className="font-data mt-2 grid grid-cols-2 gap-x-4 gap-y-0.5 text-[11px] [font-variant-numeric:tabular-nums] text-ink-secondary sm:grid-cols-3">
+                {(
+                  [
+                    ["A", `${fr3(res.a * 1e6, 0)} mm²`],
+                    ["m", `${fr3(res.mass_per_m, 2)} kg/m`],
+                    ["yG", `${fr3(res.y_g * 1000, 1)} mm`],
+                    ["zG", `${fr3(res.z_g * 1000, 1)} mm`],
+                    ["Iy", `${fr3(res.iy * 1e8, 1)} cm⁴`],
+                    ["Iz", `${fr3(res.iz * 1e8, 1)} cm⁴`],
+                    ["Wel,y", `${fr3(res.wel_y * 1e6, 1)} cm³`],
+                    ["Wpl,y", `${fr3(res.wpl_y * 1e6, 1)} cm³`],
+                    [
+                      "iy / iz",
+                      `${fr3(res.i_radius_y * 1000, 1)} / ${fr3(res.i_radius_z * 1000, 1)} mm`,
+                    ],
+                    ["It", `${fr3(res.it * 1e8, 2)} cm⁴`],
+                    ["Iw", `${fr3(res.iw * 1e12, 2)} cm⁶`],
+                    ["Av,y / Av,z", `${fr3(res.a_vy * 1e6, 0)} / ${fr3(res.a_vz * 1e6, 0)} mm²`],
+                  ] as const
+                ).map(([key, value]) => (
+                  <div key={key} className="flex justify-between gap-2">
+                    <dt className="text-ink-muted">{key}</dt>
+                    <dd className="text-right">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+          </figure>
+        );
+      })}
+    </section>
+  );
+}
+
+/** Vector cross-section drawing of one engine result (mm, z up). */
+function CompositeSectionSvg({ result }: { result: CompositeSectionResult }): React.ReactElement {
+  const [yMin, yMax, zMin, zMax] = result.bounds;
+  const pad = 10;
+  const vbW = Math.max((yMax - yMin) * 1000, 80) + pad * 2;
+  const vbH = Math.max((zMax - zMin) * 1000, 80) + pad * 2;
+  const xOf = (yMm: number): number => yMm - yMin * 1000 + pad;
+  const yOf = (zMm: number): number => vbH - pad - (zMm - zMin * 1000);
+  return (
+    <svg
+      viewBox={`0 0 ${vbW} ${vbH}`}
+      className="h-40 w-full bg-canvas"
+      role="img"
+      aria-label={result.name}
+    >
+      <g stroke="#1D4ED8" fill="#EFF6FF" strokeWidth="1" strokeLinejoin="round">
+        {result.elements.map((element) =>
+          element.paths.map((path, pathIndex) => (
+            <polygon
+              key={`${element.label}-${pathIndex}`}
+              points={path.map((pt) => `${xOf(pt[0] * 1000)},${yOf(pt[1] * 1000)}`).join(" ")}
+            />
+          )),
+        )}
+      </g>
+      <g stroke="#0F172A" strokeWidth="1">
+        <circle cx={xOf(result.y_g * 1000)} cy={yOf(result.z_g * 1000)} r="4" fill="#FFFFFF" />
+        <line
+          x1={xOf(result.y_g * 1000) - 6}
+          y1={yOf(result.z_g * 1000)}
+          x2={xOf(result.y_g * 1000) + 6}
+          y2={yOf(result.z_g * 1000)}
+        />
+        <line
+          x1={xOf(result.y_g * 1000)}
+          y1={yOf(result.z_g * 1000) - 6}
+          x2={xOf(result.y_g * 1000)}
+          y2={yOf(result.z_g * 1000) + 6}
+        />
+      </g>
+      <line
+        x1={0}
+        y1={yOf(result.pna_for_my * 1000)}
+        x2={vbW}
+        y2={yOf(result.pna_for_my * 1000)}
+        stroke="#D97706"
+        strokeWidth="1"
+        strokeDasharray="4 3"
+      />
+    </svg>
   );
 }
 
@@ -760,6 +982,11 @@ function ReportBuilder({
   registerDocxExport: (fn: () => void) => void;
 }): React.ReactElement {
   const project = useProjectStore((st) => st.project);
+  // M11.3: native Word tables ride the LIVE solve report + the exact
+  // composite section metadata (Sections Droites Composées chapter).
+  const report = useLastReport();
+  const customDefs = useProjectStore((st) => st.project.structure.custom_sections ?? []);
+  const compositeResults = useCompositeResults(customDefs);
   // v2.1.0: the cover metadata pre-fills from the local-first license
   // store (Offline Pro firm branding — LicenseModal keeps it in sync).
   const licenseFirm = useLicenseStore((s) => s.firmName);
@@ -823,8 +1050,12 @@ function ReportBuilder({
     });
   };
 
-  const blocks = (): DocxBlock[] => {
-    const out: DocxBlock[] = [];
+  const blocks = (): (DocxBlock | DocxTable)[] => {
+    const out: (DocxBlock | DocxTable)[] = [];
+    const enabled = new Set(chapters.filter((c) => c.on).map((c) => c.id));
+    const uls = report?.combinations.find((c) => c.kind === "ULS");
+    const sls = report?.combinations.find((c) => c.kind === "SLS");
+    const beamById = new Map(project.structure.beams.map((b) => [b.id, b]));
     for (const chapter of chapters.filter((c) => c.on)) {
       out.push({ kind: "heading", text: chapter.label });
       const suffix = language === "en" ? " (EN output)" : "";
@@ -832,6 +1063,84 @@ function ReportBuilder({
         kind: "paragraph",
         text: `${chapter.label}${suffix} — modèle ${project.name}, version ${project.version}.`,
       });
+      if (chapter.id === "model" && enabled.has("model")) {
+        out.push({
+          kind: "table",
+          caption: "Membres et sections",
+          header: ["Poutre", "N1", "N2", "Section", "Matière"],
+          rows: project.structure.beams.map((b) => [
+            `P${b.id}`,
+            String(b.n1),
+            String(b.n2),
+            b.section_id,
+            b.material_id,
+          ]),
+        });
+        // M11.3: embedded composite section metadata (exact properties).
+        for (const def of customDefs) {
+          const res = compositeResults[def.name];
+          out.push({
+            kind: "table",
+            caption: `Section composée ${def.name} — acier ${def.grade} (${def.elements.length} élément(s))`,
+            header: ["Grandeur", "Valeur", "Unité"],
+            rows:
+              res === undefined
+                ? [["Calcul exact en cours", "—", "—"]]
+                : [
+                    ["A", (res.a * 1e6).toFixed(0).replace(".", ","), "mm²"],
+                    ["m (linéique)", res.mass_per_m.toFixed(2).replace(".", ","), "kg/m"],
+                    ["yG", (res.y_g * 1000).toFixed(1).replace(".", ","), "mm"],
+                    ["zG", (res.z_g * 1000).toFixed(1).replace(".", ","), "mm"],
+                    ["Iy", (res.iy * 1e8).toFixed(1).replace(".", ","), "cm⁴"],
+                    ["Iz", (res.iz * 1e8).toFixed(1).replace(".", ","), "cm⁴"],
+                    ["Wel,y", (res.wel_y * 1e6).toFixed(1).replace(".", ","), "cm³"],
+                    ["Wpl,y", (res.wpl_y * 1e6).toFixed(1).replace(".", ","), "cm³"],
+                    ["It", (res.it * 1e8).toFixed(2).replace(".", ","), "cm⁴"],
+                    ["Iw", (res.iw * 1e12).toFixed(2).replace(".", ","), "cm⁶"],
+                    ["Classe flexion", String(res.class_bending), ""],
+                    ["Classe compression", String(res.class_compression), ""],
+                  ],
+          });
+        }
+      }
+      if (chapter.id === "results" && enabled.has("results")) {
+        out.push({
+          kind: "table",
+          caption: `Enveloppe ELU ${uls?.label ?? "1.35G + 1.50Q"} — vérification par membre`,
+          header: ["Membre", "Section", "η ELU", "Statut"],
+          rows: (uls?.beams ?? []).map((b) => [
+            `P${b.beam_id}`,
+            beamById.get(b.beam_id)?.section_id ?? "—",
+            b.utilization.toFixed(3).replace(".", ","),
+            b.utilization > 1 ? "NON VERIFIÉ" : "vérifié",
+          ]),
+        });
+        out.push({
+          kind: "table",
+          caption: `Enveloppe ELS ${sls?.label ?? "G + Q"} — flèches à mi-travée`,
+          header: ["Membre", "Flèche (mm)"],
+          rows: (sls?.beams ?? []).map((b) => [
+            `P${b.beam_id}`,
+            (b.midspan_deflection * 1000).toFixed(1).replace(".", ","),
+          ]),
+        });
+      }
+      if (chapter.id === "checks" && enabled.has("checks")) {
+        out.push({
+          kind: "table",
+          caption: "Vérifications EN 1993-1-1 membre par membre",
+          header: ["Membre", "σvM (MPa)", "χy", "χz", "χLT", "η", "Statut"],
+          rows: (uls?.beams ?? []).map((b) => [
+            `P${b.beam_id}`,
+            (b.max_sigma_vm / 1e6).toFixed(1).replace(".", ","),
+            b.chi_y == null ? "—" : b.chi_y.toFixed(2).replace(".", ","),
+            b.chi_z == null ? "—" : b.chi_z.toFixed(2).replace(".", ","),
+            b.chi_lt == null ? "—" : b.chi_lt.toFixed(2).replace(".", ","),
+            b.utilization.toFixed(3).replace(".", ","),
+            b.utilization > 1 ? "NON VERIFIÉ" : "vérifié",
+          ]),
+        });
+      }
     }
     out.push({
       kind: "paragraph",

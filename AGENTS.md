@@ -40,8 +40,6 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
    - **Lingui Live Locale Re-render:** Shared header/overlay components using `t` macros must invoke `useLingui()` so they re-render immediately when `activateLocale` switches `FR ↔ EN`.
    - **Zero Raw HTML Form/Overlay Primitives:** Never emit raw `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">`, or hand-rolled `<div role="dialog">` in `apps/web/src/{components,routes,viewport3d}`; always use `@/components/ui/*` (Base UI) and `@/components/interior/*`, preserving locked E2E selectors (`N1`, `N2`, `combination-selector`, `sls-limit-selector`, `scale-modes`, `clear-supports`, `clear-loads`, `hero-cta`, `showcase-*`, `launch-*`, `.driver-popover-rdm`).
    - **Context-Lean Wave Execution:** Always prepend `$HOME/.cargo/bin` to `PATH` before probing `cargo`/`wasm-pack`/`ship`, and read files per-wave (in parallel) rather than reading the entire repo upfront.
-   - **Zero Raw HTML Form/Overlay Primitives:** Never emit raw `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">`, or hand-rolled `<div role="dialog">` in `apps/web/src/{components,routes,viewport3d}`; always use `@/components/ui/*` (Base UI) and `@/components/interior/*`, preserving locked E2E selectors (`N1`, `N2`, `combination-selector`, `sls-limit-selector`, `scale-modes`, `clear-supports`, `clear-loads`, `hero-cta`, `showcase-*`, `launch-*`, `.driver-popover-rdm`).
-   - **Context-Lean Wave Execution:** Always prepend `$HOME/.cargo/bin` to `PATH` before probing `cargo`/`wasm-pack`/`ship`, and read files per-wave (in parallel) rather than reading the entire repo upfront.
 
 ---
 
@@ -85,3 +83,56 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
 3. Overwrite **`ship.toml`** (gitignored) with `base_commit = "<git rev-parse HEAD>"`, valid Conventional Commits (`subject ≤ 72` chars), and **exactly one `[[commit]]` block per dirty file** (including `ship.toml`, `.github/pr-body.md`, `STATUS.md`), ordered by dependency (`types → impl → tests → config/STATUS.md`).
 4. Run `command -v ship >/dev/null 2>&1 || cargo install --git https://github.com/elcoosp/ship` and `ship validate` while the tree is dirty until exit `0`.
 5. Create `rdm-studio-<SLUG>.zip` in the downloads folder containing `git ls-files` plus all untracked files (`ship.toml`, `.github/pr-body.md`, `STATUS.md`, and new source/test/config files), excluding only `.git/`, `target/`, `node_modules/`, and caches.
+
+---
+
+## 6. Release Process: Banners, GFM Notes, Manifest Bumps & GitHub Releases
+
+Every tagged release (`vX.Y.Z`) follows a deterministic 4-step pipeline using `@rdm-studio/brand-studio` (`packages/brand-studio`) and `gh release`:
+
+1. **Align All Monorepo Manifests (`X.Y.Z`):**
+   - Bump `"version"` to `"X.Y.Z"` across all 7 workspace manifests:
+     - `package.json`
+     - `apps/web/package.json`
+     - `apps/docs/package.json`
+     - `apps/site/package.json`
+     - `packages/ui/package.json`
+     - `Cargo.toml` (`[workspace.package]`)
+     - `crates/rdm-cad/Cargo.toml`
+   - Run `cargo check --workspace --quiet` to sync `Cargo.lock`.
+
+2. **Generate `1280×640` Swiss Metrology Release Banner (`@rdm-studio/brand-studio`):**
+   - Register the release metadata (`version`, `title`, `subtitle`, `eyebrow`, `highlights`, `standards`, `stitchIllustrationPrompt`) in `packages/brand-studio/src/releases.ts`.
+   - Save the transparent-background isometric illustration cutout at `docs/releases/illustrations/vX.Y.Z.png` (keep un-cutout raw images in `docs/releases/illustrations/raw/`, which is gitignored).
+   - Render the final `1280×640` banner via:
+     ```bash
+     pnpm --dir packages/brand-studio render -- --version vX.Y.Z
+     ```
+     producing `docs/releases/banner-vX.Y.Z.png`.
+
+3. **Author GitHub-Flavored Markdown Release Notes (`docs/releases/notes/vX.Y.Z.md`):**
+   - **Never alter historical release notes** (`v1.0.0.md` through `v2.4.0.md`).
+   - Create `docs/releases/notes/vX.Y.Z.md` following the canonical GFM template:
+     - Clickable `1280×640` banner image pointing to `https://githubusercontent.com` + top navigation bar (`Launch 3D Studio ↗`, `Documentation ↗`, `Overview & Benchmarks ↗`, `Full Diff`, `Sponsor ♥`).
+     - `> [!NOTE]` Release Summary with governing Eurocode/RDM standards.
+     - `## Architecture & Release Matrix` GFM table with verified `blob/main/...` repository links.
+     - `## Detailed Engineering Changelog` grouped by milestone deliverables.
+     - `> [!TIP]` Zero-Cloud Local-First Execution callout, collapsible `<details>` `Commit & Diff Ledger` (`git log --no-merges` + `git diff --shortstat`), and footer links.
+
+4. **Tag & Publish on GitHub (`gh release`):**
+   - Commit manifest bumps, `packages/brand-studio/src/releases.ts`, `docs/releases/illustrations/vX.Y.Z.png`, `docs/releases/banner-vX.Y.Z.png`, and `docs/releases/notes/vX.Y.Z.md` to `main`.
+   - Create annotated tag and push:
+     ```bash
+     git tag -a vX.Y.Z -m "RDM Studio vX.Y.Z — <Release Title>"
+     git push origin main
+     git push origin vX.Y.Z
+     ```
+   - Demote the previous release and publish `vX.Y.Z` as `Latest`:
+     ```bash
+     gh release edit vPREV --latest=false
+     gh release create vX.Y.Z docs/releases/banner-vX.Y.Z.png \
+       --verify-tag \
+       --title "RDM Studio vX.Y.Z — <Release Title>" \
+       --notes-file docs/releases/notes/vX.Y.Z.md \
+       --latest
+     ```

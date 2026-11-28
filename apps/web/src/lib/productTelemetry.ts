@@ -74,7 +74,15 @@ export type TelemetryEventKind =
   | "hero_3d_opened"
   | "showcase_opened"
   | "bento_opened"
-  | "opensource_clicked";
+  | "opensource_clicked"
+  // M12: connections / moving loads / groups / levels / materials
+  | "member_group_created"
+  | "levels_autodetected"
+  | "custom_material_added"
+  | "pattern_loads_generated"
+  | "support_inclined"
+  | "connection_check_run"
+  | "moving_train_run";
 
 export interface TelemetryEvent {
   kind: TelemetryEventKind;
@@ -100,6 +108,13 @@ const ALLOWLIST: Record<TelemetryEventKind, string[]> = {
   support_cleared: [],
   load_case_added: ["case"],
   load_accel_set: ["ax", "ay", "az"],
+  member_group_created: ["members"],
+  levels_autodetected: ["levels"],
+  custom_material_added: ["e_gpa"],
+  pattern_loads_generated: ["spans"],
+  support_inclined: ["angle_deg"],
+  connection_check_run: ["topology"],
+  moving_train_run: ["preset"],
   self_weight_toggled: ["enabled"],
   env_load_set: ["type"],
   solve_attempted: ["n_nodes", "n_beams", "n_load_cases"],

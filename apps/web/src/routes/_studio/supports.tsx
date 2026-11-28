@@ -151,6 +151,7 @@ function SupportsPage() {
   const supports = useProjectStore((s) => s.project.structure.supports);
   const setSupport = useProjectStore((s) => s.setSupport);
   const setSupportSprings = useProjectStore((s) => s.setSupportSprings);
+  const setSupportSettlement = useProjectStore((s) => s.setSupportSettlement);
   const removeSupport = useProjectStore((s) => s.removeSupport);
   const clearSupports = useProjectStore((s) => s.clearSupports);
   // v2.1.0: the node selection is URL-backed (`?node=`).
@@ -195,6 +196,9 @@ function SupportsPage() {
 
   const springsFor = (nodeId: number): number[] =>
     supports.find((s) => s.node_id === nodeId)?.spring_stiffness ?? [0, 0, 0, 0, 0, 0];
+
+  const settlementFor = (nodeId: number): number[] =>
+    supports.find((s) => s.node_id === nodeId)?.settlement ?? [0, 0, 0, 0, 0, 0];
 
   const reactionCount = supports.reduce((sum, s) => sum + s.locked_dofs.filter(Boolean).length, 0);
   const status = kinematicStatus(reactionCount);
@@ -312,17 +316,18 @@ function SupportsPage() {
         </div>
       </div>
 
-      {/* Appuis élastiques sub-card */}
+      {/* Appuis élastiques sub-card — M10.2 (RDM 7 §appui élastique). */}
       <div
         className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
         data-testid="spring-section"
       >
         <ExpandablePanel
+          testId="elastic-springs-panel"
           title={
             <Trans>
               <span className="inline-flex items-center gap-1.5">
                 <SupportSpring size={16} />
-                Appuis élastiques (kx..krz)
+                Appui élastique (k)
               </span>
             </Trans>
           }
@@ -333,6 +338,38 @@ function SupportsPage() {
               un DDL libre élastique participe à la raideur (EN 1993-1-1).
             </Trans>
           </p>
+          {/* M10.2: 1-click elastic-support preset — seeds kz = 1000 kN/m. */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2 h-8 w-full justify-start gap-1.5 px-2.5 text-[12px]"
+            data-testid="preset-elastic"
+            disabled={nodes.length === 0}
+            onClick={() => {
+              const targetId = selectedNodeId ?? nodes.at(0)?.id ?? null;
+              if (targetId === null) {
+                toast("Placez d'abord au moins un nœud à l'étape 1.");
+                return;
+              }
+              if (selectedNodeId === null) {
+                selectNode(targetId);
+              }
+              const existing = supports.find((s) => s.node_id === targetId);
+              setSupportSprings(targetId, [
+                existing?.spring_stiffness[0] ?? 0,
+                existing?.spring_stiffness[1] ?? 0,
+                1_000_000,
+                existing?.spring_stiffness[3] ?? 0,
+                existing?.spring_stiffness[4] ?? 0,
+                existing?.spring_stiffness[5] ?? 0,
+              ]);
+              void trackProductEvent("support_preset_applied", { preset: "elastic" });
+              toast(`Appui élastique k·z = 1000 kN/m appliqué à N${targetId}`);
+            }}
+          >
+            <SupportSpring size={18} />
+            <Trans>Appui élastique (k)</Trans>
+          </Button>
           {selectedNodeId === null ? (
             <p className="mt-2 text-[12px] text-ink-muted">
               <Trans>Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts.</Trans>
@@ -343,6 +380,41 @@ function SupportsPage() {
               nodeId={selectedNodeId}
               springs={springsFor(selectedNodeId)}
               onApply={(next) => setSupportSprings(selectedNodeId, next)}
+            />
+          )}
+        </ExpandablePanel>
+      </div>
+
+      {/* Déplacement imposé sub-card — M10.2 (RDM 7 Δux..Δrz). */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="settlement-section"
+      >
+        <ExpandablePanel testId="support-settlement-panel" title={
+          <Trans>
+            <span className="inline-flex items-center gap-1.5">
+              <SupportReaction size={16} />
+              Déplacement imposé (Δ)
+            </span>
+          </Trans>
+        }>
+          <p className="mt-1 text-[11px] text-ink-muted">
+            <Trans>
+              Déplacements imposés sur les DDL bloqués (Δu en mm, Δθ en degrés). Le tassement
+              d'appui mobilise les liaisons hyperstatiques (RDM 7).
+            </Trans>
+          </p>
+          {selectedNodeId === null ? (
+            <p className="mt-2 text-[12px] text-ink-muted">
+              <Trans>Sélectionnez un nœud pour prescrire son déplacement.</Trans>
+            </p>
+          ) : (
+            <SettlementFields
+              key={selectedNodeId}
+              nodeId={selectedNodeId}
+              locked={lockedFor(selectedNodeId)}
+              settlement={settlementFor(selectedNodeId)}
+              onApply={(next) => setSupportSettlement(selectedNodeId, next)}
             />
           )}
         </ExpandablePanel>
@@ -477,6 +549,7 @@ function SupportsPage() {
             {supports.map((s) => {
               const active = DOF_LABELS.filter((_, i) => s.locked_dofs[i]);
               const sprung = s.spring_stiffness.some((k) => k > 0);
+              const settled = (s.settlement ?? []).some((d) => d !== 0);
               return (
                 <li
                   key={s.node_id}
@@ -495,6 +568,14 @@ function SupportsPage() {
                   {sprung ? (
                     <span className="rounded-[2px] border border-accent-ring bg-accent-tint px-1 py-0 text-[10px] text-accent">
                       <Trans>élastique</Trans>
+                    </span>
+                  ) : null}
+                  {settled ? (
+                    <span
+                      className="rounded-[2px] border border-hairline bg-panel-subtle px-1 py-0 text-[10px] text-fea-mid"
+                      data-testid={`settlement-badge-${s.node_id}`}
+                    >
+                      Δ imposé
                     </span>
                   ) : null}
                   <button
@@ -603,6 +684,83 @@ function SpringFields({
         }}
       >
         <Trans>Appliquer les ressorts à N{nodeId}</Trans>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Imposed-support-displacement editor (M10.2, RDM 7): `[Δux..Δrz]` —
+ * translations in mm (stored m) and rotations in degrees (stored rad).
+ * A field is enabled only when its DOF is locked by the support (a free
+ * DOF cannot carry a prescribed displacement).
+ */
+function SettlementFields({
+  nodeId,
+  locked,
+  settlement,
+  onApply,
+}: {
+  nodeId: number;
+  locked: boolean[];
+  settlement: number[];
+  onApply: (settlement: number[]) => void;
+}) {
+  // Display units: mm for translations (1e3), degrees for rotations
+  // (180/π). The store holds strict SI values (m, rad).
+  const toDisplay = (i: number): number =>
+    (settlement[i] ?? 0) * (i < 3 ? 1e3 : 180 / Math.PI);
+  const fromDisplay = (i: number, v: number): number =>
+    v * (i < 3 ? 1e-3 : Math.PI / 180);
+  const [values, setValues] = useState<number[]>(() => [0, 1, 2, 3, 4, 5].map(toDisplay));
+  const anyLocked = locked.some(Boolean);
+  return (
+    <div className="mt-2" data-testid={`settlement-fields-${nodeId}`}>
+      <div className="grid grid-cols-3 gap-1.5">
+        {DOF_LABELS.map((label, i) => (
+          <label key={label} className="flex flex-col gap-0.5 text-[10px] text-ink-muted">
+            <span className="font-data">
+              Δ{label.toLowerCase()} [{i < 3 ? "mm" : "°"}]
+            </span>
+            <NumberFieldRoot
+              value={values[i] ?? 0}
+              step={i < 3 ? 0.5 : 0.01}
+              onValueChange={(v) => {
+                if (v === null) return;
+                setValues((prev) => {
+                  const next = [...prev];
+                  next[i] = v;
+                  return next;
+                });
+              }}
+            >
+              <NumberFieldInput
+                className="font-data h-7 w-full px-1 text-[11px]"
+                disabled={!locked[i]}
+              />
+            </NumberFieldRoot>
+          </label>
+        ))}
+      </div>
+      {!anyLocked ? (
+        <p className="mt-1 text-[10px] text-ink-muted">
+          <Trans>Bloquez d'abord un DDL : le déplacement imposé s'applique aux DDL verrouillés.</Trans>
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className="mt-2 w-full rounded bg-accent px-2 py-1.5 text-[12px] text-white disabled:opacity-50"
+        data-testid={`apply-settlement-${nodeId}`}
+        disabled={!anyLocked}
+        onClick={() => {
+          onApply([0, 1, 2, 3, 4, 5].map((i) => fromDisplay(i, values[i] ?? 0)));
+          void trackProductEvent("support_settlement_set", {
+            dof: "uz",
+            value_mm: values[2] ?? 0,
+          });
+        }}
+      >
+        <Trans>Appliquer le déplacement imposé à N{nodeId}</Trans>
       </button>
     </div>
   );

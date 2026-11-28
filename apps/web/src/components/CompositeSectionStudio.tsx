@@ -268,7 +268,7 @@ export function CompositeSectionStudio({
       beams: activeBeamIds.length,
       elements: def.elements.length,
     });
-    toast(t`Section « ${def.name} » appliquée à ${activeBeamIds.length} barre(s)`, {
+    toast.info(t`Section « ${def.name} » appliquée à ${activeBeamIds.length} barre(s)`, {
       description: t`Le solveur WASM recalcule avec les propriétés exactes de la section composée.`,
       duration: 4_000,
     });

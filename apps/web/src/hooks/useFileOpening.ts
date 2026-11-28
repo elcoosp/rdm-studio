@@ -62,7 +62,7 @@ export async function openProjectOrCadFile(file: File): Promise<boolean> {
         return false;
       }
       useProjectStore.getState().loadProject(parsed.output);
-      toast(`Projet chargé : ${file.name}`);
+      toast.info(`Projet chargé : ${file.name}`);
       return true;
     }
     if (/\.(dxf|step|stp|igs|iges)$/.test(lower)) {
@@ -70,7 +70,7 @@ export async function openProjectOrCadFile(file: File): Promise<boolean> {
       const name = file.name.replace(/\.(dxf|step|stp|igs|iges)$/i, "");
       const json = await feaClient.importCad(bytes, file.name, name);
       useProjectStore.getState().loadProject(JSON.parse(json));
-      toast(`CAO importée : ${file.name}`);
+      toast.info(`CAO importée : ${file.name}`);
       return true;
     }
     return false;

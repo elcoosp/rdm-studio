@@ -148,7 +148,7 @@ export function CadToolbar(): ReactElement {
     const before = structuredClone(useProjectStore.getState().project);
     const { project: cleaned, stats } = compactModel(useProjectStore.getState().project);
     loadProject(cleaned);
-    toast(
+    toast.info(
       t`Modèle compacté : ${stats.splitBeams} poutre(s) découpée(s), ${stats.mergedNodes} nœud(s) fusionné(s)`,
       {
         description: `${stats.removedDuplicates} doublon(s) supprimé(s), ${stats.removedOrphans} nœud(s) orphelin(s)`,

@@ -296,7 +296,7 @@ export function ProjectGalleryModal({
         const generated = JSON.parse(json) as ProjectData;
         loadProject(generated);
         void trackProductEvent("template_opened", { kind: "parametric", template: paramTemplate });
-        toast(t`Structure paramétrique générée`, {
+        toast.info(t`Structure paramétrique générée`, {
           // v2.0.1: 8 s so slow cold-start browsers (wasm init on first
           // run) never miss the "moteur Rust rdm-cad" confirmation.
           duration: 8_000,
@@ -680,7 +680,7 @@ export function ProjectGalleryModal({
                       kind: "engineering",
                       template: template.id,
                     });
-                    toast(t`Modèle chargé`, {
+                    toast.info(t`Modèle chargé`, {
                       description: t`${template.name} — ${structure.beams.length} poutre(s) prête(s) à calculer.`,
                       duration: 4_000,
                     });
@@ -783,7 +783,7 @@ export function ProjectGalleryModal({
                   JSON.stringify(project, null, 2),
                   "application/json;charset=utf-8",
                 );
-                toast(t`Modèle .rdm exporté`);
+                toast.info(t`Modèle .rdm exporté`);
                 void trackProductEvent("template_exported");
                 onClose();
               }}

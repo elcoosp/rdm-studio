@@ -264,7 +264,7 @@ function LoadsPage() {
   // and confirms with a concise toast.
   const switchCaseForGenerator = (next: LoadCaseId, label: string) => {
     setCaseId(next);
-    toast(`Cas ${label} activé`, { duration: 2_500 });
+    toast.info(`Cas ${label} activé`, { duration: 2_500 });
   };
 
   const add = () => {
@@ -337,7 +337,7 @@ function LoadsPage() {
     }
     const before: LoadData[] = structuredClone(loads);
     replaceLoads([]);
-    toast("Charges vidées", {
+    toast.info("Charges vidées", {
       description: `${before.length} charge(s) supprimée(s).`,
       action: {
         label: "Annuler",

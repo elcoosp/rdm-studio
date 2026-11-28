@@ -35,7 +35,7 @@ export function LicenseModal({ onClose }: { onClose: () => void }): React.ReactE
 
   const saveBranding = () => {
     useLicenseStore.setState({ firmName: firm, engineerName: engineer, checkerName: checker });
-    toast(t`Branding enregistré`, {
+    toast.info(t`Branding enregistré`, {
       description: t`La couverture des notes de calcul pré-remplira ces champs.`,
     });
     void trackProductEvent("firm_branding_saved");

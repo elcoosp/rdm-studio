@@ -207,7 +207,7 @@ function SupportsPage() {
   const applyPreset = (preset: Preset) => {
     const targetId = selectedNodeId ?? nodes.at(0)?.id ?? null;
     if (targetId === null) {
-      toast("Placez d'abord au moins un nœud à l'étape 1.");
+      toast.info("Placez d'abord au moins un nœud à l'étape 1.");
       return;
     }
     if (selectedNodeId === null) {
@@ -215,7 +215,7 @@ function SupportsPage() {
     }
     setSupport(targetId, [...preset.locked]);
     void trackProductEvent("support_preset_applied", { preset: preset.key });
-    toast(`Liaison « ${preset.label} » appliquée à N${targetId}`);
+    toast.info(`Liaison « ${preset.label} » appliquée à N${targetId}`);
   };
 
   const clearAll = () => {
@@ -225,7 +225,7 @@ function SupportsPage() {
     const before = structuredClone(supports);
     clearSupports();
     void trackProductEvent("support_cleared");
-    toast("Appuis supprimés", {
+    toast.info("Appuis supprimés", {
       description: `${before.length} appui(s) retiré(s).`,
       action: {
         label: "Annuler",
@@ -349,7 +349,7 @@ function SupportsPage() {
             onClick={() => {
               const targetId = selectedNodeId ?? nodes.at(0)?.id ?? null;
               if (targetId === null) {
-                toast("Placez d'abord au moins un nœud à l'étape 1.");
+                toast.info("Placez d'abord au moins un nœud à l'étape 1.");
                 return;
               }
               if (selectedNodeId === null) {
@@ -365,7 +365,7 @@ function SupportsPage() {
                 existing?.spring_stiffness[5] ?? 0,
               ]);
               void trackProductEvent("support_preset_applied", { preset: "elastic" });
-              toast(`Appui élastique k·z = 1000 kN/m appliqué à N${targetId}`);
+              toast.info(`Appui élastique k·z = 1000 kN/m appliqué à N${targetId}`);
             }}
           >
             <SupportSpring size={18} />
@@ -458,7 +458,7 @@ function SupportsPage() {
               onApply={(angleDeg) => {
                 setSupportIncline(selectedNodeId, angleDeg);
                 void trackProductEvent("support_inclined", { angle_deg: angleDeg });
-                toast(
+                toast.info(
                   `Appui de N${selectedNodeId} incliné à α = ${angleDeg.toFixed(1).replace(".", ",")}°`,
                 );
               }}

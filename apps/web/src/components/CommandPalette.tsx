@@ -109,7 +109,7 @@ export function CommandPalette({
     void trackProductEvent("command_palette_used", { action: `cad:${id}` });
     if (!isStudio) void navigate({ to: "/geometry", search: true });
     window.dispatchEvent(new CustomEvent("rdm-cad-command", { detail: id }));
-    toast(t`Outil CAD activé`, { description: id });
+    toast.info(t`Outil CAD activé`, { description: id });
   };
 
   const releaseMoments = () => {
@@ -129,7 +129,7 @@ export function CommandPalette({
       updateBeam(id, { releases_start: start, releases_end: end });
     }
     if (targets.length > 0) {
-      toast(t`Relâchements N1/N2 basculés sur ${targets.length} poutre(s)`);
+      toast.info(t`Relâchements N1/N2 basculés sur ${targets.length} poutre(s)`);
     }
   };
 

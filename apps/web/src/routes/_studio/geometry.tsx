@@ -275,7 +275,7 @@ function GeometryPage() {
         useProjectStore.getState().setSupport(leftmost.id, [true, true, true, true, true, true]);
       }
       setCadOpen(false);
-      toast("Import réussi", {
+      toast.info("Import réussi", {
         description: `${imported.structure.beams.length} poutre(s) importée(s) depuis ${file.name}.`,
         action: {
           label: "Annuler",
@@ -296,7 +296,7 @@ function GeometryPage() {
     const before = structuredClone(useProjectStore.getState().project);
     const { project: cleaned, stats } = compactModel(useProjectStore.getState().project);
     loadProject(cleaned);
-    toast(
+    toast.info(
       t`Modèle compacté : ${stats.splitBeams} poutre(s) découpée(s), ${stats.mergedNodes} nœud(s) fusionné(s)`,
       {
         description: `${stats.removedDuplicates} doublon(s) supprimé(s), ${stats.removedOrphans} nœud(s) orphelin(s)`,
@@ -343,7 +343,7 @@ function GeometryPage() {
                 loadProject(project);
                 selectBeam(null);
                 selectNode(null);
-                toast(t`Modèle chargé : ${project.name}`);
+                toast.info(t`Modèle chargé : ${project.name}`);
               }}
             >
               {label}
@@ -1116,7 +1116,7 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
           onClick={() => {
             if (segments === null || segments < 2) return;
             subdivideBeam(beam.id, segments);
-            toast(t`P${beam.id} discrétisée en ${segments} tronçons`, { duration: 3_000 });
+            toast.info(t`P${beam.id} discrétisée en ${segments} tronçons`, { duration: 3_000 });
           }}
         >
           <Trans>Discrétiser</Trans>

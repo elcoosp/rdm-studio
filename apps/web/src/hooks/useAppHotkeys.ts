@@ -185,7 +185,7 @@ export function useAppHotkeys(onTogglePalette: () => void): void {
         updateBeam(id, { releases_start: start, releases_end: end });
       }
       if (targets.length > 0) {
-        toast(`Relâchements N1/N2 basculés sur ${targets.length} poutre(s)`);
+        toast.info(`Relâchements N1/N2 basculés sur ${targets.length} poutre(s)`);
       }
     },
     { enableOnFormTags: false, preventDefault: true },

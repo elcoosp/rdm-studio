@@ -294,7 +294,7 @@ function ModelTools({ nodes }: { nodes: { id: number; x: number; y: number; z: n
       const result = autoSplitDrawnBeam(useProjectStore.getState().project, newBeamId);
       if (result.splitBeams > 0) {
         loadProject(result.project);
-        toast(t`Poutre hôte découpée — ${result.splitBeams} tronçon(s) créé(s)`, {
+        toast.info(t`Poutre hôte découpée — ${result.splitBeams} tronçon(s) créé(s)`, {
           duration: 3_500,
         });
       }
@@ -624,7 +624,7 @@ export function PersistentStage(): ReactElement {
                 if (selectedBeamId === id) {
                   selectBeam(null);
                 }
-                toast(t`Poutre B${id} supprimée`, {
+                toast.info(t`Poutre B${id} supprimée`, {
                   action: {
                     label: t`Annuler`,
                     onClick: () => {

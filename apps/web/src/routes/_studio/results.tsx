@@ -421,7 +421,7 @@ function ResultsPage() {
     const etaBefore = maxUls * 100;
     // Auto-solve (bug 10) refreshes the results within 150 ms; the toast
     // shows the captured "before" utilization and offers a 5 s undo.
-    toast(
+    toast.info(
       `Profil renforcé — Masse : ${deltaKg >= 0 ? "+" : ""}${deltaKg.toFixed(1).replace(".", ",")} kg · Taux EC3 : ${etaBefore.toFixed(1).replace(".", ",")} % → recalcul`,
       {
         description: undo.map((u) => `B${u.beamId}: ${u.section} → profil supérieur`).join(", "),
@@ -951,7 +951,7 @@ function ResultsPage() {
                         onClick={() => {
                           const target = inspected.beam_id;
                           updateBeam(target, { k_buckling_z: 0.5 });
-                          toast("Maintien latéral mi-travée (kz = 0,5)", {
+                          toast.info("Maintien latéral mi-travée (kz = 0,5)", {
                             description: "Recalcul automatique en cours…",
                           });
                         }}

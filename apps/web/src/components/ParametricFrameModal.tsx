@@ -299,7 +299,7 @@ export function ParametricFrameModal({
   const onReplace = (): void => {
     const draft = buildStructure(params);
     loadProject(draftToProject(draft));
-    toast(t`Ossature générée : ${draft.name}`, {
+    toast.info(t`Ossature générée : ${draft.name}`, {
       description: t`${draft.nodes.length} nœuds · ${draft.beams.length} poutres · projet remplacé`,
     });
     onClose();
@@ -309,7 +309,7 @@ export function ParametricFrameModal({
     const draft = buildStructure(params);
     const project = useProjectStore.getState().project;
     loadProject(insertDraft(project, draft, origin));
-    toast(t`Ossature insérée à (${origin.x} ; ${origin.y} ; ${origin.z}) m`, {
+    toast.info(t`Ossature insérée à (${origin.x} ; ${origin.y} ; ${origin.z}) m`, {
       description: t`${draft.nodes.length} nœuds · ${draft.beams.length} poutres ajoutés`,
     });
     onClose();

@@ -123,7 +123,7 @@ export function ModelDataTable({
     for (const [x, y, z] of points) {
       addNode(x, y, z);
     }
-    toast(t`${points.length} nœud(s) créé(s) depuis le presse-papiers`);
+    toast.info(t`${points.length} nœud(s) créé(s) depuis le presse-papiers`);
   };
 
   return (

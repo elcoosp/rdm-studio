@@ -38,7 +38,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps): React
       rating,
       ...(comment.trim() ? { comment: comment.trim().slice(0, 500) } : {}),
     });
-    toast(t({ id: "feedback.thankYou", message: "Merci pour votre retour !" }));
+    toast.info(t({ id: "feedback.thankYou", message: "Merci pour votre retour !" }));
     setRating(null);
     setComment("");
     setSubmitting(false);

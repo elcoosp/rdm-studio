@@ -557,15 +557,24 @@ pub fn member_check(input: MemberCheckInput<'_>) -> Result<MemberCheck, Ec3Error
 
     // Flexural buckling (compression members).
     let mut chi: Option<(f64, f64)> = None;
+    // v2.1.0 audit fix: the squared non-dimensional slendernesses entering
+    // the 6.61 / 6.62 Annex A/B interaction factors are computed from the
+    // actual member geometry — Euler critical forces `N_cr = π²EI/L_cr²`
+    // from `L`, `k_buckling`, `E` and `Iy`/`Iz` — for compression AND
+    // bending members alike, instead of the 0.5 / 0.8 placeholders.
+    let l_y = input.k_buckling.0 * input.length;
+    let l_z = input.k_buckling.1 * input.length;
+    let n_cr_y = euler_critical_force(material.e, props.iy, l_y);
+    let n_cr_z = euler_critical_force(material.e, props.iz, l_z);
+    let lambda_bar_y = lambda_bar(props.a, material.fy, n_cr_y);
+    let lambda_bar_z = lambda_bar(props.a, material.fy, n_cr_z);
+    let lambda_bar_y_sq = lambda_bar_y * lambda_bar_y;
+    let lambda_bar_z_sq = lambda_bar_z * lambda_bar_z;
     if n_ed < 0.0 {
-        let l_y = input.k_buckling.0 * input.length;
-        let l_z = input.k_buckling.1 * input.length;
-        let n_cr_y = euler_critical_force(material.e, props.iy, l_y);
-        let n_cr_z = euler_critical_force(material.e, props.iz, l_z);
         let curve_y = buckling_curve_rolled(props, true)?;
         let curve_z = buckling_curve_rolled(props, false)?;
-        let chi_y = flexural_buckling_chi(curve_y, lambda_bar(props.a, material.fy, n_cr_y));
-        let chi_z = flexural_buckling_chi(curve_z, lambda_bar(props.a, material.fy, n_cr_z));
+        let chi_y = flexural_buckling_chi(curve_y, lambda_bar_y);
+        let chi_z = flexural_buckling_chi(curve_z, lambda_bar_z);
         utilizations.push(("Nb,Rd,y".to_owned(), n_ed.abs() / (chi_y * n_pl_rd)));
         utilizations.push(("Nb,Rd,z".to_owned(), n_ed.abs() / (chi_z * n_pl_rd)));
         chi = Some((chi_y, chi_z));
@@ -634,8 +643,8 @@ pub fn member_check(input: MemberCheckInput<'_>) -> Result<MemberCheck, Ec3Error
         mc_y_rd,
         mc_z_rd,
         chi_lt,
-        lambda_bar_y_sq: 0.5,
-        lambda_bar_z_sq: 0.8,
+        lambda_bar_y_sq,
+        lambda_bar_z_sq,
     };
     let annex = if input.national_annex == rdm_model::NationalAnnex::EN {
         crate::interaction::InteractionAnnex::B

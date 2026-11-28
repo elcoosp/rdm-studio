@@ -16,7 +16,7 @@ import {
 } from "recharts";
 import { useProjectStore } from "../state/projectStore";
 import { toast } from "sonner";
-import { feaClient, type GroupOptimizationDto } from "../wasmBridge/workerClient";
+import { feaClient } from "../wasmBridge/workerClient";
 import { CalcTrace } from "./CalcTraceTree";
 import type { CalcTraceNodeDto } from "../wasmBridge/workerClient";
 
@@ -32,8 +32,18 @@ import type { CalcTraceNodeDto } from "../wasmBridge/workerClient";
 const CARBON_KG_PER_KG = 1.9;
 const COST_EUR_PER_KG = 1.85;
 
-interface OptimizerRow extends GroupOptimizationDto {
-  beamId: number;
+/** M12.3: one optimizer row per member GROUP (named groups share a single
+ * uniform profile); ungrouped members keep their own row. */
+interface OptimizedGroupDto {
+  beam_ids: number[];
+  group_name: string | null;
+  chosen: string | null;
+  passes: number;
+  pareto: [string, number, number][];
+}
+
+interface OptimizerRow extends OptimizedGroupDto {
+  label: string;
 }
 
 const CATALOG_CANDIDATES = [
@@ -134,12 +144,12 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
     void feaClient
       .engineCall("optimize_sections_json", project, CATALOG_CANDIDATES)
       .then((payload) => {
-        const [optimizations, totalsValue] = payload as [
-          GroupOptimizationDto[],
-          { mass_kg: number },
-        ];
+        const [optimizations, totalsValue] = payload as [OptimizedGroupDto[], { mass_kg: number }];
         setRows(
-          optimizations.map((o, i) => ({ ...o, beamId: project.structure.beams[i]?.id ?? i })),
+          optimizations.map((o) => ({
+            ...o,
+            label: o.group_name ?? o.beam_ids.map((id) => `B${id}`).join(", "),
+          })),
         );
         setTotals({
           mass_kg: totalsValue.mass_kg,
@@ -186,9 +196,19 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
     if (rows === null) {
       return;
     }
-    const beams = project.structure.beams.map((beam, index) => {
-      const chosen = rows[index]?.chosen;
-      return chosen === undefined || chosen === null ? beam : { ...beam, section_id: chosen };
+    // M12.3: every member of a named group receives the SAME uniform
+    // profile (the group optimum); ungrouped members keep their own pick.
+    const chosenByBeam = new Map<number, string>();
+    for (const row of rows) {
+      if (row.chosen !== null) {
+        for (const id of row.beam_ids) {
+          chosenByBeam.set(id, row.chosen);
+        }
+      }
+    }
+    const beams = project.structure.beams.map((beam) => {
+      const chosen = chosenByBeam.get(beam.id);
+      return chosen === undefined ? beam : { ...beam, section_id: chosen };
     });
     loadProject({ ...project, structure: { ...project.structure, beams } });
   };
@@ -305,8 +325,8 @@ export function OptimizerModal({ onClose }: { onClose: () => void }): ReactEleme
             </thead>
             <tbody>
               {rows?.map((row) => (
-                <tr key={row.beamId} className="border-b border-hairline">
-                  <td className="py-1 pr-2 font-mono">B{row.beamId}</td>
+                <tr key={row.label} className="border-b border-hairline">
+                  <td className="py-1 pr-2 font-mono">{row.label}</td>
                   <td className="py-1 pr-2 font-semibold">{row.chosen ?? "—"}</td>
                   <td className="py-1 pr-2">{row.passes}</td>
                   <td className="py-1 text-ink-secondary ">

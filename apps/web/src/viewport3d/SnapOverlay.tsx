@@ -190,8 +190,9 @@ export function SnapOverlay({
           style={{ left: hover.snap.x, top: hover.snap.y }}
           data-testid="snap-reticle"
         >
-          <div className="h-5 w-5 rounded-full border-2 border-accent" />
-          <span className="absolute top-6 left-1/2 -translate-x-1/2 font-mono text-[10px] text-accent">
+          <div className="h-5 w-5 rounded-full border-2 border-accent bg-accent/10 shadow-2xs" />
+          <span className="font-data absolute top-6.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-[4px] border border-accent-ring bg-panel/95 px-2 py-0.5 text-[10.5px] font-medium text-ink-primary shadow-sm backdrop-blur-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
             {hover.snap.label}
           </span>
         </div>
@@ -202,18 +203,24 @@ export function SnapOverlay({
           style={{ left: hover.snap.x, top: hover.snap.y }}
           data-testid="snap-reticle"
         >
-          <svg viewBox="0 0 20 18" className="h-4 w-4" aria-hidden>
-            <polygon points="10,1 19,17 1,17" fill="none" stroke="#06B6D4" strokeWidth="2" />
+          <svg viewBox="0 0 20 18" className="h-4 w-4 drop-shadow-2xs" aria-hidden>
+            <polygon
+              points="10,1 19,17 1,17"
+              fill="rgba(6,182,212,0.12)"
+              stroke="#06B6D4"
+              strokeWidth="2"
+            />
           </svg>
-          <span className="absolute top-6 left-1/2 -translate-x-1/2 font-mono text-[10px] text-fea-low">
+          <span className="font-data absolute top-6 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-[4px] border border-hairline bg-panel/95 px-2 py-0.5 text-[10.5px] font-medium text-ink-primary shadow-sm backdrop-blur-xs">
+            <span className="h-1.5 w-1.5 rotate-45 bg-[#06B6D4]" aria-hidden />
             {hover.snap.label}
           </span>
         </div>
       ) : null}
       {hover.beamHover !== null && hover.snap === null ? (
         <div
-          className="absolute -translate-x-1/2 rounded-[4px] border border-accent-ring bg-panel px-2 py-1 font-mono text-[10px] text-ink-primary"
-          style={{ left: hover.beamHover.x, top: hover.beamHover.y - 34 }}
+          className="font-data absolute -translate-x-1/2 whitespace-nowrap rounded-[4px] border border-hairline bg-panel/95 px-2 py-0.5 text-[10.5px] font-medium text-ink-primary shadow-sm backdrop-blur-xs"
+          style={{ left: hover.beamHover.x, top: hover.beamHover.y - 32 }}
           data-testid="cursor-pill"
         >
           {hover.beamHover.label}

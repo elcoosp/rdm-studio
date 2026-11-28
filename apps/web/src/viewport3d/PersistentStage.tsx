@@ -25,6 +25,9 @@ import { ViewportLabels } from "./ViewportLabels";
 import { DimensionLines } from "./DimensionLines";
 import { useBeamBoundsTree, pickBeamAtRay } from "./useBvhPicking";
 import { beamProfileLookup } from "./ProfileShapes";
+import { DrawGhost } from "./DrawGhost";
+import { snapCandidates } from "@/modeling/cadTools";
+import { autoSplitOnDraw as autoSplitDrawnBeam } from "@/modeling/modelCleanup";
 import type { SectionDims } from "@/wasmBridge/workerClient";
 import { feaClient } from "@/wasmBridge/workerClient";
 import {
@@ -185,13 +188,42 @@ function StageContextMenuBridge({
 /** Grid-plane click-to-place node + 2-node click-to-connect beam tools. */
 function ModelTools({ nodes }: { nodes: { id: number; x: number; y: number; z: number }[] }) {
   const toolMode = useViewportStore((s) => s.toolMode);
+  const { t } = useLingui();
   // v2.1.0: the magnetic snap grid is the URL `?snap=` param (10|50|100 mm).
   const { snapStep } = useViewportParams();
   const addNode = useProjectStore((s) => s.addNode);
   const addBeam = useProjectStore((s) => s.addBeam);
+  const loadProject = useProjectStore((s) => s.loadProject);
+  const beams = useProjectStore((s) => s.project.structure.beams);
+  const autoSplit = useViewportStore((s) => s.autoSplitOnDraw);
+  const setDrawGhost = useViewportStore((s) => s.setDrawGhost);
   const { selectNode } = useSelectedIds();
   const pendingRef = useRef<number | null>(null);
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const modelRef = useRef({ nodes, beams });
+  modelRef.current = { nodes, beams };
+
+  // M9.4: leaving the beam tool (or unmounting) clears the ghost preview.
+  useEffect(() => {
+    if (toolMode !== "beam") {
+      pendingRef.current = null;
+      setPendingId(null);
+      setDrawGhost(null);
+    }
+  }, [toolMode, setDrawGhost]);
+
+  // Escape cancels the armed start node.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        pendingRef.current = null;
+        setPendingId(null);
+        setDrawGhost(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setDrawGhost]);
 
   if (toolMode === "select") {
     return null;
@@ -216,9 +248,93 @@ function ModelTools({ nodes }: { nodes: { id: number; x: number; y: number; z: n
       </mesh>
     );
   }
-  // Beam mode: first click arms the start node, second click connects.
+
+  /**
+   * M9.4 ghost cursor: snap to the nearest endpoint/midpoint candidate in
+   * a 35 cm radius, otherwise to the magnetic grid — same precedence the
+   * `snapCandidates` registry uses everywhere else.
+   */
+  const snapCursor = (p: {
+    x: number;
+    y: number;
+    z: number;
+  }): {
+    x: number;
+    y: number;
+    z: number;
+  } => {
+    const model = modelRef.current;
+    const candidates = snapCandidates(model, p, 0.35);
+    let best: { x: number; y: number; z: number } | null = null;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (const candidate of candidates) {
+      const d = Math.hypot(
+        candidate.point.x - p.x,
+        candidate.point.y - p.y,
+        candidate.point.z - p.z,
+      );
+      if (d < bestDist) {
+        bestDist = d;
+        best = candidate.point;
+      }
+    }
+    return best ?? { x: snap(p.x), y: snap(p.y), z: snap(p.z) };
+  };
+
+  const completeBeam = (n1: number, n2: number): void => {
+    const newBeamId = addBeam(n1, n2, "IPE 200", "S235JR");
+    setDrawGhost(null);
+    // M9.1 Auto-Split on Draw: a member drawn onto an existing beam's
+    // midpoint/interior cuts the host at the landing point so the model
+    // stays a clean connected topology.
+    if (autoSplit) {
+      const result = autoSplitDrawnBeam(useProjectStore.getState().project, newBeamId);
+      if (result.splitBeams > 0) {
+        loadProject(result.project);
+        toast(t`Poutre hôte découpée — ${result.splitBeams} tronçon(s) créé(s)`, {
+          duration: 3_500,
+        });
+      }
+    }
+  };
+
+  // Beam mode: first click arms the start node (ghost preview tracks the
+  // snapped cursor), second click connects — with axis-lock guides when
+  // the cursor stays on the start node's X/Y/Z line.
   return (
     <group>
+      <mesh
+        rotation={[Math.PI / 2, 0, 0]}
+        position={[0, 0, -0.002]}
+        onPointerMove={(event) => {
+          event.stopPropagation();
+          const armed = pendingRef.current;
+          if (armed === null) {
+            return;
+          }
+          const start = modelRef.current.nodes.find((n) => n.id === armed);
+          if (start === undefined) {
+            return;
+          }
+          const cursor = snapCursor(event.point);
+          const tol = 0.01;
+          const dx = Math.abs(cursor.x - start.x);
+          const dy = Math.abs(cursor.y - start.y);
+          const dz = Math.abs(cursor.z - start.z);
+          const axisLock =
+            dy < tol && dz < tol && dx > tol
+              ? "X"
+              : dx < tol && dz < tol && dy > tol
+                ? "Y"
+                : dx < tol && dy < tol && dz > tol
+                  ? "Z"
+                  : null;
+          setDrawGhost({ startNodeId: armed, cursor, axisLock });
+        }}
+      >
+        <planeGeometry args={[400, 400]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
       {nodes.map((n) => (
         <mesh
           key={n.id}
@@ -229,13 +345,18 @@ function ModelTools({ nodes }: { nodes: { id: number; x: number; y: number; z: n
               pendingRef.current = n.id;
               setPendingId(n.id);
               selectNode(n.id);
+              setDrawGhost({
+                startNodeId: n.id,
+                cursor: { x: n.x, y: n.y, z: n.z },
+                axisLock: null,
+              });
               return;
             }
             const n1 = pendingRef.current;
             pendingRef.current = null;
             setPendingId(null);
             if (n1 !== n.id) {
-              addBeam(n1, n.id, "IPE 200", "S235JR");
+              completeBeam(n1, n.id);
             }
           }}
         >
@@ -518,10 +639,12 @@ export function PersistentStage(): ReactElement {
               <NodeMarkers
                 positions={nodePositions(nodes)}
                 nodeIds={nodes.map((n) => n.id)}
-                highlightNodeId={null}
+                // M9.4: the metrology table hover highlights the node in 3D.
+                highlightNodeId={options.hoveredNodeId ?? null}
                 onPickNode={(id) => selectNode(id)}
               />
               <ModelTools nodes={nodes} />
+              <DrawGhost />
             </>
           ) : null}
           <ViewportLabels nodes={nodes} beams={beams} pathname={pathname} />

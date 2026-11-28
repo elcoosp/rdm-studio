@@ -1217,7 +1217,24 @@ export const useProjectStore = create<ProjectState>()(
             },
           },
         })),
-      loadProject: (project) => set({ project }),
+      loadProject: (project) =>
+        set({
+          project: {
+            ...project,
+            structure: {
+              ...project.structure,
+              nodes: project.structure.nodes ?? [],
+              beams: project.structure.beams ?? [],
+              supports: project.structure.supports ?? [],
+              loads: project.structure.loads ?? [],
+              sections: project.structure.sections ?? {},
+              materials: project.structure.materials ?? {},
+              load_cases: project.structure.load_cases ?? [],
+              groups: project.structure.groups ?? [],
+              levels: project.structure.levels ?? [],
+            },
+          },
+        }),
       resetDemo: () => set({ project: demoProject() }),
     }),
     {

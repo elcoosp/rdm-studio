@@ -245,7 +245,7 @@ function SupportsPage() {
 
       {/* Status & Kinematic sub-card */}
       <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-1.5">
           <StatusBadge tone={status.tone} testId="kinematic-status">
             {status.label}
           </StatusBadge>

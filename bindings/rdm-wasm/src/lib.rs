@@ -20,8 +20,8 @@ use wasm_bindgen::prelude::*;
 use rdm_eurocode::{Factors, build_combinations, member_check};
 use rdm_model::{LoadCase, MaterialProperties, SectionProperties, Structure};
 use rdm_solver::{
-    SolveError, SolvedModel, build_elements, span_loads_local, station_forces, superimpose,
-    validate_and_solve, von_mises_grid,
+    AxleTrain, ResponseKind, SolveError, SolvedModel, build_elements, span_loads_local,
+    station_forces, superimpose, train_envelope, validate_and_solve, von_mises_grid,
 };
 
 /// One case of the solve report (flat arrays, SI units).
@@ -1845,9 +1845,14 @@ pub fn custom_section_preview(
 /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
 #[wasm_bindgen]
 pub fn compute_composite_section(def_json: &str) -> Result<String, JsValue> {
-    let def: rdm_model::CompositeSectionDef =
-        serde_json::from_str(def_json).map_err(|e| fault_err("InvalidModel", format!("malformed composite section payload: {e}")))?;
-    let result = rdm_cad::compute_composite_section(&def).map_err(|err| fault_err("InvalidModel", err.to_string()))?;
+    let def: rdm_model::CompositeSectionDef = serde_json::from_str(def_json).map_err(|e| {
+        fault_err(
+            "InvalidModel",
+            format!("malformed composite section payload: {e}"),
+        )
+    })?;
+    let result = rdm_cad::compute_composite_section(&def)
+        .map_err(|err| fault_err("InvalidModel", err.to_string()))?;
     serde_json::to_string(&result).map_err(|e| fault_err("InvalidModel", e.to_string()))
 }
 
@@ -1898,6 +1903,17 @@ pub fn generate_env_loads_json(
     }
 }
 
+/// M12.3: one optimizer row per member GROUP (named groups share a single
+/// uniform profile); members outside any group keep their own row.
+#[derive(Debug, Clone, Serialize)]
+struct OptimizedGroupDto {
+    beam_ids: Vec<u32>,
+    group_name: Option<String>,
+    chosen: Option<String>,
+    passes: usize,
+    pareto: Vec<(String, f64, f64)>,
+}
+
 /// v1.8.0: iterative EC3 section optimizer over the catalog-like
 /// candidate list supplied by the caller.
 ///
@@ -1927,8 +1943,14 @@ pub fn optimize_sections_json(
         Err(e) => return fault_js("SolveError", e.to_string()),
     };
     let fy = structure.materials.values().next().map_or(235e6, |m| m.fy);
-    let mut results: Vec<rdm_eurocode::GroupOptimization> = Vec::new();
-    for (index, beam) in structure.beams.iter().enumerate() {
+    let mut group_of_beam: std::collections::HashMap<u32, (usize, String)> =
+        std::collections::HashMap::new();
+    for (gi, group) in structure.groups.iter().enumerate() {
+        for id in &group.beam_ids {
+            group_of_beam.insert(*id, (gi, group.name.clone()));
+        }
+    }
+    let member_demand = |index: usize, beam: &rdm_model::Beam| -> (f64, f64, f64) {
         let base = 12 * index;
         let mut n = 0.0_f64;
         let mut my = 0.0_f64;
@@ -1942,31 +1964,72 @@ pub fn optimize_sections_json(
             }
             _ => 4.0,
         };
-        let demand = rdm_eurocode::GroupDemand {
+        (n, my, length)
+    };
+    let demand_for = |members: &[(usize, u32, String)]| -> rdm_eurocode::GroupDemand {
+        let mut n = 0.0_f64;
+        let mut my = 0.0_f64;
+        let mut length = 0.0_f64;
+        for (index, _id, _name) in members {
+            let beam = &structure.beams[*index];
+            let (bn, bmy, blen) = member_demand(*index, beam);
+            n = n.min(bn);
+            my = my.max(bmy);
+            length = length.max(blen);
+        }
+        rdm_eurocode::GroupDemand {
             n_ed: n,
             my_ed: my,
             mz_ed: 0.0,
             v_ed: 0.0,
-            length_m: length,
+            length_m: if length > 0.0 { length } else { 4.0 },
             defl_limit_ratio: 250.0,
             defl_ed_m: 0.0,
-        };
-        results.push(rdm_eurocode::optimize_group(
+        }
+    };
+    let mut members_by_group: Vec<Vec<(usize, u32, String)>> =
+        vec![Vec::new(); structure.groups.len()];
+    let mut ungrouped: Vec<(usize, u32, String)> = Vec::new();
+    for (index, beam) in structure.beams.iter().enumerate() {
+        match group_of_beam.get(&beam.id) {
+            Some((gi, name)) => members_by_group[*gi].push((index, beam.id, name.clone())),
+            None => ungrouped.push((index, beam.id, String::new())),
+        }
+    }
+    let mut results: Vec<OptimizedGroupDto> = Vec::new();
+    for members in members_by_group.iter().chain(std::iter::once(&ungrouped)) {
+        if members.is_empty() {
+            continue;
+        }
+        let group_name = members
+            .iter()
+            .map(|(_, _, name)| name.clone())
+            .find(|name| !name.is_empty());
+        let demand = demand_for(members);
+        let opt = rdm_eurocode::optimize_group(
             &demand,
             &candidates,
             fy,
             structure.settings.national_annex,
             10,
-        ));
+        );
+        results.push(OptimizedGroupDto {
+            beam_ids: members.iter().map(|(_, id, _)| *id).collect(),
+            group_name,
+            chosen: opt.chosen,
+            passes: opt.passes,
+            pareto: opt.pareto,
+        });
     }
     let totals = rdm_eurocode::totals(
         structure
             .beams
             .iter()
-            .zip(&results)
-            .map(|(beam, opt)| {
-                opt.chosen
-                    .as_ref()
+            .map(|beam| {
+                results
+                    .iter()
+                    .find(|r| r.beam_ids.contains(&beam.id))
+                    .and_then(|r| r.chosen.as_ref())
                     .and_then(|designation| {
                         candidates.iter().find(|c| &c.designation == designation)
                     })
@@ -2304,5 +2367,615 @@ pub fn moving_loads_envelope_json(
     match rdm_solver::tandem_envelope(&structure, beam_index, n_positions.clamp(1, 24)) {
         Ok(envelope) => serde_wasm_bindgen::to_value(&envelope).map_err(Into::into),
         Err(e) => fault_js("SolveError", e.to_string()),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// M12 — connections, influence lines, member groups / drift, BIM import
+// ---------------------------------------------------------------------------
+
+/// Serializable echo + result payload of [`ec3_connection_check`].
+#[derive(Debug, Clone, Serialize)]
+struct ConnectionResultDto {
+    /// Joint topology code (`end_plate` | `fin_plate` | `gusset`).
+    topology: String,
+    /// French topology label (`Platine d'about`, ...).
+    topology_label: String,
+    /// Bolt grade code (`8.8`, ...).
+    grade: String,
+    /// Bolt size code (`M20`, ...).
+    size: String,
+    /// Total bolt count `rows × cols`.
+    n_bolts: usize,
+    /// Pitch along the load direction (m).
+    p1: f64,
+    /// Gauge across the load direction (m).
+    p2: f64,
+    /// End distance (m).
+    e1: f64,
+    /// Edge distance (m).
+    e2: f64,
+    /// Connected plate thickness (m).
+    plate_t: f64,
+    /// Clearance hole diameter (m).
+    d0: f64,
+    /// Steel grade of the connected plates (`S355`, ...).
+    steel_grade: String,
+    /// Fillet weld throat thickness (m, 0 = bolted only).
+    weld_throat_a: f64,
+    /// Total weld length (m).
+    weld_length: f64,
+    /// Design actions auto-imported / provided (SI).
+    n_ed: f64,
+    v_ed: f64,
+    m_ed: f64,
+    /// Clause-by-clause EN 1993-1-8 trace.
+    trace: Vec<rdm_eurocode::CalcTraceNode>,
+    /// Governing utilization `η` (0..∞).
+    utilization: f64,
+    /// Title of the governing check node.
+    governing: String,
+    /// Per-bolt shear resistance `F_v,Rd` (N).
+    fv_rd: f64,
+    /// Per-bolt bearing resistance `F_b,Rd` (N).
+    fb_rd: f64,
+    /// Per-bolt tension resistance `F_t,Rd` (N).
+    ft_rd: f64,
+    /// Block tearing resistance `V_eff,1,Rd` (N).
+    v_eff_rd: f64,
+    /// Fillet weld design resistance `F_w,Rd` (N, 0 = bolted only).
+    fw_rd: f64,
+}
+
+/// Extracts the ULS envelope design actions `(N, V, M)` of one member:
+/// station-wise `max |My|`, `max |Vz|` and `max |N|` over the first ULS
+/// combination — the "active ULS envelope" of the results step.
+fn uls_envelope_forces(project_json: &str, beam_id: u32) -> Result<(f64, f64, f64), SolveError> {
+    let solved = cached_solved_model(project_json)?;
+    let weights = combination_weights(&solved, "ULS").ok_or_else(|| SolveError::Sparse {
+        message: "no ULS combination".into(),
+    })?;
+    let structure = cached_structure(project_json)?;
+    let index = structure
+        .beams
+        .iter()
+        .position(|b| b.id == beam_id)
+        .ok_or_else(|| SolveError::Sparse {
+            message: format!("unknown beam id {beam_id}"),
+        })?;
+    let state = rdm_solver::superimposed_beam_state(&structure, &solved, &weights, index)
+        .map_err(SolveError::Load)?;
+    let stations = rdm_solver::beam_forces_at(&state, 11).map_err(SolveError::Load)?;
+    let mut n_max = 0.0_f64;
+    let mut v_max = 0.0_f64;
+    let mut m_max = 0.0_f64;
+    for (_, f) in &stations {
+        n_max = n_max.max(f.n_axial.abs());
+        v_max = v_max.max(f.vz.abs());
+        m_max = m_max.max(f.my.abs());
+    }
+    Ok((n_max, v_max, m_max))
+}
+
+/// M12.1: complete EN 1993-1-8 steel-connection check — bolt shear
+/// (Table 3.4 `α_v`), bearing (`k_1, α_b`), tension (`k_2`), the combined
+/// shear+tension interaction, block tearing (§3.10.2) and the §4.5.3
+/// directional fillet-weld check, for the end-plate / fin-plate / gusset
+/// studio topologies. When `project_json` + `beam_id` are supplied the
+/// design actions `(N_Ed, V_Ed, M_Ed)` are auto-imported from the active
+/// ULS envelope of that member.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn ec3_connection_check(input_json: &str) -> Result<JsValue, JsValue> {
+    let raw: serde_json::Value = serde_json::from_str(input_json)
+        .map_err(|e| fault_err("InvalidModel", format!("bad connection input: {e}")))?;
+    let mut input = rdm_eurocode::ConnectionInput {
+        topology: rdm_eurocode::JointTopology::parse(
+            raw["topology"].as_str().unwrap_or("fin_plate"),
+        ),
+        grade: rdm_eurocode::BoltGrade::parse(raw["grade"].as_str().unwrap_or("8.8")),
+        size: rdm_eurocode::BoltSize::parse(raw["size"].as_str().unwrap_or("M20")),
+        threads_in_plane: raw["threads_in_plane"].as_bool().unwrap_or(true),
+        n_rows: raw["n_rows"].as_u64().unwrap_or(4).max(1) as usize,
+        n_cols: raw["n_cols"].as_u64().unwrap_or(2).max(1) as usize,
+        p1: raw["p1"].as_f64().unwrap_or(0.08),
+        p2: raw["p2"].as_f64().unwrap_or(0.09),
+        e1: raw["e1"].as_f64().unwrap_or(0.05),
+        e2: raw["e2"].as_f64().unwrap_or(0.04),
+        plate_t: raw["plate_t"].as_f64().unwrap_or(0.012),
+        steel_grade: raw["steel_grade"].as_str().unwrap_or("S355").to_owned(),
+        weld_throat_a: raw["weld_throat_a"].as_f64().unwrap_or(0.004),
+        weld_length: raw["weld_length"].as_f64().unwrap_or(0.30),
+        n_ed: raw["n_ed"].as_f64().unwrap_or(0.0),
+        v_ed: raw["v_ed"].as_f64().unwrap_or(100.0e3),
+        m_ed: raw["m_ed"].as_f64().unwrap_or(0.0),
+    };
+    // Auto-import of the design internal forces from the active ULS
+    // envelope (M12.1): the studio sends the project + member id instead
+    // of hand-typed forces.
+    let mut forces_source = String::from("manual");
+    if raw["project_json"].is_string() && raw["beam_id"].as_u64().is_some() {
+        let project_json = raw["project_json"].as_str().unwrap_or_default();
+        let beam_id = raw["beam_id"].as_u64().unwrap_or_default() as u32;
+        match uls_envelope_forces(project_json, beam_id) {
+            Ok((n, v, m)) => {
+                input.n_ed = n;
+                input.v_ed = v;
+                input.m_ed = m;
+                forces_source = "uls_envelope".into();
+            }
+            Err(e) => return fault_js("SolveError", e.to_string()),
+        }
+    }
+    let result = rdm_eurocode::ec3_connection_check(&input);
+    let dto = ConnectionResultDto {
+        topology: match input.topology {
+            rdm_eurocode::JointTopology::EndPlate => "end_plate",
+            rdm_eurocode::JointTopology::FinPlate => "fin_plate",
+            rdm_eurocode::JointTopology::Gusset => "gusset",
+        }
+        .to_owned(),
+        topology_label: input.topology.label().to_owned(),
+        grade: input.grade.code().to_owned(),
+        size: match input.size {
+            rdm_eurocode::BoltSize::M12 => "M12",
+            rdm_eurocode::BoltSize::M16 => "M16",
+            rdm_eurocode::BoltSize::M20 => "M20",
+            rdm_eurocode::BoltSize::M24 => "M24",
+            rdm_eurocode::BoltSize::M27 => "M27",
+            rdm_eurocode::BoltSize::M30 => "M30",
+            rdm_eurocode::BoltSize::M36 => "M36",
+        }
+        .to_owned(),
+        n_bolts: input.n_rows * input.n_cols,
+        p1: input.p1,
+        p2: input.p2,
+        e1: input.e1,
+        e2: input.e2,
+        plate_t: input.plate_t,
+        d0: input.size.hole(),
+        steel_grade: input.steel_grade.clone(),
+        weld_throat_a: input.weld_throat_a,
+        weld_length: input.weld_length,
+        n_ed: input.n_ed,
+        v_ed: input.v_ed,
+        m_ed: input.m_ed,
+        trace: result.trace,
+        utilization: result.utilization,
+        governing: result.governing,
+        fv_rd: result.fv_rd,
+        fb_rd: result.fb_rd,
+        ft_rd: result.ft_rd,
+        v_eff_rd: result.v_eff_rd,
+        fw_rd: result.fw_rd,
+    };
+    let _ = forces_source;
+    serde_wasm_bindgen::to_value(&dto).map_err(Into::into)
+}
+
+/// Serializable influence-line payload (M12.2).
+#[derive(Debug, Clone, Serialize)]
+struct InfluenceLineDto {
+    /// Member id.
+    beam_id: u32,
+    /// Response code (`uz` | `My` | `Vy` | `N` | `Rz`).
+    response: String,
+    /// Station ratios `x/L ∈ [0, 1]`.
+    ratios: Vec<f64>,
+    /// Influence ordinate `η(x)` at each station (response per N of load).
+    values: Vec<f64>,
+    /// Interpolated `η` at the requested `station_ratio` (scrubber).
+    at_station: f64,
+    /// Member span (m).
+    span_m: f64,
+}
+
+/// M12.2: influence line `η(x)` of one response function along a member —
+/// a unit vertical load walks the span and the response is sampled at
+/// `n_stations + 1` positions. `response_kind` is one of `uz`, `My`,
+/// `Vy`, `N`, `Rz`; `station_ratio ∈ [0, 1]` is the current scrubber
+/// position (interpolated ordinate returned in `at_station`).
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid inputs.
+#[wasm_bindgen]
+pub fn influence_line_json(
+    project_json: &str,
+    beam_id: u32,
+    station_ratio: f64,
+    response_kind: &str,
+) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<InfluenceLineDto, SolveError> {
+        let structure = cached_structure(project_json)?;
+        let index =
+            structure
+                .beams
+                .iter()
+                .position(|b| b.id == beam_id)
+                .ok_or(SolveError::Sparse {
+                    message: format!("unknown beam id {beam_id}"),
+                })?;
+        let response = ResponseKind::parse(response_kind);
+        let values = rdm_solver::influence_line(&structure, index, response, 24)?;
+        let (Some(p1), Some(p2)) = (
+            structure.node(structure.beams[index].n1).ok(),
+            structure.node(structure.beams[index].n2).ok(),
+        ) else {
+            return Err(SolveError::Sparse {
+                message: format!("beam {beam_id} references missing nodes"),
+            });
+        };
+        let span = ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2) + (p2.z - p1.z).powi(2)).sqrt();
+        let ratio = station_ratio.clamp(0.0, 1.0);
+        let n = values.len().saturating_sub(1);
+        let scaled = ratio * f64::from(n.max(1) as u32);
+        let i = (scaled as usize).min(n);
+        let frac = scaled - i as f64;
+        let lo = values.get(i).copied().unwrap_or_default();
+        let hi = values.get((i + 1).min(n)).copied().unwrap_or(lo);
+        let at_station = lo + (hi - lo) * frac;
+        Ok(InfluenceLineDto {
+            beam_id,
+            response: response.code().to_owned(),
+            ratios: (0..=n)
+                .map(|k| f64::from(k as u32) / f64::from(n.max(1) as u32))
+                .collect(),
+            values,
+            at_station,
+            span_m: span,
+        })
+    })();
+    match outcome {
+        Ok(dto) => serde_wasm_bindgen::to_value(&dto).map_err(Into::into),
+        Err(err) => fault_js("SolveError", err.to_string()),
+    }
+}
+
+/// M12.2: moving-load envelope of one member crossed by an axle train —
+/// EN 1991-2 LM1 tandem (`{"preset": "lm1"}`) or a custom train
+/// (`{"wheel_loads_n": [...], "axle_spacings_m": [...]}` — *Pont roulant*
+/// wheel groups included). The train walks `n_positions + 1` placements
+/// and the governing `(Mmax, Mmin, Vmax, Nmax, Rmax, uz_max)` envelope is
+/// returned with the governing position ratio.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid inputs.
+#[wasm_bindgen]
+pub fn moving_load_train_json(
+    project_json: &str,
+    beam_id: u32,
+    train_json: &str,
+    n_positions: usize,
+) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<rdm_solver::TrainEnvelope, SolveError> {
+        let structure = cached_structure(project_json)?;
+        let index =
+            structure
+                .beams
+                .iter()
+                .position(|b| b.id == beam_id)
+                .ok_or(SolveError::Sparse {
+                    message: format!("unknown beam id {beam_id}"),
+                })?;
+        let train_spec: serde_json::Value =
+            serde_json::from_str(train_json).map_err(|e| SolveError::InvalidModel {
+                message: format!("bad train payload: {e}"),
+            })?;
+        let train = if train_spec["preset"].as_str() == Some("lm1") {
+            AxleTrain::lm1_tandem()
+        } else if train_spec["preset"].as_str() == Some("pont_roulant") {
+            AxleTrain::bridge_crane(
+                train_spec["wheel_load_n"].as_f64().unwrap_or(25_000.0),
+                train_spec["end_carriage_spacing_m"].as_f64().unwrap_or(3.0),
+            )
+        } else {
+            // Custom train: n wheel loads with n − 1 axle spacings.
+            let loads = train_spec["wheel_loads_n"].as_array().map_or_else(
+                || vec![300_000.0],
+                |a| {
+                    a.iter()
+                        .filter_map(serde_json::Value::as_f64)
+                        .collect::<Vec<f64>>()
+                },
+            );
+            let spacings = train_spec["axle_spacings_m"]
+                .as_array()
+                .map_or_else(Vec::new, |a| {
+                    a.iter()
+                        .filter_map(serde_json::Value::as_f64)
+                        .collect::<Vec<f64>>()
+                });
+            AxleTrain {
+                wheel_loads_n: if loads.is_empty() {
+                    vec![300_000.0]
+                } else {
+                    loads
+                },
+                axle_spacings_m: spacings,
+                wheel_spacing_m: train_spec["wheel_spacing_m"].as_f64().unwrap_or(0.0),
+            }
+        };
+        train_envelope(&structure, index, &train, n_positions.clamp(4, 96))
+    })();
+    match outcome {
+        Ok(envelope) => serde_wasm_bindgen::to_value(&envelope).map_err(Into::into),
+        Err(err) => fault_js("SolveError", err.to_string()),
+    }
+}
+
+/// Serializable checkerboard pattern-load envelope (M12.4).
+#[derive(Debug, Clone, Serialize)]
+struct PatternEnvelopeDto {
+    /// Number of detected spans.
+    n_spans: usize,
+    /// `pattern_live_loads(n_spans)` multipliers (all-loaded + 2 alternating).
+    patterns: Vec<Vec<f64>>,
+    /// Beam ids assigned to each span index.
+    span_beam_ids: Vec<Vec<u32>>,
+    /// Per-beam governing envelope across the pattern sub-cases (SI).
+    beams: Vec<PatternBeamEnvelope>,
+}
+
+/// Per-beam min/max envelope across the checkerboard sub-cases.
+#[derive(Debug, Clone, Serialize)]
+struct PatternBeamEnvelope {
+    /// Beam id.
+    beam_id: u32,
+    /// `[min, max]` of the member end moment `My` (N·m).
+    my: [f64; 2],
+    /// `[min, max]` of the member end shear `Vz` (N).
+    vz: [f64; 2],
+    /// `[min, max]` of the member axial force `N` (N).
+    n: [f64; 2],
+}
+
+/// M12.4: EN 1990 pattern (checkerboard) variable sub-cases — the spans
+/// of the X-aligned continuous members are detected from the vertical
+/// supports, `pattern_live_loads` builds the all-loaded + 2 alternating
+/// multipliers, each sub-case is solved with the scaled Variable loads
+/// and the per-beam governing envelope is returned.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid inputs.
+#[wasm_bindgen]
+pub fn pattern_loads_envelope_json(project_json: &str) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<PatternEnvelopeDto, SolveError> {
+        let structure = cached_structure(project_json)?;
+        // Span detection: X-aligned beams chain into segments split at
+        // nodes with a vertical (Uz) restraint.
+        let supported: std::collections::HashSet<u32> = structure
+            .supports
+            .iter()
+            .filter(|s| s.locked_dofs.len() > 2 && s.locked_dofs[2])
+            .map(|s| s.node_id)
+            .collect();
+        let mut span_of_beam: std::collections::HashMap<u32, usize> =
+            std::collections::HashMap::new();
+        let mut span_beam_ids: Vec<Vec<u32>> = Vec::new();
+        // Walk each X-aligned beam chain from a supported start node.
+        let x_beams: Vec<&rdm_model::Beam> = structure
+            .beams
+            .iter()
+            .filter(|b| {
+                let (Ok(n1), Ok(n2)) = (structure.node(b.n1), structure.node(b.n2)) else {
+                    return false;
+                };
+                let dx = (n2.x - n1.x).abs();
+                dx > 1e-6 && dx > 1.4 * (n2.y - n1.y).abs().max((n2.z - n1.z).abs())
+            })
+            .collect();
+        for start_beam in &x_beams {
+            if span_of_beam.contains_key(&start_beam.id) {
+                continue;
+            }
+            // Walk forward from n2 (and backward from n1) building the
+            // ordered chain until a support or a dead end.
+            let mut chain: Vec<&rdm_model::Beam> = Vec::new();
+            let mut backward: Vec<&rdm_model::Beam> = Vec::new();
+            let mut cursor_node = start_beam.n2;
+            chain.push(start_beam);
+            loop {
+                if supported.contains(&cursor_node) {
+                    break;
+                }
+                let next = x_beams
+                    .iter()
+                    .find(|b| b.n1 == cursor_node && !span_of_beam.contains_key(&b.id));
+                match next {
+                    Some(b) => {
+                        chain.push(b);
+                        cursor_node = b.n2;
+                    }
+                    None => break,
+                }
+            }
+            let mut back_node = start_beam.n1;
+            loop {
+                if supported.contains(&back_node) {
+                    break;
+                }
+                let prev = x_beams
+                    .iter()
+                    .find(|b| b.n2 == back_node && !span_of_beam.contains_key(&b.id));
+                match prev {
+                    Some(b) => {
+                        backward.insert(0, b);
+                        back_node = b.n1;
+                    }
+                    None => break,
+                }
+            }
+            // Split the ordered chain into spans at supported nodes.
+            let mut ordered = backward;
+            ordered.extend(chain);
+            let mut current_span: Vec<u32> = Vec::new();
+            for beam in ordered {
+                if span_of_beam.contains_key(&beam.id) {
+                    continue;
+                }
+                current_span.push(beam.id);
+                if supported.contains(&beam.n2) {
+                    let span_index = span_beam_ids.len();
+                    for id in &current_span {
+                        span_of_beam.insert(*id, span_index);
+                    }
+                    span_beam_ids.push(current_span.clone());
+                    current_span.clear();
+                }
+            }
+            if !current_span.is_empty() {
+                let span_index = span_beam_ids.len();
+                for id in &current_span {
+                    span_of_beam.insert(*id, span_index);
+                }
+                span_beam_ids.push(current_span);
+            }
+        }
+        let n_spans = span_beam_ids.len();
+        if n_spans == 0 {
+            return Ok(PatternEnvelopeDto {
+                n_spans: 0,
+                patterns: Vec::new(),
+                span_beam_ids: Vec::new(),
+                beams: Vec::new(),
+            });
+        }
+        let patterns = rdm_eurocode::pattern_live_loads(n_spans);
+        let mut beams: Vec<PatternBeamEnvelope> = structure
+            .beams
+            .iter()
+            .map(|b| PatternBeamEnvelope {
+                beam_id: b.id,
+                my: [f64::INFINITY, f64::NEG_INFINITY],
+                vz: [f64::INFINITY, f64::NEG_INFINITY],
+                n: [f64::INFINITY, f64::NEG_INFINITY],
+            })
+            .collect();
+        for pattern in &patterns {
+            let mut s = structure.as_ref().clone();
+            s.loads.clear();
+            for load in &structure.loads {
+                if load.case != LoadCase::Variable {
+                    s.loads.push(*load);
+                    continue;
+                }
+                let beam_of = match &load.kind {
+                    rdm_model::LoadKind::Trapezoid { beam_id, .. }
+                    | rdm_model::LoadKind::PointOnSpan { beam_id, .. } => Some(*beam_id),
+                    _ => None,
+                };
+                let multiplier = beam_of
+                    .and_then(|id| span_of_beam.get(&id))
+                    .and_then(|span| pattern.get(*span))
+                    .copied()
+                    .unwrap_or(1.0);
+                if multiplier.abs() < 1.0e-12 {
+                    continue;
+                }
+                let mut scaled = *load;
+                match &mut scaled.kind {
+                    rdm_model::LoadKind::Trapezoid { q_start, q_end, .. } => {
+                        *q_start *= multiplier;
+                        *q_end *= multiplier;
+                    }
+                    rdm_model::LoadKind::PointOnSpan { forces, .. } => {
+                        forces.fx *= multiplier;
+                        forces.fy *= multiplier;
+                        forces.fz *= multiplier;
+                    }
+                    _ => {}
+                }
+                s.loads.push(scaled);
+            }
+            let solved = rdm_solver::validate_and_solve(&s)?;
+            let Some((_, sol)) = solved.cases.iter().find(|(c, _)| *c == LoadCase::Variable) else {
+                return Err(SolveError::Sparse {
+                    message: "Variable case missing".into(),
+                });
+            };
+            for (i, _beam) in structure.beams.iter().enumerate() {
+                let base = 12 * i;
+                let my = sol.beam_end_forces.get(base + 4).copied().unwrap_or(0.0);
+                let vz = sol.beam_end_forces.get(base + 2).copied().unwrap_or(0.0);
+                let n = sol.beam_end_forces.get(base).copied().unwrap_or(0.0);
+                let entry = &mut beams[i];
+                entry.my[0] = entry.my[0].min(my);
+                entry.my[1] = entry.my[1].max(my);
+                entry.vz[0] = entry.vz[0].min(vz);
+                entry.vz[1] = entry.vz[1].max(vz);
+                entry.n[0] = entry.n[0].min(n);
+                entry.n[1] = entry.n[1].max(n);
+            }
+        }
+        Ok(PatternEnvelopeDto {
+            n_spans,
+            patterns,
+            span_beam_ids,
+            beams,
+        })
+    })();
+    match outcome {
+        Ok(dto) => serde_wasm_bindgen::to_value(&dto).map_err(Into::into),
+        Err(err) => fault_js("SolveError", err.to_string()),
+    }
+}
+
+/// M12.3: SLS inter-storey drift check of the storey levels
+/// (`d_r / h ≤ 1/300` or `1/500`) — solves the model, superposes the SLS
+/// combination and pairs the nodes vertically between consecutive levels.
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on invalid inputs.
+#[wasm_bindgen]
+pub fn storey_drift_json(project_json: &str, limit_denominator: u32) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<rdm_solver::StoreyDriftReport, SolveError> {
+        let structure = cached_structure(project_json)?;
+        rdm_solver::interstorey_drift(&structure, limit_denominator.max(100))
+    })();
+    match outcome {
+        Ok(report) => serde_wasm_bindgen::to_value(&report).map_err(Into::into),
+        Err(e) => fault_js("SolveError", e.to_string()),
+    }
+}
+
+/// M12.5: bidirectional BIM import — `.ifc` (IFC4 structural STEP
+/// text) or `.saf.json` (SAF structural analysis format) text parsed
+/// into a fresh `.rdm` project JSON string. Inverse of [`export_bim`].
+///
+/// # Errors
+///
+/// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
+#[wasm_bindgen]
+pub fn import_bim(text: &str, format: &str, name: &str) -> Result<JsValue, JsValue> {
+    let outcome = (|| -> Result<String, SolveError> {
+        let structure = match format {
+            "ifc" => Ok(rdm_cad::import_ifc4_structural(text)),
+            "saf" | "saf_json" => {
+                rdm_cad::import_saf_json(text).map_err(|e| SolveError::InvalidModel {
+                    message: format!("invalid SAF payload: {e}"),
+                })
+            }
+            _ => Err(SolveError::InvalidModel {
+                message: format!("unknown BIM format {format}"),
+            }),
+        }?;
+        let project = rdm_model::ProjectFile::new(name, structure);
+        project
+            .to_canonical_json()
+            .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+            .map_err(|e| SolveError::InvalidModel {
+                message: format!("canonical write failed: {e}"),
+            })
+    })();
+    match outcome {
+        Ok(json) => serde_wasm_bindgen::to_value(&json).map_err(Into::into),
+        Err(err) => fault_js("SolveError", err.to_string()),
     }
 }

@@ -24,6 +24,7 @@ import {
   Settings2,
   SlidersHorizontal,
   Spline,
+  Wrench,
 } from "lucide-react";
 import { BoxSelect, FlipHorizontal2, Merge, Move, Play, Repeat, RotateCw } from "lucide-react";
 import { ReleaseHinge } from "@rdm-studio/ui/icons";
@@ -193,6 +194,23 @@ export function CommandPalette({
                   label={t`Studio Sections Composées`}
                   shortcut="⌥S"
                   onSelect={() => fire("rdm-open-composite-studio")}
+                />
+                {/* M12.1: Assemblages entry — deep-links into the EC3-1-8
+                    connection studio dialog on the results step. */}
+                <PaletteRow
+                  icon={Wrench}
+                  label={t`Studio Assemblages EC3-1-8`}
+                  shortcut="⌥A"
+                  onSelect={() => {
+                    onOpenChange(false);
+                    void trackProductEvent("command_palette_used", {
+                      action: "nav:assemblages",
+                    });
+                    void navigate({
+                      to: "/results",
+                      search: (prev) => ({ ...prev, modal: "connection" as const }),
+                    });
+                  }}
                 />
                 <PaletteRow icon={Spline} label={t`Polyligne`} onSelect={() => cad("polyline")} />
                 <PaletteRow icon={BoxSelect} label={t`Extruder`} onSelect={() => cad("extrude")} />
@@ -402,6 +420,23 @@ export function CommandPalette({
                   label={t`Studio Sections Composées`}
                   shortcut="⌥S"
                   onSelect={() => fire("rdm-open-composite-studio")}
+                />
+                {/* M12.1: Assemblages entry — deep-links into the EC3-1-8
+                    connection studio dialog on the results step. */}
+                <PaletteRow
+                  icon={Wrench}
+                  label={t`Studio Assemblages EC3-1-8`}
+                  shortcut="⌥A"
+                  onSelect={() => {
+                    onOpenChange(false);
+                    void trackProductEvent("command_palette_used", {
+                      action: "nav:assemblages",
+                    });
+                    void navigate({
+                      to: "/results",
+                      search: (prev) => ({ ...prev, modal: "connection" as const }),
+                    });
+                  }}
                 />
                 <PaletteRow icon={Spline} label={t`Polyligne`} onSelect={() => cad("polyline")} />
                 <PaletteRow icon={BoxSelect} label={t`Extruder`} onSelect={() => cad("extrude")} />

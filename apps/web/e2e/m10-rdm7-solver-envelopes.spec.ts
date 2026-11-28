@@ -32,7 +32,11 @@ test("imposed settlement applies on the locked DOFs (Δ badge)", async ({ page }
   await expect(page.getByTestId("settlement-section")).toBeVisible();
   await expandPanel(page, "support-settlement-panel");
   // Node 1 locks Ux / Uz / Ry in the demo model: Δuz is editable.
-  const uzField = page.getByTestId("settlement-fields-1").locator("label").nth(2).locator("input");
+  const uzField = page
+    .getByTestId("settlement-fields-1")
+    .locator("label")
+    .nth(2)
+    .locator('input[type="text"]');
   await expect(uzField).toBeEditable();
   await uzField.fill("5");
   await page.getByTestId("apply-settlement-1").click();
@@ -68,7 +72,7 @@ test("validation certificate shows 49/49 with the RDM6/RDM7 filter pill", async 
   // The 8 Debard RDM6/RDM7 closed-form benchmarks join the 41 legacy ones.
   await expect(modal.getByText("49/49")).toBeVisible();
   await modal.getByTestId("filter-rdm6").click();
-  await expect(modal.getByText("8 / 49")).toBeVisible();
+  await expect(modal.getByRole("radio", { name: "RDM6 / RDM7 (8)" })).toBeVisible();
   await expect(modal.getByText("RDM6 / RDM7 (Debard)")).toBeVisible();
 });
 
@@ -88,7 +92,7 @@ test("load-case manager adds an elementary case and generates combinations", asy
   await expandPanel(page, "load-case-manager-panel");
   await page.getByTestId("add-load-case").click();
   // The default new-case code is Q2 (EN 1990 Annex A1 ψ presets).
-  await expect(page.getByTestId("load-case-manager")).toContainText("Q2");
+  await expect(page.getByTestId("load-case-manager")).toContainText("Exploitation (Q)");
   await page.getByTestId("generate-combinations").click();
   await expect(page.getByTestId("load-case-manager")).toContainText("1.35G + 1.50Q");
 });

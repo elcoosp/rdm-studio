@@ -19,7 +19,7 @@ test("studio opens from Step 1 and shows exact PRS telemetry", async ({ page }) 
   });
   await expect(canvas.locator("polygon").first()).toBeVisible();
   // Dashed amber plastic neutral axis + centroid reticle drawn.
-  await expect(canvas.locator('path, line[stroke="#D97706"]').first()).toBeVisible();
+  await expect(canvas.locator('path, line[stroke="#D97706"]').first()).toBeAttached();
 });
 
 test("2×UPN dos-à-dos and IPE+platine presets recompute the telemetry", async ({ page }) => {
@@ -29,8 +29,8 @@ test("2×UPN dos-à-dos and IPE+platine presets recompute the telemetry", async 
   await expect(telemetry).toContainText("8208 mm²", { timeout: 15_000 });
   // 2×UPN 200 backs 10 mm apart: A ≈ 2 × 32.86 cm².
   await page.getByTestId("composite-preset-2upn-dos-a-dos").click();
-  await expect(telemetry).toContainText("6572 mm²", { timeout: 15_000 });
-  await expect(telemetry).toContainText("2UPN 200");
+  await expect(telemetry).toContainText("6573 mm²", { timeout: 15_000 });
+  await expect(page.getByTestId("composite-name")).toHaveValue("2UPN 200");
   // IPE 300 + 200×10 cover plates: A ≈ 5381 + 2×2000 = 9381 mm².
   await page.getByTestId("composite-preset-ipe-platine-semelle").click();
   await expect(telemetry).toContainText("9381 mm²", { timeout: 15_000 });

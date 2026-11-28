@@ -1844,23 +1844,11 @@ pub fn custom_section_preview(
 ///
 /// Returns a `SolveFault`-shaped `JsValue` on malformed payloads.
 #[wasm_bindgen]
-pub fn compute_composite_section(def_json: &str) -> Result<JsValue, JsValue> {
-    let outcome = (|| -> Result<rdm_cad::CompositeSectionResult, SolveError> {
-        let def: rdm_model::CompositeSectionDef =
-            serde_json::from_str(def_json).map_err(|e| SolveError::InvalidModel {
-                message: format!("malformed composite section payload: {e}"),
-            })?;
-        rdm_cad::compute_composite_section(&def).map_err(|err| SolveError::InvalidModel {
-            message: err.to_string(),
-        })
-    })();
-    match outcome {
-        Ok(result) => serde_wasm_bindgen::to_value(&result).map_err(Into::into),
-        Err(err) => {
-            let fault: SolveFault = SolveFault::from(&err);
-            serde_wasm_bindgen::to_value(&fault).map_err(Into::into)
-        }
-    }
+pub fn compute_composite_section(def_json: &str) -> Result<String, JsValue> {
+    let def: rdm_model::CompositeSectionDef =
+        serde_json::from_str(def_json).map_err(|e| fault_err("InvalidModel", format!("malformed composite section payload: {e}")))?;
+    let result = rdm_cad::compute_composite_section(&def).map_err(|err| fault_err("InvalidModel", err.to_string()))?;
+    serde_json::to_string(&result).map_err(|e| fault_err("InvalidModel", e.to_string()))
 }
 
 /// v1.8.0: EN 1991 action generators (`kind`: `imposed|snow|wind`),

@@ -688,7 +688,7 @@ function GeometryPage() {
           </div>
         ) : null}
         {/* v2.1.2: HUD corners lifted above the 24px stage status bar. */}
-        {sectionCounts.length > 0 && project.structure.nodes.length > 0 ? (
+        {sectionCounts.length > 0 ? (
           <div
             className="pointer-events-none absolute bottom-8 left-2 z-30 flex max-w-[62%] flex-wrap gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
             data-testid="profile-legend"

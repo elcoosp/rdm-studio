@@ -615,6 +615,7 @@ function useCompositeResults(defs: { name: string }[]): Record<string, Composite
 }
 
 const fr3 = (v: number, digits = 3): string => v.toFixed(digits).replace(".", ",");
+const EMPTY_CUSTOM_SECTIONS: never[] = [];
 
 /**
  * M11.3: dedicated «Sections Droites Composées» chapter — for every custom
@@ -623,7 +624,7 @@ const fr3 = (v: number, digits = 3): string => v.toFixed(digits).replace(".", ",
  * EN 1993-1-1 Table 5.2 classification badges.
  */
 function CompositeReportChapter(): React.ReactElement | null {
-  const defs = useProjectStore((s) => s.project.structure.custom_sections ?? []);
+  const defs = useProjectStore((s) => s.project.structure.custom_sections ?? EMPTY_CUSTOM_SECTIONS);
   const results = useCompositeResults(defs);
   if (defs.length === 0) {
     return null;
@@ -985,7 +986,9 @@ function ReportBuilder({
   // M11.3: native Word tables ride the LIVE solve report + the exact
   // composite section metadata (Sections Droites Composées chapter).
   const report = useLastReport();
-  const customDefs = useProjectStore((st) => st.project.structure.custom_sections ?? []);
+  const customDefs = useProjectStore(
+    (st) => st.project.structure.custom_sections ?? EMPTY_CUSTOM_SECTIONS,
+  );
   const compositeResults = useCompositeResults(customDefs);
   // v2.1.0: the cover metadata pre-fills from the local-first license
   // store (Offline Pro firm branding — LicenseModal keeps it in sync).

@@ -41,6 +41,7 @@ import { trackProductEvent } from "@/lib/productTelemetry";
  */
 
 const GRADES = ["S235", "S275", "S355", "S460"] as const;
+const EMPTY_SECTIONS: CompositeSectionDefData[] = [];
 
 /** French decimal comma formatting for the telemetry table. */
 function fr(value: number, digits = 1): string {
@@ -160,7 +161,9 @@ export function CompositeSectionStudio({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }): React.ReactElement {
-  const customSections = useProjectStore((s) => s.project.structure.custom_sections ?? []);
+  const customSections = useProjectStore(
+    (s) => s.project.structure.custom_sections ?? EMPTY_SECTIONS,
+  );
   const upsertCompositeSection = useProjectStore((s) => s.upsertCompositeSection);
   const batchIds = useProjectStore((s) => s.batch.selectedBeamIds);
   const { beamId } = useSelectedIds();
@@ -256,11 +259,11 @@ export function CompositeSectionStudio({
     return beamId !== null ? [beamId] : [];
   }, [batchIds, beamId]);
 
-  const apply = (): void => {
+  const apply = async (): Promise<void> => {
     if (activeBeamIds.length === 0) {
       return;
     }
-    upsertCompositeSection(def, activeBeamIds);
+    await upsertCompositeSection(def, activeBeamIds);
     void trackProductEvent("composite_section_applied", {
       beams: activeBeamIds.length,
       elements: def.elements.length,

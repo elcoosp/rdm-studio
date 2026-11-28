@@ -226,6 +226,46 @@ async function ensureReady(): Promise<void> {
 let session: ModelSession | null = null;
 let liveToken = 0;
 
+function flattenCompositeDef(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const def = raw as { elements?: unknown[]; [k: string]: unknown };
+  if (!Array.isArray(def.elements)) return raw;
+  return {
+    ...def,
+    elements: def.elements.map((el) => {
+      if (typeof el !== "object" || el === null) return el;
+      const item = el as { kind?: unknown; [k: string]: unknown };
+      if (typeof item.kind === "object" && item.kind !== null) {
+        const { kind, ...rest } = item;
+        return { ...(kind as Record<string, unknown>), ...rest };
+      }
+      return item;
+    }),
+  };
+}
+
+function serializeProjectForWasm(project: unknown): string {
+  if (typeof project === "string") {
+    return serializeProjectForWasm(JSON.parse(project));
+  }
+  if (typeof project === "object" && project !== null) {
+    const p = project as {
+      structure?: { custom_sections?: unknown[]; [k: string]: unknown };
+      [k: string]: unknown;
+    };
+    if (p.structure && Array.isArray(p.structure.custom_sections)) {
+      return JSON.stringify({
+        ...p,
+        structure: {
+          ...p.structure,
+          custom_sections: p.structure.custom_sections.map(flattenCompositeDef),
+        },
+      });
+    }
+  }
+  return JSON.stringify(project);
+}
+
 function ensureSession(): ModelSession {
   session ??= new ModelSession();
   return session;
@@ -243,7 +283,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     liveToken = request.token;
     const session = ensureSession();
     const applied: void | { kind?: string } = session.apply_delta(
-      JSON.stringify(request.project),
+      serializeProjectForWasm(request.project),
     ) as unknown as void | { kind?: string };
     if (applied !== undefined && applied.kind === "Fault") {
       self.postMessage({ type: "LIVE_FAULT", token: request.token, fault: applied });
@@ -306,13 +346,13 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     try {
       switch (request.fn) {
         case "build_combinations_v2_json":
-          result = build_combinations_v2_json(JSON.stringify(args[0]));
+          result = build_combinations_v2_json(serializeProjectForWasm(args[0]));
           break;
         case "member_calc_trace":
-          result = member_calc_trace(JSON.stringify(args[0]), (args[1] as number) ?? 0);
+          result = member_calc_trace(serializeProjectForWasm(args[0]), (args[1] as number) ?? 0);
           break;
         case "compute_envelopes_json":
-          result = compute_envelopes_json(JSON.stringify(args[0]));
+          result = compute_envelopes_json(serializeProjectForWasm(args[0]));
           break;
         case "custom_section_preview":
           result = custom_section_preview(
@@ -332,10 +372,16 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           );
           break;
         case "optimize_sections_json":
-          result = optimize_sections_json(JSON.stringify(args[0]), JSON.stringify(args[1]));
+          result = optimize_sections_json(
+            serializeProjectForWasm(args[0]),
+            JSON.stringify(args[1]),
+          );
           break;
         case "buckling_analysis_json":
-          result = buckling_analysis_json(JSON.stringify(args[0]), (args[1] as number) ?? 4);
+          result = buckling_analysis_json(
+            serializeProjectForWasm(args[0]),
+            (args[1] as number) ?? 4,
+          );
           break;
         case "seismic_spectrum_json":
           result = seismic_spectrum_json(
@@ -346,7 +392,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           );
           break;
         case "export_bim":
-          result = export_bim(JSON.stringify(args[0]), args[1] as string);
+          result = export_bim(serializeProjectForWasm(args[0]), args[1] as string);
           break;
         case "multi_material_check_json":
           result = multi_material_check_json(args[0] as string, JSON.stringify(args[1]));
@@ -356,14 +402,19 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           break;
         case "moving_loads_envelope_json":
           result = moving_loads_envelope_json(
-            JSON.stringify(args[0]),
+            serializeProjectForWasm(args[0]),
             args[1] as number,
             args[2] as number,
           );
           break;
         case "compute_composite_section":
-          result = compute_composite_section(args[0] as string);
-          break;
+          {
+            const parsed = typeof args[0] === "string" ? JSON.parse(args[0]) : args[0];
+            result = JSON.parse(
+              compute_composite_section(JSON.stringify(flattenCompositeDef(parsed))),
+            );
+            break;
+          }
         default:
           result = { kind: "Fault", message: "unrouted engine call" };
       }
@@ -387,7 +438,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     return;
   }
   if (request.type === "MODAL_ANALYSIS") {
-    const report = modal_analysis(JSON.stringify(request.project), request.nModes);
+    const report = modal_analysis(serializeProjectForWasm(request.project), request.nModes);
     if ((report as { kind?: string }).kind === "Fault") {
       self.postMessage({ type: "MODAL_FAULT", fault: report });
       return;
@@ -397,7 +448,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   }
   if (request.type === "SECTION_STRESS") {
     const grid = section_stress_grid(
-      JSON.stringify(request.project),
+      serializeProjectForWasm(request.project),
       request.beamId,
       "ULS",
       request.ratio,
@@ -412,7 +463,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   }
   if (request.type === "SPAN_FORCES") {
     const forces = beam_span_forces(
-      JSON.stringify(request.project),
+      serializeProjectForWasm(request.project),
       request.beamId,
       "ULS",
       request.nRatios,
@@ -464,7 +515,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   }
   if (request.type === "MODEL_ISSUES") {
     // v1.6.0: structured pre-solve diagnostics for the Steps 1–3 badges.
-    const issues = validate_model_issues(JSON.stringify(request.project));
+    const issues = validate_model_issues(serializeProjectForWasm(request.project));
     if ((issues as { kind?: string }).kind === "Fault") {
       self.postMessage({ type: "MODEL_ISSUES_FAULT", fault: issues });
       return;
@@ -509,7 +560,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   if (request.project === undefined) {
     return;
   }
-  const result = solve(JSON.stringify(request.project));
+  const result = solve(serializeProjectForWasm(request.project));
   const fault = (result as { kind?: string }).kind;
   if (typeof fault === "string") {
     console.error("[fea.worker] solve fault:", fault, (result as { message?: string }).message);

@@ -1228,6 +1228,7 @@ version = "0.1.0"
 dependencies = [
  "approx 0.6.0-rc2",
  "dxf",
+ "rdm-eurocode",
  "rdm-model",
  "serde",
  "serde_json",

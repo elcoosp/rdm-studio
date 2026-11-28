@@ -274,7 +274,7 @@ interface ProjectState {
    * on the model state and optionally assigns it to the given beams — the
    * WASM solver then resolves the section natively.
    */
-  upsertCompositeSection: (def: CompositeSectionDefData, beamIds?: number[]) => void;
+  upsertCompositeSection: (def: CompositeSectionDefData, beamIds?: number[]) => Promise<void>;
   /** M11.1: removes one composite section definition from the model. */
   removeCompositeSection: (name: string) => void;
   /** v1.6.0: removes the support on one node (Step 2 `×` button). */
@@ -1017,26 +1017,29 @@ export const useProjectStore = create<ProjectState>()(
             },
           },
         })),
-      // M11.1: persist the composite definition and re-target the beams.
-      upsertCompositeSection: (def, beamIds) =>
+      upsertCompositeSection: async (def, beamIds) => {
+        let nextProject: ProjectData | undefined;
         set((st) => {
           const others = (st.project.structure.custom_sections ?? []).filter(
             (d) => d.name !== def.name,
           );
           const selected = new Set(beamIds ?? []);
-          return {
-            project: {
-              ...st.project,
-              structure: {
-                ...st.project.structure,
-                custom_sections: [...others, def],
-                beams: st.project.structure.beams.map((b) =>
-                  selected.has(b.id) ? { ...b, section_id: def.name } : b,
-                ),
-              },
+          nextProject = {
+            ...st.project,
+            structure: {
+              ...st.project.structure,
+              custom_sections: [...others, def],
+              beams: st.project.structure.beams.map((b) =>
+                selected.has(b.id) ? { ...b, section_id: def.name } : b,
+              ),
             },
           };
-        }),
+          return { project: nextProject };
+        });
+        if (nextProject !== undefined) {
+          await idbSet(IDB_KEY, nextProject);
+        }
+      },
       removeCompositeSection: (name) =>
         set((st) => ({
           project: {

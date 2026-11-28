@@ -573,7 +573,11 @@ class FeaClient {
    * studio canvas telemetry runs through the same engine the solver uses.
    */
   computeCompositeSection(defJson: string): Promise<CompositeSectionResult> {
-    return this.engineCall("compute_composite_section", defJson) as Promise<CompositeSectionResult>;
+    return this.engineCall("compute_composite_section", defJson).then((r) =>
+      typeof r === "string"
+        ? (JSON.parse(r) as CompositeSectionResult)
+        : (r as CompositeSectionResult),
+    ) as Promise<CompositeSectionResult>;
   }
 
   /** v1.8.0/v1.9.0: named engine call over the generic lane.

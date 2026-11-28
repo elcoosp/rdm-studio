@@ -1,11 +1,12 @@
+#
 msgid ""
 msgstr ""
 "POT-Creation-Date: 2026-11-25 01:17+0000\n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
-"Language: en\n"
 
 #: src/routes/_studio/report.tsx
 msgid ".docx téléchargé"
@@ -34,14 +35,29 @@ msgstr "{0} {1} — appliquer au nœud sélectionné"
 msgid "{0} barreaux · {1}"
 msgstr "{0} members · {1}"
 
+#. placeholder {0}: points.length
+#: src/components/ModelDataTable.tsx
+msgid "{0} nœud(s) créé(s) depuis le presse-papiers"
+msgstr "{0} node(s) created from the clipboard"
+
+#. placeholder {0}: draft.nodes.length
+#. placeholder {1}: draft.beams.length
+#: src/components/ParametricFrameModal.tsx
+msgid "{0} nœuds · {1} poutres · projet remplacé"
+msgstr "{0} nodes · {1} members · project replaced"
+
 #. placeholder {0}: generated.structure.nodes.length
 #. placeholder {1}: generated.structure.beams.length
 #: src/components/ProjectGalleryModal.tsx
 msgid "{0} nœuds · {1} poutres (moteur Rust rdm-cad)."
 msgstr "{0} nodes · {1} beams (Rust engine rdm-cad)."
 
-#. placeholder {0}: results?.length ?? 0
-#: src/components/ValidationModal.tsx
+#. placeholder {0}: draft.nodes.length
+#. placeholder {1}: draft.beams.length
+#: src/components/ParametricFrameModal.tsx
+msgid "{0} nœuds · {1} poutres ajoutés"
+msgstr "{0} nodes · {1} members added"
+
 #~ msgid "{passed}/{0} benchmarks passent (tolérance 3 %)."
 #~ msgstr "{passed}/{0} benchmarks pass (3% tolerance)."
 
@@ -49,7 +65,6 @@ msgstr "{0} nodes · {1} beams (Rust engine rdm-cad)."
 msgid "← Retour à l'accueil"
 msgstr "← Back to home"
 
-#: src/routes/geometry.tsx
 #~ msgid "+ Nœud"
 #~ msgstr "+ Node"
 
@@ -89,11 +104,9 @@ msgstr "100 % local-first"
 msgid "15 liaisons normalisées, matrice 6 DDL et contrôle d'isostaticité en temps réel — appuis élastiques kx..krz inclus."
 msgstr "15 standard restraints, the 6-DOF matrix and real-time isostaticity control — elastic supports kx..krz included."
 
-#: src/components/LicenseModal.tsx
 #~ msgid "19 € HT — toutes les fonctions Pro actives 48 h sur ce poste (démonstration hors-ligne)."
 #~ msgstr "€19 excl. VAT — every Pro feature active for 48 h on this device (offline demo)."
 
-#: src/components/LicenseModal.tsx
 #~ msgid "19 € HT · 48 h de plein droit"
 #~ msgstr "€19 excl. VAT · 48 h of full access"
 
@@ -105,7 +118,6 @@ msgstr "41 / 41"
 msgid "48 h de plein droit, sans abonnement"
 msgstr "48 h of full access, no subscription"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "49 €/mois · Licence perpétuelle"
 #~ msgstr "€49/month · perpetual licence"
 
@@ -117,7 +129,6 @@ msgstr "What is the 48 h Project Pass for?"
 msgid "Accrochage magnétique 10/50/100 mm, import DXF / STEP / IGES, sections personnalisées PRS / RHS / CHS et optimiseur Pareto EC3 en un clic — annulable instantanément."
 msgstr "10/50/100 mm magnetic snapping, DXF / STEP / IGES import, custom PRS / RHS / CHS sections and a 1-click EC3 Pareto optimizer — instantly undoable."
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Accrochage magnétique 10/50/100 mm, subdivisions, extrusion, optimiseur EC3 1-clic avec retour arrière ⌘Z — la géométrie reste la source de vérité."
 #~ msgstr "10/50/100 mm magnetic snapping, subdivisions, extrusion and the 1-click EC3 optimizer with ⌘Z undo — geometry stays the single source of truth."
 
@@ -141,7 +152,6 @@ msgstr "Steel S235–S460"
 msgid "Acier, inox, alu, bois, béton, boulons, feu"
 msgstr "Steel, stainless, aluminium, timber, concrete, bolts, fire"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Actif"
 #~ msgstr "Active"
 
@@ -157,11 +167,9 @@ msgstr "naval & lifting actions"
 msgid "Activation 1 clic, hors-ligne"
 msgstr "1-click activation, offline"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Activée"
 #~ msgstr "Activated"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Activer"
 #~ msgstr "Activate"
 
@@ -173,7 +181,6 @@ msgstr "Activer Plan 2D & recalculer"
 msgid "Activer une démonstration Pro"
 msgstr "Activate a Pro demonstration"
 
-#: src/components/CadToolbar.tsx
 #~ msgid "Aide-mémoire des raccourcis"
 #~ msgstr "Shortcut cheat-sheet"
 
@@ -185,7 +192,6 @@ msgstr "Add load"
 msgid "Ajouter un lien antidéversant (kLT → 1)"
 msgstr "Add a lateral restraint (kLT → 1)"
 
-#: src/routes/geometry.tsx
 #~ msgid "Ajouter un nœud"
 #~ msgstr "Add node"
 
@@ -197,7 +203,6 @@ msgstr "Add nodes, connect them with N1 → N2 members, import a DXF drawing or 
 msgid "Alu EN 1999"
 msgstr "Aluminium EN 1999"
 
-#: src/routes/results.tsx
 #~ msgid "Amplification"
 #~ msgstr "Amplification"
 
@@ -223,6 +228,8 @@ msgid "Annexe nationale (FR / BE / DE / UK / EN), méthode EN 1990 6.10 ou 6.10a
 msgstr "National Annex (FR / BE / DE / UK / EN), EN 1990 6.10 or 6.10a/b method, Timoshenko shear, second-order P-Δ — and the 41 / 41 analytical benchmark suite verifies the solver."
 
 #: src/components/CadImportDialog.tsx
+#: src/components/CadToolbar.tsx
+#: src/routes/_studio/geometry.tsx
 #: src/viewport3d/PersistentStage.tsx
 msgid "Annuler"
 msgstr "Undo"
@@ -258,9 +265,12 @@ msgstr "Support"
 msgid "Appuis actifs"
 msgstr "Active supports"
 
-#: src/routes/_studio/supports.tsx
 #~ msgid "Appuis élastiques (kx..krz)"
 #~ msgstr "Elastic supports (kx..krz)"
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Articuler les diagonales (barres de treillis)"
+msgstr "Articulate the diagonals (truss bars)"
 
 #: src/viewport3d/PersistentStage.tsx
 msgid "Articuler N1/N2"
@@ -270,7 +280,6 @@ msgstr "Hinge N1/N2"
 msgid "Atelier 3D complet en 5 étapes"
 msgstr "Complete 3D workshop in 5 steps"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Atelier 3D complet, 5 étapes"
 #~ msgstr "Complete 3D workshop, 5 steps"
 
@@ -294,13 +303,16 @@ msgstr "No results."
 msgid "Aucune charge définie — choisissez un scénario d'accélération ou ajoutez une charge."
 msgstr "No loads yet — pick an acceleration scenario or add a load."
 
-#: src/routes/loads.tsx
 #~ msgid "Aucune charge définie."
 #~ msgstr "No load defined."
 
 #: src/routes/_marketing/legal.tsx
 msgid "Aucune donnée envoyée sur un serveur. Vos modèles, sections, charges, résultats et notes de calcul sont traités et stockés exclusivement dans votre navigateur (IndexedDB, localStorage). RDM Studio ne comporte aucun outil de mesure télémétrique, aucun traceur tiers et aucun transfert vers un pays tiers : le responsable de traitement de vos données d'ingénierie, c'est vous."
 msgstr "No data is ever sent to a server. Your models, sections, loads, results and calculation notes are processed and stored exclusively in your browser (IndexedDB, localStorage). RDM Studio ships no telemetry tooling, no third-party trackers and no transfers to third countries: the data controller for your engineering data is you."
+
+#: src/routes/_studio/geometry.tsx
+msgid "Auto-découpe"
+msgstr "Auto-split"
 
 #: src/routes/_studio/geometry.tsx
 msgid "Barre de treillis (articuler N1/N2)"
@@ -326,9 +338,12 @@ msgstr "benchmarks pass"
 msgid "Béton EN 1992"
 msgstr "Concrete EN 1992"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Béton, bois, alu, mixte"
 #~ msgstr "Concrete, timber, aluminium, composite"
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Bibliothèque d'ossatures paramétrées"
+msgstr "Parametric frame library"
 
 #: src/components/OnboardingTour.tsx
 msgid "Bibliothèque normalisée EN 10365"
@@ -338,7 +353,6 @@ msgstr "EN 10365 standard library"
 msgid "Bibliothèque RDM 7 (12 appuis groupés)"
 msgstr "RDM 7 library (12 grouped supports)"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "BIM IFC4 / SAF"
 #~ msgstr "IFC4 / SAF BIM"
 
@@ -391,7 +405,6 @@ msgstr "Solving…"
 msgid "Calculé"
 msgstr "Computed"
 
-#: src/routes/_studio/results.tsx
 #~ msgid "Calculer"
 #~ msgstr "Calculate"
 
@@ -399,7 +412,6 @@ msgstr "Computed"
 msgid "Calculer 3D & Eurocode 3"
 msgstr "Run 3D & Eurocode 3 analysis"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "CAO 3D interactive + optimiseur"
 #~ msgstr "Interactive 3D CAD + optimizer"
 
@@ -419,7 +431,6 @@ msgstr "Member properties"
 msgid "Cas"
 msgstr "Case"
 
-#: src/routes/loads.tsx
 #~ msgid "Cas de charge"
 #~ msgstr "Load case"
 
@@ -427,7 +438,6 @@ msgstr "Case"
 msgid "Cas G / Q / W / S / Acc, générateurs EN 1991 (imposée, neige, vent, ΔT) et résultante globale en direct."
 msgstr "G / Q / W / S / Acc cases, EN 1991 generators (imposed, snow, wind, ΔT) and a live global force resultant."
 
-#: src/routes/geometry.tsx
 #~ msgid "Catalogue"
 #~ msgstr "Catalog"
 
@@ -467,7 +477,6 @@ msgstr "Change the profile (+2 sizes)"
 msgid "Chaque modèle d'ouverture est un vrai projet de bureau d'études : choisissez-le ici, il s'ouvre profilé, appuyé et prêt à calculer dans l'atelier."
 msgstr "Every quick-start model is a real engineering-firm project: pick it here and it opens in the workshop with profiles assigned, supports placed and ready to solve."
 
-#: src/routes/loads.tsx
 #~ msgid "Charge ponctuelle"
 #~ msgstr "Point load"
 
@@ -519,11 +528,9 @@ msgstr "Engineer's Technical Responsibility Clause"
 msgid "clauses EN 1993-1-1"
 msgstr "EN 1993-1-1 clauses"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Clé de licence"
 #~ msgstr "Licence key"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Clé refusée"
 #~ msgstr "Key rejected"
 
@@ -535,7 +542,6 @@ msgstr "click two nodes to connect (cyan start node)"
 msgid "cliquez le plan de grille pour poser un nœud (accrochage magnétique)"
 msgstr "click the grid plane to place a node (magnetic snapping)"
 
-#: src/routes/_studio/supports.tsx
 #~ msgid "Cliquez un nœud dans la vue 3D pour le sélectionner, puis appliquez un appui."
 #~ msgstr "Click a node in the 3D view to select it, then apply a support."
 
@@ -546,6 +552,10 @@ msgstr "Cliquez une poutre pour la supprimer — Échap pour quitter"
 #: src/routes/_studio/supports.tsx
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
 msgstr "Tick the DOFs locked by each support. Free rotations let bending pass (pin)."
+
+#: src/components/ModelDataTable.tsx
+msgid "Coller x y z (Tab/CSV) pour créer des nœuds"
+msgstr "Paste x y z (Tab/CSV) to create nodes"
 
 #: src/routes/_studio/results.tsx
 msgid "Combinaison affichée"
@@ -568,6 +578,22 @@ msgstr "feedback.commentLabel"
 #: src/components/FeedbackModal.tsx
 msgid "feedback.button"
 msgstr "feedback.button"
+
+#: src/components/CadToolbar.tsx
+msgid "Compacter"
+msgstr "Compact"
+
+#: src/routes/_studio/geometry.tsx
+msgid "Compacter / nettoyer le modèle"
+msgstr "Compact / clean the model"
+
+#: src/components/CadToolbar.tsx
+msgid "Compacter / nettoyer le modèle — fusionner les nœuds, couper les intersections, dédoublonner les poutres"
+msgstr "Compact / clean the model — merge nodes, split intersections, deduplicate members"
+
+#: src/components/CadToolbar.tsx
+msgid "Compacter le modèle"
+msgstr "Compact the model"
 
 #: src/components/CommandPalette.tsx
 #: src/components/ScenarioCompareModal.tsx
@@ -595,7 +621,6 @@ msgstr "General Terms of Use & Sale"
 msgid "Confidentialité RGPD"
 msgstr "GDPR privacy"
 
-#: src/routes/geometry.tsx
 #~ msgid "Connecter au nœud sélectionné"
 #~ msgstr "Connect to selected node"
 
@@ -627,7 +652,6 @@ msgstr "Copy TSV"
 msgid "Cotes"
 msgstr "Dimensions"
 
-#: src/routes/_studio/results.tsx
 #~ msgid "Coupe 2D σvM"
 #~ msgstr "2D σvM section"
 
@@ -647,7 +671,6 @@ msgstr "CQC / SRSS"
 msgid "Créer une poutre"
 msgstr "Create a member"
 
-#: src/routes/_studio/report.tsx
 #~ msgid "CSV Excel"
 #~ msgstr "CSV Excel"
 
@@ -663,7 +686,6 @@ msgstr "Date"
 msgid "Découverte"
 msgstr "Discovery"
 
-#: src/routes/results.tsx
 #~ msgid "Déformée & exploitation (ELU)"
 #~ msgstr "Deformed shape & ULS utilization"
 
@@ -683,7 +705,6 @@ msgstr "Already linked"
 msgid "Démarrer le pass 48 h"
 msgstr "Start the 48 h pass"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Démonstration Pro activée"
 #~ msgstr "Pro demonstration activated"
 
@@ -699,11 +720,9 @@ msgstr "Extreme SLS displacements"
 msgid "Déplacements nodaux"
 msgstr "Nodal displacements"
 
-#: src/routes/results.tsx
 #~ msgid "Déplacements nodaux (G)"
 #~ msgstr "Nodal displacements (G)"
 
-#: src/routes/results.tsx
 #~ msgid "Déplacements nodaux (Q)"
 #~ msgstr "Nodal displacements (Q)"
 
@@ -745,11 +764,9 @@ msgstr "Alternating diagonals without verticals: some members carry zero force d
 msgid "Diagrammes d'efforts 3D"
 msgstr "3D force diagrams"
 
-#: src/routes/_studio/results.tsx
 #~ msgid "Diagrammes d'efforts 3D (enveloppes)"
 #~ msgstr "3D force diagrams (envelopes)"
 
-#: src/viewport3d/ForceDiagrams3D.tsx
 #~ msgid "Diagrammes N/V/T/M (envelopes)"
 #~ msgstr "N/V/T/M diagrams (envelopes)"
 
@@ -768,6 +785,14 @@ msgstr "Publishing director: the editorial manager of the RDM Studio project. Si
 #: src/routes/_studio/loads.tsx
 msgid "Direction"
 msgstr "Direction"
+
+#: src/routes/_studio/geometry.tsx
+msgid "Discrétiser"
+msgstr "Subdivide"
+
+#: src/routes/_studio/geometry.tsx
+msgid "Discrétiser (N tronçons)"
+msgstr "Subdivide (N segments)"
 
 #: src/routes/_marketing/legal.tsx
 msgid "Disponibilité. Le service étant local-first, aucune disponibilité serveur n'est requise pour calculer : les mises à jour, la documentation et le support sont les seuls services en ligne. L'éditeur s'engage à publier chaque version avec son journal de modifications et ses 41 benchmarks de validation."
@@ -806,7 +831,6 @@ msgstr "Data processed locally: the current project (geometry, profiles, loads, 
 msgid "DXF / STEP / IGES"
 msgstr "DXF / STEP / IGES"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "EC3 complet + CalcTrace"
 #~ msgstr "Full EC3 + CalcTrace"
 
@@ -827,7 +851,6 @@ msgstr "Thermal scale"
 msgid "Édition & branding"
 msgstr "Edition & branding"
 
-#: src/components/LicenseBadge.tsx
 #~ msgid "Édition Découverte"
 #~ msgstr "Discovery edition"
 
@@ -839,11 +862,9 @@ msgstr "Discovery Edition — Non-contractual evaluation"
 msgid "Édition Open Source"
 msgstr "Open Source Edition"
 
-#: src/components/LicenseBadge.tsx
 #~ msgid "Édition Pro"
 #~ msgstr "Pro edition"
 
-#: src/routes/_studio/results.tsx
 #~ msgid "Efforts internes (5 courbes)"
 #~ msgstr "Internal forces (5 curves)"
 
@@ -887,7 +908,6 @@ msgstr "Save branding"
 msgid "Enregistrer le projet courant"
 msgstr "Save the current project"
 
-#: src/routes/_studio/results.tsx
 #~ msgid "Enveloppes 3D"
 #~ msgstr "3D envelopes"
 
@@ -905,7 +925,6 @@ msgstr "feedback.send"
 msgid "Envoyer des commentaires"
 msgstr "Send feedback"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Équipe / Entreprise"
 #~ msgstr "Team / Enterprise"
 
@@ -913,8 +932,6 @@ msgstr "Send feedback"
 msgid "Équipe / Intranet"
 msgstr "Team / Intranet"
 
-#. placeholder {0}: step.stepOrder
-#: src/routes/_studio.tsx
 #~ msgid "Étape {0}"
 #~ msgstr "Step {0}"
 
@@ -926,15 +943,12 @@ msgstr "Eurocode 3"
 msgid "Exécution de la suite de validation…"
 msgstr "Running validation suite…"
 
-#: src/components/ValidationModal.tsx
 #~ msgid "Exécution en cours…"
 #~ msgstr "Running…"
 
-#: src/routes/results.tsx
 #~ msgid "Exploitation EC3"
 #~ msgstr "EC3 utilization"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Export PDF / CSV / .rdm"
 #~ msgstr "PDF / CSV / .rdm export"
 
@@ -962,7 +976,6 @@ msgstr "Export IFC4"
 msgid "Exporter TSV"
 msgstr "Export TSV"
 
-#: src/routes/_studio/report.tsx
 #~ msgid "Exports (étape 5)"
 #~ msgstr "Exports (step 5)"
 
@@ -978,7 +991,6 @@ msgstr "Extrude"
 msgid "f (Hz)"
 msgstr "f (Hz)"
 
-#: src/components/ValidationModal.tsx
 #~ msgid "FAIL"
 #~ msgstr "FAIL"
 
@@ -1010,7 +1022,6 @@ msgstr "Wireframes: DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) and IGES (110
 msgid "Filtrer les benchmarks"
 msgstr "Filter benchmarks"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Firm branding enregistré"
 #~ msgstr "Firm branding saved"
 
@@ -1034,7 +1045,6 @@ msgstr "Deflection δ"
 msgid "Flèches ELS (mm)"
 msgstr "SLS deflections (mm)"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "flux CAD verrouillé"
 #~ msgstr "locked CAD workflow"
 
@@ -1066,7 +1076,6 @@ msgstr "Pareto frontier (mass vs utilization)"
 msgid "Fusionner doublons"
 msgstr "Merge duplicates"
 
-#: src/routes/loads.tsx
 #~ msgid "Fz (kN, négatif vers le bas)"
 #~ msgstr "Fz (kN, negative downward)"
 
@@ -1074,7 +1083,6 @@ msgstr "Merge duplicates"
 msgid "Gabarit"
 msgstr "Template"
 
-#: src/components/CommandPalette.tsx
 #~ msgid "Galerie — 12 modèles"
 #~ msgstr "Gallery — 12 models"
 
@@ -1095,6 +1103,10 @@ msgstr "Parametric generator (Rust)"
 msgid "Générateurs EN 1991"
 msgstr "EN 1991 generators"
 
+#: src/components/ParametricFrameModal.tsx
+msgid "Générateurs RDM6/7 — portique, treillis, ferme retroussée, pylône. Aperçu mis à jour en direct."
+msgstr "RDM6/7 generators — portal frame, plan truss, raised-tie truss, lattice tower. Live preview updates instantly."
+
 #. placeholder {0}: fault.message ?? "paramètres invalides"
 #: src/components/ProjectGalleryModal.tsx
 msgid "Génération impossible : {0}"
@@ -1109,6 +1121,10 @@ msgstr "Rendering…"
 msgid "Générer la structure"
 msgstr "Generate the structure"
 
+#: src/routes/_studio/geometry.tsx
+msgid "Générer une ossature paramétrée…"
+msgstr "Generate a parametric frame…"
+
 #: src/routes/_studio/report.tsx
 msgid "Grandeur"
 msgstr "Quantity"
@@ -1117,7 +1133,6 @@ msgstr "Quantity"
 msgid "Gratuit — illimité"
 msgstr "Free — unlimited"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Gratuit à vie — solveur 3D Timoshenko, tous les Eurocodes, 14 modèles, tous les exports."
 #~ msgstr "Free for life — Timoshenko 3D solver, all Eurocodes, 14 models, all exports."
 
@@ -1141,7 +1156,6 @@ msgstr "Guides & tutorials <0>↗</0>"
 msgid "Hauteur H (m)"
 msgstr "Height H (m)"
 
-#: src/routes/_studio/report.tsx
 #~ msgid "HTML 3D"
 #~ msgstr "3D HTML"
 
@@ -1153,7 +1167,6 @@ msgstr "Ideal for a signed deliverable this weekend"
 msgid "Importer CAO"
 msgstr "Import CAD"
 
-#: src/routes/geometry.tsx
 #~ msgid "Importer DXF"
 #~ msgstr "Import DXF"
 
@@ -1177,6 +1190,10 @@ msgstr "Engineer"
 msgid "Inox 304L"
 msgstr "Stainless 304L"
 
+#: src/components/ParametricFrameModal.tsx
+msgid "Insérer à l'origine"
+msgstr "Insert at origin"
+
 #: src/viewport3d/PersistentStage.tsx
 msgid "Inspecter sur Étape 4"
 msgstr "Inspect in Step 4"
@@ -1189,7 +1206,6 @@ msgstr "Section inspector"
 msgid "Inverser la sélection"
 msgstr "Invert selection"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "L'édition Découverte est complète pour apprendre et calculer. L'édition Pro ajoute le branding du bureau d'études et le multi-matériaux — activation hors-ligne, sans compte."
 #~ msgstr "The Discovery edition is complete for learning and running calculations. The Pro edition adds engineering-firm branding and multi-material design — offline activation, no account."
 
@@ -1205,7 +1221,6 @@ msgstr "The calculation-note cover will pre-fill these fields."
 msgid "La licence Pro expire-t-elle hors-ligne ?"
 msgstr "Does the Pro licence expire offline?"
 
-#: src/components/CommandPalette.tsx
 #~ msgid "Lancer le calcul 3D & Eurocode 3"
 #~ msgstr "Run the 3D & Eurocode 3 calculation"
 
@@ -1233,7 +1248,6 @@ msgstr "Interface language"
 msgid "Le calcul de structures 3D aux Eurocodes, entièrement sur votre poste."
 msgstr "Eurocode 3D structural analysis, entirely on your machine."
 
-#: src/routes/report.tsx
 #~ msgid "Le modèle .rdm est compresse (lz-string) dans l'URL et valide par Valibot a la relecture."
 #~ msgstr "The .rdm model is compressed (lz-string) into the URL and validated by Valibot on read."
 
@@ -1249,7 +1263,6 @@ msgstr "Le solveur a détecté un mécanisme"
 msgid "Légal"
 msgstr "Legal"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Les 14 modèles métiers (naval, levage, charpente, bois, mixte)"
 #~ msgstr "The 14 trade models (naval, lifting, framing, timber, composite)"
 
@@ -1261,11 +1274,9 @@ msgstr "The 15 trade models (naval, lifting, framing, timber, composite)"
 msgid "Liaisons (RDM 7)"
 msgstr "Connections (RDM 7)"
 
-#: src/routes/supports.tsx
 #~ msgid "Libre"
 #~ msgstr "Free"
 
-#: src/components/CommandPalette.tsx
 #~ msgid "Licence & branding"
 #~ msgstr "Licence & branding"
 
@@ -1273,7 +1284,6 @@ msgstr "Connections (RDM 7)"
 msgid "Licence d'utilisation. L'édition Découverte est fournie gratuitement, pour un usage professionnel ou pédagogique, sous les termes de la licence open source du projet. L'édition Pro est concédée (non cédée) par clé RDM-PRO- : la clé d'essai débloque les fonctions Pro sur un poste, la licence perpétuelle les débloque durablement, l'abonnement mensuel tant qu'il est actif."
 msgstr "Licence of use. The Discovery edition is provided free of charge, for professional or educational use, under the project's open-source licence. The Pro edition is licensed (not sold) through an RDM-PRO- key: the trial key unlocks the Pro features on one machine, the perpetual licence unlocks them durably, and the monthly subscription for as long as it remains active."
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Licence Pro activée (hors-ligne)"
 #~ msgstr "Pro licence activated (offline)"
 
@@ -1378,6 +1388,13 @@ msgstr "Model loaded"
 msgid "Modèle chargé : {0}"
 msgstr "Model loaded: {0}"
 
+#. placeholder {0}: stats.splitBeams
+#. placeholder {1}: stats.mergedNodes
+#: src/components/CadToolbar.tsx
+#: src/routes/_studio/geometry.tsx
+msgid "Modèle compacté : {0} poutre(s) découpée(s), {1} nœud(s) fusionné(s)"
+msgstr "Model compacted: {0} member(s) split, {1} node(s) merged"
+
 #: src/routes/_marketing/index.tsx
 msgid "Modèle du hero"
 msgstr "Hero model"
@@ -1426,7 +1443,6 @@ msgstr "Naval & lifting —"
 msgid "Naval, levage & dynamique"
 msgstr "Naval, lifting & dynamics"
 
-#: src/components/ValidationModal.tsx
 #~ msgid "Niveaux de validation"
 #~ msgstr "Validation levels"
 
@@ -1475,7 +1491,6 @@ msgstr "Standard"
 msgid "Normes"
 msgstr "Standards"
 
-#: src/components/CommandPalette.tsx
 #~ msgid "Note de calcul A4 / PDF"
 #~ msgstr "A4 / PDF calculation note"
 
@@ -1483,7 +1498,6 @@ msgstr "Standards"
 msgid "Note de calcul A4 & Exports"
 msgstr "A4 calculation note & exports"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Note de calcul A4 PDF vectorielle (polices embarquées), .docx structuré et BIM IFC4 / SAF — plus l'export HTML 3D autonome."
 #~ msgstr "Vector A4 PDF calculation note (embedded fonts), structured .docx and IFC4 / SAF BIM — plus the self-contained 3D HTML export."
 
@@ -1517,7 +1531,6 @@ msgstr "Optimiser automatiquement les profilés surchargés"
 msgid "optimiseur 1-clic"
 msgstr "1-click optimizer"
 
-#: src/components/OptimizerModal.tsx
 #~ msgid "Optimiseur de sections"
 #~ msgstr "Section optimizer"
 
@@ -1532,6 +1545,18 @@ msgstr "EC3 optimizer — lightest profile"
 #: src/components/OnboardingTour.tsx
 msgid "Orbite librement, basculez les vues Iso / XY / XZ / YZ, profitez de l'accrochage aimanté sur nœuds et milieux — et clic droit sur une poutre pour le menu contextuel."
 msgstr "Orbit freely, switch the Iso / XY / XZ / YZ views, enjoy magnetic snapping on nodes and midpoints — and right-click a member for the context menu."
+
+#. placeholder {0}: draft.name
+#: src/components/ParametricFrameModal.tsx
+msgid "Ossature générée : {0}"
+msgstr "Frame generated: {0}"
+
+#. placeholder {0}: origin.x
+#. placeholder {1}: origin.y
+#. placeholder {2}: origin.z
+#: src/components/ParametricFrameModal.tsx
+msgid "Ossature insérée à ({0} ; {1} ; {2}) m"
+msgstr "Frame inserted at ({0} ; {1} ; {2}) m"
 
 #: src/routes/_marketing/index.tsx
 msgid "ou licence perpétuelle — hors-ligne"
@@ -1592,8 +1617,11 @@ msgstr "P-Δ (second order)"
 
 #. placeholder {0}: beam.id
 #: src/routes/_studio/geometry.tsx
-msgid "P{0} subdivisée en {segments} tronçons"
+msgid "P{0} discrétisée en {segments} tronçons"
 msgstr "P{0} subdivided into {segments} segments"
+
+#~ msgid "P{0} subdivisée en {segments} tronçons"
+#~ msgstr "P{0} subdivided into {segments} segments"
 
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Palette"
@@ -1623,7 +1651,6 @@ msgstr "EC3 Pareto"
 msgid "Partage & impression"
 msgstr "Share & Print"
 
-#: src/routes/report.tsx
 #~ msgid "Partage par URL"
 #~ msgstr "URL sharing"
 
@@ -1639,11 +1666,9 @@ msgstr "Share anonymous usage statistics (no cookie)"
 msgid "Pass Projet 48 h"
 msgstr "48 h Project Pass"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Pass Projet 48 h démarré"
 #~ msgstr "48 h Project Pass started"
 
-#: src/components/ValidationModal.tsx
 #~ msgid "passent"
 #~ msgstr "pass"
 
@@ -1667,7 +1692,6 @@ msgstr "PDF downloaded"
 msgid "PDF vectoriel Takumi, .docx structuré, CSV Excel, maquette 3D HTML autonome, BIM IFC4 / SAF et empreinte SHA-256."
 msgstr "Vector Takumi PDF, structured .docx, CSV Excel, standalone 3D HTML, BIM IFC4 / SAF and the SHA-256 fingerprint."
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "PDF vectoriel, .docx & BIM"
 #~ msgstr "Vector PDF, .docx & BIM"
 
@@ -1707,11 +1731,9 @@ msgstr "Automatic self-weight"
 msgid "Poids propre automatique (1g −Z)"
 msgstr "Self-weight (1g −Z)"
 
-#: src/routes/loads.tsx
 #~ msgid "Poids propre automatique (cas G)"
 #~ msgstr "Automatic self-weight (G case)"
 
-#: src/components/CadToolbar.tsx
 #~ msgid "Polar 15°"
 #~ msgstr "Polar 15°"
 
@@ -1764,15 +1786,17 @@ msgstr "Poutre B{id} supprimée"
 msgid "Poutre continue 3 × 4 m : moments négatifs sur appuis et redistribution — comparez 6.10 et 6.10a/b ici."
 msgstr "Continuous 3 × 4 m beam: negative moments over supports and redistribution — compare 6.10 against 6.10a/b here."
 
-#: src/routes/_studio/results.tsx
+#. placeholder {0}: result.splitBeams
+#: src/viewport3d/PersistentStage.tsx
+msgid "Poutre hôte découpée — {0} tronçon(s) créé(s)"
+msgstr "Host member split — {0} segment(s) created"
+
 #~ msgid "Poutre inspectée"
 #~ msgstr "Inspected member"
 
-#: src/routes/geometry.tsx
 #~ msgid "Poutres"
 #~ msgstr "Beams"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Poutres 3D 6 DDL en Rust/WASM : cisaillement Timoshenko, P-Δ second ordre, analyse modale et flambement linéaire — résolu localement dans votre navigateur."
 #~ msgstr "3D 6-DOF beam elements in Rust/WASM: Timoshenko shear, second-order P-Δ, modal analysis and linear buckling — solved locally in your browser."
 
@@ -1780,7 +1804,6 @@ msgstr "Continuous 3 × 4 m beam: negative moments over supports and redistribut
 msgid "Poutres 3D 6 DDL en Rust/WASM (Cholesky creuse faer) : cisaillement Timoshenko, second ordre géométrique P-Δ et flambement linéaire global λcr — résolus localement dans votre navigateur."
 msgstr "3D 6-DOF members in Rust/WASM (sparse faer Cholesky): Timoshenko shear, geometric second-order P-Δ and global linear buckling — solved locally in your browser."
 
-#: src/routes/loads.tsx
 #~ msgid "poutres résolues par élément"
 #~ msgstr "beams solved per element"
 
@@ -1800,6 +1823,10 @@ msgstr "Preferences & Help"
 msgid "Presets d'appui"
 msgstr "Support presets"
 
+#: src/components/ModelDataTable.tsx
+msgid "Presse-papiers illisible — attendu « x y z » par ligne"
+msgstr "Unreadable clipboard — expected one “x y z” row per line"
+
 #: src/routes/_marketing/index.tsx
 msgid "Preuves techniques"
 msgstr "Technical proof"
@@ -1816,7 +1843,6 @@ msgstr "Product"
 msgid "Profil"
 msgstr "Profile"
 
-#: src/routes/_studio/geometry.tsx
 #~ msgid "Profil (EN 10365)"
 #~ msgstr "Profile (EN 10365)"
 
@@ -1836,7 +1862,6 @@ msgstr "Secondary section"
 msgid "Profilés"
 msgstr "Sections"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Profilés EN 10365 / 10210 / 10056 et matériaux EN 1992 / 1995 / 1998 / 1999 : kmod, kdef et catégories de service intégrés au même modèle."
 #~ msgstr "EN 10365 / 10210 / 10056 sections and EN 1992 / 1995 / 1998 / 1999 materials: kmod, kdef and service classes built into the same model."
 
@@ -1884,7 +1909,6 @@ msgstr "Quitter le mode suppression (Échap)"
 msgid "Raccourcis"
 msgstr "Raccourcis"
 
-#: src/components/CadToolbar.tsx
 #~ msgid "Raccourcis CAD"
 #~ msgstr "CAD shortcuts"
 
@@ -1900,11 +1924,9 @@ msgstr "Keyboard shortcuts"
 msgid "Raideurs N/m (translations) et N·m/rad (rotations). Un DDL bloqué ignore son ressort ; un DDL libre élastique participe à la raideur (EN 1993-1-1)."
 msgstr "Stiffnesses in N/m (translations) and N·m/rad (rotations). A locked DOF ignores its spring; a free elastic DOF contributes to the stiffness (EN 1993-1-1)."
 
-#: src/routes/report.tsx
 #~ msgid "Rapport 3D autonome (HTML)"
 #~ msgstr "Standalone 3D report (HTML)"
 
-#: src/routes/report.tsx
 #~ msgid "Rapport de model"
 #~ msgstr "Model report"
 
@@ -1912,7 +1934,6 @@ msgstr "Stiffnesses in N/m (translations) and N·m/rad (rotations). A locked DOF
 msgid "Rapport PDF"
 msgstr "PDF report"
 
-#: src/routes/report.tsx
 #~ msgid "Rapport PDF (takumi)"
 #~ msgstr "PDF report (takumi)"
 
@@ -1928,7 +1949,6 @@ msgstr "RDM Studio — Calculation report"
 msgid "RDM Studio est édité en open source : l’édition est 100 % gratuite, illimitée, sans compte et sans cloud. Les métadonnées ci-dessous pré-remplissent la couverture de la note de calcul (étape 5)."
 msgstr "RDM Studio is open-source published: the edition is 100 % free, unlimited, no account, no cloud. The metadata below pre-fills the calculation report cover (step 5)."
 
-#: src/components/LicenseModal.tsx
 #~ msgid "RDM Studio est local-first : l'activation s'effectue hors-ligne, aucune donnée n'est envoyée sur un serveur."
 #~ msgstr "RDM Studio is local-first: activation happens offline, no data is sent to any server."
 
@@ -1956,7 +1976,6 @@ msgstr "Reactions"
 msgid "Réactions d'appuis ELU (kN / kN·m)"
 msgstr "Réactions d'appuis ELU (kN / kN·m)"
 
-#: src/routes/_studio/report.tsx
 #~ msgid "Réactions d'appuis ELU (kN)"
 #~ msgstr "ULS support reactions (kN)"
 
@@ -1984,7 +2003,6 @@ msgstr "Recommended"
 msgid "Réduire la portée ou ajouter un appui"
 msgstr "Shorten the span or add a support"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Refusée"
 #~ msgstr "Rejected"
 
@@ -2001,7 +2019,6 @@ msgstr "Normative settings"
 msgid "Réglages normatifs & 41 benchmarks"
 msgstr "Normative settings & 41 benchmarks"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Réinitialiser"
 #~ msgstr "Reset"
 
@@ -2021,6 +2038,10 @@ msgstr "Release N1/N2 moments"
 #: src/routes/_studio/geometry.tsx
 msgid "Relier N1 → N2"
 msgstr "Connect N1 → N2"
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Remplacer le projet"
+msgstr "Replace project"
 
 #: src/viewport3d/LayerToolbar.tsx
 msgid "Rendu filaire"
@@ -2071,11 +2092,9 @@ msgstr "Engineer's responsibility"
 msgid "Résultantes globales"
 msgstr "Global resultants"
 
-#: src/routes/report.tsx
 #~ msgid "Resultats CSV (Excel)"
 #~ msgstr "Results CSV (Excel)"
 
-#: src/routes/results.tsx
 #~ msgid "Resultats de calcul"
 #~ msgstr "Calculation results"
 
@@ -2087,7 +2106,6 @@ msgstr "Calculation results"
 msgid "Résultats σvM indisponibles"
 msgstr "σvM results unavailable"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Retour à l'édition Découverte"
 #~ msgstr "Back to the Discovery edition"
 
@@ -2103,7 +2121,6 @@ msgstr "Roll angle θx (°)"
 msgid "Rust + WASM · < 20 ms"
 msgstr "Rust + WASM · < 20 ms"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Sans abonnement ni compte"
 #~ msgstr "No subscription, no account"
 
@@ -2119,11 +2136,9 @@ msgstr "Metrological 3D scene"
 msgid "Scène temps réel · WebGL"
 msgstr "Real-time scene · WebGL"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Schéma isométrique d'un portique en profilés IPE"
 #~ msgstr "Isometric diagram of a portal frame in IPE sections"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Schéma structurel d'un portique chargé"
 #~ msgstr "Structural diagram of a loaded portal frame"
 
@@ -2131,7 +2146,6 @@ msgstr "Real-time scene · WebGL"
 msgid "Sections classes 1–4, χy / χz / χLT, Nb,Rd, Mc,Rd : chaque clause s'ouvre en formule KaTeX pas-à-pas, vérifiable par le contresignateur, avec empreinte SHA-256 du modèle."
 msgstr "Cross-section classes 1–4, χy / χz / χLT, Nb,Rd, Mc,Rd: every clause opens into a step-by-step KaTeX formula the checker can verify, with the SHA-256 model fingerprint."
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Sections classes 1–4, χy/χz/χLT, Nb,Rd, Mc,Rd et formules KaTeX traçables : chaque étape de calcul est documentée pour le vérificateur."
 #~ msgstr "Class 1–4 sections, χy/χz/χLT, Nb,Rd, Mc,Rd and traceable KaTeX formulas: every calculation step is documented for the checker."
 
@@ -2195,11 +2209,9 @@ msgstr "WASM Cholesky solver"
 msgid "solveur par pas de temps"
 msgstr "solver per time step"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Solveur Timoshenko + EC3"
 #~ msgstr "Timoshenko solver + EC3"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "Solveur Timoshenko 3D"
 #~ msgstr "3D Timoshenko solver"
 
@@ -2224,17 +2236,15 @@ msgstr "Status"
 msgid "Structure paramétrique générée"
 msgstr "Parametric structure generated"
 
-#: src/routes/_studio/geometry.tsx
-msgid "Subdiviser"
-msgstr "Subdivide"
+#~ msgid "Subdiviser"
+#~ msgstr "Subdivide"
 
 #: src/viewport3d/PersistentStage.tsx
 msgid "Subdiviser en 4 tronçons"
 msgstr "Split into 4 segments"
 
-#: src/routes/_studio/geometry.tsx
-msgid "Subdiviser en N tronçons"
-msgstr "Subdivide into N segments"
+#~ msgid "Subdiviser en N tronçons"
+#~ msgstr "Subdivide into N segments"
 
 #: src/components/ValidationModal.tsx
 msgid "Suite de 41 benchmarks analytiques — RDM & Eurocode 3"
@@ -2252,7 +2262,6 @@ msgstr "Next: define the loads →"
 msgid "Suivant : Définir les liaisons →"
 msgstr "Next: define the connections →"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Support prioritaire hors-ligne"
 #~ msgstr "Priority offline support"
 
@@ -2346,7 +2355,6 @@ msgstr "All thresholds are met. The model is certified for the calculation note.
 msgid "Tout supprimer"
 msgstr "Delete all"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Toutes les fonctionnalités Pro sont débloquées sur ce poste."
 #~ msgstr "All Pro features are unlocked on this machine."
 
@@ -2390,7 +2398,6 @@ msgstr "A complete engineering firm, from model to calculation note."
 msgid "Un facteur de cas sert d'ordre de grandeur : conversions SI vers affichage exclusives à l'UI."
 msgstr "A load-case factor is an order of magnitude: SI-to-display conversions are UI-only."
 
-#: src/routes/results.tsx
 #~ msgid "Un facteur de cas sert d'ordre de grandeur: conversions SI vers affichage exclusives a l'UI."
 #~ msgstr "Case factors give the order of magnitude: SI to display conversions live exclusively in the UI."
 
@@ -2398,13 +2405,16 @@ msgstr "A load-case factor is an order of magnitude: SI-to-display conversions a
 msgid "Un même modèle traverse les matériaux : profils EN 10365 / 10210 / 10056, S235–S460, inox 304L, alu 6061/6082-T6 (EN 1999), lamellé-collé GL24h (EN 1995), béton armé (EN 1992), assemblages boulonnés (EC3-1-8) et feu R30–R120 (EC3-1-2)."
 msgstr "One model spans every material: EN 10365 / 10210 / 10056 profiles, S235–S460 steel, 304L stainless, 6061/6082-T6 aluminium (EN 1999), GL24h glulam (EN 1995), reinforced concrete (EN 1992), bolted joints (EC3-1-8) and fire R30–R120 (EC3-1-2)."
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Une clé valide commence par RDM-PRO-."
 #~ msgstr "A valid key starts with RDM-PRO-."
 
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
 msgstr "A new version is available."
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Unités SI strictes (m)"
+msgstr "Strict SI units (m)"
 
 #: src/routes/_studio/report.tsx
 msgid "URL de partage"
@@ -2422,7 +2432,6 @@ msgstr "Unit value"
 msgid "Validation — 41 benchmarks analytiques"
 msgstr "Validation — 41 analytical benchmarks"
 
-#: src/components/ValidationModal.tsx
 #~ msgid "Validation suite"
 #~ msgstr "Validation suite"
 
@@ -2446,9 +2455,6 @@ msgstr "Cross-verification. The 41 built-in analytical benchmarks verify the sol
 msgid "Vérification EC3"
 msgstr "EC3 verification"
 
-#. placeholder {0}: uls.beams.reduce((m, b) => (b.utilization > m.utilization ? b : m)).beam_id
-#. placeholder {1}: (maxUls * 100).toFixed(1).replace(".", ",")
-#: src/routes/results.tsx
 #~ msgid "Vérification EC3 dépassée — élément déterminant : P{0} (η ={1} %). Un renforcement en 1 clic est proposé."
 #~ msgstr "EC3 check exceeded — governing member: P{0} (η ={1} %). A 1-click reinforcement is offered."
 
@@ -2460,7 +2466,6 @@ msgstr "ULS verification"
 msgid "Vérification Eurocode 3"
 msgstr "Eurocode 3 verification"
 
-#: src/components/LicenseModal.tsx
 #~ msgid "Vérification…"
 #~ msgstr "Checking…"
 
@@ -2505,7 +2510,6 @@ msgstr "feedback.title"
 msgid "Vue 3D du modèle"
 msgstr "3D view of the model"
 
-#: src/viewport3d/ViewportCanvas.tsx
 #~ msgid "Vue 3D indisponible (WebGL) — edition et calculs actifs."
 #~ msgstr "3D view unavailable (WebGL) — editing and solving remain active."
 
@@ -2529,7 +2533,6 @@ msgstr "zero cloud"
 msgid "Zéro compte, zéro bridage, zéro cloud"
 msgstr "Zero account, zero throttling, zero cloud"
 
-#: src/routes/_marketing/index.tsx
 #~ msgid "zéro télémétrie"
 #~ msgstr "zero telemetry"
 

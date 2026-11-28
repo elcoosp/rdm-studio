@@ -10,22 +10,28 @@ import init, {
   compute_composite_section,
   compute_envelopes_json,
   custom_section_preview,
+  ec3_connection_check,
   export_bim,
   generate_env_loads_json,
   generate_parametric_structure,
+  import_bim,
   import_cad,
   import_dxf,
+  influence_line_json,
   member_calc_trace,
+  moving_load_train_json,
+  moving_loads_envelope_json,
   multi_material_check_json,
   migrate_project_json,
-  moving_loads_envelope_json,
   modal_analysis,
   optimize_sections_json,
+  pattern_loads_envelope_json,
   project_fingerprint,
   run_validation_suite,
   section_stress_grid,
   seismic_spectrum_json,
   solve,
+  storey_drift_json,
   validate_model_issues,
 } from "../wasm-pkg/rdm_wasm.js";
 
@@ -146,7 +152,13 @@ export interface EngineCallRequest {
     | "multi_material_check_json"
     | "moving_loads_envelope_json"
     | "migrate_project_json"
-    | "compute_composite_section";
+    | "compute_composite_section"
+    | "ec3_connection_check"
+    | "influence_line_json"
+    | "moving_load_train_json"
+    | "pattern_loads_envelope_json"
+    | "storey_drift_json"
+    | "import_bim";
   args: unknown[];
 }
 
@@ -407,14 +419,45 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
             args[2] as number,
           );
           break;
-        case "compute_composite_section":
-          {
-            const parsed = typeof args[0] === "string" ? JSON.parse(args[0]) : args[0];
-            result = JSON.parse(
-              compute_composite_section(JSON.stringify(flattenCompositeDef(parsed))),
-            );
-            break;
-          }
+        case "compute_composite_section": {
+          const parsed = typeof args[0] === "string" ? JSON.parse(args[0]) : args[0];
+          result = JSON.parse(
+            compute_composite_section(JSON.stringify(flattenCompositeDef(parsed))),
+          );
+          break;
+        }
+        case "ec3_connection_check":
+          result = ec3_connection_check(JSON.stringify(args[0]));
+          break;
+        case "influence_line_json":
+          result = influence_line_json(
+            serializeProjectForWasm(args[0]),
+            args[1] as number,
+            args[2] as number,
+            args[3] as string,
+          );
+          break;
+        case "moving_load_train_json":
+          result = moving_load_train_json(
+            serializeProjectForWasm(args[0]),
+            args[1] as number,
+            JSON.stringify(args[2]),
+            (args[3] as number) ?? 24,
+          );
+          break;
+        case "pattern_loads_envelope_json":
+          result = pattern_loads_envelope_json(serializeProjectForWasm(args[0]));
+          break;
+        case "storey_drift_json":
+          result = storey_drift_json(serializeProjectForWasm(args[0]), (args[1] as number) ?? 300);
+          break;
+        case "import_bim":
+          result = import_bim(
+            args[0] as string,
+            args[1] as string,
+            (args[2] as string) || "Import",
+          );
+          break;
         default:
           result = { kind: "Fault", message: "unrouted engine call" };
       }

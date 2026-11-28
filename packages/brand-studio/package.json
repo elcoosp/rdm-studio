@@ -1,0 +1,24 @@
+{
+  "name": "@rdm-studio/brand-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Takumi-powered Swiss Metrology brand asset compositor bound directly to @rdm-studio/ui tokens.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "render": "node src/cli.ts render",
+    "prompts": "node src/cli.ts prompts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rdm-studio/ui": "workspace:*",
+    "@takumi-rs/helpers": "^2.22.1",
+    "takumi-js": "^2.22.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^6.0.3"
+  }
+}

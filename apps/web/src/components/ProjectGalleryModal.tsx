@@ -359,161 +359,187 @@ export function ProjectGalleryModal({
         <div>
           {/* v1.6.0: parametric configurator (moteur Rust rdm-cad). */}
           <div
-            className="rounded border border-accent-ring bg-accent-tint/60 p-2"
+            className="rounded-[6px] border border-accent-ring bg-accent-tint/45 p-2.5"
             data-testid="parametric-configurator"
           >
-            <h3 className="flex items-center gap-1.5 text-[12px] font-semibold text-accent">
-              <Trans>Générateur paramétrique (Rust)</Trans>
-            </h3>
-            <div className="mt-2 grid grid-cols-[112px_1fr] items-center gap-x-2 gap-y-1.5">
-              <label className="text-[11px] text-ink-secondary" htmlFor="param-template">
-                <Trans>Gabarit</Trans>
-              </label>
-              <SelectRoot
-                id="param-template"
-                value={paramTemplate}
-                onValueChange={(next) =>
-                  setParamTemplate(next as ParametricParamsInput["template"])
-                }
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-[12px] font-semibold text-accent">
+                <Trans>Générateur paramétrique (Rust)</Trans>
+              </h3>
+              <button
+                type="button"
+                data-testid="generate-parametric-btn"
+                className="rounded-[4px] bg-accent px-3 py-1 text-[11px] font-semibold text-white hover:bg-accent/90 disabled:opacity-60"
+                disabled={paramBusy}
+                onClick={generateParametric}
               >
-                <SelectTrigger aria-label={t`Gabarit`} data-testid="param-template-select">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    {templateIcon(paramTemplate)}
-                    <span className="min-w-0 truncate">
-                      {TEMPLATE_LABELS[paramTemplate] ?? paramTemplate}
-                    </span>
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="WarrenTruss">
-                    <span className="flex items-center gap-1.5">
-                      <WarrenTrussIcon size={16} />
-                      Treillis Warren
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="PortalFrame">
-                    <span className="flex items-center gap-1.5">
-                      <PortalFrameIcon size={16} />
-                      Portique
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="Cantilever">
-                    <span className="flex items-center gap-1.5">
-                      <PortalFrameIcon size={16} />
-                      Potence (cantilever)
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="ContinuousBeam">
-                    <span className="flex items-center gap-1.5">
-                      <ContinuousBeamIcon size={16} />
-                      Poutre continue multi-travées
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </SelectRoot>
-              <label className="text-[11px] text-ink-secondary" htmlFor="param-span">
-                <Trans>Portée L (m)</Trans>
-              </label>
-              <NumberFieldRoot
-                value={paramSpan}
-                min={0.5}
-                step={0.5}
-                onValueChange={(v) => setParamSpan(v)}
-              >
-                <NumberFieldInput
-                  id="param-span"
-                  className="font-data h-7 w-full px-1 text-[12px]"
-                />
-              </NumberFieldRoot>
-              <label className="text-[11px] text-ink-secondary" htmlFor="param-height">
-                <Trans>Hauteur H (m)</Trans>
-              </label>
-              <NumberFieldRoot
-                value={paramHeight}
-                min={0}
-                step={0.25}
-                onValueChange={(v) => setParamHeight(v)}
-              >
-                <NumberFieldInput
-                  id="param-height"
-                  className="font-data h-7 w-full px-1 text-[12px]"
-                />
-              </NumberFieldRoot>
-              <label className="text-[11px] text-ink-secondary" htmlFor="param-bays">
-                <Trans>Travées / panneaux</Trans>
-              </label>
-              <NumberFieldRoot
-                value={paramBays}
-                min={1}
-                max={24}
-                step={1}
-                onValueChange={(v) => setParamBays(v)}
-              >
-                <NumberFieldInput
-                  id="param-bays"
-                  className="font-data h-7 w-full px-1 text-[12px]"
-                />
-              </NumberFieldRoot>
-              <label className="text-[11px] text-ink-secondary" htmlFor="param-primary">
-                <Trans>Profilé principal</Trans>
-              </label>
-              <ComboboxRoot
-                items={[...PROFILE_CHOICES]}
-                value={paramSection}
-                onValueChange={(next: string | null) => {
-                  if (next !== null) setParamSection(next);
-                }}
-              >
-                <ComboboxInput id="param-primary" className="h-7" />
-                <ComboboxContent
-                  className="min-w-[300px]"
-                  renderItem={(designation: string) => (
-                    <ComboboxItem key={designation} value={designation}>
-                      <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
-                      <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
-                        {profileMeta(designation)}
-                      </span>
-                    </ComboboxItem>
-                  )}
-                >
-                  <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
-                </ComboboxContent>
-              </ComboboxRoot>
-              <label className="text-[11px] text-ink-secondary" htmlFor="param-secondary">
-                <Trans>Profilé secondaire</Trans>
-              </label>
-              <ComboboxRoot
-                items={[...PROFILE_CHOICES]}
-                value={paramSecondary}
-                onValueChange={(next: string | null) => {
-                  if (next !== null) setParamSecondary(next);
-                }}
-              >
-                <ComboboxInput id="param-secondary" className="h-7" />
-                <ComboboxContent
-                  className="min-w-[300px]"
-                  renderItem={(designation: string) => (
-                    <ComboboxItem key={designation} value={designation}>
-                      <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
-                      <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
-                        {profileMeta(designation)}
-                      </span>
-                    </ComboboxItem>
-                  )}
-                >
-                  <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
-                </ComboboxContent>
-              </ComboboxRoot>
+                {paramBusy ? <Trans>Génération…</Trans> : <Trans>Générer la structure</Trans>}
+              </button>
             </div>
-            <button
-              type="button"
-              className="mt-2 w-full rounded bg-accent px-2 py-1.5 text-[12px] text-white disabled:opacity-50"
-              data-testid="generate-parametric"
-              disabled={paramBusy}
-              onClick={generateParametric}
-            >
-              {paramBusy ? <Trans>Génération…</Trans> : <Trans>Générer la structure</Trans>}
-            </button>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-[10px] font-medium text-ink-secondary"
+                  htmlFor="param-template"
+                >
+                  <Trans>Gabarit</Trans>
+                </label>
+                <SelectRoot
+                  id="param-template"
+                  value={paramTemplate}
+                  onValueChange={(next) =>
+                    setParamTemplate(next as ParametricParamsInput["template"])
+                  }
+                >
+                  <SelectTrigger aria-label={t`Gabarit`} data-testid="param-template-select">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      {templateIcon(paramTemplate)}
+                      <span className="min-w-0 truncate text-[11px]">
+                        {TEMPLATE_LABELS[paramTemplate] ?? paramTemplate}
+                      </span>
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WarrenTruss">
+                      <span className="flex items-center gap-1.5">
+                        <WarrenTrussIcon size={16} />
+                        Treillis Warren
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="PortalFrame">
+                      <span className="flex items-center gap-1.5">
+                        <PortalFrameIcon size={16} />
+                        Portique
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="Cantilever">
+                      <span className="flex items-center gap-1.5">
+                        <CantileverBracketIcon size={16} />
+                        Potence (cantilever)
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="ContinuousBeam">
+                      <span className="flex items-center gap-1.5">
+                        <ContinuousBeamIcon size={16} />
+                        Poutre continue multi-travées
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </SelectRoot>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-[10px] font-medium text-ink-secondary"
+                  htmlFor="param-primary"
+                >
+                  <Trans>Profilé principal</Trans>
+                </label>
+                <ComboboxRoot
+                  items={[...PROFILE_CHOICES]}
+                  value={paramSection}
+                  onValueChange={(next: string | null) => {
+                    if (next !== null) setParamSection(next);
+                  }}
+                >
+                  <ComboboxInput id="param-primary" className="h-7" />
+                  <ComboboxContent
+                    className="min-w-[300px]"
+                    renderItem={(designation: string) => (
+                      <ComboboxItem key={designation} value={designation}>
+                        <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
+                        <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
+                          {profileMeta(designation)}
+                        </span>
+                      </ComboboxItem>
+                    )}
+                  >
+                    <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
+                  </ComboboxContent>
+                </ComboboxRoot>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-[10px] font-medium text-ink-secondary"
+                  htmlFor="param-secondary"
+                >
+                  <Trans>Profilé secondaire</Trans>
+                </label>
+                <ComboboxRoot
+                  items={[...PROFILE_CHOICES]}
+                  value={paramSecondary}
+                  onValueChange={(next: string | null) => {
+                    if (next !== null) setParamSecondary(next);
+                  }}
+                >
+                  <ComboboxInput id="param-secondary" className="h-7" />
+                  <ComboboxContent
+                    className="min-w-[300px]"
+                    renderItem={(designation: string) => (
+                      <ComboboxItem key={designation} value={designation}>
+                        <span className="font-data flex-1 whitespace-nowrap">{designation}</span>
+                        <span className="font-data whitespace-nowrap text-right text-[10px] text-ink-muted">
+                          {profileMeta(designation)}
+                        </span>
+                      </ComboboxItem>
+                    )}
+                  >
+                    <ComboboxEmpty>Aucun profilé trouvé</ComboboxEmpty>
+                  </ComboboxContent>
+                </ComboboxRoot>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-medium text-ink-secondary" htmlFor="param-span">
+                  <Trans>Portée L (m)</Trans>
+                </label>
+                <NumberFieldRoot
+                  value={paramSpan}
+                  min={0.5}
+                  step={0.5}
+                  onValueChange={(v) => setParamSpan(v)}
+                >
+                  <NumberFieldInput
+                    id="param-span"
+                    className="font-data h-7 w-full px-1.5 text-[12px]"
+                  />
+                </NumberFieldRoot>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label
+                  className="text-[10px] font-medium text-ink-secondary"
+                  htmlFor="param-height"
+                >
+                  <Trans>Hauteur H (m)</Trans>
+                </label>
+                <NumberFieldRoot
+                  value={paramHeight}
+                  min={0}
+                  step={0.25}
+                  onValueChange={(v) => setParamHeight(v)}
+                >
+                  <NumberFieldInput
+                    id="param-height"
+                    className="font-data h-7 w-full px-1.5 text-[12px]"
+                  />
+                </NumberFieldRoot>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-medium text-ink-secondary" htmlFor="param-bays">
+                  <Trans>Travées / panneaux</Trans>
+                </label>
+                <NumberFieldRoot
+                  value={paramBays}
+                  min={1}
+                  max={24}
+                  step={1}
+                  onValueChange={(v) => setParamBays(v)}
+                >
+                  <NumberFieldInput
+                    id="param-bays"
+                    className="font-data h-7 w-full px-1.5 text-[12px]"
+                  />
+                </NumberFieldRoot>
+              </div>
+            </div>
           </div>
           <div className="mt-3 flex items-center justify-between">
             <h3 className="text-[12px] text-ink-secondary">
@@ -681,8 +707,45 @@ export function ProjectGalleryModal({
               );
             })}
           </div>
+          <div className="mt-4 rounded-[6px] border border-hairline bg-canvas/50 p-2.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] font-semibold text-ink-secondary">Enregistrés en local</h3>
+              {entries.length === 0 ? (
+                <span className="text-[11px] text-ink-muted">Aucun projet enregistré</span>
+              ) : (
+                <span className="font-data text-[10px] text-ink-muted">{entries.length} / 12</span>
+              )}
+            </div>
+            {entries.length > 0 ? (
+              <ul className="mt-1.5 max-h-36 divide-y divide-hairline overflow-auto rounded-[4px] border border-hairline bg-panel">
+                {entries.map((e) => (
+                  <li key={e.id}>
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[12px] hover:bg-accent-tint/60"
+                      onClick={() => {
+                        loadProject(e.project);
+                        void trackProductEvent("template_opened", {
+                          kind: "gallery_saved",
+                          template: e.id,
+                        });
+                        onClose();
+                      }}
+                    >
+                      <span className="font-data font-medium text-ink-primary">{e.name}</span>
+                      <span className="font-data text-[10px] text-ink-muted">
+                        {new Date(e.savedAt).toLocaleString("fr-FR")}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-hairline pt-3">
           {/* v1.4.0: direct file import (.rdm / CAD). */}
-          <label className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded border border-hairline px-2 py-1 text-[11px] text-ink-secondary hover:border-accent hover:text-accent">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-[4px] border border-hairline bg-panel px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent">
             Importer (.rdm, .dxf, .step, .igs)
             <input
               type="file"
@@ -698,64 +761,36 @@ export function ProjectGalleryModal({
               }}
             />
           </label>
-          <h3 className="mt-4 text-[12px] text-ink-secondary">Enregistrés en local</h3>
-          {entries.length === 0 ? (
-            <p className="mt-1 text-[12px] text-ink-muted">Aucun projet enregistré.</p>
-          ) : (
-            <ul className="mt-1 max-h-40 overflow-auto">
-              {entries.map((e) => (
-                <li key={e.id}>
-                  <button
-                    type="button"
-                    className="w-full rounded px-2 py-1.5 text-left text-[13px] hover:bg-accent-tint"
-                    onClick={() => {
-                      loadProject(e.project);
-                      void trackProductEvent("template_opened", {
-                        kind: "gallery_saved",
-                        template: e.id,
-                      });
-                      onClose();
-                    }}
-                  >
-                    <span className="font-data">{e.name}</span>
-                    <span className="ml-2 text-[11px] text-ink-muted">
-                      {new Date(e.savedAt).toLocaleString("fr-FR")}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="mt-3 flex gap-2 border-t border-hairline pt-3">
-          <button
-            type="button"
-            className="flex-1 rounded border border-hairline px-2 py-1.5 text-[13px] text-ink-secondary"
-            onClick={() => {
-              void saveToGallery(useProjectStore.getState().project);
-              onClose();
-            }}
-          >
-            <Trans>Enregistrer le projet courant</Trans>
-          </button>
-          {/* v1.6.0: header project menu `Exporter (.rdm)` surface. */}
-          <button
-            type="button"
-            className="flex-1 rounded border border-accent px-2 py-1.5 text-[13px] text-accent hover:bg-accent-tint"
-            data-testid="gallery-export-rdm"
-            onClick={() => {
-              downloadText(
-                `${project.name.replace(/[^\w-]+/g, "_")}.rdm`,
-                JSON.stringify(project, null, 2),
-                "application/json;charset=utf-8",
-              );
-              toast(t`Modèle .rdm exporté`);
-              void trackProductEvent("template_exported");
-              onClose();
-            }}
-          >
-            <Trans>Exporter (.rdm)</Trans>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-[4px] border border-hairline bg-panel px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+              onClick={() => {
+                void saveToGallery(useProjectStore.getState().project);
+                onClose();
+              }}
+            >
+              <Trans>Enregistrer le projet courant</Trans>
+            </button>
+            {/* v1.6.0: header project menu `Exporter (.rdm)` surface. */}
+            <button
+              type="button"
+              className="rounded-[4px] border border-accent bg-accent-tint/50 px-2.5 py-1.5 text-[12px] font-semibold text-accent transition-colors hover:bg-accent-tint"
+              data-testid="gallery-export-rdm"
+              onClick={() => {
+                downloadText(
+                  `${project.name.replace(/[^\w-]+/g, "_")}.rdm`,
+                  JSON.stringify(project, null, 2),
+                  "application/json;charset=utf-8",
+                );
+                toast(t`Modèle .rdm exporté`);
+                void trackProductEvent("template_exported");
+                onClose();
+              }}
+            >
+              <Trans>Exporter (.rdm)</Trans>
+            </button>
+          </div>
         </div>
       </DialogContent>
     </DialogRoot>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { Trans } from "@lingui/react/macro";
 import { t } from "@lingui/core/macro";
+import { toast } from "sonner";
 import {
   BoxSelect,
   ChevronDown,
@@ -31,6 +32,7 @@ import { useProjectStore } from "@/state/projectStore";
 import { useSelectedIds } from "@/hooks/useStudioQuery";
 import { useViewportStore } from "@/state/viewportStore";
 import { CAD_COMMANDS, parseUnitValue, snapCandidates, snapPolar } from "@/modeling/cadTools";
+import { compactModel } from "@/modeling/modelCleanup";
 import type { CadModel } from "@/modeling/cadTools";
 import { trackProductEvent } from "@/lib/productTelemetry";
 
@@ -141,6 +143,28 @@ export function CadToolbar(): ReactElement {
     void trackProductEvent("cad_tool_selected", { tool: id });
   };
 
+  // M9.1: 1-click topological cleanup (Ossatures §3.7) with an undoable
+  // Sonner summary toast — merge → split → deduplicate → purge.
+  const runCompact = (): void => {
+    const before = structuredClone(useProjectStore.getState().project);
+    const { project: cleaned, stats } = compactModel(useProjectStore.getState().project);
+    loadProject(cleaned);
+    toast(
+      t`Modèle compacté : ${stats.splitBeams} poutre(s) découpée(s), ${stats.mergedNodes} nœud(s) fusionné(s)`,
+      {
+        description: `${stats.removedDuplicates} doublon(s) supprimé(s), ${stats.removedOrphans} nœud(s) orphelin(s)`,
+        action: {
+          label: t`Annuler`,
+          onClick: () => {
+            useProjectStore.getState().loadProject(before);
+          },
+        },
+        duration: 5_000,
+      },
+    );
+    void trackProductEvent("cad_tool_selected", { tool: "compact_model" });
+  };
+
   // v2.1.1: the ⌘K palette dispatches `rdm-cad-command` — the toolbar
   // stays the single execution point (latest closure via a ref).
   const runCommandRef = useRef(runCommand);
@@ -212,6 +236,25 @@ export function CadToolbar(): ReactElement {
           </DropdownMenuContent>
         </DropdownMenuRoot>
       </TooltipGroup>
+
+      {/* M9.1: 1-click topological cleanup with warm tooltip. */}
+      <Tooltip
+        label={t`Compacter / nettoyer le modèle — fusionner les nœuds, couper les intersections, dédoublonner les poutres`}
+        side="bottom"
+      >
+        <button
+          type="button"
+          data-testid="compact-model"
+          aria-label={t`Compacter le modèle`}
+          onClick={runCompact}
+          className="flex h-7 shrink-0 items-center gap-1 rounded-[4px] border border-hairline bg-canvas px-2 text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+        >
+          <Merge size={15} strokeWidth={1.5} aria-hidden />
+          <span className="hidden lg:inline">
+            <Trans>Compacter</Trans>
+          </span>
+        </button>
+      </Tooltip>
 
       {/* v2.4.0: two-step beam deletion toggle (click mode → click members). */}
       <Tooltip

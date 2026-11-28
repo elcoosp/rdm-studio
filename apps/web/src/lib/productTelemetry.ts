@@ -13,6 +13,9 @@ import { get, set } from "idb-keyval";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type TelemetryEventKind =
+  | "beam_behavior_set"
+  | "combinations_generated"
+  | "support_settlement_set"
   // Studio lifecycle & navigation
   | "studio_opened"
   | "step_dwell"
@@ -129,6 +132,9 @@ const ALLOWLIST: Record<TelemetryEventKind, string[]> = {
   hero_3d_opened: [],
   showcase_opened: ["tab"],
   bento_opened: [],
+  beam_behavior_set: [],
+  combinations_generated: [],
+  support_settlement_set: [],
   opensource_clicked: [],
 };
 

@@ -23,12 +23,19 @@ const BeamSchema = v.object({
   releases_end: v.optional(v.array(v.boolean()), [false, false, false, false, false, false]),
   k_buckling_y: v.optional(v.number(), 1),
   k_buckling_z: v.optional(v.number(), 1),
+  /** v2.1.0 (M10.3): Standard | TensionOnly | CompressionOnly axial behavior. */
+  behavior: v.optional(
+    v.picklist(["Standard", "TensionOnly", "CompressionOnly"]),
+    "Standard",
+  ),
 });
 
 const SupportSchema = v.object({
   node_id: v.pipe(v.number(), v.integer()),
   locked_dofs: v.array(v.boolean()),
   spring_stiffness: v.optional(v.array(v.number()), [0, 0, 0, 0, 0, 0]),
+  /** v2.1.0 (M10.2, RDM 7): prescribed displacements `[Δux..Δrz]` (m, rad). */
+  settlement: v.optional(v.array(v.number()), [0, 0, 0, 0, 0, 0]),
 });
 
 const LoadCase = v.picklist(["Permanent", "Variable", "Wind", "Snow", "Acceleration"]);

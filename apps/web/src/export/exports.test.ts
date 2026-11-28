@@ -74,6 +74,7 @@ const project: ProjectData = {
 const report: SolveReport = {
   n_nodes: 4,
   n_beams: 2,
+  inactive_beam_ids: [],
   cases: [
     {
       code: "G",

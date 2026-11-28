@@ -50,6 +50,9 @@ export interface SolveReport {
   n_beams: number;
   cases: CaseReport[];
   combinations: CombinationReport[];
+  /** M10.3: ids of the TensionOnly/CompressionOnly members the behavior
+   * iteration deactivated (residual axial force < 1e-3 N). */
+  inactive_beam_ids: number[];
 }
 
 export interface SolveFault {
@@ -81,6 +84,8 @@ export interface ModeShape {
   frequency_hz: number;
   omega: number;
   displacements: number[];
+  /** M10.1: effective modal mass ratios `[X, Y, Z]` in `0.0..=1.0`. */
+  effective_mass_ratios: number[];
 }
 
 export interface ModalReport {

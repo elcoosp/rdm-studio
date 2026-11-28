@@ -214,6 +214,27 @@ interface ProjectState {
    * support — wired to `Support.spring_stiffness` in Step 2.
    */
   setSupportSprings: (nodeId: number, springs: number[]) => void;
+  /**
+   * v2.1.0 (M10.2, RDM 7): prescribed support displacements
+   * `[Δux..Δrz]` (m, rad) applied on the locked DOFs of one support —
+   * wired to `Support.settlement` in Step 2.
+   */
+  setSupportSettlement: (nodeId: number, settlement: number[]) => void;
+  /**
+   * M10.5: replaces the custom elementary load-case table
+   * (`LoadCaseDef[]`, schema v2) — Step 3 "Cas de charges" manager.
+   */
+  setLoadCases: (
+    cases: {
+      id: number;
+      code: string;
+      category: string;
+      psi0: number;
+      psi1: number;
+      psi2: number;
+      include_self_weight: boolean;
+    }[],
+  ) => void;
   /** v1.6.0: removes the support on one node (Step 2 `×` button). */
   removeSupport: (nodeId: number) => void;
   /** Removes every support (v1.3.0 "Tout supprimer", undoable upstream). */
@@ -860,6 +881,7 @@ export const useProjectStore = create<ProjectState>()(
                     node_id: nodeId,
                     locked_dofs: lockedDofs,
                     spring_stiffness: existing?.spring_stiffness ?? [0, 0, 0, 0, 0, 0],
+                    settlement: existing?.settlement ?? [0, 0, 0, 0, 0, 0],
                   },
                 ],
               },
@@ -891,6 +913,41 @@ export const useProjectStore = create<ProjectState>()(
                       false,
                     ],
                     spring_stiffness: normalized,
+                    settlement: existing?.settlement ?? [0, 0, 0, 0, 0, 0],
+                  },
+                ],
+              },
+            },
+          };
+        }),
+      // v2.1.0 (M10.2, RDM 7): prescribed displacements `[Δux..Δrz]`
+      // (m, rad) applied on the locked DOFs of one support.
+      setSupportSettlement: (nodeId, settlement) =>
+        set((st) => {
+          const others = st.project.structure.supports.filter((s) => s.node_id !== nodeId);
+          const existing = st.project.structure.supports.find((s) => s.node_id === nodeId);
+          const normalized = [0, 0, 0, 0, 0, 0].map(
+            (fallback, i) => settlement[i] ?? existing?.settlement?.[i] ?? fallback,
+          );
+          return {
+            project: {
+              ...st.project,
+              structure: {
+                ...st.project.structure,
+                supports: [
+                  ...others,
+                  {
+                    node_id: nodeId,
+                    locked_dofs: existing?.locked_dofs ?? [
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                      false,
+                    ],
+                    spring_stiffness: existing?.spring_stiffness ?? [0, 0, 0, 0, 0, 0],
+                    settlement: normalized,
                   },
                 ],
               },
@@ -904,6 +961,17 @@ export const useProjectStore = create<ProjectState>()(
             structure: {
               ...st.project.structure,
               supports: st.project.structure.supports.filter((s) => s.node_id !== nodeId),
+            },
+          },
+        })),
+      // M10.5: replaces the elementary load-case table (Step 3 manager).
+      setLoadCases: (cases) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            structure: {
+              ...st.project.structure,
+              load_cases: cases,
             },
           },
         })),

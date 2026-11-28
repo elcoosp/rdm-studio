@@ -229,7 +229,7 @@ test("legacy .rdm v1 migration + .docx / IFC4 / .rdm export suite", async ({ pag
   // .docx + IFC4 + .rdm exports produce valid non-empty downloads.
   const docx = page.waitForEvent("download", { timeout: 20_000 });
   // v2.1.1: the rail-top `Word (.docx)` button (secondary outline).
-  await page.getByTestId("export-docx").click();
+  await page.getByTestId("export-docx-btn").click();
   const docxDownload = await docx;
   expect((await docxDownload.path()) !== null).toBe(true);
 

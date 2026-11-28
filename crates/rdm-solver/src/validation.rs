@@ -1196,7 +1196,8 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.175_f64;
         for i in 0..17_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..16_u32 {
             s.beams.push(beam(i + 1, i + 1, i + 2, "RECT", "E200"));
@@ -1249,7 +1250,7 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
                 shape: SectionShape::DoubleSymmetricI,
                 a: 1.74e-3,
                 iy: 4.42728e-6,
-                iz: 1.001125e-6,
+                iz: 1.001_125e-6,
                 it: 1.89e-8,
                 iw: Some(1.2746e-8),
                 wel_y: 7.3788e-5,
@@ -1265,7 +1266,8 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.3_f64;
         for i in 0..17_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..16_u32 {
             s.beams.push(beam(i + 1, i + 1, i + 2, "RDM6-I", "E200"));
@@ -1345,7 +1347,8 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.05_f64;
         for i in 0..17_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..16_u32 {
             let mut b = beam(i + 1, i + 1, i + 2, "RDM6-CHS", "S235");
@@ -1393,9 +1396,7 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
             "m",
         ));
         // The hinge transfers no bending moment on either side.
-        let _hinge_leak = solved.cases[0]
-            .1
-            .beam_end_forces[7 * 12 + 10]
+        let _hinge_leak = solved.cases[0].1.beam_end_forces[7 * 12 + 10]
             .abs()
             .max(solved.cases[0].1.beam_end_forces[8 * 12 + 4].abs());
     }
@@ -1440,7 +1441,8 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.15_f64;
         for i in 0..17_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..16_u32 {
             s.beams.push(beam(i + 1, i + 1, i + 2, "IPE100", "E200"));
@@ -1573,7 +1575,8 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.05625_f64;
         for i in 0..17_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..16_u32 {
             s.beams.push(beam(i + 1, i + 1, i + 2, "HEA100", "E200"));
@@ -1581,7 +1584,14 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         s.supports.push(Support {
             node_id: 1,
             locked_dofs: [true, true, true, true, false, false],
-            spring_stiffness: [0.0, 0.0, 0.0, 0.0, 50e3 * 180.0 / core::f64::consts::PI, 0.0],
+            spring_stiffness: [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                50e3 * 180.0 / core::f64::consts::PI,
+                0.0,
+            ],
             incline: None,
             settlement: [0.0; 6],
         });
@@ -1646,7 +1656,8 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.125_f64;
         for i in 0..9_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..8_u32 {
             s.beams.push(beam(i + 1, i + 1, i + 2, "RDM6-T", "E200"));
@@ -1715,10 +1726,12 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         );
         let step = 0.1_f64;
         for i in 0..101_u32 {
-            s.nodes.push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
+            s.nodes
+                .push(Node::new(i + 1, step * f64::from(i), 0.0, 0.0));
         }
         for i in 0..100_u32 {
-            s.beams.push(beam(i + 1, i + 1, i + 2, "RDM6-ROUND", "RDM6-8"));
+            s.beams
+                .push(beam(i + 1, i + 1, i + 2, "RDM6-ROUND", "RDM6-8"));
         }
         s.supports.push(Support::fixed(1));
         s.supports.push(roller_line(101));
@@ -1729,18 +1742,16 @@ pub fn run_validation_suite() -> Vec<BenchResult> {
         let big_l = 10.0;
         let e_i = 200e9 * inertia;
         let station = |x: f64| -> f64 {
-            -q * x * x * (3.0 * big_l * big_l - 5.0 * big_l * x + 2.0 * x * x)
-                / (48.0 * e_i)
+            -q * x * x * (3.0 * big_l * big_l - 5.0 * big_l * x + 2.0 * x * x) / (48.0 * e_i)
         };
-        let _station_ref = station(5.8);
-        let _v58 = solved.cases[0].1.displacements[58 * 6 + 2];
+        let station_ref = station(5.8);
+        let v58 = solved.cases[0].1.displacements[58 * 6 + 2];
+        let _ = (station_ref, v58);
         // The maximum sits at x* = 0.57846 L: the discrete argmax node
         // must bracket it.
         let argmax = (1..100_usize)
             .min_by(|a, b| {
-                solved.cases[0]
-                    .1
-                    .displacements[a * 6 + 2]
+                solved.cases[0].1.displacements[a * 6 + 2]
                     .total_cmp(&solved.cases[0].1.displacements[b * 6 + 2])
             })
             .expect("interior nodes");

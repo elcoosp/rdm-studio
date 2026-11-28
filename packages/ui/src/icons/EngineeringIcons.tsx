@@ -480,6 +480,61 @@ export function ContinuousBeamIcon({ size = 22, ...props }: IconProps) {
   );
 }
 
+export function CantileverBracketIcon({ size = 22, ...props }: IconProps) {
+  return (
+    <Svg size={size} {...props}>
+      <line x1="6" y1="4.5" x2="6" y2="19.5" />
+      <line x1="3.5" y1="6.5" x2="6" y2="9" />
+      <line x1="3.5" y1="10.5" x2="6" y2="13" />
+      <line x1="3.5" y1="14.5" x2="6" y2="17" />
+      <line x1="6" y1="8" x2="19" y2="8" stroke="var(--color-accent)" />
+      <line x1="6" y1="14" x2="13.5" y2="8" stroke="var(--color-accent)" />
+      <line x1="18.5" y1="10.5" x2="18.5" y2="16.5" />
+      <polyline points="16.5,14.5 18.5,16.5 20.5,14.5" />
+    </Svg>
+  );
+}
+
+export function PitchedRoofPortalIcon({ size = 22, ...props }: IconProps) {
+  return (
+    <Svg size={size} {...props}>
+      <polyline points="5,18 5,9.5 12,5 19,9.5 19,18" stroke="var(--color-accent)" />
+      <circle cx="5" cy="9.5" r="1.25" fill="currentColor" />
+      <circle cx="12" cy="5" r="1.25" fill="currentColor" />
+      <circle cx="19" cy="9.5" r="1.25" fill="currentColor" />
+      <line x1="3" y1="18" x2="7" y2="18" />
+      <line x1="17" y1="18" x2="21" y2="18" />
+    </Svg>
+  );
+}
+
+export function BracedBuildingFrameIcon({ size = 22, ...props }: IconProps) {
+  return (
+    <Svg size={size} {...props}>
+      <rect x="6" y="4.5" width="12" height="14.5" stroke="var(--color-accent)" />
+      <line x1="6" y1="9.5" x2="18" y2="9.5" stroke="var(--color-accent)" />
+      <line x1="6" y1="14.5" x2="18" y2="14.5" stroke="var(--color-accent)" />
+      <line x1="6" y1="9.5" x2="18" y2="14.5" />
+      <line x1="18" y1="9.5" x2="6" y2="14.5" />
+      <line x1="4" y1="19" x2="20" y2="19" />
+    </Svg>
+  );
+}
+
+export function LiftingBeamIcon({ size = 22, ...props }: IconProps) {
+  return (
+    <Svg size={size} {...props}>
+      <circle cx="12" cy="4.75" r="1.5" />
+      <polyline points="6.5,10.5 12,6.25 17.5,10.5" />
+      <line x1="4.5" y1="10.5" x2="19.5" y2="10.5" stroke="var(--color-accent)" />
+      <line x1="7" y1="10.5" x2="7" y2="16.5" stroke="var(--color-accent)" />
+      <line x1="17" y1="10.5" x2="17" y2="16.5" stroke="var(--color-accent)" />
+      <path d="M5.75 16.5a1.5 1.5 0 1 0 2.5 1.1" />
+      <path d="M15.75 16.5a1.5 1.5 0 1 0 2.5 1.1" />
+    </Svg>
+  );
+}
+
 export function WindLoadIcon({ size = 22, ...props }: IconProps) {
   return (
     <Svg size={size} {...props}>

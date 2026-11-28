@@ -15,7 +15,17 @@ import {
   ComboboxRoot,
 } from "@/components/ui/combobox";
 import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
-import { ContinuousBeamIcon, PortalFrameIcon, WarrenTrussIcon } from "@rdm-studio/ui/icons";
+import {
+  BracedBuildingFrameIcon,
+  CantileverBracketIcon,
+  ContinuousBeamIcon,
+  LiftingBeamIcon,
+  ModalVibration,
+  PitchedRoofPortalIcon,
+  PortalFrameIcon,
+  TimberBeamIcon,
+  WarrenTrussIcon,
+} from "@rdm-studio/ui/icons";
 import { feaClient, type SectionDims, type ParametricParamsInput } from "@/wasmBridge/workerClient";
 import { trackProductEvent } from "@/lib/productTelemetry";
 
@@ -300,12 +310,39 @@ export function ProjectGalleryModal({
       .finally(() => setParamBusy(false));
   };
 
-  /** Template icon per parametric kind. */
+  /** Template icon per parametric kind or engineering template ID. */
   const templateIcon = (kind: string) => {
-    if (kind === "warren" || kind === "WarrenTruss") return <WarrenTrussIcon size={22} />;
-    if (kind === "portique" || kind === "PortalFrame") return <PortalFrameIcon size={22} />;
-    if (kind === "continue" || kind === "ContinuousBeam") return <ContinuousBeamIcon size={22} />;
-    return <PortalFrameIcon size={22} />;
+    const k = kind.toLowerCase();
+    if (k.includes("warren") || k.includes("pratt") || k.includes("howe")) {
+      return <WarrenTrussIcon size={20} />;
+    }
+    if (k.includes("2-versants")) {
+      return <PitchedRoofPortalIcon size={20} />;
+    }
+    if (k.includes("portique") || k === "portalframe") {
+      return <PortalFrameIcon size={20} />;
+    }
+    if (
+      k.includes("potence") ||
+      k.includes("cantilever") ||
+      k.includes("auvent") ||
+      k.includes("jib")
+    ) {
+      return <CantileverBracketIcon size={20} />;
+    }
+    if (k.includes("ossature")) {
+      return <BracedBuildingFrameIcon size={20} />;
+    }
+    if (k.includes("naval") || k.includes("lifting")) {
+      return <LiftingBeamIcon size={20} />;
+    }
+    if (k.includes("passerelle")) {
+      return <ModalVibration size={20} />;
+    }
+    if (k.includes("gl24h") || k.includes("timber")) {
+      return <TimberBeamIcon size={20} />;
+    }
+    return <ContinuousBeamIcon size={20} />;
   };
 
   return (
@@ -625,7 +662,8 @@ export function ProjectGalleryModal({
                   }}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-[12px] font-semibold text-ink-primary">
+                    <span className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-primary">
+                      {templateIcon(template.id)}
                       {template.name}
                     </span>
                     <span className="font-data shrink-0 rounded border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-accent">

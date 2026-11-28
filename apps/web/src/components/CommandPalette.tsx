@@ -14,6 +14,7 @@ import {
   FileType2,
   FolderOpen,
   Home,
+  Layers,
   KeyRound,
   Languages,
   MessageSquareWarning,
@@ -187,6 +188,12 @@ export function CommandPalette({
 
             {isStudio ? (
               <Command.Group className="py-1" heading={<GroupHeading>Outils CAD</GroupHeading>}>
+                <PaletteRow
+                  icon={Layers}
+                  label={t`Studio Sections Composées`}
+                  shortcut="⌥S"
+                  onSelect={() => fire("rdm-open-composite-studio")}
+                />
                 <PaletteRow icon={Spline} label={t`Polyligne`} onSelect={() => cad("polyline")} />
                 <PaletteRow icon={BoxSelect} label={t`Extruder`} onSelect={() => cad("extrude")} />
                 <PaletteRow icon={Move} label={t`Déplacer`} onSelect={() => cad("move")} />
@@ -390,6 +397,12 @@ export function CommandPalette({
 
             {isStudio ? (
               <Command.Group className="py-1" heading={<GroupHeading>Outils CAD</GroupHeading>}>
+                <PaletteRow
+                  icon={Layers}
+                  label={t`Studio Sections Composées`}
+                  shortcut="⌥S"
+                  onSelect={() => fire("rdm-open-composite-studio")}
+                />
                 <PaletteRow icon={Spline} label={t`Polyligne`} onSelect={() => cad("polyline")} />
                 <PaletteRow icon={BoxSelect} label={t`Extruder`} onSelect={() => cad("extrude")} />
                 <PaletteRow icon={Move} label={t`Déplacer`} onSelect={() => cad("move")} />

@@ -18,6 +18,7 @@ import {
   TorqueMoment,
 } from "@rdm-studio/ui/icons";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Button } from "@rdm-studio/ui/primitives";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import {
@@ -28,6 +29,13 @@ import {
   ComboboxRoot,
 } from "@/components/ui/combobox";
 import { ExpandablePanel, HoldToConfirm, StatusBadge } from "@rdm-studio/ui/interior";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { LoadsFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useUpdateSearch } from "@/hooks/useStudioQuery";
@@ -357,6 +365,9 @@ function LoadsPage() {
           </HoldToConfirm>
         </div>
       </div>
+
+      {/* M10.5: Cas de charges & Combinaisons EN 1990 manager. */}
+      <LoadCaseManager />
 
       {/* EN 1990 Case Tabs sub-card */}
       <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
@@ -1071,6 +1082,246 @@ function EnvLoadGenerators({
           ΔT {dt} K
         </button>
       </div>
+    </div>
+  );
+}
+
+
+/**
+ * M10.5 — Step 3 "Cas de charges & Combinaisons EN 1990" manager
+ * (`data-testid="load-case-manager"`): add / rename elementary cases
+ * (`G1`, `Q1`, `Q2`, `W+`, `S`, …) with their EN 1990 Annex A1
+ * ψ0/ψ1/ψ2 factors, and 1-click "Générer combinaisons ELU/ELS"
+ * (expressions 6.10 / 6.10a+6.10b via `build_combinations_v2`).
+ */
+const CATEGORY_LABELS: Record<string, string> = {
+  Permanent: "Permanente (G)",
+  Variable: "Exploitation (Q)",
+  Wind: "Vent (W)",
+  Snow: "Neige (S)",
+  Accidental: "Accidentelle (Acc)",
+  Seismic: "Sismique",
+  Temperature: "Thermique",
+};
+
+const CATEGORY_PSI: Record<string, [number, number, number]> = {
+  Permanent: [1.0, 1.0, 1.0],
+  Variable: [0.7, 0.5, 0.3],
+  Wind: [0.6, 0.2, 0.0],
+  Snow: [0.5, 0.2, 0.0],
+  Accidental: [1.0, 1.0, 1.0],
+  Seismic: [1.0, 1.0, 1.0],
+  Temperature: [1.0, 1.0, 1.0],
+};
+
+interface LoadCaseRow {
+  id: number;
+  code: string;
+  category: string;
+  psi0: number;
+  psi1: number;
+  psi2: number;
+  include_self_weight: boolean;
+}
+
+/** Canonical schema-v2 seed (mirrors `rdm_model::canonical_load_cases`). */
+const CANONICAL_CASES: LoadCaseRow[] = [
+  { id: 1, code: "G", category: "Permanent", psi0: 1.0, psi1: 1.0, psi2: 1.0, include_self_weight: true },
+  { id: 2, code: "Q", category: "Variable", psi0: 0.7, psi1: 0.5, psi2: 0.3, include_self_weight: false },
+  { id: 3, code: "W", category: "Wind", psi0: 0.6, psi1: 0.2, psi2: 0.0, include_self_weight: false },
+  { id: 4, code: "S", category: "Snow", psi0: 0.5, psi1: 0.2, psi2: 0.0, include_self_weight: false },
+  { id: 5, code: "Acc", category: "Accidental", psi0: 1.0, psi1: 1.0, psi2: 1.0, include_self_weight: false },
+];
+
+function LoadCaseManager(): React.ReactElement {
+  const loadCases = useProjectStore((s) => s.project.structure.load_cases);
+  const setLoadCases = useProjectStore((s) => s.setLoadCases);
+  const project = useProjectStore((s) => s.project);
+  const [combos, setCombos] = useState<
+    { kind: string; label: string }[] | null
+  >(null);
+  const [newCode, setNewCode] = useState("Q2");
+  const [newCategory, setNewCategory] = useState("Variable");
+
+  const rows: LoadCaseRow[] =
+    loadCases && loadCases.length > 0
+      ? (loadCases as LoadCaseRow[])
+      : CANONICAL_CASES;
+
+  const commit = (next: LoadCaseRow[]) => {
+    setLoadCases(next);
+    setCombos(null);
+  };
+
+  const addCase = () => {
+    const code = newCode.trim();
+    if (code === "") {
+      return;
+    }
+    const nextId = Math.max(...rows.map((r) => r.id), 0) + 1;
+    const [psi0, psi1, psi2] = CATEGORY_PSI[newCategory] ?? [1.0, 1.0, 1.0];
+    commit([...rows, { id: nextId, code, category: newCategory, psi0, psi1, psi2, include_self_weight: false }]);
+    void trackProductEvent("load_case_added", { case: code });
+  };
+
+  const generate = () => {
+    void feaClient
+      .engineCall("build_combinations_v2_json", project)
+      .then((payload) => {
+        const raw = payload as [string, string, [string, number][]][];
+        setCombos(raw.map((entry) => ({ kind: entry[0], label: entry[1] })));
+        void trackProductEvent("combinations_generated", { count: raw.length });
+      })
+      .catch(() => setCombos(null));
+  };
+
+  return (
+    <div
+      className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+      data-testid="load-case-manager"
+    >
+      <ExpandablePanel
+        testId="load-case-manager-panel"
+        title={
+          <Trans>
+            <span className="inline-flex items-center gap-1.5">
+              <IconLoad size={16} />
+              Cas de charges & combinaisons EN 1990
+            </span>
+          </Trans>
+        }
+      >
+        <p className="mt-1 text-[11px] text-ink-muted">
+          <Trans>
+            Cas élémentaires et facteurs ψ (Annexe A1). Un cas ajouté ici alimente les
+            combinaisons 6.10 / 6.10a+6.10b et les enveloppes Min/Max.
+          </Trans>
+        </p>
+        <div className="mt-2 max-h-44 overflow-auto">
+          <table className="w-full text-[12px]">
+            <thead className="text-left text-[10px] text-ink-muted">
+              <tr>
+                <th className="py-1">
+                  <Trans>Code</Trans>
+                </th>
+                <th className="py-1">{t`Catégorie`}</th>
+                <th className="py-1 font-data">ψ0</th>
+                <th className="py-1 font-data">ψ1</th>
+                <th className="py-1 font-data">ψ2</th>
+                <th className="py-1" />
+              </tr>
+            </thead>
+            <tbody className="font-data">
+              {rows.map((row) => (
+                <tr key={row.id} className="border-t border-hairline">
+                  <td className="py-1 pr-1">
+                    <Input
+                      value={row.code}
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        commit(rows.map((r) => (r.id === row.id ? { ...r, code } : r)));
+                      }}
+                      aria-label={`code-${row.id}`}
+                      className="h-7 w-16 px-1 text-[12px]"
+                    />
+                  </td>
+                  <td className="py-1 pr-1 text-[11px] text-ink-secondary">
+                    {CATEGORY_LABELS[row.category] ?? row.category}
+                  </td>
+                  {[row.psi0, row.psi1, row.psi2].map((psi, i) => (
+                    <td key={i} className="py-1 pr-1 text-[11px] text-ink-primary">
+                      {psi.toFixed(1).replace(".", ",")}
+                    </td>
+                  ))}
+                  <td className="py-1">
+                    <button
+                      type="button"
+                      aria-label={`Supprimer le cas ${row.code}`}
+                      data-testid={`remove-case-${row.id}`}
+                      className="text-ink-muted hover:text-fea-max disabled:opacity-40"
+                      disabled={rows.length <= 1}
+                      onClick={() => commit(rows.filter((r) => r.id !== row.id))}
+                    >
+                      ×
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-2 flex items-center gap-1.5">
+          <Input
+            value={newCode}
+            onChange={(e) => setNewCode(e.target.value)}
+            aria-label="new-case-code"
+            data-testid="new-case-code"
+            className="h-7 w-16 px-1 text-[12px]"
+          />
+          <SelectRoot
+            value={newCategory}
+            onValueChange={(next) => {
+              if (next !== null) setNewCategory(next);
+            }}
+          >
+            <SelectTrigger
+              aria-label={t`Catégorie du nouveau cas`}
+              className="h-7 gap-1 text-[12px]"
+              data-testid="new-case-category"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </SelectRoot>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 shrink-0 px-2 text-[11px]"
+            data-testid="add-load-case"
+            onClick={addCase}
+          >
+            <Trans>Ajouter le cas</Trans>
+          </Button>
+        </div>
+        <Button
+          className="mt-2 w-full"
+          size="sm"
+          data-testid="generate-combinations"
+          onClick={generate}
+        >
+          <Trans>Générer combinaisons ELU/ELS</Trans>
+        </Button>
+        {combos !== null ? (
+          <ul
+            className="mt-2 max-h-32 space-y-0.5 overflow-auto"
+            data-testid="generated-combinations"
+          >
+            {combos.map((combo, i) => (
+              <li
+                key={`${combo.kind}:${i}`}
+                className="font-data flex items-center gap-1.5 text-[11px] text-ink-secondary"
+              >
+                <span
+                  className={`rounded-[2px] px-1 py-0 text-[10px] ${
+                    combo.kind === "ULS"
+                      ? "bg-accent-tint text-accent"
+                      : "bg-panel-subtle text-ink-primary"
+                  }`}
+                >
+                  {combo.kind}
+                </span>
+                <span className="truncate">{combo.label}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </ExpandablePanel>
     </div>
   );
 }

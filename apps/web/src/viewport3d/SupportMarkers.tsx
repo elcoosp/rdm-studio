@@ -21,11 +21,19 @@ const ROLLER_CONE_GEO = new THREE.ConeGeometry(0.09, 0.12, 4);
 const DISC_GEO = new THREE.CylinderGeometry(0.03, 0.03, 0.16, 10);
 const SLIDING_PLATE_GEO = new THREE.BoxGeometry(0.16, 0.16, 0.02);
 const PIN_GEO = new THREE.SphereGeometry(0.035, 12, 12);
+// M10.2 (RDM 7): 3D helical spring coil (torus knot approximates the coil)
+// and the prescribed-displacement arrow shaft/head.
+const SPRING_GEO = new THREE.TorusKnotGeometry(0.055, 0.014, 64, 8, 3, 7);
+const ARROW_SHAFT_GEO = new THREE.CylinderGeometry(0.012, 0.012, 0.16, 8);
+const ARROW_HEAD_GEO = new THREE.ConeGeometry(0.03, 0.06, 10);
 
 const DARK_MATERIAL = new THREE.MeshStandardMaterial({ color: "#374151" });
 const MID_MATERIAL = new THREE.MeshStandardMaterial({ color: "#4B5563" });
 const LIGHT_MATERIAL = new THREE.MeshStandardMaterial({ color: "#6B7280" });
 const INK_MATERIAL = new THREE.MeshStandardMaterial({ color: "#111827" });
+// M10.2: Deep Cobalt springs (accent) + cyan prescribed-displacement arrows.
+const SPRING_MATERIAL = new THREE.MeshStandardMaterial({ color: "#1D4ED8" });
+const SETTLEMENT_MATERIAL = new THREE.MeshStandardMaterial({ color: "#0891B2" });
 
 export function SupportMarkers({
   nodes,
@@ -48,6 +56,8 @@ export function SupportMarkers({
             key={`${support.node_id}`}
             position={[node.x, node.y, node.z]}
             locked={support.locked_dofs}
+            springs={support.spring_stiffness}
+            settlement={support.settlement}
           />
         );
       })}
@@ -58,9 +68,13 @@ export function SupportMarkers({
 function SupportSymbol({
   position,
   locked,
+  springs,
+  settlement,
 }: {
   position: [number, number, number];
   locked: boolean[];
+  springs?: number[];
+  settlement?: number[];
 }) {
   const [ux, uy, uz, rx, ry, rz] = locked;
   const isFixed = ux && uy && uz && rx && ry && rz;
@@ -73,6 +87,12 @@ function SupportSymbol({
       : isRoller
         ? "roller"
         : "sliding";
+  // M10.2: the first sprung translation drives the coil placement (the
+  // RDM 7 appui élastique symbol hangs under the node along that axis).
+  const springAxis = [0, 1, 2].find((i) => (springs?.[i] ?? 0) > 0);
+  // M10.2: the first prescribed displacement drives the arrow (mm-scale
+  // settlements draw a cyan directional arrow along its axis).
+  const settlementAxis = [0, 1, 2].find((i) => (settlement?.[i] ?? 0) !== 0);
   return (
     <group position={position}>
       {kind === "fixed" ? (
@@ -100,6 +120,38 @@ function SupportSymbol({
       ) : null}
       {/* Node pin head */}
       <mesh geometry={PIN_GEO} material={isFixed ? INK_MATERIAL : MID_MATERIAL} />
+      {/* M10.2: helical spring coil (Deep Cobalt) under the sprung axis. */}
+      {springAxis !== undefined ? (
+        <mesh
+          geometry={SPRING_GEO}
+          material={SPRING_MATERIAL}
+          data-testid="spring-coil"
+          position={[0, 0, -0.22]}
+          rotation={
+            springAxis === 2
+              ? [0, 0, 0]
+              : springAxis === 0
+                ? [0, Math.PI / 2, 0]
+                : [Math.PI / 2, 0, 0]
+          }
+        />
+      ) : null}
+      {/* M10.2: prescribed-displacement arrow (cyan) along its axis. */}
+      {settlementAxis !== undefined ? (
+        <group
+          data-testid="settlement-arrow"
+          rotation={
+            settlementAxis === 0
+              ? [0, 0, Math.PI / 2]
+              : settlementAxis === 1
+                ? [Math.PI / 2, 0, 0]
+                : [0, 0, 0]
+          }
+        >
+          <mesh position={[0, 0, -0.3]} geometry={ARROW_SHAFT_GEO} material={SETTLEMENT_MATERIAL} />
+          <mesh position={[0, 0, -0.4]} geometry={ARROW_HEAD_GEO} material={SETTLEMENT_MATERIAL} />
+        </group>
+      ) : null}
     </group>
   );
 }

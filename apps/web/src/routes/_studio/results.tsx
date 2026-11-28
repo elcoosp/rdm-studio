@@ -19,8 +19,8 @@ import { formatMm } from "@/lib/units";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { UtilizationProgress } from "@/components/ui/progress";
 import { ArrowLeftRight, SlidersHorizontal, AlertTriangle } from "lucide-react";
-import {
-  feaClient,
+import { 
+  feaClient, type BeamEnvelopeDto,
   type ModalReport,
   type SolveFault,
   type SolveReport,
@@ -208,7 +208,35 @@ function ResultsPage() {
   const viewKey = search.combo ?? "SLS:0";
   const setViewKey = (next: string) => {
     updateSearch((prev) => ({ ...prev, combo: next === "SLS:0" ? undefined : next }));
+
+
+
   };
+  // M10.5 (EN 1990 envelopes): the Min/Max envelope engine runs in the
+  // worker lane on demand — only when an `ENV:ULS` / `ENV:SLS` view is
+  // selected. The per-member (min, max) tuples feed the docked uPlot
+  // shaded bands and the 3D extremum callouts.
+  const isEnvelopeView = viewKey.startsWith("ENV");
+  const [envelopes, setEnvelopes] = useState<BeamEnvelopeDto[] | null>(null);
+  useEffect(() => {
+    if (!isEnvelopeView) {
+      setEnvelopes(null);
+      return;
+    }
+    let cancelled = false;
+    void feaClient
+      .engineCall("compute_envelopes_json", project)
+      .then((result) => {
+        if (!cancelled) {
+          setEnvelopes(result as BeamEnvelopeDto[]);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [isEnvelopeView, project, report]);
+
   const slsDenominator = search.sls ?? 250;
   const setSlsDenominator = (next: 200 | 250 | 300) => {
     updateSearch((prev) => ({ ...prev, sls: next === 250 ? undefined : next }));
@@ -318,6 +346,9 @@ function ResultsPage() {
       value: `${c.kind}:${i}`,
       label: c.label,
     }));
+    // M10.5: multi-case Min/Max envelope views (EN 1990 ELU / ELS).
+    items.push({ value: "ENV:ULS", label: t`Enveloppe ELU (Min/Max)` });
+    items.push({ value: "ENV:SLS", label: t`Enveloppe ELS (Min/Max)` });
     for (const m of (modal?.modes ?? []).slice(0, 6)) {
       items.push({
         value: `MODE:${m.mode_index - 1}`,
@@ -530,6 +561,19 @@ function ResultsPage() {
                   </span>
                 </SelectItem>
               ))}
+              {/* M10.5: multi-case Min/Max envelopes. */}
+              <SelectItem value="ENV:ULS">
+                <span className="flex items-center gap-1.5">
+                  <LoadCombination size={14} />
+                  <Trans>Enveloppe ELU (Min/Max)</Trans>
+                </span>
+              </SelectItem>
+              <SelectItem value="ENV:SLS">
+                <span className="flex items-center gap-1.5">
+                  <LoadCombination size={14} />
+                  <Trans>Enveloppe ELS (Min/Max)</Trans>
+                </span>
+              </SelectItem>
               {modal !== null
                 ? (modal.modes ?? []).slice(0, 6).map((m) => (
                     <SelectItem key={`MODE:${m.mode_index}`} value={`MODE:${m.mode_index - 1}`}>
@@ -595,6 +639,27 @@ function ResultsPage() {
         </div>
       </div>
       {fault !== null ? <SolverFaultCard fault={fault} onRerun={run} /> : null}
+      {/* M10.3: buckled tension-only / compression-only members — the
+          solver deactivated them (residual axial force < 1e-3 N). */}
+      {(report?.inactive_beam_ids?.length ?? 0) > 0 ? (
+        <div
+          className="flex shrink-0 flex-wrap items-center gap-1.5 rounded-panel border border-hairline bg-panel-subtle/50 px-2 py-1.5"
+          data-testid="inactive-beams-banner"
+        >
+          <span className="text-[11px] text-ink-muted">
+            <Trans>Membres inactifs (flambage / décompression) :</Trans>
+          </span>
+          {(report?.inactive_beam_ids ?? []).map((id) => (
+            <span
+              key={id}
+              className="font-data rounded-[2px] border border-hairline bg-panel px-1.5 py-0.5 text-[10px] text-ink-secondary"
+              data-testid={`inactive-badge-${id}`}
+            >
+              P{id} · <Trans>Inactif (comprimé)</Trans>
+            </span>
+          ))}
+        </div>
+      ) : null}
       {report !== null ? (
         <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4" data-testid="kpi-strip">
           <KpiCard
@@ -869,6 +934,11 @@ function ResultsPage() {
           sectionDims={sectionDims}
           scaleMode={scaleMode}
           onScaleModeChange={(next) => setScaleMode(next)}
+          envelope={
+            isEnvelopeView
+              ? (envelopes?.find((e) => e.beam_id === cutBeamId) ?? null)
+              : null
+          }
         />
       ) : null}
       {/* Phone drawer: nodal displacements + SI/UI conversion note. */}
@@ -1011,6 +1081,7 @@ function DockedInspector({
   sectionDims,
   scaleMode,
   onScaleModeChange,
+  envelope = null,
 }: {
   project: ReturnType<typeof useProjectStore.getState>["project"];
   beams: { id: number; section_id: string }[];
@@ -1023,6 +1094,8 @@ function DockedInspector({
   mRd: number | null;
   view3d: boolean;
   onView3dChange: (open: boolean) => void;
+  /** M10.5: the selected member's Min/Max envelope (ENV views only). */
+  envelope?: BeamEnvelopeDto | null;
   inspected: {
     beam_id: number;
     class_index?: number | null;
@@ -1163,6 +1236,22 @@ function DockedInspector({
     if (forces === null || view3d || plotRef.current === null) {
       return;
     }
+    // M10.5: resample the 5-station envelope onto the 24 span samples so
+    // the Min/Max bands share uPlot's aligned data grid.
+    const envelopeAt = (pick: (e: BeamEnvelopeDto) => [number, number]) => {
+      if (envelope === null) {
+        return null;
+      }
+      const stations = [0, 0.25, 0.5, 0.75, 1];
+      const [lo, hi] = pick(envelope);
+      const span = hi - lo;
+      return stations.map((s) => (lo + span * s) / 1e3);
+    };
+    const envMy = envelopeAt((e) => e.my);
+    const envVz = envelopeAt((e) => e.vz);
+    const envN = envelopeAt((e) => e.n);
+    // First envelope series index: x, My, Mz, Vz, N, T, σvM (+ ±M_Rd).
+    const envStart = 7 + (mRd !== null ? 2 : 0);
     const data: uPlot.AlignedData = [
       forces.map((f) => f.ratio),
       forces.map((f) => f.my / 1e3),
@@ -1173,6 +1262,10 @@ function DockedInspector({
       // v2.4.0: σvM(x) curve (MPa) from the internal forces + section props.
       forces.map((f) => sigmaVmAt(f) / 1e6),
       ...(mRd !== null ? [forces.map(() => mRd / 1000), forces.map(() => -mRd / 1000)] : []),
+      // M10.5: EN 1990 multi-case Min/Max envelope bands.
+      ...(envMy !== null && envVz !== null && envN !== null
+        ? [envMy, envMy, envVz, envVz, envN, envN]
+        : []),
     ] as unknown as uPlot.AlignedData;
     const opts: uPlot.Options = {
       width: plotRef.current.clientWidth,
@@ -1198,6 +1291,19 @@ function DockedInspector({
           ? [
               { label: "+M_Rd", stroke: "#dc2626", width: 1.5, dash: [6, 4] },
               { label: "−M_Rd", stroke: "#dc2626", width: 1.5, dash: [6, 4] },
+            ]
+          : []),
+        // M10.5: shaded Min/Max envelope bands (Deep Cobalt 12% fill) —
+        // the band partner is the preceding min series (indices shift
+        // with the optional ±M_Rd capacity lines).
+        ...(envMy !== null && envVz !== null && envN !== null
+          ? [
+              { label: "My min", stroke: "rgba(29,78,216,0.55)", width: 1, dash: [4, 3] },
+              { label: "My max", stroke: "#1d4ed8", width: 1, dash: [4, 3], fill: "rgba(29,78,216,0.12)", band: envStart },
+              { label: "Vz min", stroke: "rgba(29,78,216,0.55)", width: 1, dash: [4, 3] },
+              { label: "Vz max", stroke: "#1d4ed8", width: 1, dash: [4, 3], fill: "rgba(29,78,216,0.12)", band: envStart + 2 },
+              { label: "N min", stroke: "rgba(29,78,216,0.55)", width: 1, dash: [4, 3] },
+              { label: "N max", stroke: "#1d4ed8", width: 1, dash: [4, 3], fill: "rgba(29,78,216,0.12)", band: envStart + 4 },
             ]
           : []),
       ] as uPlot.Series[],

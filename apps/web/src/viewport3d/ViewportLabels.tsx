@@ -1,7 +1,8 @@
 import { Html } from "@react-three/drei";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearch } from "@tanstack/react-router";
 import { useViewportParams } from "@/hooks/useStudioQuery";
-import { useLastReport } from "@/wasmBridge/workerClient";
+import { feaClient, useLastReport, type BeamEnvelopeDto } from "@/wasmBridge/workerClient";
 import { useProjectStore } from "@/state/projectStore";
 import type { BeamData, NodeData } from "@/state/projectStore";
 
@@ -36,7 +37,7 @@ function Badge({
   testId,
 }: {
   position: [number, number, number];
-  kind: "node" | "beam" | "reaction" | "deflection";
+  kind: "node" | "beam" | "reaction" | "deflection" | "envelope";
   children: React.ReactNode;
   testId?: string;
 }) {
@@ -45,6 +46,7 @@ function Badge({
     beam: "bg-accent-tint/95 text-accent border-accent-ring",
     reaction: "bg-panel/95 text-ink-primary border-accent",
     deflection: "bg-panel/95 text-fea-max border-fea-max/50",
+    envelope: "bg-accent/95 text-white border-accent-hover",
   };
   return (
     <Html
@@ -131,6 +133,51 @@ export function ViewportLabels({
     return map;
   }, [report, pathname, reactionsOn]);
 
+  // M10.5 (EN 1990 envelopes): when an `ENV:ULS` / `ENV:SLS` view is
+  // selected (`?combo=ENV:…`), floating extremum pills pin the peak
+  // bending moment (M_max) and peak deflection (u_max) of each member at
+  // its critical station in the 3D viewport.
+  // M10.5: the ENV view rides the URL (`?combo=ENV:ULS|ENV:SLS`).
+  const comboView = (useSearch({ strict: false }) as { combo?: string }).combo ?? "SLS:0";
+  const envKind = comboView.startsWith("ENV:") ? comboView.slice(4) : null;
+  const [envelopes, setEnvelopes] = useState<BeamEnvelopeDto[] | null>(null);
+  useEffect(() => {
+    if (pathname !== "/results" || envKind === null || report === null) {
+      setEnvelopes(null);
+      return;
+    }
+    let cancelled = false;
+    void feaClient
+      .engineCall("compute_envelopes_json", useProjectStore.getState().project)
+      .then((result) => {
+        if (!cancelled) {
+          setEnvelopes(result as BeamEnvelopeDto[]);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, envKind, report]);
+  // u_max per member: the largest |deflection| across the selected
+  // envelope kind's combinations (ULS or SLS).
+  const uMaxByBeam = useMemo(() => {
+    const map = new Map<number, number>();
+    if (envKind === null) {
+      return map;
+    }
+    for (const combo of report?.combinations ?? []) {
+      if (combo.kind !== envKind) {
+        continue;
+      }
+      for (const beam of combo.beams) {
+        const current = map.get(beam.beam_id) ?? 0;
+        map.set(beam.beam_id, Math.max(current, Math.abs(beam.midspan_deflection) * 1000));
+      }
+    }
+    return map;
+  }, [report, envKind]);
+
   if (nodes.length === 0) {
     return null;
   }
@@ -182,6 +229,37 @@ export function ViewportLabels({
                 testId={`reaction-${nodeId}`}
               >
                 {`Rz = ${signedFr(rz)} kN`}
+              </Badge>
+            );
+          })
+        : null}
+      {/* M10.5: floating Min/Max extremum callout pills (ENV views). */}
+      {pathname === "/results" && envKind !== null && envelopes !== null
+        ? beams.map((b) => {
+            const envelope = envelopes.find((e) => e.beam_id === b.id);
+            const uMax = uMaxByBeam.get(b.id);
+            if (envelope === undefined || uMax === undefined) {
+              return null;
+            }
+            const n1 = nodes.find((n) => n.id === b.n1);
+            const n2 = nodes.find((n) => n.id === b.n2);
+            if (n1 === undefined || n2 === undefined) {
+              return null;
+            }
+            const mMax = Math.max(Math.abs(envelope.my[0]), Math.abs(envelope.my[1])) / 1000;
+            const mid: [number, number, number] = [
+              (n1.x + n2.x) / 2,
+              (n1.y + n2.y) / 2,
+              (n1.z + n2.z) / 2 + 0.34,
+            ];
+            return (
+              <Badge
+                key={`env${b.id}`}
+                position={mid}
+                kind="envelope"
+                testId={`envelope-callout-${b.id}`}
+              >
+                {`M_max = ${fr(mMax)} kN·m · u_max = ${fr(uMax)} mm`}
               </Badge>
             );
           })

@@ -526,7 +526,7 @@ function ResultsPage() {
       : null;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2 p-3">
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto p-3 lg:overflow-hidden">
       {/* Zone 1 — compact solve header + KPI strip. */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold">
@@ -806,7 +806,7 @@ function ResultsPage() {
         </div>
       ) : null}
       {/* Zone 2 — viewport row: persistent stage slot + 340px EC3 rail. */}
-      <div className="flex min-h-0 flex-1 gap-2">
+      <div className="flex min-h-[340px] flex-1 gap-2 lg:min-h-0">
         <section className="relative min-w-0 flex-1 overflow-hidden rounded-panel border border-hairline bg-panel">
           <div ref={slotRef} className="h-full w-full" data-testid="results-stage-slot" />
           <StageContent
@@ -1510,7 +1510,7 @@ function DockedInspector({
 
   return (
     <section
-      className="grid h-[220px] shrink-0 grid-cols-1 gap-3 overflow-hidden rounded-panel border border-hairline bg-panel p-2.5 lg:grid-cols-[280px_1fr]"
+      className="grid h-auto shrink-0 grid-cols-1 gap-3 overflow-hidden rounded-panel border border-hairline bg-panel p-2.5 lg:h-[220px] lg:grid-cols-[280px_1fr]"
       data-testid="docked-inspector"
     >
       <SectionCutCard

@@ -1,43 +1,56 @@
-Task: : github.com/elcoosp/rdm-studio. Maximum-velocity, plan-aligned implementation following `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `./mockups/`.
+Task: github.com/elcoosp/rdm-studio. Maximum-velocity, plan-aligned implementation following `AGENTS.md`, `ARCHITECTURE.md`, `DESIGN.md`, and `./mockups/`.
 
 1. **Bootstrap & Sync (< 3 tool calls):**
-   - If `rdm-studio` is not cloned locally, `git clone https://://github.com.git && cd rdm-studio`; if it already exists, `cd rdm-studio && git fetch origin && git reset --hard origin/main` so `HEAD` matches your latest pushed `main` (`d8d856d`).
-   - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com`) are installed, then read `STATUS.md` and `git log -5 --oneline` to confirm `HEAD` (`d8d856d`) and prepare **Milestone M9 (Session 1 of 4 — RDM7 CAD Power Tools, Parametric Structure Library & Synchronized Metrology Spreadsheet)**.
+   - If `rdm-studio` is not cloned locally, `git clone https://://github.com.git && cd rdm-studio`; if it already exists, `cd rdm-studio && git fetch origin && git reset --hard origin/main` so `HEAD` matches your latest pushed `main` (with M10 & `SpectralLogoCube` landed).
+   - Ensure `rustc`/`cargo` (`wasm32-unknown-unknown`, `rustfmt`, `clippy`), `wasm-pack`, `pnpm`, and `ship` (`cargo install --git https://github.com`) are installed, then read `STATUS.md` and `git log -5 --oneline` to confirm `HEAD` and prepare **Milestone M11 (Session 3 of 3 — Composite Cross-Section Studio _Sections Droites_, Client-Side Branded Calculation Note & Full E2E Sweep)**.
 
-2. **Ship Complete Milestone M9 (CAD Power Tools, Parametric Frame Generators & Astonishing Step 1 UI):**
-   Implement all 4 deliverables below direct-to-green with full unit + E2E tests (zero stubs, zero `.unwrap()`/`.expect()` in Rust, zero raw HTML primitives `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">` in `apps/web/src/`, zero ALL-CAPS text, strict SI units in state/WASM):
-   - **M9.1 — 1-Click Topological Cleanup ("Compacter / Nettoyer le modèle", RDM6/7 _Ossatures_ §3.7) & Auto-Split Intersections:**
-     - Create `apps/web/src/modeling/modelCleanup.ts` with deterministic pure functions + unit tests (`modelCleanup.test.ts`):
-       1. `mergeDuplicateNodes(project, tolM = 1e-4)`: welds coincident nodes within tolerance, remaps `beam.start_node` / `beam.end_node`, `supports`, `nodal_loads`, and removes zero-length beams (`start_node === end_node`).
-       2. `splitIntersectingBeams(project, tolM = 1e-4)`: detects both T-junctions (an existing node lying strictly inside a beam segment $t \in (0, 1)$) and X-crossings (two non-coincident 3D beam segments intersecting within `tolM`), splits the host beam(s) at the intersection point(s), preserves `section_id`, `material_id`, `roll_angle_rad`, and end releases (outer ends keep original releases; new interior junctions are rigid by default), and proportionally remaps distributed/point beam loads onto the child segments.
-       3. `purgeOrphanNodes(project)`: removes nodes not referenced by any beam, support, or nodal load.
-       4. `compactModel(project, tolM = 1e-4)`: runs `mergeDuplicateNodes` → `splitIntersectingBeams` → `deduplicateBeams` → `purgeOrphanNodes` in one atomic operation, returning `{ project, stats: { mergedNodes, splitBeams, removedDuplicates, removedOrphans } }`.
-     - Wire an **Auto-Split on Draw** toggle (`autoSplitOnDraw: boolean`, default `true`) into `cadTools.ts` / `viewportStore.ts` so drawing a new beam onto an existing beam's midpoint/interior automatically splits the host beam and connects cleanly.
-     - Expose a **Compacter** (`data-testid="compact-model"`) button with `<Tooltip>` in `CadToolbar.tsx` and Step 1 (`geometry.tsx`) showing a Sonner summary toast (e.g., `Modèle compacté : 2 poutres découpées, 1 nœud fusionné`).
+2. **Ship Complete Milestone M11 (Composite Cross-Section Engine + Visual _Sections Droites_ Studio + Client Calculation Note & Full E2E Sweep):**
+   Implement all 4 deliverables below direct-to-green with full Rust `cargo test`, Vitest unit tests, and Playwright E2E tests (zero stubs, zero `.unwrap()`/`.expect()`/`panic!()` in `crates/rdm-solver`, `crates/rdm-cad`, or `bindings/rdm-wasm`, zero `#[allow(...)]`/`#[expect(...)]` outside `Cargo.toml`, zero raw HTML primitives `<select>`, `<details>`, `<input type="checkbox">`, `<input type="range">` in `apps/web/src/`, zero ALL-CAPS text, strict SI units in state/WASM):
+   - **M11.1 — Multi-Element Composite Cross-Section Engine (`crates/rdm-cad/src/sections.rs` + `bindings/rdm-wasm`):**
+     - Implement exact analytical cross-section mechanics for multi-element built-up sections (`CompositeSectionDef` composed of $1..N$ sub-elements with local offset $(\Delta y, \Delta z)$ in `m`, rotation $\theta$ in `rad`, mirror flags, and standard EN 10365/10210/10056 profiles, parametric plates $b \times t$, `CHS`, `RHS`/`SHS`):
+       - Total cross-sectional area $A = \sum A_i$ (`m²`) and linear mass $m$ (`kg/m`).
+       - Centroid coordinates $(y_G, z_G)$ (`m`).
+       - Centroidal second moments of area $I_y, I_z, I_{yz}$ (`m⁴`) via parallel-axis theorem (Huygens-Steiner), principal moments $(I_u, I_v)$ (`m⁴`), and principal axis angle $\alpha$ (`rad`).
+       - Radii of gyration $i_y, i_z$ (`m`).
+       - Extreme fiber distances $(y_{\min}, y_{\max}, z_{\min}, z_{\max})$ (`m`) and elastic section moduli $W_{el,y,\sup}, W_{el,y,\inf}, W_{el,z,\text{left}}, W_{el,z,\text{right}}$ (`m³`).
+       - Exact plastic section moduli $W_{pl,y}, W_{pl,z}$ (`m³`) by bisection search for the equal-area plastic neutral axis ($\int_{A^+} f_y \, dA = \int_{A^-} f_y \, dA$), handling asymmetric built-up sections (T-sections, crane girders `HEA + UPN`, asymmetric PRS).
+       - Shear areas $A_{vy}, A_{vz}$ (`m²`) per EN 1993-1-1 §6.2.6, Saint-Venant torsion constant $I_t$ (`m⁴`), and warping constant $I_w$ (`m⁶`).
+       - Automatic EN 1993-1-1 Table 5.2 cross-section classification (`Class 1`, `Class 2`, `Class 3`, `Class 4`) for pure bending and pure compression across steel grades (`S235`, `S275`, `S355`, `S460`).
+     - Expose `compute_composite_section` through `bindings/rdm-wasm` and persist custom composite sections on `ModelState` (`custom_sections: Vec<CompositeSectionDef>`) so beams referencing a composite section solve natively in the 3D Timoshenko WASM solver and EN 1993-1-1 verification pass.
+     - Add comprehensive Rust unit tests in `crates/rdm-cad/tests/composite_sections.rs` verifying: single rectangle ($b h^3 / 12$, $W_{pl}/W_{el} = 1.5$), built-up 3-plate `IPE 300` against EN 10365 nominal properties (`< 0.5%`), asymmetric T-section centroid $y_G$ and plastic modulus $W_{pl,y}$, and rotated angle section principal axis angle $\alpha$.
 
-   - **M9.2 — Beam Subdivision into $N$ Equal Segments ("Discrétiser une poutre", RDM6/7 _Ossatures_ §3.8.13):**
-     - Add `subdivideBeam(project, beamId, segments: number)` ($2 \le N \le 50$) in `apps/web/src/modeling/modelCleanup.ts`: creates $N-1$ equidistant interior nodes along the beam, replaces the beam with $N$ contiguous sub-beams inheriting section, material, roll angle, and outer end releases, and remaps beam loads onto the affected sub-segments.
-     - Add a **Discrétiser ($N$ tronçons)** popover/control (`data-testid="subdivide-beam"`) in the Step 1 beam inspector (`geometry.tsx`) with quick segment presets (`2`, `4`, `8`, `10`) and a `NumberField`.
+   - **M11.2 — Visual _Sections Droites_ Studio (`apps/web/src/components/CompositeSectionStudio.tsx` + `geometry.tsx`):**
+     - Wire an entry trigger **Studio Sections Composées** (`data-testid="open-composite-section-studio"`) in Step 1 (`apps/web/src/routes/_studio/geometry.tsx`) and in the `⌘K` command palette.
+     - Build a 2-column Swiss Metrology daylight dialog (`DialogRoot` / `DialogContent`) with:
+       - **Left Column — Interactive Metrological SVG Canvas (`data-testid="composite-section-svg"`):**
+         - Dimensioned millimeter coordinate grid, exact vector outlines of all sub-elements (with fillets for rolled I/H/U sections), centroid reticle $G(y_G, z_G)$, centroidal axes $(y, z)$, rotated principal axes $(u, v)$, dashed amber Plastic Neutral Axis (`ANP`), and an interactive normal-stress diagram $\sigma(z) = \frac{N}{A} + \frac{M_y}{I_y} z$ driven by `NumberField` / `SliderDetents` inputs for $N$ (`kN`) and $M_y$ (`kN·m`).
+       - **Right Column — Builder & Telemetry:**
+         - 1-click presets (`PRS Symétrique`, `Caisson Soudé`, `2×UPN Dos-à-Dos`, `IPE + Platine Semelle`, `Chemin de Roulement HEA+UPN`).
+         - Sub-element list with `NumberField` steppers ($\Delta y, \Delta z$ in `mm`, $\theta$ in `°`, plate dimensions in `mm`), add/remove controls, and `<SegmentedControl>` for steel grade (`S235` | `S275` | `S355` | `S460`).
+         - Tabular telemetry readout (`font-data tabular-nums`, French comma decimal formatting in `fr`) for $A, m, y_G, z_G, I_y, I_z, I_{yz}, \alpha, W_{el}, W_{pl}, i_y, i_z, I_t, I_w$, `<StatusBadge>` for EN 1993-1-1 class, `<CopyButton>` for TSV/JSON export, and **Appliquer à la barre sélectionnée** (`data-testid="apply-composite-section"`) which assigns the composite section to active beam(s) and triggers WASM re-solve.
 
-   - **M9.3 — RDM6/7 Parametric Structure Generators (_Bibliothèque d'ossatures paramétrées_, _Ossatures_ §3.10):**
-     - Create `apps/web/src/modeling/parametricGenerators.ts` + `ParametricFrameModal.tsx` (`data-testid="parametric-generator-modal"`) accessible from Step 1 (`geometry.tsx`, button `data-testid="open-parametric-generator"`):
-       1. **Portique à traverse brisée / monopente / multipans (2D/3D Portal Frame):** span $L$, eave height $H_1$, ridge height $H_2$, number of bays $N_{\text{bays}}$, 3D depth & spacing $L_y$ (when $N_{\text{frames}} > 1$), column section (`HEA`), rafter section (`IPE`), base support preset (`Encastrement` / `Rotule`).
-       2. **Treillis plan Pratt / Howe / Warren (RDM6 #50–#58):** span $L$, height at ends $H_0$, ridge height $H_c$, panel count $N$, chord section & web diagonal section, auto-pinned diagonals option.
-       3. **Ferme à entrait retroussé / Polonceau (RDM6 #200–#206):** span $L$, column height $H_1$, truss rise $H_2$, panel subdivisions $N$.
-       4. **Pylône treillis 3D / Tour tronconique (RDM6 #100–#105):** height $H$, base width $(L_{x,\text{inf}}, L_{y,\text{inf}})$, top width $(L_{x,\text{sup}}, L_{y,\text{sup}})$, tier count $N$, X or K bracing.
-     - Include a live **2D/3D SVG wireframe preview** inside `ParametricFrameModal.tsx` that updates instantaneously as parameters change, plus an option to **Replace project** or **Insert at origin $(x_0, y_0, z_0)$**.
+   - **M11.3 — Client-Side Branded Calculation Note & Vector Exports (`apps/web/src/routes/_studio/report.tsx`):**
+     - Upgrade Step 5 (`report.tsx`) so the calculation note renders:
+       - Official `<BrandMark />` (`/logo-rdm-studio.png`) cover header with engineer title block (project title, author, date, Eurocode scope EN 1990–1999, 3D Timoshenko WASM solver badge, certified `49 / 49` benchmark seal).
+       - Dedicated **Sections Droites Composées** chapter whenever custom composite sections exist in the model, embedding the vector SVG cross-section diagram, full geometric property table ($A, I_y, I_z, W_{el}, W_{pl}, I_t, I_w$), and EN 1993-1-1 Table 5.2 classification.
+       - Complete ULS/SLS envelope summary tables and member-by-member Eurocode verification checks.
+     - Verify 100 % client-side exports (`0 octet cloud`):
+       - **Vector A4 PDF / Print** (`window.print()` / vector print stylesheet).
+       - **Structured `.docx` export** (`data-testid="export-docx-btn"`) generated client-side with native Word tables and embedded section metadata.
+       - **Standalone Offline 3D HTML Model** (`data-testid="export-html-btn"`) embedding geometry, boundary conditions, and envelope results in a self-contained `.html` download.
 
-   - **M9.4 — Astonishing Swiss-Metrology Step 1 UI (CAD Ghost Preview + Synchronized Nodes & Beams Spreadsheet Drawer):**
-     - **3D CAD Ghost Preview (`apps/web/src/viewport3d/`):** While drawing a beam (`draw_beam` tool) after clicking the start node, render a dashed Deep Cobalt (`#1D4ED8`) preview segment to the snapped cursor point, perpendicular/axis alignment guide lines (`X`, `Y`, `Z` snap indicators), and a floating monospace HUD pill showing live length $\Delta L$ (`m`) and angle $\alpha$ (`°`).
-     - **Synchronized Nodes & Beams Data Table (`apps/web/src/components/ModelDataTable.tsx`):** Add a collapsible bottom metrology drawer (`data-testid="model-data-table"`) in Step 1 with two tabs (`Nœuds` and `Poutres`) built with `@tanstack/react-table` and `@rdm-studio/ui` primitives:
-       - **Nœuds tab:** ID (`N1`…), editable `X (m)`, `Y (m)`, `Z (m)` inline `NumberField`s, support badge, and delete row button.
-       - **Poutres tab:** ID (`B1`…), `Nœud i`, `Nœud j`, `Section` (`Select`/`Combobox`), `Matériau`, `Roulis (°)`, calculated length `L (m)` in `JetBrains Mono tabular-nums`, and delete row button.
-       - **Bidirectional 3D Sync:** Clicking or hovering a row highlights and focuses the corresponding node/beam in the 3D viewport; selecting a node/beam in 3D scrolls to and highlights its row in the table.
-       - **Spreadsheet Paste:** Support pasting tab/CSV coordinate rows (`x y z`) directly to batch-create nodes.
-     - Extract and compile Lingui i18n catalogs (`pnpm --filter web i18n:extract && pnpm --filter web i18n:compile`).
+   - **M11.4 — Full E2E Suite Sweep & M11 Playwright Contract (`apps/web/e2e/m11-composite-section-report.spec.ts`):**
+     - Extract and compile Lingui i18n catalogs (`pnpm --filter web i18n:extract && pnpm --filter web i18n:compile`, zero untranslated strings in `en.po`).
+     - Run the **entire Playwright E2E suite** across `apps/web/e2e/` and fix any regression (including any legacy `.svg` logo assertions updated to `/logo-rdm-studio.png` from commit `9840605b`).
+     - Create `apps/web/e2e/m11-composite-section-report.spec.ts` verifying:
+       1. Opening _Studio Sections Composées_ from `/geometry`.
+       2. Selecting `2×UPN Dos-à-Dos` and `PRS Symétrique` presets, verifying $A, I_y, W_{el,y}, W_{pl,y}$, EN 1993-1-1 class badge, and SVG stress diagram updates.
+       3. Applying the composite section to a beam, running WASM solve, and verifying the custom section chapter in `/report` plus `.docx` and standalone `.html` downloads.
 
 3. **Verify Gates:**
    - Run all applicable Gates `G0 → G6` (`AGENTS.md` §4):
+     - `cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings && cargo test --workspace --all-features`
+     - `wasm-pack build bindings/rdm-wasm --target web --out-dir ../../apps/web/src/wasm-pkg`
      - `pnpm --filter @rdm-studio/ui build`
      - `pnpm --filter web exec tsr generate`
      - `pnpm --filter web exec oxfmt --write src && pnpm --filter web exec oxfmt --check`
@@ -45,13 +58,14 @@ Task: : github.com/elcoosp/rdm-studio. Maximum-velocity, plan-aligned implementa
      - `pnpm --filter web exec tsc --noEmit`
      - `pnpm --filter web test:unit`
      - `pnpm --filter web build`
-     - `pnpm --filter web test:e2e` (verify all existing E2E suites remain green + add `apps/web/e2e/m9-cad-powertools.spec.ts` testing compact model, beam subdivision, parametric truss/portal generation, and synchronized Nodes/Beams table).
+     - `pnpm --filter site typecheck && pnpm --filter site build`
+     - `pnpm --filter web exec playwright test --project=chromium --project=firefox --reporter=list` (full E2E sweep including `e2e/m11-composite-section-report.spec.ts`).
    - Fix every single error or warning until 100% green.
 
 4. **Handoff & Archive (Leave Tree Dirty — No Commits):**
    - Leave the working tree dirty with zero commits created during this session (`git status` shows all new/modified files).
-   - Update `STATUS.md` with Milestone M9 completion status and verification gate results.
-   - Write `.github/pr-body.md` summarizing Milestone M9 features, geometry invariants, and test results.
-   - Write `ship.toml` at the repo root with **strictly 1 dirty file per `[[commit]]`**, ordered by dependency (`packages/ui` → `modeling/` → `viewport3d/` → `components/` → `routes/` → `i18n/` → `e2e/` → `STATUS.md` → `.github/pr-body.md`).
+   - Update `STATUS.md` with Milestone M11 completion status and verification gate results.
+   - Write `.github/pr-body.md` summarizing Milestone M11 composite cross-section engine, visual _Sections Droites_ studio, client-side branded calculation note, and full E2E sweep results.
+   - Write `ship.toml` at the repo root with strictly 1 dirty file per `[[commit]]`, ordered by dependency (`crates/` → `bindings/` → `packages/ui` → `apps/web/src/` → `i18n/` → `e2e/` → `STATUS.md` → `.github/pr-body.md`).
    - Run `ship validate` until exit `0`.
-   - Zip the full clean tree (`rdm-studio-m9-cad-powertools.zip`, excluding only `.git/`, `target/`, `node_modules/`, caches) into the downloads folder with zip contents proof.
+   - Zip the full clean tree (`rdm-studio-m11-sections-report.zip`, excluding only `.git/`, `target/`, `node_modules/`, caches) into `~/Downloads/rdm-studio-m11-sections-report.zip` with zip contents proof.

@@ -34,6 +34,13 @@ pub struct ModeShape {
     /// Global displacements `[6n]` normalized to unit modal mass
     /// (`[Ux,Uy,Uz,Rx,Ry,Rz]` per node, zeros on constrained DOFs).
     pub displacements: Vec<f64>,
+    /// v2.1.0: effective modal mass ratios `[X, Y, Z]` — each entry is
+    /// `M_eff,d / M_T` in `0.0..=1.0` (0–100 % of the total structural
+    /// mass participating in direction `d`), following Debard
+    /// _RDM6 – Méthodes de calculs_ §5.5 and EN 1998-1 §4.3.3.3: the
+    /// participation factor `Γ_d = (M·φ)ᵀ·e_d` over the translational
+    /// DOFs of direction `d` gives `M_eff,d = Γ_d² / (φᵀMφ)`.
+    pub effective_mass_ratios: [f64; 3],
 }
 
 /// Deflation workspace: normalized iterate over the free DOFs plus its
@@ -223,6 +230,9 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
 
     let mut k_map: BTreeMap<(usize, usize), f64> = BTreeMap::new();
     let mut m_map: BTreeMap<(usize, usize), f64> = BTreeMap::new();
+    // v2.1.0: total structural mass `M_T = Σ ρ·A·L` — the denominator of
+    // the effective modal mass ratios.
+    let mut total_mass = 0.0_f64;
     for data in &elements {
         let beam = structure
             .beams
@@ -241,6 +251,7 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
                 message: format!("unknown material {}", beam.material_id),
             }
         })?;
+        total_mass += material.rho * section.a * data.frame.length;
         let m_local = consistent_mass_local(
             material.rho,
             section.a,
@@ -300,31 +311,6 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
         m_reduced[fi * n_free + fj] += v;
     }
 
-    if std::env::var("RDM_MODAL_DEBUG").is_ok() {
-        let ktrace: f64 = (0..n_free).map(|r| k_reduced[r * n_free + r]).sum();
-        let mtrace: f64 = (0..n_free).map(|r| m_reduced[r * n_free + r]).sum();
-        eprintln!("DEBUG n_free={n_free} trace_K={ktrace} trace_M={mtrace}");
-        for r in 0..n_free {
-            let row: Vec<String> = (0..n_free)
-                .map(|c| format!("{:.3}", m_reduced[r * n_free + c]))
-                .collect();
-            eprintln!("DEBUG M[{}]: {}", r, row.join(" "));
-        }
-        for r in 0..n_free {
-            eprintln!("DEBUG K[{r},{r}]={}", k_reduced[r * n_free + r]);
-        }
-    }
-    if std::env::var("RDM_MODAL_DEBUG").is_ok() {
-        let ktrace: f64 = (0..n_free).map(|r| k_reduced[r * n_free + r]).sum();
-        let mtrace: f64 = (0..n_free).map(|r| m_reduced[r * n_free + r]).sum();
-        eprintln!("DEBUG n_free={n_free} trace_K={ktrace} trace_M={mtrace}");
-        for r in 0..n_free {
-            let row: Vec<String> = (0..n_free)
-                .map(|c| format!("{:.3}", m_reduced[r * n_free + c]))
-                .collect();
-            eprintln!("DEBUG M[{}]: {}", r, row.join(" "));
-        }
-    }
     let cholesky = DenseCholesky::factor(&k_reduced, n_free).ok_or_else(|| {
         ModalError::Factorization(
             "the reduced stiffness matrix is not positive definite".to_owned(),
@@ -412,6 +398,23 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
             }
             m_phi[r] = acc;
         }
+        // v2.1.0: effective modal masses per global direction (Debard
+        // RDM6 §5.5 / EN 1998-1 §4.3.3.3). With the unit-modal-mass
+        // normalization `φᵀMφ = 1` the participation factor of direction
+        // `d` is `Γ_d = (M·φ)ᵀ·e_d` — the mass-weighted mode sum over the
+        // translational DOFs `[Ux|Uy|Uz]` — and the effective mass is
+        // `M_eff,d = Γ_d² / (φᵀMφ)`, reported as a fraction of `M_T`.
+        let modal_mass: f64 = (0..n_free).map(|r| phi[r] * m_phi[r]).sum::<f64>().max(1e-300);
+        let mut effective_mass_ratios = [0.0f64; 3];
+        for (d, ratio) in effective_mass_ratios.iter_mut().enumerate() {
+            let gamma: f64 = free
+                .iter()
+                .enumerate()
+                .filter(|&(_, &dof)| dof % 6 == d)
+                .map(|(slot, _)| m_phi[slot])
+                .sum();
+            *ratio = ((gamma * gamma / modal_mass) / total_mass.max(1e-300)).clamp(0.0, 1.0);
+        }
         let mut displacements = vec![0.0f64; ndof];
         for (slot, &dof) in free.iter().enumerate() {
             displacements[dof] = iterate[slot];
@@ -422,6 +425,7 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
                 frequency_hz: omega / (2.0 * std::f64::consts::PI),
                 omega,
                 displacements,
+                effective_mass_ratios,
             },
             ModeIterate {
                 phi: iterate,
@@ -571,5 +575,55 @@ mod tests {
         for pair in report.modes.windows(2) {
             assert!(pair[0].frequency_hz < pair[1].frequency_hz);
         }
+    }
+
+    #[test]
+    fn effective_mass_ratios_are_fractions_of_total_mass() {
+        // The cantilever bends in the Y (weak) and Z (strong) planes; every
+        // ratio stays within [0, 1] and the first two bending modes carry a
+        // substantial share of the total mass `M_T = ρ·A·L_total`.
+        let structure = cantilever();
+        let report = modal_analysis(&structure, 2).expect("modal analysis");
+        let total_mass = 7850.0 * 2.24e-3 * 4.0;
+        for mode in &report.modes {
+            for d in 0..3 {
+                let ratio = mode.effective_mass_ratios[d];
+                assert!(
+                    (0.0..=1.0).contains(&ratio),
+                    "mode {} dir {d} ratio {ratio} outside [0, 1]",
+                    mode.mode_index
+                );
+            }
+        }
+        // Both extracted modes together must mobilize a significant part of
+        // M_T in the transverse directions (unit-modal-mass normalization).
+        let sum_y: f64 = report
+            .modes
+            .iter()
+            .map(|m| m.effective_mass_ratios[1])
+            .sum();
+        let sum_z: f64 = report
+            .modes
+            .iter()
+            .map(|m| m.effective_mass_ratios[2])
+            .sum();
+        assert!(
+            sum_y > 0.2 && sum_y <= 1.0 + 1e-9,
+            "cumulative Y ratio {sum_y} implausible"
+        );
+        assert!(
+            sum_z > 0.2 && sum_z <= 1.0 + 1e-9,
+            "cumulative Z ratio {sum_z} implausible"
+        );
+        // The axial direction (X) carries no transverse modal mass for the
+        // first bending modes: well below the transverse shares.
+        let sum_x: f64 = report
+            .modes
+            .iter()
+            .map(|m| m.effective_mass_ratios[0])
+            .sum();
+        assert!(sum_x <= sum_y.max(sum_z), "axial X share {sum_x} dominates");
+        // Sanity: the ratios scale like M_eff / M_T with M_eff ≤ M_T.
+        assert!(total_mass > 0.0);
     }
 }

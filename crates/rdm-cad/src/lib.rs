@@ -9,6 +9,7 @@
 pub mod bim_interop;
 pub mod dxf_importer;
 pub mod parametric;
+pub mod sections;
 pub mod step_importer;
 pub mod topology_cleaner;
 
@@ -18,6 +19,10 @@ pub use bim_interop::{
 };
 pub use dxf_importer::{import_dxf, RawSegment};
 pub use parametric::{generate_structure, ParametricError, ParametricParams, ParametricTemplate};
+pub use sections::{
+    compute_composite_section, CompositeSectionError, CompositeSectionResult, ElementOutline,
+    STEEL_DENSITY,
+};
 pub use step_importer::import_step_or_iges;
 pub use topology_cleaner::{clean_topology, Topology, TopologyError};
 

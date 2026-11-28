@@ -104,6 +104,9 @@ pub struct SolveReport {
     pub cases: Vec<CaseReport>,
     /// ULS/SLS superpositions with Eurocode checks.
     pub combinations: Vec<CombinationReport>,
+    /// v2.1.0: ids of the TensionOnly / CompressionOnly members the
+    /// behavior iteration deactivated (residual axial force < 1e-3 N).
+    pub inactive_beam_ids: Vec<u32>,
 }
 
 /// Summary of one profile designation for the UI pickers.
@@ -194,6 +197,7 @@ pub fn build_solve_report(project_json: &str) -> Result<SolveReport, SolveError>
         n_beams: solved.n_beams,
         cases,
         combinations,
+        inactive_beam_ids: solved.inactive_beam_ids.clone(),
     })
 }
 
@@ -446,6 +450,9 @@ pub struct ModeShapeDto {
     pub omega: f64,
     /// Global modal displacements `[6n]`.
     pub displacements: Vec<f64>,
+    /// v2.1.0: effective modal mass ratios `[X, Y, Z]` in `0.0..=1.0`
+    /// (fraction of the total structural mass participating per direction).
+    pub effective_mass_ratios: [f64; 3],
 }
 
 /// Serializable modal report.
@@ -1093,6 +1100,7 @@ pub fn modal_analysis(project_json: &str, n_modes: usize) -> Result<JsValue, JsV
                     frequency_hz: m.frequency_hz,
                     omega: m.omega,
                     displacements: m.displacements.clone(),
+                    effective_mass_ratios: m.effective_mass_ratios,
                 })
                 .collect(),
         })

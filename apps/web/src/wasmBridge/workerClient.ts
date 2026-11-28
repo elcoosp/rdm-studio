@@ -202,7 +202,101 @@ export type EngineFn =
   | "multi_material_check_json"
   | "moving_loads_envelope_json"
   | "migrate_project_json"
-  | "compute_composite_section";
+  | "compute_composite_section"
+  | "ec3_connection_check"
+  | "influence_line_json"
+  | "moving_load_train_json"
+  | "pattern_loads_envelope_json"
+  | "storey_drift_json"
+  | "import_bim";
+
+// ---------------------------------------------------------------------------
+// M12 — connections, influence lines, drift, pattern loads, BIM import
+// ---------------------------------------------------------------------------
+
+/** One clause node of the EN 1993-1-8 connection trace (M12.1). */
+export interface ConnectionCheckResult {
+  topology: string;
+  topology_label: string;
+  grade: string;
+  size: string;
+  n_bolts: number;
+  p1: number;
+  p2: number;
+  e1: number;
+  e2: number;
+  plate_t: number;
+  d0: number;
+  steel_grade: string;
+  weld_throat_a: number;
+  weld_length: number;
+  n_ed: number;
+  v_ed: number;
+  m_ed: number;
+  trace: CalcTraceNodeDto[];
+  utilization: number;
+  governing: string;
+  fv_rd: number;
+  fb_rd: number;
+  ft_rd: number;
+  v_eff_rd: number;
+  fw_rd: number;
+}
+
+/** Influence line η(x) of one response function (M12.2). */
+export interface InfluenceLineResult {
+  beam_id: number;
+  response: string;
+  ratios: number[];
+  values: number[];
+  at_station: number;
+  span_m: number;
+}
+
+/** Governing envelope of one axle-train crossing (M12.2). */
+export interface TrainEnvelopeResult {
+  my_max: number;
+  my_min: number;
+  vz_max: number;
+  n_max: number;
+  rz_max: number;
+  uz_max: number;
+  governing_ratio: number;
+  train_total_n: number;
+}
+
+/** One beam's min/max envelope across the checkerboard patterns (M12.4). */
+export interface PatternBeamEnvelopeDto {
+  beam_id: number;
+  my: [number, number];
+  vz: [number, number];
+  n: [number, number];
+}
+
+/** EN 1990 pattern (checkerboard) envelope output (M12.4). */
+export interface PatternEnvelopeResult {
+  n_spans: number;
+  patterns: number[][];
+  span_beam_ids: number[][];
+  beams: PatternBeamEnvelopeDto[];
+}
+
+/** One level of the inter-storey drift report (M12.3). */
+export interface LevelDriftDto {
+  elevation: number;
+  name: string;
+  storey_height_m: number;
+  drift_m: number;
+  ratio: number;
+  limit_denominator: number;
+  passed: boolean;
+}
+
+/** Full storey drift report (M12.3). */
+export interface StoreyDriftResult {
+  levels: LevelDriftDto[];
+  ground_elevation: number;
+}
 
 /**
  * M11.1: exact analytical result of a composite cross-section (mirrors
@@ -591,6 +685,65 @@ class FeaClient {
       });
       this.worker.postMessage({ type: "ENGINE_CALL", callId, fn, args } satisfies WorkerRequest);
     });
+  }
+
+  /** M12.1: complete EN 1993-1-8 connection check (bolt group + welds). */
+  ec3ConnectionCheck(input: Record<string, unknown>): Promise<ConnectionCheckResult> {
+    return this.engineCall("ec3_connection_check", input) as Promise<ConnectionCheckResult>;
+  }
+
+  /** M12.2: influence line η(x) of one response along a member. */
+  influenceLine(
+    project: unknown,
+    beamId: number,
+    stationRatio: number,
+    responseKind: string,
+  ): Promise<InfluenceLineResult> {
+    return this.engineCall(
+      "influence_line_json",
+      project,
+      beamId,
+      stationRatio,
+      responseKind,
+    ) as Promise<InfluenceLineResult>;
+  }
+
+  /** M12.2: moving-load envelope of an axle-train crossing. */
+  movingLoadTrain(
+    project: unknown,
+    beamId: number,
+    train: Record<string, unknown>,
+    nPositions: number,
+  ): Promise<TrainEnvelopeResult> {
+    return this.engineCall(
+      "moving_load_train_json",
+      project,
+      beamId,
+      train,
+      nPositions,
+    ) as Promise<TrainEnvelopeResult>;
+  }
+
+  /** M12.4: EN 1990 checkerboard pattern sub-case envelope. */
+  patternLoadsEnvelope(project: unknown): Promise<PatternEnvelopeResult> {
+    return this.engineCall(
+      "pattern_loads_envelope_json",
+      project,
+    ) as Promise<PatternEnvelopeResult>;
+  }
+
+  /** M12.3: SLS inter-storey drift check. */
+  storeyDrift(project: unknown, limitDenominator: number): Promise<StoreyDriftResult> {
+    return this.engineCall(
+      "storey_drift_json",
+      project,
+      limitDenominator,
+    ) as Promise<StoreyDriftResult>;
+  }
+
+  /** M12.5: bidirectional BIM import (.ifc / .saf.json → project JSON). */
+  importBim(text: string, format: string, name: string): Promise<string> {
+    return this.engineCall("import_bim", text, format, name) as Promise<string>;
   }
 
   solveModel(project: unknown): Promise<SolveReport> {

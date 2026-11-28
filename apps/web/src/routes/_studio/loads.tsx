@@ -39,8 +39,9 @@ import {
 import { StageContent, useStageSlot } from "@/state/stageStore";
 import { LoadsFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useUpdateSearch } from "@/hooks/useStudioQuery";
-import { IconLoad } from "@rdm-studio/ui/icons";
-import { feaClient } from "@/wasmBridge/workerClient";
+import { IconLoad, LoadCombination } from "@rdm-studio/ui/icons";
+import { feaClient, type PatternEnvelopeResult } from "@/wasmBridge/workerClient";
+import { MovingLoadPanel } from "@/components/MovingLoadPanel";
 import type { LoadData as LoadDataRow } from "@/state/projectStore";
 import {
   useProjectStore,
@@ -140,6 +141,10 @@ function LoadsPage() {
   const beams = useProjectStore((s) => s.project.structure.beams);
   const sections = useProjectStore((s) => s.project.structure.sections);
   const materials = useProjectStore((s) => s.project.structure.materials);
+  const project = useProjectStore((s) => s.project);
+  // M12.4: EN 1990 checkerboard pattern envelope readout.
+  const [pattern, setPattern] = useState<PatternEnvelopeResult | null>(null);
+  const [patternBusy, setPatternBusy] = useState(false);
   const addNodalLoad = useProjectStore((s) => s.addNodalLoad);
   const addBeamSpanLoad = useProjectStore((s) => s.addBeamSpanLoad);
   const addAccelerationField = useProjectStore((s) => s.addAccelerationField);
@@ -493,6 +498,92 @@ function LoadsPage() {
             Appliquer
           </Button>
         </div>
+      </div>
+
+      {/* M12.4 — EN 1990 checkerboard pattern sub-cases (multi-span). */}
+      <div
+        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        data-testid="pattern-loads-card"
+      >
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
+          <LoadCombination size={16} />
+          <Trans>Travées alternées (EN 1990)</Trans>
+        </h3>
+        <p className="text-[11px] leading-4 text-ink-muted">
+          <Trans>
+            Génère les sous-cas variables en damier (travées chargées / déchargées) et l'enveloppe
+            gouvernante par barre pour les structures multi-travées.
+          </Trans>
+        </p>
+        <div className="mt-2 flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="generate-pattern-loads"
+            disabled={patternBusy}
+            onClick={() => {
+              setPatternBusy(true);
+              feaClient
+                .patternLoadsEnvelope(project)
+                .then((res) => {
+                  setPattern(res);
+                  if (res.n_spans === 0) {
+                    toast.error(t`Aucune travée continue détectée (barres alignées X + appuis Uz)`);
+                  } else {
+                    toast.success(
+                      t`${res.n_spans} travées · ${res.patterns.length} sous-cas générés (damier EN 1990)`,
+                    );
+                  }
+                  void trackProductEvent("pattern_loads_generated", { spans: res.n_spans });
+                })
+                .catch(() => toast.error(t`Génération des travées alternées impossible`))
+                .finally(() => setPatternBusy(false));
+            }}
+          >
+            Travées alternées (EN 1990)
+          </Button>
+          {pattern !== null && pattern.n_spans > 0 ? (
+            <span className="font-data text-[11px] text-ink-secondary">
+              {`${pattern.n_spans} travées · ${pattern.patterns.length} sous-cas`}
+            </span>
+          ) : null}
+        </div>
+        {pattern !== null && pattern.n_spans > 0 ? (
+          <table
+            className="font-data mt-2 w-full text-[11px] [font-variant-numeric:tabular-nums]"
+            data-testid="pattern-loads-table"
+          >
+            <thead>
+              <tr className="text-left text-[10px] text-ink-muted">
+                <th className="py-0.5 font-medium">
+                  <Trans>Sous-cas</Trans>
+                </th>
+                {pattern.patterns[0]?.map((_, i) => (
+                  <th key={i} className="py-0.5 font-medium">{`T${i + 1}`}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pattern.patterns.map((row, i) => (
+                <tr key={i} className="border-t border-hairline">
+                  <td className="py-0.5 text-ink-primary">
+                    {i === 0 ? <Trans>Toutes chargées</Trans> : `Damier ${i}`}
+                  </td>
+                  {row.map((m, j) => (
+                    <td key={j} className="py-0.5">
+                      {m.toFixed(1)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+      </div>
+
+      {/* M12.2 — moving loads & influence lines. */}
+      <div className="mt-2">
+        <MovingLoadPanel />
       </div>
 
       {/* Load Form sub-card */}

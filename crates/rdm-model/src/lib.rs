@@ -17,12 +17,14 @@
 //! - `project` module: the `.rdm` canonical JSON file + SHA-256 fingerprint
 
 pub mod boundary;
+pub mod composite;
 pub mod geometry;
 pub mod loads;
 pub mod project;
 pub mod validator;
 
 pub use boundary::Support;
+pub use composite::{CompositeElement, CompositeElementKind, CompositeSectionDef, SteelGrade};
 pub use geometry::{Beam, MemberBehavior, Node, SectionProperties, SectionShape};
 pub use loads::{Direction, GlobalForces, Load, LoadCase, LoadKind};
 pub use project::{
@@ -86,7 +88,13 @@ pub struct Structure {
     pub groups: Vec<project::MemberGroup>,
     /// v1.7.0 (schema v2): storey levels.
     #[serde(default)]
-    pub levels: Vec<project::Level>,
+    pub levels: Vec<Level>,
+    /// M11.1: user-authored built-up cross-sections. Beams reference them
+    /// through `section_id == CompositeSectionDef::name`; the WASM bridge
+    /// resolves the exact mechanical properties into `sections` before
+    /// validation and solving.
+    #[serde(default)]
+    pub custom_sections: Vec<composite::CompositeSectionDef>,
 }
 
 impl Default for Structure {
@@ -103,6 +111,7 @@ impl Default for Structure {
             load_cases: Vec::new(),
             groups: Vec::new(),
             levels: Vec::new(),
+            custom_sections: Vec::new(),
         }
     }
 }

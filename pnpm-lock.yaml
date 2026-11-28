@@ -487,6 +487,25 @@ importers:
         specifier: 5.1.1
         version: 5.1.1(@types/node@26.6.10)(vite@8.3.8(@types/node@26.6.10)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.4)(tsx@4.23.15)(yaml@2.9.1))
 
+  packages/brand-studio:
+    dependencies:
+      '@rdm-studio/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@takumi-rs/helpers':
+        specifier: ^2.22.1
+        version: 2.22.1(react@19.3.1)
+      takumi-js:
+        specifier: ^2.22.1
+        version: 2.22.1(csstype@3.2.4)(react@19.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^24.19.2
+        version: 24.19.4
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
   packages/ui:
     dependencies:
       '@base-ui/react':
@@ -6838,6 +6857,10 @@ packages:
 
   tailwindcss@4.3.5:
     resolution: {integrity: sha512-FcQk9BuffmEHJP2G0XmB2SplU1aLTI7j07Kunk+U74Ny+XiWOtzXz9aujFZ/avntw1e2cOv/3PkgzflQ7gX2vQ==}
+
+  takumi-js@2.22.1:
+    resolution: {integrity: sha512-kxageAHzLTmNkXSMDt1o5R9sneATS/kFSgW/gisYtlR0c1T1vabzWVfY4vRj19wHAdLKE897YA1B20hBPpvA0Q==}
+    engines: {node: '>=20.19'}
 
   takumi-pdf@0.21.3:
     resolution: {integrity: sha512-81ORNhkCYzqNbRDblmOz5LEqrT0rNFS++5MWCNbxmoK2VAcmvoSILV9EF73iEzEtJIy6dxnmVekeG3Y0DF1dxQ==}
@@ -14517,6 +14540,16 @@ snapshots:
   tailwind-merge@3.7.0: {}
 
   tailwindcss@4.3.5: {}
+
+  takumi-js@2.22.1(csstype@3.2.4)(react@19.3.1):
+    dependencies:
+      '@takumi-rs/core': 2.22.1(csstype@3.2.4)(react@19.3.1)
+      '@takumi-rs/helpers': 2.22.1(react@19.3.1)
+      '@takumi-rs/wasm': 2.22.1(csstype@3.2.4)(react@19.3.1)
+    transitivePeerDependencies:
+      - csstype
+      - preact
+      - react
 
   takumi-pdf@0.21.3(react@19.3.1):
     dependencies:

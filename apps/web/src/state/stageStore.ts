@@ -30,6 +30,8 @@ export interface StageRenderOptions {
   selectedBeamId?: number | null;
   /** Table-hovered member (soft cobalt rim). */
   hoveredBeamId?: number | null;
+  /** M9.4: table-hovered node (larger cobalt marker). */
+  hoveredNodeId?: number | null;
 }
 
 interface StageState {

@@ -27,7 +27,6 @@ import {
 import { Kbd } from "@/components/ui/kbd";
 import { Input } from "@/components/ui/input";
 import { DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipGroup } from "@rdm-studio/ui/interior";
 import { useProjectStore } from "@/state/projectStore";
 import { useSelectedIds } from "@/hooks/useStudioQuery";
 import { useViewportStore } from "@/state/viewportStore";
@@ -188,111 +187,109 @@ export function CadToolbar(): ReactElement {
 
   return (
     <div
-      className="flex h-9 items-center justify-between gap-3 border-b border-hairline bg-panel px-2.5"
+      className="flex h-10 items-center justify-between gap-3 border-b border-hairline bg-panel px-3"
       role="toolbar"
       aria-label={t`Outils CAD`}
     >
-      {/* Left: cohesive Swiss Metrology CAD tool rail (flush left, zero random gaps) */}
-      <div className="flex min-w-0 items-center gap-1.5">
-        <TooltipGroup className="inline-flex min-w-0 items-center overflow-hidden rounded-[4px] border border-hairline bg-canvas">
-          {PRIMARY.map((tool) => (
-            <Tooltip
+      {/* Left: clean ghost CAD tool pills with inline monospaced keycaps (zero redundant tooltips) */}
+      <div className="flex min-w-0 items-center gap-1">
+        {PRIMARY.map((tool) => {
+          const shortcut = CAD_COMMANDS.find((c) => c.id === tool.id)?.shortcut;
+          return (
+            <button
               key={tool.id}
-              label={`${tool.label} (${CAD_COMMANDS.find((c) => c.id === tool.id)?.shortcut ?? ""})`}
-              side="bottom"
+              type="button"
+              aria-label={tool.label}
+              onClick={() => runCommand(tool.id)}
+              className="group inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] font-medium text-ink-secondary transition-colors hover:bg-panel-subtle hover:text-ink-primary active:bg-accent-tint active:text-accent"
             >
-              <button
-                type="button"
-                aria-label={tool.label}
-                onClick={() => runCommand(tool.id)}
-                className="flex h-7 shrink-0 items-center gap-1.5 border-r border-hairline px-2.5 text-[11.5px] font-medium text-ink-secondary transition-colors hover:bg-accent-tint hover:text-accent active:bg-accent/15"
-              >
-                <tool.icon size={14} strokeWidth={1.6} aria-hidden />
-                <span className="hidden lg:inline">{tool.label}</span>
-              </button>
-            </Tooltip>
-          ))}
-          <DropdownMenuRoot>
-            <DropdownMenuTrigger
-              className="flex h-7 shrink-0 items-center gap-1 px-2.5 text-[11.5px] font-medium text-ink-secondary transition-colors hover:bg-accent-tint hover:text-accent"
-              aria-label={t`Outils secondaires`}
-            >
-              <Trans>Outils</Trans>
-              <ChevronDown size={13} strokeWidth={1.6} aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>
-                <Trans>Outils CAD secondaires</Trans>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {SECONDARY.map((tool) => (
-                <DropdownMenuItem
-                  key={tool.id}
-                  className="cursor-pointer"
-                  onSelect={() => runCommand(tool.id)}
-                >
-                  <tool.icon size={15} strokeWidth={1.6} aria-hidden />
-                  {tool.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenuRoot>
-        </TooltipGroup>
+              <tool.icon
+                size={15}
+                strokeWidth={1.6}
+                className="text-ink-muted transition-colors group-hover:text-accent"
+                aria-hidden
+              />
+              <span className="hidden lg:inline">{tool.label}</span>
+              {shortcut !== undefined ? (
+                <span className="font-data hidden rounded bg-canvas px-1 py-0.2 text-[10px] text-ink-muted group-hover:text-accent xl:inline">
+                  {shortcut}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
 
-        {/* Topology & deletion segment */}
-        <div className="inline-flex items-center overflow-hidden rounded-[4px] border border-hairline bg-canvas">
-          <Tooltip
-            label={t`Compacter / nettoyer le modèle — fusionner les nœuds, couper les intersections, dédoublonner les poutres`}
-            side="bottom"
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-[5px] px-2 text-[12px] font-medium text-ink-secondary transition-colors hover:bg-panel-subtle hover:text-ink-primary"
+            aria-label={t`Outils secondaires`}
           >
-            <button
-              type="button"
-              data-testid="compact-model"
-              aria-label={t`Compacter le modèle`}
-              onClick={runCompact}
-              className="flex h-7 shrink-0 items-center gap-1.5 border-r border-hairline px-2.5 text-[11.5px] font-medium text-ink-secondary transition-colors hover:bg-accent-tint hover:text-accent"
-            >
-              <Merge size={14} strokeWidth={1.6} aria-hidden />
-              <span className="hidden xl:inline">
-                <Trans>Compacter</Trans>
-              </span>
-            </button>
-          </Tooltip>
-          <Tooltip
-            label={
-              deleteBeamMode
-                ? t`Quitter le mode suppression (Échap)`
-                : t`Supprimer des poutres (cliquer ensuite une poutre)`
-            }
-            side="bottom"
-          >
-            <button
-              type="button"
-              data-testid="delete-beam-mode"
-              aria-pressed={deleteBeamMode}
-              aria-label={t`Supprimer des poutres`}
-              onClick={() => toggleDeleteBeamMode()}
-              className={`flex h-7 shrink-0 items-center gap-1.5 px-2.5 text-[11.5px] font-medium transition-colors ${
-                deleteBeamMode
-                  ? "bg-fea-max/10 text-fea-max"
-                  : "text-ink-secondary hover:bg-fea-max/10 hover:text-fea-max"
-              }`}
-            >
-              <Trash2 size={14} strokeWidth={1.6} aria-hidden />
-              <span className="hidden xl:inline">
-                <Trans>Supprimer</Trans>
-              </span>
-            </button>
-          </Tooltip>
-        </div>
+            <Trans>Plus</Trans>
+            <ChevronDown size={13} strokeWidth={1.6} className="text-ink-muted" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>
+              <Trans>Outils CAD avancés</Trans>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {SECONDARY.map((tool) => (
+              <DropdownMenuItem
+                key={tool.id}
+                className="cursor-pointer"
+                onSelect={() => runCommand(tool.id)}
+              >
+                <tool.icon size={15} strokeWidth={1.6} aria-hidden />
+                {tool.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenuRoot>
+
+        <span className="mx-1 h-4 w-px shrink-0 bg-hairline" aria-hidden />
+
+        <button
+          type="button"
+          data-testid="compact-model"
+          aria-label={t`Compacter le modèle`}
+          onClick={runCompact}
+          className="group inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] font-medium text-ink-secondary transition-colors hover:bg-panel-subtle hover:text-ink-primary"
+        >
+          <Merge
+            size={15}
+            strokeWidth={1.6}
+            className="text-ink-muted transition-colors group-hover:text-accent"
+            aria-hidden
+          />
+          <span className="hidden xl:inline">
+            <Trans>Compacter</Trans>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          data-testid="delete-beam-mode"
+          aria-pressed={deleteBeamMode}
+          aria-label={t`Supprimer des poutres`}
+          onClick={() => toggleDeleteBeamMode()}
+          className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] font-medium transition-colors ${
+            deleteBeamMode
+              ? "bg-fea-max/12 text-fea-max ring-1 ring-fea-max/30"
+              : "text-ink-secondary hover:bg-fea-max/10 hover:text-fea-max"
+          }`}
+        >
+          <Trash2 size={15} strokeWidth={1.6} aria-hidden />
+          <span className="hidden xl:inline">
+            <Trans>Supprimer</Trans>
+          </span>
+        </button>
       </div>
 
-      {/* Right: unified Swiss Metrology parameter & telemetry strip */}
-      <div className="flex shrink-0 items-center gap-1.5">
-        <div className="inline-flex h-7 items-center overflow-hidden rounded-[4px] border border-hairline bg-canvas">
+      {/* Right: crisp inline metrology step & shortcuts */}
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="inline-flex h-7 items-center gap-1.5 rounded-[5px] border border-hairline bg-canvas/70 px-2">
           <label
             htmlFor="cad-unit-value"
-            className="hidden border-r border-hairline px-2 text-[11px] font-medium text-ink-muted sm:inline"
+            className="hidden text-[11px] font-medium text-ink-muted sm:inline"
           >
             <Trans>Pas</Trans>
           </label>
@@ -301,21 +298,22 @@ export function CadToolbar(): ReactElement {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             aria-label={t`Valeur unitaire`}
-            className="font-data h-7 w-14 rounded-none border-0 bg-transparent px-1.5 text-center text-[11.5px] font-medium text-ink-primary focus-visible:ring-0"
+            className="font-data h-6 w-12 rounded-[3px] border-0 bg-panel px-1 text-center text-[11.5px] font-semibold text-ink-primary shadow-2xs focus-visible:ring-1 focus-visible:ring-accent"
           />
           <span
             aria-live="polite"
-            className="font-data hidden border-l border-hairline px-2 text-[11px] text-ink-muted md:inline"
+            className="font-data hidden text-[11px] text-ink-muted md:inline"
             data-testid="cad-feedback"
           >
             {feedback ?? `${snaps.length} pts`}
           </span>
         </div>
+
         <button
           type="button"
           onClick={() => setCheatOpen(true)}
           aria-label={t`Raccourcis clavier`}
-          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[4px] border border-hairline bg-canvas px-2.5 text-[11.5px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+          className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[11.5px] font-medium text-ink-secondary transition-colors hover:bg-panel-subtle hover:text-ink-primary"
         >
           <Trans>Raccourcis</Trans>
           <Kbd className="font-data px-1 py-0 text-[10px]">?</Kbd>

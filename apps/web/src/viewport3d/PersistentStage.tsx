@@ -1,3 +1,4 @@
+import { Kbd } from "@/components/ui/kbd";
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { useLocation, useMatches, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useLingui } from "@lingui/react/macro";
@@ -664,18 +665,21 @@ export function PersistentStage(): ReactElement {
         {/* v2.1.2: 24px bottom metrological status bar — Z-up convention,
             live magnetic grid step, current selection and the [F] hint. */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex h-6 items-center justify-between gap-2 border-t border-hairline bg-panel/85 px-2 font-data text-[10px] text-ink-muted backdrop-blur"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex h-6.5 items-center justify-between gap-2 border-t border-hairline bg-panel/90 px-3 font-data text-[10.5px] text-ink-secondary backdrop-blur"
           data-testid="stage-status-bar"
         >
-          <span>
+          <span className="text-ink-muted">
             {t`Repère Z-up`} · {t`Grille`} {Math.round(snapStep * 1000)} mm
           </span>
-          <span className="min-w-0 truncate">
+          <span className="min-w-0 truncate font-medium text-ink-primary">
             {selectedBeam !== null
               ? `${t`Sélection`} : P${selectedBeam.id} (${selectedBeam.section_id})`
               : t`Sélection : aucune`}
           </span>
-          <span>[F] {t`Cadrer`}</span>
+          <span className="inline-flex items-center gap-1 text-ink-muted">
+            <Kbd className="px-1 py-0 text-[9.5px]">F</Kbd>
+            <span>{t`Cadrer`}</span>
+          </span>
         </div>
       </ContextMenuTrigger>
       {/* v2.1.2: Base UI right-click context menu on 3D beams/nodes —

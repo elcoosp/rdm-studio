@@ -128,7 +128,7 @@ export function ModelDataTable({
 
   return (
     <section
-      className="shrink-0 overflow-hidden rounded border border-hairline bg-panel"
+      className="shrink-0 overflow-hidden border-t border-hairline bg-panel"
       data-testid="model-data-table"
       onPaste={(event) => {
         const text = event.clipboardData?.getData("text/plain") ?? "";
@@ -142,7 +142,7 @@ export function ModelDataTable({
           (`data-dock` → tabs + table pane) stay addressable under the
           v2.5.0 `model-data-table` contract. */}
       <div className="overflow-hidden" data-testid="data-dock">
-        <div className="flex h-9 items-center gap-1 px-1.5">
+        <div className="flex h-8 items-center gap-1 bg-canvas/55 px-2.5">
           <button
             type="button"
             data-testid="dock-tab-nodes"

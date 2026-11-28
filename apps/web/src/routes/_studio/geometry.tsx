@@ -773,9 +773,9 @@ function GeometryPage() {
       >
         {null}
       </StageContent>
-      {/* v1.3.0 Step 1: segmented 3D tool modes ([V]/[N]/[B]). */}
+      {/* v2.6.0: flush Swiss Metrology 3D interaction mode bar (zero double border / radius). */}
       <div
-        className="flex shrink-0 items-center gap-1 rounded border border-hairline bg-panel p-0.5"
+        className="flex h-9 shrink-0 items-center gap-1.5 border-t border-hairline bg-panel px-2.5"
         data-testid="tool-modes"
       >
         {(
@@ -789,15 +789,15 @@ function GeometryPage() {
             key={mode}
             type="button"
             data-testid={`tool-${mode}`}
-            className={`flex min-h-8 flex-1 items-center justify-center gap-1 rounded px-2 text-[12px] ${
+            className={`inline-flex h-6.5 items-center gap-1.5 rounded-[4px] px-2.5 text-[11.5px] font-medium transition-colors ${
               toolMode === mode
-                ? "bg-accent-tint text-accent"
-                : "text-ink-secondary hover:text-ink-primary"
+                ? "bg-accent-tint text-accent ring-1 ring-accent-ring"
+                : "text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
             }`}
             onClick={() => setToolMode(mode)}
           >
-            {label}
-            <span className="font-data text-[10px] text-ink-muted">[{hint}]</span>
+            <span>{label}</span>
+            <Kbd className="px-1 py-0 text-[9.5px]">{hint}</Kbd>
           </button>
         ))}
         {toolMode === "node" ? (

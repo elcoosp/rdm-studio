@@ -7,6 +7,7 @@ This repository (`rdm-studio`) is a **Local-First 3D Finite Element & Eurocode 3
 ## 1. Source of Truth Documents (Read First)
 
 - **`STATUS.md`** — Current milestone ledger (`M0..M8`), verified green gates, and the exact next milestone to implement.
+- **`docs/ROADMAP.md`** — Definitive M14–2029 engineering roadmap, §3 physics/security fixes, locked product decisions, and accelerated Q1 2027 Tauri desktop milestone.
 - **`ARCHITECTURE.md`** — Canonical module layout (§5), milestone roadmap (§18), Vite/Lingui/PWA config (§19.1–§19.3), and SI domain contracts (§19.4).
 - **`DESIGN.md`** — _Swiss Metrology Workstation_ daylight tokens (`#F8FAFC` canvas, `#FFFFFF` panels, `1px #E2E8F0` hairlines, `#1D4ED8` Deep Cobalt accent), typography (`Inter` + `JetBrains Mono` `tabular-nums`), responsive mobile `100dvh` + `BottomSheet`, and v1.1 ergonomics (§7).
 - **`mockups/`** — Visual reference screens (9 desktop, 5 mobile `390×844`, and `mockups/icons-sheet.html` containing the exact 32 `<svg viewBox="0 0 24 24">` engineering icons).
@@ -111,10 +112,11 @@ Every tagged release (`vX.Y.Z`) follows a deterministic 5-step pipeline using Gi
      - `crates/rdm-cad/Cargo.toml`
    - Run `cargo check --workspace --quiet` to sync `Cargo.lock`.
 
-3. **Generate `1280×640` Swiss Metrology Release Banner (`@rdm-studio/brand-studio`):**
-   - Register the release metadata (`version`, `title`, `subtitle`, `eyebrow`, `highlights`, `standards`, `stitchIllustrationPrompt`) derived from Step 1 in `packages/brand-studio/src/releases.ts`.
-   - Save the transparent-background isometric illustration cutout at `docs/releases/illustrations/vX.Y.Z.png` (keep un-cutout raw images in `docs/releases/illustrations/raw/`, which is gitignored).
-   - Render the final `1280×640` banner via:
+3. **Output Copy-Pasteable Google Stitch Illustration Prompt & Render `1280×640` Banner (`@rdm-studio/brand-studio`):**
+   - Register the release metadata (`version`, `title`, `subtitle`, `tags`, `stitchIllustrationPrompt`) derived from Step 1 in `packages/brand-studio/src/releases.ts`.
+   - Output a ready-to-copy Google Stitch prompt prefixed with the version screen label (`vX.Y.Z` so the exported file is named `vX.Y.Z.png` in Downloads) instructing Stitch to produce a pure isometric illustration on a solid `#FFFFFF` background with zero rendered text, numbers, or logos.
+   - Once the user provides the exported Stitch PNG (via chat upload or `~/Downloads/vX.Y.Z.png`), save the raw image into `docs/releases/illustrations/raw/vX.Y.Z.png` (gitignored) and run border-connected flood-fill alpha cutout (`PIL`/`scipy`/`cv2`) to save the transparent-background PNG at `docs/releases/illustrations/vX.Y.Z.png`.
+   - Render the final `1280×640` banner compositing `docs/releases/illustrations/vX.Y.Z.png` via:
      ```bash
      pnpm --dir packages/brand-studio render -- --version vX.Y.Z
      ```

@@ -1,7 +1,7 @@
 {
   "name": "site",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.5.0",
   "type": "module",
   "description": "RDM Studio marketing site — the v2.1.2 landing page ported to the Oxide static adapter (rdm-studio-site.vercel.app).",
   "scripts": {

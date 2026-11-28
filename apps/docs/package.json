@@ -1,7 +1,7 @@
 {
   "name": "docs",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.5.0",
   "type": "module",
   "description": "RDM Studio documentation — 14-page bilingual (EN + FR) Diataxis Starlight site powered by @elcoosp/docs-toolkit (rdm-studio-docs.vercel.app).",
   "scripts": {

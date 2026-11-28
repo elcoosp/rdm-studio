@@ -136,4 +136,12 @@ export const RELEASE_CATALOG: readonly ReleaseSpec[] = [
     stitchIllustrationPrompt:
     "Isometric 3D architectural engineering illustration on a pure solid #FFFFFF background, zero text, zero labels, zero numbers, zero logos: an extruded built-up composite steel cross-section combining a welded I-girder with back-to-back UPN channels resting on a millimeter coordinate grid with #1D4ED8 cobalt principal axis vectors and an amber plastic neutral plane, studio daylight.",
   },
+  {
+    version: "v2.5.0",
+    title: "Steel Connections EC3-1-8, Moving Loads & BIM",
+    subtitle: "Bolts & fillet welds · EN 1991-2 LM1 trains · Grouped EC3 & IFC4",
+    tags: ["EC3-1-8 Joints", "LM1 Moving Loads", "IFC4 / SAF BIM"],
+    stitchIllustrationPrompt:
+      "Isometric 3D architectural engineering illustration on a pure solid #FFFFFF background, zero text, zero labels, zero numbers, zero logos: a precision bolted steel end-plate beam-to-column connection with #1D4ED8 cobalt high-strength bolts, fillet weld seams, and a bridge girder overhead with moving axle load vectors and an amber influence line curve, studio daylight.",
+  },
 ];

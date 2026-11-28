@@ -1,7 +1,7 @@
 {
   "name": "rdm-studio",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.5.0",
   "packageManager": "pnpm@12.18.0",
   "scripts": {
     "dev": "pnpm --filter web dev",

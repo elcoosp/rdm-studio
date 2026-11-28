@@ -680,7 +680,18 @@ class FeaClient {
     return new Promise<unknown>((resolve, reject) => {
       const callId = ++engineCallCounter;
       enginePending.set(callId, {
-        resolve: resolve as (value: unknown) => void,
+        resolve: (value: unknown) => {
+          if (
+            value !== null &&
+            typeof value === "object" &&
+            "error" in value &&
+            typeof (value as { error?: unknown }).error === "string"
+          ) {
+            reject(new Error((value as { error: string }).error));
+            return;
+          }
+          resolve(value);
+        },
         reject,
       });
       this.worker.postMessage({ type: "ENGINE_CALL", callId, fn, args } satisfies WorkerRequest);

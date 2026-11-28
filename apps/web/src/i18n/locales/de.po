@@ -34,10 +34,27 @@ msgstr ""
 msgid "{0} barreaux · {1}"
 msgstr ""
 
+#. placeholder {0}: points.length
+#: src/components/ModelDataTable.tsx
+msgid "{0} nœud(s) créé(s) depuis le presse-papiers"
+msgstr ""
+
+#. placeholder {0}: draft.nodes.length
+#. placeholder {1}: draft.beams.length
+#: src/components/ParametricFrameModal.tsx
+msgid "{0} nœuds · {1} poutres · projet remplacé"
+msgstr ""
+
 #. placeholder {0}: generated.structure.nodes.length
 #. placeholder {1}: generated.structure.beams.length
 #: src/components/ProjectGalleryModal.tsx
 msgid "{0} nœuds · {1} poutres (moteur Rust rdm-cad)."
+msgstr ""
+
+#. placeholder {0}: draft.nodes.length
+#. placeholder {1}: draft.beams.length
+#: src/components/ParametricFrameModal.tsx
+msgid "{0} nœuds · {1} poutres ajoutés"
 msgstr ""
 
 #. placeholder {0}: results?.length ?? 0
@@ -223,6 +240,8 @@ msgid "Annexe nationale (FR / BE / DE / UK / EN), méthode EN 1990 6.10 ou 6.10a
 msgstr ""
 
 #: src/components/CadImportDialog.tsx
+#: src/components/CadToolbar.tsx
+#: src/routes/_studio/geometry.tsx
 #: src/viewport3d/PersistentStage.tsx
 msgid "Annuler"
 msgstr ""
@@ -261,6 +280,10 @@ msgstr ""
 #: src/routes/_studio/supports.tsx
 #~ msgid "Appuis élastiques (kx..krz)"
 #~ msgstr ""
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Articuler les diagonales (barres de treillis)"
+msgstr ""
 
 #: src/viewport3d/PersistentStage.tsx
 msgid "Articuler N1/N2"
@@ -303,6 +326,10 @@ msgid "Aucune donnée envoyée sur un serveur. Vos modèles, sections, charges, 
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
+msgid "Auto-découpe"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
 msgid "Barre de treillis (articuler N1/N2)"
 msgstr ""
 
@@ -329,6 +356,10 @@ msgstr ""
 #: src/routes/_marketing/index.tsx
 #~ msgid "Béton, bois, alu, mixte"
 #~ msgstr ""
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Bibliothèque d'ossatures paramétrées"
+msgstr ""
 
 #: src/components/OnboardingTour.tsx
 msgid "Bibliothèque normalisée EN 10365"
@@ -547,6 +578,10 @@ msgstr ""
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
 msgstr ""
 
+#: src/components/ModelDataTable.tsx
+msgid "Coller x y z (Tab/CSV) pour créer des nœuds"
+msgstr ""
+
 #: src/routes/_studio/results.tsx
 msgid "Combinaison affichée"
 msgstr ""
@@ -567,6 +602,22 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/components/FeedbackModal.tsx
 msgid "feedback.button"
+msgstr ""
+
+#: src/components/CadToolbar.tsx
+msgid "Compacter"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Compacter / nettoyer le modèle"
+msgstr ""
+
+#: src/components/CadToolbar.tsx
+msgid "Compacter / nettoyer le modèle — fusionner les nœuds, couper les intersections, dédoublonner les poutres"
+msgstr ""
+
+#: src/components/CadToolbar.tsx
+msgid "Compacter le modèle"
 msgstr ""
 
 #: src/components/CommandPalette.tsx
@@ -767,6 +818,14 @@ msgstr ""
 
 #: src/routes/_studio/loads.tsx
 msgid "Direction"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Discrétiser"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Discrétiser (N tronçons)"
 msgstr ""
 
 #: src/routes/_marketing/legal.tsx
@@ -1095,6 +1154,10 @@ msgstr ""
 msgid "Générateurs EN 1991"
 msgstr ""
 
+#: src/components/ParametricFrameModal.tsx
+msgid "Générateurs RDM6/7 — portique, treillis, ferme retroussée, pylône. Aperçu mis à jour en direct."
+msgstr ""
+
 #. placeholder {0}: fault.message ?? "paramètres invalides"
 #: src/components/ProjectGalleryModal.tsx
 msgid "Génération impossible : {0}"
@@ -1107,6 +1170,10 @@ msgstr ""
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Générer la structure"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Générer une ossature paramétrée…"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -1175,6 +1242,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Inox 304L"
+msgstr ""
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Insérer à l'origine"
 msgstr ""
 
 #: src/viewport3d/PersistentStage.tsx
@@ -1378,6 +1449,13 @@ msgstr ""
 msgid "Modèle chargé : {0}"
 msgstr ""
 
+#. placeholder {0}: stats.splitBeams
+#. placeholder {1}: stats.mergedNodes
+#: src/components/CadToolbar.tsx
+#: src/routes/_studio/geometry.tsx
+msgid "Modèle compacté : {0} poutre(s) découpée(s), {1} nœud(s) fusionné(s)"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Modèle du hero"
 msgstr ""
@@ -1533,6 +1611,18 @@ msgstr ""
 msgid "Orbite librement, basculez les vues Iso / XY / XZ / YZ, profitez de l'accrochage aimanté sur nœuds et milieux — et clic droit sur une poutre pour le menu contextuel."
 msgstr ""
 
+#. placeholder {0}: draft.name
+#: src/components/ParametricFrameModal.tsx
+msgid "Ossature générée : {0}"
+msgstr ""
+
+#. placeholder {0}: origin.x
+#. placeholder {1}: origin.y
+#. placeholder {2}: origin.z
+#: src/components/ParametricFrameModal.tsx
+msgid "Ossature insérée à ({0} ; {1} ; {2}) m"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "ou licence perpétuelle — hors-ligne"
 msgstr ""
@@ -1592,8 +1682,13 @@ msgstr ""
 
 #. placeholder {0}: beam.id
 #: src/routes/_studio/geometry.tsx
-msgid "P{0} subdivisée en {segments} tronçons"
+msgid "P{0} discrétisée en {segments} tronçons"
 msgstr ""
+
+#. placeholder {0}: beam.id
+#: src/routes/_studio/geometry.tsx
+#~ msgid "P{0} subdivisée en {segments} tronçons"
+#~ msgstr ""
 
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Palette"
@@ -1764,6 +1859,11 @@ msgstr ""
 msgid "Poutre continue 3 × 4 m : moments négatifs sur appuis et redistribution — comparez 6.10 et 6.10a/b ici."
 msgstr ""
 
+#. placeholder {0}: result.splitBeams
+#: src/viewport3d/PersistentStage.tsx
+msgid "Poutre hôte découpée — {0} tronçon(s) créé(s)"
+msgstr ""
+
 #: src/routes/_studio/results.tsx
 #~ msgid "Poutre inspectée"
 #~ msgstr ""
@@ -1798,6 +1898,10 @@ msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "Presets d'appui"
+msgstr ""
+
+#: src/components/ModelDataTable.tsx
+msgid "Presse-papiers illisible — attendu « x y z » par ligne"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -2022,6 +2126,10 @@ msgstr ""
 msgid "Relier N1 → N2"
 msgstr ""
 
+#: src/components/ParametricFrameModal.tsx
+msgid "Remplacer le projet"
+msgstr ""
+
 #: src/viewport3d/LayerToolbar.tsx
 msgid "Rendu filaire"
 msgstr ""
@@ -2225,16 +2333,16 @@ msgid "Structure paramétrique générée"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
-msgid "Subdiviser"
-msgstr ""
+#~ msgid "Subdiviser"
+#~ msgstr ""
 
 #: src/viewport3d/PersistentStage.tsx
 msgid "Subdiviser en 4 tronçons"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
-msgid "Subdiviser en N tronçons"
-msgstr ""
+#~ msgid "Subdiviser en N tronçons"
+#~ msgstr ""
 
 #: src/components/ValidationModal.tsx
 msgid "Suite de 41 benchmarks analytiques — RDM & Eurocode 3"
@@ -2404,6 +2512,10 @@ msgstr ""
 
 #: src/components/UpdatePrompt.tsx
 msgid "Une nouvelle version est disponible."
+msgstr ""
+
+#: src/components/ParametricFrameModal.tsx
+msgid "Unités SI strictes (m)"
 msgstr ""
 
 #: src/routes/_studio/report.tsx

@@ -118,10 +118,9 @@ function CameraRig({
 }
 
 /**
- * v2.4.0: cursor-anchored orbit pivot. On right-button pointer-down (or a
- * wheel zoom) we raycast the scene under the pointer and glide the
- * CameraControls target to the hit point, so the orbit always rotates about
- * the point the user is aiming at instead of a far-away fixed centre.
+ * v2.5.1: cursor-anchored orbit pivot on primary orbit drag (left-button
+ * without Shift), ignoring infinite grid planes and distant rays so
+ * right-button / Shift pan (`truck`) is never hijacked or clamped.
  */
 function PivotToCursor({ controlsRef }: { controlsRef: RefObject<CameraControlsImpl | null> }) {
   const camera = useThree((s) => s.camera);
@@ -131,34 +130,34 @@ function PivotToCursor({ controlsRef }: { controlsRef: RefObject<CameraControlsI
     const dom = gl.domElement;
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    const retarget = (clientX: number, clientY: number): void => {
+    const onPointerDown = (event: PointerEvent): void => {
+      // Only retarget on left-click orbit without pan modifiers (never on right-click pan).
+      if (event.button !== 0 || event.shiftKey || event.ctrlKey || event.metaKey) {
+        return;
+      }
       const controls = controlsRef.current;
       if (controls === null) {
         return;
       }
       const rect = dom.getBoundingClientRect();
-      pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(scene.children, true);
-      const hit = hits.find((h) => h.point !== undefined);
+      const hit = hits.find(
+        (h) =>
+          h.point !== undefined &&
+          h.distance < 250 &&
+          !(h.object instanceof THREE.GridHelper) &&
+          h.object.type !== "GridHelper",
+      );
       if (hit !== undefined) {
         void controls.setTarget(hit.point.x, hit.point.y, hit.point.z, true);
       }
     };
-    const onPointerDown = (event: PointerEvent): void => {
-      if (event.button === 2) {
-        retarget(event.clientX, event.clientY);
-      }
-    };
-    const onWheel = (event: WheelEvent): void => {
-      retarget(event.clientX, event.clientY);
-    };
     dom.addEventListener("pointerdown", onPointerDown);
-    dom.addEventListener("wheel", onWheel, { passive: true });
     return () => {
       dom.removeEventListener("pointerdown", onPointerDown);
-      dom.removeEventListener("wheel", onWheel);
     };
   }, [camera, gl, scene, controlsRef]);
   return null;

@@ -1,3 +1,4 @@
+import { Kbd } from "@/components/ui/kbd";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "@lingui/react/macro";
@@ -733,12 +734,32 @@ function GeometryPage() {
             ))}
           </div>
         ) : null}
-        <p
-          className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 font-data text-[10px] text-ink-muted md:block"
+        <div
+          className="pointer-events-none absolute bottom-8 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-hairline/80 bg-panel/85 px-3 py-1 text-[10.5px] text-ink-secondary shadow-2xs backdrop-blur-xs md:flex"
           data-testid="viewport-hint"
         >
-          Clic G Sélection · Clic D Orbite · Maj+Glisser Pan · Clic D Nœud Menu · Suppr Effacer
-        </p>
+          <span className="inline-flex items-center gap-1">
+            <Kbd className="px-1.5 py-0 text-[9.5px]">Clic G</Kbd>
+            <span>Sélection</span>
+          </span>
+          <span className="text-hairline">·</span>
+          <span className="inline-flex items-center gap-1">
+            <Kbd className="px-1.5 py-0 text-[9.5px]">Clic D</Kbd>
+            <span>Orbite</span>
+          </span>
+          <span className="text-hairline">·</span>
+          <span className="inline-flex items-center gap-1">
+            <Kbd className="px-1.5 py-0 text-[9.5px]">Maj</Kbd>
+            <span>+</span>
+            <Kbd className="px-1.5 py-0 text-[9.5px]">Glisser</Kbd>
+            <span>Pan</span>
+          </span>
+          <span className="text-hairline">·</span>
+          <span className="inline-flex items-center gap-1">
+            <Kbd className="px-1.5 py-0 text-[9.5px]">Suppr</Kbd>
+            <span>Effacer</span>
+          </span>
+        </div>
       </div>
       {/* Route render inputs for the shared stage geometry. */}
       <StageContent

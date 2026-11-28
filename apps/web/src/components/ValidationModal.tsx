@@ -55,11 +55,11 @@ const BENCH_TITLES_FR: Record<string, string> = {
   E11: "Plafond ρ des sections de classe 4",
 };
 
-type TierId = "all" | "structural" | "ec3";
+type TierId = "all" | "structural" | "ec3" | "rdm6";
 
 interface BenchRow extends BenchResultDto {
   tolerancePct: number;
-  tier: "structural" | "ec3";
+  tier: "structural" | "ec3" | "rdm6";
   titleFr: string;
 }
 
@@ -277,23 +277,25 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
   }, [project]);
 
   const allPassed = results?.filter((r) => r.passed).length ?? 0;
-  const total = results?.length ?? 41;
-  const allPass = allPassed === total && total === 41;
+  const total = results?.length ?? 49;
+  const allPass = allPassed === total && total === 49;
 
   const enrichedRows = useMemo((): BenchRow[] => {
     if (!results) return [];
     return results.map((r) => ({
       ...r,
       tolerancePct: Math.abs(r.rel_error) * 100,
-      tier: r.id.startsWith("R") ? "structural" : "ec3",
+      tier: r.id.startsWith("RDM6") ? "rdm6" : r.id.startsWith("R") ? "structural" : "ec3",
       titleFr: BENCH_TITLES_FR[r.id] ?? r.title,
     }));
   }, [results]);
 
   const structuralRows = enrichedRows.filter((r) => r.tier === "structural");
   const ec3Rows = enrichedRows.filter((r) => r.tier === "ec3");
+  const rdm6Rows = enrichedRows.filter((r) => r.tier === "rdm6");
   const structuralPassed = structuralRows.filter((r) => r.passed).length;
   const ec3Passed = ec3Rows.filter((r) => r.passed).length;
+  const rdm6Passed = rdm6Rows.filter((r) => r.passed).length;
   const maxTolerance =
     enrichedRows.length > 0 ? Math.max(...enrichedRows.map((r) => r.tolerancePct)) : 0;
   const avgWasmTime = results?.length ? "< 20 ms" : "—";
@@ -320,7 +322,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
                   <Trans>Certificat de Validation Analytique</Trans>
                 </DialogTitle>
                 <p className="text-[12px] text-ink-secondary mt-0.5">
-                  {t`Suite de 41 benchmarks analytiques — RDM & Eurocode 3`}
+                  {t`Suite de 49 benchmarks analytiques — RDM, Eurocode 3 & RDM6/RDM7`}
                 </p>
               </div>
             </div>
@@ -350,7 +352,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
           </div>
         </DialogHeader>
 
-        <div className="border-b border-hairline bg-panel p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+        <div className="border-b border-hairline bg-panel p-3 grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
           <SummaryCard
             label={t`RDM & Stabilité`}
             value={`${structuralPassed}/30`}
@@ -362,6 +364,12 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
             value={`${ec3Passed}/11`}
             subLabel={t`clauses EN 1993-1-1`}
             tone={ec3Passed === 11 ? "pass" : "fail"}
+          />
+          <SummaryCard
+            label={t`RDM6 / RDM7 (Debard)`}
+            value={`${rdm6Passed}/8`}
+            subLabel={t`exemples RDM – Flexion §6`}
+            tone={rdm6Passed === 8 ? "pass" : "fail"}
           />
           <SummaryCard
             label={t`Tolérance max`}
@@ -390,6 +398,7 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
                   testId: "filter-structural",
                 },
                 { value: "ec3", label: `Eurocode 3 (${ec3Rows.length})`, testId: "filter-ec3" },
+                { value: "rdm6", label: `RDM6 / RDM7 (${rdm6Rows.length})`, testId: "filter-rdm6" },
               ]}
               size="sm"
               className="flex-1"
@@ -425,7 +434,11 @@ export function ValidationModal({ onClose }: { onClose: () => void }): React.Rea
             </div>
           ) : (
             <ResultsTable
-              rows={enrichedRows}
+              rows={
+                activeFilter === "all"
+                  ? enrichedRows
+                  : enrichedRows.filter((r) => r.tier === activeFilter)
+              }
               searchQuery={searchQuery}
               locale={locale}
               _onExportTsv={() => {}}

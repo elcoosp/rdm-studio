@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { useProjectStore } from "../state/projectStore";
-import { feaClient, type BucklingReportDto } from "../wasmBridge/workerClient";
+import { feaClient, type BucklingReportDto, type ModalReport } from "../wasmBridge/workerClient";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import {
   SelectContent,
@@ -66,6 +66,9 @@ export function AdvancedPanels(): ReactElement {
     void trackProductEvent("advanced_panel_used", { panel: next });
   };
   const [buckling, setBuckling] = useState<BucklingReportDto | null>(null);
+  // M10.1: real modal effective mass ratios (Debard RDM6 §5.5 / EN 1998-1
+  // §4.3.3.3) — fetched with the eigen report on every model change.
+  const [modal, setModal] = useState<ModalReport | null>(null);
   const [agG, setAgG] = useState(0.35);
   const [ground, setGround] = useState<(typeof GROUNDS)[number]>("B");
   const [spectrumType, setSpectrumType] = useState<"Type1" | "Type2">("Type1");
@@ -88,6 +91,14 @@ export function AdvancedPanels(): ReactElement {
       .engineCall("buckling_analysis_json", project, 4)
       .then((payload) => setBuckling(payload as BucklingReportDto))
       .catch(() => setBuckling(null));
+    return undefined;
+  }, [project]);
+
+  useEffect(() => {
+    void feaClient
+      .modalAnalysis(project, 6)
+      .then((report) => setModal(report))
+      .catch(() => setModal(null));
     return undefined;
   }, [project]);
 
@@ -169,6 +180,55 @@ export function AdvancedPanels(): ReactElement {
 
       {tab === "seismic" ? (
         <div className="text-sm">
+          {/* M10.1: modal participation — effective modal mass ratios per
+              direction and their cumulative sum (EN 1998-1 §4.3.3.3). */}
+          {modal !== null && (modal.modes ?? []).length > 0 ? (
+            <div className="mb-3 rounded-lg border border-hairline p-2" data-testid="modal-effective-masses">
+              <p className="mb-1.5 text-xs font-semibold">
+                <Trans>Masses modales effectives (EN 1998-1 §4.3.3.3)</Trans>
+              </p>
+              <table className="w-full font-mono text-[11px]">
+                <thead className="text-left text-ink-muted">
+                  <tr>
+                    <th className="py-0.5 pr-2">{t`Mode`}</th>
+                    <th className="py-0.5 pr-2">{t`f (Hz)`}</th>
+                    <th className="py-0.5 pr-2">Mx %</th>
+                    <th className="py-0.5 pr-2">My %</th>
+                    <th className="py-0.5 pr-2">Mz %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(modal.modes ?? []).map((m) => (
+                    <tr key={m.mode_index} className="border-t border-hairline">
+                      <td className="py-0.5 pr-2">{m.mode_index}</td>
+                      <td className="py-0.5 pr-2">{m.frequency_hz.toFixed(2)}</td>
+                      {(m.effective_mass_ratios ?? [0, 0, 0]).map((ratio, d) => (
+                        <td key={d} className="py-0.5 pr-2">
+                          {(ratio * 100).toFixed(1).replace(".", ",")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  <tr className="border-t border-hairline font-semibold">
+                    <td className="py-0.5 pr-2">{t`Cumul`}</td>
+                    <td className="py-0.5 pr-2">—</td>
+                    {[0, 1, 2].map((d) => (
+                      <td key={d} className="py-0.5 pr-2">
+                        {(
+                          (modal.modes ?? []).reduce(
+                            (sum, m) => sum + (m.effective_mass_ratios?.[d] ?? 0),
+                            0,
+                          ) * 100
+                        )
+                          .toFixed(1)
+                          .replace(".", ",")}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : null}
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
             <label className="flex items-center gap-1">
               ag/g:

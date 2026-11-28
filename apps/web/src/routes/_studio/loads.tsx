@@ -352,7 +352,7 @@ function LoadsPage() {
       {/* v2.3.0: Inspector sections grouped into hairline sub-cards with 16px engineering icons. */}
 
       {/* Load Count & Clear sub-card */}
-      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <div className="flex items-center justify-between gap-2">
           <span className="font-data text-[11px] text-ink-muted">
             {loads.length} charge(s) définie(s)
@@ -375,7 +375,7 @@ function LoadsPage() {
       <LoadCaseManager />
 
       {/* EN 1990 Case Tabs sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         {/* G | Q | W | Acc tabs with the shared layoutId glider (§8.6). */}
         <div
           className="flex items-center gap-1 border-b border-hairline pb-2"
@@ -403,7 +403,7 @@ function LoadsPage() {
       </div>
 
       {/* EN 1991 Generators sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <ThermalLoadIcon size={16} />
           <Trans>Générateurs EN 1991</Trans>
@@ -422,7 +422,7 @@ function LoadsPage() {
 
       {/* g-Acceleration sub-card */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="accel-field"
       >
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
@@ -502,7 +502,7 @@ function LoadsPage() {
 
       {/* M12.4 — EN 1990 checkerboard pattern sub-cases (multi-span). */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="pattern-loads-card"
       >
         <h3 className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
@@ -587,7 +587,7 @@ function LoadsPage() {
       </div>
 
       {/* Load Form sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <TorqueMoment size={16} />
           <Trans>Formulaire de charge</Trans>
@@ -836,7 +836,7 @@ function LoadsPage() {
 
       {/* Concentrated Moments sub-card */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="moments-section"
       >
         <ExpandablePanel
@@ -870,7 +870,7 @@ function LoadsPage() {
       </div>
 
       {/* Live Force Resultants sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <SelfWeightGravity size={16} />
           <Trans>Résultantes globales</Trans>
@@ -894,7 +894,7 @@ function LoadsPage() {
       </div>
 
       {/* Self-Weight & Equilibrium sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
           <Switch
             checked={selfWeight}
@@ -1306,7 +1306,7 @@ function LoadCaseManager(): React.ReactElement {
 
   return (
     <div
-      className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+      className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
       data-testid="load-case-manager"
     >
       <ExpandablePanel

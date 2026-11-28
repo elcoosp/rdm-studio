@@ -319,7 +319,7 @@ function GeometryPage() {
       {/* v2.3.0: 1-click quick-start switcher — always on top of the
           inspector, empty model or not: the 4 pre-supported, pre-loaded
           flagships, ready to solve and jump straight to Steps 4–5. */}
-      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <PortalFrameIcon size={16} />
           <Trans>Modèles rapides (1 clic)</Trans>
@@ -353,7 +353,7 @@ function GeometryPage() {
       </div>
 
       {/* Node Placement sub-card */}
-      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <NodePin size={16} />
           <Trans>Placement des nœuds</Trans>
@@ -425,7 +425,7 @@ function GeometryPage() {
       </div>
 
       {/* Material & Profile Selection sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <SteelJointIcon size={16} />
           <Trans>Matériau et profilé</Trans>
@@ -530,7 +530,7 @@ function GeometryPage() {
       </div>
 
       {/* Create Beam sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <ProfileIpe size={16} />
           <Trans>Créer une poutre</Trans>
@@ -581,7 +581,7 @@ function GeometryPage() {
       </div>
 
       {/* Selected-member patch panel sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <TorqueMoment size={16} />
           <Trans>Caractéristiques de la poutre</Trans>

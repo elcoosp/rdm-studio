@@ -244,7 +244,7 @@ function SupportsPage() {
       {/* v2.3.0: Inspector sections grouped into hairline sub-cards with 16px engineering icons. */}
 
       {/* Status & Kinematic sub-card */}
-      <div className="rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <div className="flex flex-wrap items-center justify-between gap-1.5">
           <StatusBadge tone={status.tone} testId="kinematic-status">
             {status.label}
@@ -265,7 +265,7 @@ function SupportsPage() {
             const freeDofs = DOF_LABELS.filter((_, i) => !locked[i]);
             return (
               <div
-                className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+                className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
                 data-testid="node-summary-card"
               >
                 <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
@@ -287,7 +287,7 @@ function SupportsPage() {
         : null}
 
       {/* Presets d'appui sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <SupportFixed size={16} />
           <Trans>Presets d'appui</Trans>
@@ -319,7 +319,7 @@ function SupportsPage() {
 
       {/* Appuis élastiques sub-card — M10.2 (RDM 7 §appui élastique). */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="spring-section"
       >
         <ExpandablePanel
@@ -388,7 +388,7 @@ function SupportsPage() {
 
       {/* Déplacement imposé sub-card — M10.2 (RDM 7 Δux..Δrz). */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="settlement-section"
       >
         <ExpandablePanel
@@ -426,7 +426,7 @@ function SupportsPage() {
 
       {/* M12.4 — inclined roller angle (Support.incline unit normal). */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="incline-section"
       >
         <ExpandablePanel
@@ -469,7 +469,7 @@ function SupportsPage() {
 
       {/* Bibliothèque RDM 7 sub-card */}
       <div
-        className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5"
+        className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
         data-testid="rdm7-library"
       >
         <ExpandablePanel title={<Trans>Bibliothèque RDM 7 (12 appuis groupés)</Trans>}>
@@ -512,7 +512,7 @@ function SupportsPage() {
       </div>
 
       {/* Matrice 6 DDL sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary mb-2">
           <SupportReaction size={16} />
           <Trans>Matrice 6 DDL des appuis</Trans>
@@ -569,7 +569,7 @@ function SupportsPage() {
       </div>
 
       {/* Appuis actifs sub-card */}
-      <div className="mt-2 rounded-[6px] border border-hairline bg-panel-subtle/35 p-2.5">
+      <div className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0">
         <div className="mb-1 flex items-center justify-between">
           <h3 className="flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
             <SupportReaction size={16} />

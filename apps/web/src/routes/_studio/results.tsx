@@ -1124,7 +1124,10 @@ function KpiCard({
   testId?: string;
 }) {
   return (
-    <div className="rounded border border-hairline bg-panel p-2.5" data-testid={testId}>
+    <div
+      className="border-b border-hairline py-3.5 first:pt-0 last:border-b-0 last:pb-0"
+      data-testid={testId}
+    >
       <p className="text-[11px] text-ink-muted">{label}</p>
       <p
         className="mt-1 text-[17px] font-semibold text-ink-primary"

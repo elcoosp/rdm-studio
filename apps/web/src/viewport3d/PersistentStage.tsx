@@ -379,10 +379,7 @@ export function PersistentStage(): ReactElement {
   const nodes = useProjectStore((s) => s.project.structure.nodes);
   // M10.3: buckled tension-only / compression-only members (slate dim).
   const lastReport = useLastReport();
-  const inactiveBeamIds = useMemo(
-    () => new Set(lastReport?.inactive_beam_ids ?? []),
-    [lastReport],
-  );
+  const inactiveBeamIds = useMemo(() => new Set(lastReport?.inactive_beam_ids ?? []), [lastReport]);
   const beams = useProjectStore((s) => s.project.structure.beams);
   const supports = useProjectStore((s) => s.project.structure.supports);
   const loads = useProjectStore((s) => s.project.structure.loads);

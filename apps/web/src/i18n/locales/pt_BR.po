@@ -34,6 +34,11 @@ msgstr ""
 msgid "{0} barreaux · {1}"
 msgstr ""
 
+#. placeholder {0}: zs.length
+#: src/components/StudioM12Panels.tsx
+msgid "{0} niveaux détectés depuis les cotes Z des nœuds"
+msgstr ""
+
 #. placeholder {0}: points.length
 #: src/components/ModelDataTable.tsx
 msgid "{0} nœud(s) créé(s) depuis le presse-papiers"
@@ -55,6 +60,12 @@ msgstr ""
 #. placeholder {1}: draft.beams.length
 #: src/components/ParametricFrameModal.tsx
 msgid "{0} nœuds · {1} poutres ajoutés"
+msgstr ""
+
+#. placeholder {0}: res.n_spans
+#. placeholder {1}: res.patterns.length
+#: src/routes/_studio/loads.tsx
+msgid "{0} travées · {1} sous-cas générés (damier EN 1990)"
 msgstr ""
 
 #. placeholder {0}: results?.length ?? 0
@@ -84,6 +95,10 @@ msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "<0><1/>Appui élastique (k)</0>"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "<0><1/>Appui incliné (α)</0>"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
@@ -167,6 +182,10 @@ msgstr ""
 msgid "Acier"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Acier de la platine"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Acier S235–S460"
 msgstr ""
@@ -207,9 +226,17 @@ msgstr ""
 msgid "Activer une démonstration Pro"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "affecter la sélection"
+msgstr ""
+
 #: src/components/CadToolbar.tsx
 #~ msgid "Aide-mémoire des raccourcis"
 #~ msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Ajouter"
+msgstr ""
 
 #: src/routes/_studio/loads.tsx
 msgid "Ajouter la charge"
@@ -229,6 +256,10 @@ msgstr ""
 
 #: src/routes/_studio/geometry.tsx
 msgid "Ajoutez des nœuds, reliez-les par des poutres N1 → N2, importez un plan DXF ou choisissez un modèle type dans la galerie de projets."
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Ajustez la géométrie pour lancer la vérification."
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -252,6 +283,10 @@ msgstr ""
 msgid "Analyses avancées"
 msgstr ""
 
+#: src/routes/_studio/supports.tsx
+msgid "Angle d'appui incliné α"
+msgstr ""
+
 #: src/components/SettingsPopover.tsx
 msgid "Annexe nationale"
 msgstr ""
@@ -262,6 +297,7 @@ msgstr ""
 
 #: src/components/CadImportDialog.tsx
 #: src/components/CadToolbar.tsx
+#: src/components/StudioM12Panels.tsx
 #: src/routes/_studio/geometry.tsx
 #: src/viewport3d/PersistentStage.tsx
 msgid "Annuler"
@@ -284,6 +320,10 @@ msgstr ""
 #. placeholder {0}: activeBeamIds.length
 #: src/components/CompositeSectionStudio.tsx
 msgid "Appliquer à la barre sélectionnée ({0})"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Appliquer l'inclinaison"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
@@ -323,6 +363,10 @@ msgstr ""
 msgid "Articuler N1/N2"
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Assemblages EC3-1-8"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Atelier 3D complet en 5 étapes"
 msgstr ""
@@ -343,6 +387,18 @@ msgstr ""
 msgid "Aucun appui — sélectionnez un nœud puis choisissez un preset."
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Aucun groupe — sélectionnez plusieurs barres (Maj+clic) puis créez un groupe nommé."
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Aucun niveau — les déplacements inter-étages ne sont pas encore disponibles."
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Aucun nœud à analyser"
+msgstr ""
+
 #: src/components/CommandPalette.tsx
 msgid "Aucun résultat."
 msgstr ""
@@ -357,6 +413,14 @@ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Aucune donnée envoyée sur un serveur. Vos modèles, sections, charges, résultats et notes de calcul sont traités et stockés exclusivement dans votre navigateur (IndexedDB, localStorage). RDM Studio ne comporte aucun outil de mesure télémétrique, aucun traceur tiers et aucun transfert vers un pays tiers : le responsable de traitement de vos données d'ingénierie, c'est vous."
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Aucune sélection (batch)"
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "Aucune travée continue détectée (barres alignées X + appuis Uz)"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -618,9 +682,17 @@ msgstr ""
 msgid "Classe compression"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Classe de boulon"
+msgstr ""
+
 #: src/components/CompositeSectionStudio.tsx
 #: src/routes/_studio/report.tsx
 msgid "Classe flexion"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Clause"
 msgstr ""
 
 #: src/routes/_marketing/legal.tsx
@@ -665,6 +737,10 @@ msgstr ""
 
 #: src/components/ModelDataTable.tsx
 msgid "Coller x y z (Tab/CSV) pour créer des nœuds"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Colonnes de boulons"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -743,6 +819,22 @@ msgstr ""
 msgid "Contrat de maintenance annuel"
 msgstr ""
 
+#: src/components/MovingLoadPanel.tsx
+msgid "Convoi"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Convoi {trainLabel} sur le membre P{beamId} — positions balayées par le moteur WASM (EN 1991-2)."
+msgstr ""
+
+#: src/components/MovingLoadPanel.tsx
+msgid "Convoi personnalisé"
+msgstr ""
+
+#: src/components/MovingLoadPanel.tsx
+msgid "Convois & Lignes d'influence"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Copie !"
 msgstr ""
@@ -757,6 +849,10 @@ msgstr ""
 
 #: src/routes/_studio/report.tsx
 msgid "Copier l'URL de partage"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Copier pour Excel"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -787,8 +883,20 @@ msgstr ""
 msgid "CQC / SRSS"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Créer depuis la sélection"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Créer une poutre"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Créez d'abord des barres."
+msgstr ""
+
+#: src/components/MovingLoadPanel.tsx
+msgid "Créez une barre pour étudier les convois mobiles."
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -840,6 +948,14 @@ msgid "DÉPASSÉ"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
+msgid "Déplacement Inter-Étages"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Déplacement inter-étages (ELS)"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
 msgid "Déplacements extrêmes ELS"
 msgstr ""
 
@@ -879,6 +995,10 @@ msgstr ""
 msgid "Détails techniques"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Détecter les niveaux (cotes Z)"
+msgstr ""
+
 #: src/routes/_studio/results.tsx
 msgid "Diagnostic"
 msgstr ""
@@ -913,6 +1033,10 @@ msgstr ""
 msgid "Diagrammes N/V/T/M sur les membres 3D"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Diamètre"
+msgstr ""
+
 #: src/components/OptimizerModal.tsx
 msgid "Diminue My ~ (L/2)² — le levier le plus fort sur la flexion"
 msgstr ""
@@ -935,6 +1059,14 @@ msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Disponibilité. Le service étant local-first, aucune disponibilité serveur n'est requise pour calculer : les mises à jour, la documentation et le support sont les seuls services en ligne. L'éditeur s'engage à publier chaque version avec son journal de modifications et ses 41 benchmarks de validation."
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Distance au bord (e₂)"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Distance d'about (e₁)"
 msgstr ""
 
 #. js-lingui-explicit-id
@@ -966,6 +1098,10 @@ msgstr ""
 msgid "Données traitées localement : le projet courant (géométrie, profilés, charges, résultats), vos préférences d'affichage (perspective, calques, accrochage — conservées dans l'URL), votre préférence de langue et, si vous les saisissez, les métadonnées de branding de la couverture de rapport. Effacer les données du navigateur efface définitivement l'ensemble — aucune copie existe ailleurs."
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Drift SLS d_r / h ≤ 1/300 — appariement vertical des nœuds entre niveaux."
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "DXF / STEP / IGES"
 msgstr ""
@@ -984,6 +1120,10 @@ msgstr ""
 
 #: src/routes/_studio/results.tsx
 msgid "Échelle thermique"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Éclisse / Attache d'âme"
 msgstr ""
 
 #: src/components/CommandPalette.tsx
@@ -1011,6 +1151,10 @@ msgstr ""
 msgid "Effort normal N (kN)"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Efforts auto-importés de l'enveloppe ELU active de la barre sélectionnée."
+msgstr ""
+
 #: src/routes/_studio/results.tsx
 #~ msgid "Efforts internes (5 courbes)"
 #~ msgstr ""
@@ -1027,6 +1171,14 @@ msgstr ""
 msgid "Éléments constitutifs"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Élévation de l'assemblage"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Élévation Z (m)"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "EN 1990 (combinaisons), EN 1991 (actions), EN 1993-1-1 (acier, vérifications 6.61/6.62 + C1), EN 1992 / 1995 / 1998 / 1999 pour béton, bois, alu et mixte. Les 41 benchmarks analytiques intégrés vérifient le solveur à chaque mise à jour."
 msgstr ""
@@ -1039,6 +1191,7 @@ msgstr ""
 msgid "EN 1990 → 1999"
 msgstr ""
 
+#: src/components/MovingLoadPanel.tsx
 #: src/routes/_marketing/index.tsx
 msgid "EN 1991-2 LM1"
 msgstr ""
@@ -1051,12 +1204,24 @@ msgstr ""
 msgid "Encastrer le nœud le plus à gauche"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Enregistrer"
+msgstr ""
+
 #: src/components/LicenseModal.tsx
 msgid "Enregistrer le branding"
 msgstr ""
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Enregistrer le projet courant"
+msgstr ""
+
+#: src/components/MovingLoadPanel.tsx
+msgid "Entraxe (m)"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Enveloppe Convois Mobiles"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -1085,12 +1250,20 @@ msgstr ""
 msgid "Envoyer des commentaires"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Épaisseur platine"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 #~ msgid "Équipe / Entreprise"
 #~ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Équipe / Intranet"
+msgstr ""
+
+#: src/components/MovingLoadPanel.tsx
+msgid "Essieu (kN)"
 msgstr ""
 
 #. placeholder {0}: step.stepOrder
@@ -1188,7 +1361,11 @@ msgid "Fichier canonique réimportable à l'identique (round-trip Valibot)."
 msgstr ""
 
 #: src/components/CadImportDialog.tsx
-msgid "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
+#~ msgid "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m."
+#~ msgstr ""
+
+#: src/components/CadImportDialog.tsx
+msgid "Fils wireframe : DXF (LINE/POLYLINE), STEP (LINE/TRIMMED_CURVE) et IGES (110) — unités mm converties en m. BIM bidirectionnel : IFC4 structurel (.ifc) et SAF (.saf.json) exportés depuis l'étape Rapport sont réimportés en projets complets."
 msgstr ""
 
 #: src/components/ValidationModal.tsx
@@ -1276,6 +1453,10 @@ msgstr ""
 msgid "Galerie de projets"
 msgstr ""
 
+#: src/components/MovingLoadPanel.tsx
+msgid "Galet (kN)"
+msgstr ""
+
 #: src/components/ProjectGalleryModal.tsx
 msgid "Générateur paramétrique (Rust)"
 msgstr ""
@@ -1286,6 +1467,10 @@ msgstr ""
 
 #: src/components/ParametricFrameModal.tsx
 msgid "Générateurs RDM6/7 — portique, treillis, ferme retroussée, pylône. Aperçu mis à jour en direct."
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "Génération des travées alternées impossible"
 msgstr ""
 
 #. placeholder {0}: fault.message ?? "paramètres invalides"
@@ -1299,6 +1484,10 @@ msgid "Génération…"
 msgstr ""
 
 #: src/routes/_studio/loads.tsx
+msgid "Génère les sous-cas variables en damier (travées chargées / déchargées) et l'enveloppe gouvernante par barre pour les structures multi-travées."
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
 msgid "Générer combinaisons ELU/ELS"
 msgstr ""
 
@@ -1308,6 +1497,14 @@ msgstr ""
 
 #: src/routes/_studio/geometry.tsx
 msgid "Générer une ossature paramétrée…"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Gorge de soudure a"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Gousset de treillis"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -1336,6 +1533,21 @@ msgstr ""
 
 #: src/components/CompositeSectionStudio.tsx
 msgid "grille en mm"
+msgstr ""
+
+#. placeholder {0}: name.trim()
+#. placeholder {1}: batchIds.length
+#: src/components/StudioM12Panels.tsx
+msgid "Groupe « {0} » créé sur {1} barre(s)"
+msgstr ""
+
+#. placeholder {0}: g.name
+#: src/components/StudioM12Panels.tsx
+msgid "Groupe « {0} » mis à jour"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Groupes de barres"
 msgstr ""
 
 #: src/routes/_marketing.tsx
@@ -1412,6 +1624,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "L'édition Découverte est complète pour apprendre et calculer. Le Pass Projet 48 h débloque tout pour un livrable ponctuel, l'édition Pro ajoute le branding du bureau d'études et le multi-matériaux — activation hors-ligne, sans compte."
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "L'élévation de l'assemblage s'affiche au premier calcul."
 msgstr ""
 
 #: src/components/LicenseModal.tsx
@@ -1503,11 +1719,19 @@ msgid "licences flottantes, déploiement interne"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
+msgid "Limite de drift"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
 msgid "Limite de flèche ELS"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Local-first, RGPD par conception"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Longueur de soudure"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
@@ -1542,8 +1766,21 @@ msgstr ""
 msgid "Matériau"
 msgstr ""
 
+#. placeholder {0}: name.trim()
+#: src/components/StudioM12Panels.tsx
+msgid "Matériau « {0} » ajouté à la table du projet"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Matériau et profilé"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Matériau personnalisé"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Matériau personnalisé…"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
@@ -1675,6 +1912,15 @@ msgstr ""
 msgid "Naval, levage & dynamique"
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+#: src/routes/_studio/results.tsx
+msgid "Niveau"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Niveaux (élévations Z)"
+msgstr ""
+
 #: src/components/ValidationModal.tsx
 #~ msgid "Niveaux de validation"
 #~ msgstr ""
@@ -1696,8 +1942,16 @@ msgstr ""
 msgid "Nœuds / Poutres / Appuis / Charges"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Nom"
+msgstr ""
+
 #: src/components/CompositeSectionStudio.tsx
 msgid "Nom de la section"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Nom du niveau"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -1792,6 +2046,10 @@ msgstr ""
 
 #: src/components/OnboardingTour.tsx
 msgid "Orbite librement, basculez les vues Iso / XY / XZ / YZ, profitez de l'accrochage aimanté sur nœuds et milieux — et clic droit sur une poutre pour le menu contextuel."
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Oriente la normale d'un appui glissant : la retenue agit selon (sin α ; 0 ; cos α) dans le plan XZ — vérifié par le benchmark analytique RDM6-08."
 msgstr ""
 
 #. placeholder {0}: draft.name
@@ -1913,6 +2171,14 @@ msgstr ""
 msgid "Partager les statistiques d'usage anonymes (sans cookie)"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Pas p₁ (rangées)"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Pas p₂ (colonnes)"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Pass Projet 48 h"
 msgstr ""
@@ -1985,6 +2251,10 @@ msgstr ""
 msgid "Platine"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Platine d'about"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Poids propre automatique"
 msgstr ""
@@ -2009,6 +2279,10 @@ msgstr ""
 msgid "Polyligne"
 msgstr ""
 
+#: src/components/MovingLoadPanel.tsx
+msgid "Pont roulant (2 galets)"
+msgstr ""
+
 #: src/components/ProjectGalleryModal.tsx
 msgid "Portée L (m)"
 msgstr ""
@@ -2023,6 +2297,14 @@ msgstr ""
 
 #: src/routes/_studio/results.tsx
 msgid "Position de la coupe"
+msgstr ""
+
+#: src/components/MovingLoadPanel.tsx
+msgid "Position du convoi"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Poteaux, Traverses, Diagonales…"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -2156,6 +2438,10 @@ msgstr ""
 msgid "Projets IndexedDB locaux"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Propriétés isotropes persistées dans la table des matériaux du projet (unités SI internes)."
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "PRS / RHS / CHS"
 msgstr ""
@@ -2198,6 +2484,10 @@ msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "Raideurs N/m (translations) et N·m/rad (rotations). Un DDL bloqué ignore son ressort ; un DDL libre élastique participe à la raideur (EN 1993-1-1)."
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Rangées de boulons"
 msgstr ""
 
 #: src/routes/report.tsx
@@ -2362,6 +2652,10 @@ msgstr ""
 msgid "Répétition linéaire"
 msgstr ""
 
+#: src/components/MovingLoadPanel.tsx
+msgid "Réponse"
+msgstr ""
+
 #: src/viewport3d/ForceDiagrams3D.tsx
 msgid "Résoudre le modèle pour afficher les enveloppes."
 msgstr ""
@@ -2473,6 +2767,10 @@ msgstr ""
 msgid "Sélection : aucune"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Sélection batch actuelle"
+msgstr ""
+
 #: src/components/CadToolbar.tsx
 msgid "Sélection, Magnétisme & Vue"
 msgstr ""
@@ -2482,11 +2780,19 @@ msgid "Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts."
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
+msgid "Sélectionnez un nœud pour incliner son appui."
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
 msgid "Sélectionnez un nœud pour prescrire son déplacement."
 msgstr ""
 
 #: src/components/CompositeSectionStudio.tsx
 msgid "Sélectionnez une barre pour appliquer"
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Sélectionnez une barre pour importer les efforts de l'enveloppe ELU."
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -2545,6 +2851,10 @@ msgstr ""
 msgid "Solveur Timoshenko 3D + P-Δ + flambement"
 msgstr ""
 
+#: src/routes/_studio/loads.tsx
+msgid "Sous-cas"
+msgstr ""
+
 #: src/components/AdvancedPanels.tsx
 msgid "Spectre élastique"
 msgstr ""
@@ -2559,11 +2869,17 @@ msgstr ""
 
 #: src/components/ValidationModal.tsx
 #: src/routes/_studio/report.tsx
+#: src/routes/_studio/results.tsx
 msgid "Statut"
 msgstr ""
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Structure paramétrique générée"
+msgstr ""
+
+#: src/components/CommandPalette.tsx
+#: src/components/ConnectionStudioModal.tsx
+msgid "Studio Assemblages EC3-1-8"
 msgstr ""
 
 #: src/components/CommandPalette.tsx
@@ -2641,6 +2957,14 @@ msgstr ""
 msgid "Supprimer la charge"
 msgstr ""
 
+#: src/components/StudioM12Panels.tsx
+msgid "Supprimer le groupe"
+msgstr ""
+
+#: src/components/StudioM12Panels.tsx
+msgid "Supprimer le niveau"
+msgstr ""
+
 #: src/routes/_studio/supports.tsx
 msgid "Supprimés"
 msgstr ""
@@ -2709,6 +3033,10 @@ msgstr ""
 msgid "Tolérance max"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Topologie"
+msgstr ""
+
 #: src/components/FamilyPills.tsx
 msgid "Tous"
 msgstr ""
@@ -2729,6 +3057,10 @@ msgstr ""
 msgid "Tout supprimer"
 msgstr ""
 
+#: src/routes/_studio/loads.tsx
+msgid "Toutes chargées"
+msgstr ""
+
 #: src/components/LicenseModal.tsx
 #~ msgid "Toutes les fonctionnalités Pro sont débloquées sur ce poste."
 #~ msgstr ""
@@ -2747,6 +3079,10 @@ msgstr ""
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Travées / panneaux"
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "Travées alternées (EN 1990)"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -2830,6 +3166,10 @@ msgstr ""
 msgid "Vérificateur"
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Vérification"
+msgstr ""
+
 #: src/routes/_marketing/legal.tsx
 msgid "Vérification croisée. Les 41 benchmarks analytiques embarqués vérifient le solveur à chaque version, et chaque note de calcul porte l'empreinte SHA-256 du modèle calculé. L'éditeur ne saurait être tenu responsable d'une utilisation hors du périmètre normatif, de données d'entrée erronées ou de l'omission des vérifications incombant au concepteur."
 msgstr ""
@@ -2848,6 +3188,18 @@ msgstr ""
 msgid "Vérification ELU"
 msgstr ""
 
+#: src/components/ConnectionStudioModal.tsx
+msgid "Vérification EN 1993-1-8"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Vérification EN 1993-1-8 du studio Assemblages (Table 3.4, §3.10.2, §4.5.3) — membre {beamLabel}."
+msgstr ""
+
+#: src/components/ConnectionStudioModal.tsx
+msgid "Vérification EN 1993-1-8 en cours…"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Vérification Eurocode 3"
 msgstr ""
@@ -2858,6 +3210,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "vérifications EC3"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Vérifier les assemblages boulonnés / soudés (EN 1993-1-8)"
 msgstr ""
 
 #: src/components/ValidationModal.tsx

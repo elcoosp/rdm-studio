@@ -58,6 +58,7 @@ export function SupportMarkers({
             locked={support.locked_dofs}
             springs={support.spring_stiffness}
             settlement={support.settlement}
+            incline={support.incline}
           />
         );
       })}
@@ -70,11 +71,14 @@ function SupportSymbol({
   locked,
   springs,
   settlement,
+  incline,
 }: {
   position: [number, number, number];
   locked: boolean[];
   springs?: number[];
   settlement?: number[];
+  /** M12.4: inclined-roller unit normal — tilts the roller symbol by α. */
+  incline?: { x: number; y: number; z: number };
 }) {
   const [ux, uy, uz, rx, ry, rz] = locked;
   const isFixed = ux && uy && uz && rx && ry && rz;
@@ -87,6 +91,10 @@ function SupportSymbol({
       : isRoller
         ? "roller"
         : "sliding";
+  // M12.4: deck angle α from the incline unit normal (rotation about the
+  // global Y axis tilts the restraint line into the XZ plane).
+  const inclineTiltY = incline !== undefined ? Math.atan2(incline.x, incline.z) : 0;
+  const hasIncline = incline !== undefined && Math.abs(inclineTiltY) > 1e-9;
   // M10.2: the first sprung translation drives the coil placement (the
   // RDM 7 appui élastique symbol hangs under the node along that axis).
   const springAxis = [0, 1, 2].find((i) => (springs?.[i] ?? 0) > 0);
@@ -105,15 +113,29 @@ function SupportSymbol({
         <mesh position={[0, 0, -0.07]} geometry={CONE_GEO} material={DARK_MATERIAL} />
       ) : null}
       {kind === "roller" ? (
-        <>
-          <mesh position={[0, 0, -0.07]} geometry={ROLLER_CONE_GEO} material={MID_MATERIAL} />
-          <mesh
-            position={[0, 0, -0.15]}
-            rotation={[Math.PI / 2, 0, 0]}
-            geometry={DISC_GEO}
-            material={LIGHT_MATERIAL}
-          />
-        </>
+        hasIncline ? (
+          // M12.4: inclined roller — cone + disc tilted by α about Y so the
+          // rolling plane matches the Support.incline restraint line.
+          <group rotation={[0, inclineTiltY, 0]} data-testid="inclined-roller-marker">
+            <mesh position={[0, 0, -0.07]} geometry={ROLLER_CONE_GEO} material={MID_MATERIAL} />
+            <mesh
+              position={[0, 0, -0.15]}
+              rotation={[Math.PI / 2, 0, 0]}
+              geometry={DISC_GEO}
+              material={LIGHT_MATERIAL}
+            />
+          </group>
+        ) : (
+          <>
+            <mesh position={[0, 0, -0.07]} geometry={ROLLER_CONE_GEO} material={MID_MATERIAL} />
+            <mesh
+              position={[0, 0, -0.15]}
+              rotation={[Math.PI / 2, 0, 0]}
+              geometry={DISC_GEO}
+              material={LIGHT_MATERIAL}
+            />
+          </>
+        )
       ) : null}
       {kind === "sliding" ? (
         <mesh position={[0, 0, -0.06]} geometry={SLIDING_PLATE_GEO} material={LIGHT_MATERIAL} />

@@ -92,40 +92,41 @@ function SolverFaultCard({ fault, onRerun }: { fault: SolveFault; onRerun: () =>
   const [detailsOpen, setDetailsOpen] = useState(false);
   return (
     <div
-      className="flex shrink-0 items-start gap-2.5 rounded-[8px] border border-fail-border bg-fail-bg p-3"
+      className="shrink-0 rounded-[5px] border border-fail-border bg-fail-bg px-3 py-1.5"
       data-testid="solve-fault"
     >
-      <AlertTriangle
-        size={20}
-        strokeWidth={1.5}
-        className="mt-0.5 shrink-0 text-fail-text"
-        aria-hidden
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-fail-text">
-          <Trans>Le solveur a détecté un mécanisme</Trans>
-        </p>
-        <p className="mt-1 text-[12px] leading-5 text-fail-text/85">
-          {outOfPlane ? (
-            <Trans>
-              Certains degrés de liberté hors plan (Uy, Rx, Rz) ne sont pas contraints : le modèle
-              est hypostatique. Pour un portique ou une poutre plane, le mode plan 2D ajoute
-              automatiquement ces liaisons et relance le calcul.
-            </Trans>
-          ) : (
-            <Trans>
-              Certains degrés de liberté restent libres : le modèle n'est pas suffisamment soutenu.
-              Vérifiez les appuis de l'étape Liaisons ou les relâchements d'extrémité avant de
-              recalculer.
-            </Trans>
-          )}
-        </p>
-        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <AlertTriangle
+            size={15}
+            strokeWidth={1.75}
+            className="shrink-0 text-fail-text"
+            aria-hidden
+          />
+          <span className="text-[12px] font-semibold text-fail-text">
+            <Trans>Mécanisme détecté</Trans>
+          </span>
+          <span className="hidden truncate text-[11.5px] text-fail-text/85 lg:inline">
+            {outOfPlane
+              ? t`DDL hors plan (Uy, Rx, Rz) libres — activez le mode Plan 2D.`
+              : t`Modèle insuffisamment appuyé — vérifiez les liaisons avant de recalculer.`}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            aria-expanded={detailsOpen}
+            data-testid="fault-details-toggle"
+            className="rounded-[4px] border border-hairline bg-panel px-2 py-1 text-[11px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
+            onClick={() => setDetailsOpen((v) => !v)}
+          >
+            {detailsOpen ? t`Masquer` : t`Détails`}
+          </button>
           {outOfPlane ? (
             <button
               type="button"
               data-testid="fix-plane-2d"
-              className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-accent-strong"
+              className="rounded-[4px] bg-accent px-2.5 py-1 text-[11.5px] font-semibold text-white hover:bg-accent-strong"
               onClick={() => {
                 updateSettings({ plane_frame_2d: true });
                 toast.success(t`Plan 2D activé — recalcul en cours`, { duration: 3200 });
@@ -138,30 +139,21 @@ function SolverFaultCard({ fault, onRerun }: { fault: SolveFault; onRerun: () =>
             <a
               href="/supports"
               data-testid="fix-go-supports"
-              className="inline-flex items-center gap-1.5 rounded bg-accent px-3 py-1 text-[12px] font-semibold text-white hover:bg-accent-strong"
+              className="inline-flex items-center rounded-[4px] bg-accent px-2.5 py-1 text-[11.5px] font-semibold text-white hover:bg-accent-strong"
             >
               <Trans>Aller aux Liaisons →</Trans>
             </a>
           )}
-          <button
-            type="button"
-            aria-expanded={detailsOpen}
-            data-testid="fault-details-toggle"
-            className="rounded border border-hairline bg-panel px-2.5 py-1.5 text-[12px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
-            onClick={() => setDetailsOpen((v) => !v)}
-          >
-            {detailsOpen ? t`Masquer les détails` : t`Détails techniques`}
-          </button>
         </div>
-        {detailsOpen ? (
-          <pre
-            className="font-data mt-2.5 max-h-44 overflow-auto rounded-[4px] border border-hairline bg-panel p-2 text-[11px] leading-4 text-ink-secondary"
-            data-testid="fault-details"
-          >
-            {`${fault.kind}\n${fault.message}`}
-          </pre>
-        ) : null}
       </div>
+      {detailsOpen ? (
+        <pre
+          className="font-data mt-1.5 max-h-32 overflow-auto rounded-[4px] border border-hairline bg-panel p-2 text-[10.5px] leading-4 text-ink-secondary"
+          data-testid="fault-details"
+        >
+          {`${fault.kind}\n${fault.message}`}
+        </pre>
+      ) : null}
     </div>
   );
 }

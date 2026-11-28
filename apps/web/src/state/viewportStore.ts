@@ -26,6 +26,30 @@ interface ViewportState {
   deleteBeamMode: boolean;
   setDeleteBeamMode: (active: boolean) => void;
   toggleDeleteBeamMode: () => void;
+  /**
+   * M9.1 Auto-Split on Draw: when true (default), completing a drawn beam
+   * whose endpoints land strictly inside an existing host beam cuts the
+   * host at the landing point so the member connects cleanly.
+   */
+  autoSplitOnDraw: boolean;
+  setAutoSplitOnDraw: (active: boolean) => void;
+  /**
+   * M9.4 CAD ghost preview: the armed start node id plus the live snapped
+   * cursor point while the beam tool draws (null when idle).
+   */
+  drawGhost: {
+    startNodeId: number;
+    cursor: { x: number; y: number; z: number };
+    /** True when the cursor is axis-aligned with the start node (X/Y/Z). */
+    axisLock: "X" | "Y" | "Z" | null;
+  } | null;
+  setDrawGhost: (
+    ghost: {
+      startNodeId: number;
+      cursor: { x: number; y: number; z: number };
+      axisLock: "X" | "Y" | "Z" | null;
+    } | null,
+  ) => void;
 }
 
 export const useViewportStore = create<ViewportState>()((set) => ({
@@ -36,4 +60,8 @@ export const useViewportStore = create<ViewportState>()((set) => ({
   deleteBeamMode: false,
   setDeleteBeamMode: (active) => set({ deleteBeamMode: active }),
   toggleDeleteBeamMode: () => set((s) => ({ deleteBeamMode: !s.deleteBeamMode })),
+  autoSplitOnDraw: true,
+  setAutoSplitOnDraw: (active) => set({ autoSplitOnDraw: active }),
+  drawGhost: null,
+  setDrawGhost: (ghost) => set({ drawGhost: ghost }),
 }));

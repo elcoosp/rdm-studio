@@ -35,7 +35,7 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
   const { t } = useLingui();
   return (
     <div
-      className="absolute top-2 left-2 z-30 flex max-w-[46%] flex-wrap items-center gap-1 rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
+      className="absolute top-2 left-2 z-30 flex max-w-[calc(100%-210px)] flex-nowrap items-center gap-1 overflow-x-auto whitespace-nowrap rounded-panel border border-hairline bg-panel/90 p-1 backdrop-blur"
       data-testid="layer-toolbar"
     >
       <TooltipGroup>
@@ -129,7 +129,7 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
         </Tooltip>
         {lastSelectionMs !== undefined ? (
           <span
-            className="font-data rounded px-1.5 py-1 text-[11px] text-ink-muted"
+            className="font-data shrink-0 rounded px-1.5 py-1 text-[11px] text-ink-muted"
             data-testid="pick-latency"
           >
             {lastSelectionMs < 0.01 ? "<0.01" : lastSelectionMs.toFixed(2)} ms

@@ -108,18 +108,25 @@ export function SettingsPopover(): React.ReactElement {
           />
         </div>
 
-        <div className="space-y-2 border-t border-hairline pt-2.5">
-          <label className="flex cursor-pointer items-center justify-between gap-3 text-[12px] text-ink-primary">
-            <span>
-              <Trans>Cisaillement Timoshenko</Trans>
-            </span>
-            <Switch
-              className="shrink-0"
-              checked={shearDeformation}
-              onCheckedChange={(checked) => updateSettings({ shear_deformation: checked })}
-              aria-label={t`Cisaillement Timoshenko`}
+        <div className="space-y-2.5 border-t border-hairline pt-2.5">
+          {/* M10.3: beam theory toggle — Timoshenko (shear flexible) vs
+              Euler-Bernoulli, bound to `settings.shear_deformation`. */}
+          <div data-testid="shear-deformation-toggle">
+            <p className="mb-1.5 text-[12px] font-medium text-ink-secondary">
+              <Trans>Théorie de poutre</Trans>
+            </p>
+            <SegmentedControl
+              size="sm"
+              value={shearDeformation ? "Timoshenko" : "Bernoulli"}
+              onValueChange={(next) =>
+                updateSettings({ shear_deformation: next === "Timoshenko" })
+              }
+              options={[
+                { value: "Timoshenko", label: <Trans>Timoshenko</Trans> },
+                { value: "Bernoulli", label: <Trans>Bernoulli</Trans> },
+              ]}
             />
-          </label>
+          </div>
           <label className="flex cursor-pointer items-center justify-between gap-3 text-[12px] text-ink-primary">
             <span>
               <Trans>Plan 2D (Uy/Rx/Rz bloqués)</Trans>

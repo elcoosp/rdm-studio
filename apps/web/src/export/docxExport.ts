@@ -1,14 +1,25 @@
 /**
- * .docx Word export (v2.0.0): builds a minimal, clean Office Open XML
- * package (single document.xml + [Content_Types].xml + rels) as a ZIP
- * — no external dependency, ISO 8601 metadata, heading styles and
- * paragraph runs for the report chapters.
+ * .docx Word export (v2.0.0 base, M11.3 upgrade): builds a minimal, clean
+ * Office Open XML package (document.xml + [Content_Types].xml + rels +
+ * docProps core metadata) as a STORED ZIP — no external dependency, ISO
+ * 8601 metadata, heading styles, paragraph runs and NATIVE Word tables
+ * (`w:tbl`) for the report chapters. M11.3: the Sections Droites Composées
+ * chapter and every envelope summary ride real Word tables with embedded
+ * document metadata (title / creator / dates in docProps/core.xml).
  */
 
 /** One report chapter heading or body paragraph. */
 export interface DocxBlock {
   kind: "heading" | "paragraph";
   text: string;
+}
+
+/** M11.3: a native Word table block (header row bold, hairline borders). */
+export interface DocxTable {
+  kind: "table";
+  caption: string;
+  header: string[];
+  rows: string[][];
 }
 
 function esc(text: string): string {
@@ -19,17 +30,39 @@ function esc(text: string): string {
     .replaceAll('"', "&quot;");
 }
 
-function documentXml(blocks: DocxBlock[], meta: CoverMeta): string {
+/** One `<w:tc>` cell with a single left-aligned run. */
+function tableCell(text: string, bold: boolean): string {
+  const runProps = bold ? "<w:rPr><w:b/></w:rPr>" : "";
+  return `<w:tc><w:tcPr><w:tcMar><w:top w:w="40" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:start w:w="60" w:type="dxa"/><w:end w:w="60" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:spacing w:after="0"/></w:pPr><w:r>${runProps}<w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p></w:tc>`;
+}
+
+/** A bordered `w:tbl` with a bold header row (native Word table). */
+function tableXml(table: DocxTable): string {
+  const border = (side: string) =>
+    `<w:${side} w:val="single" w:sz="4" w:space="0" w:color="D9D9D9"/>`;
+  const header = `<w:tr>${table.header.map((cell) => tableCell(cell, true)).join("")}</w:tr>`;
+  const body = table.rows
+    .map((row) => `<w:tr>${row.map((cell) => tableCell(cell, false)).join("")}</w:tr>`)
+    .join("");
+  return `<w:p><w:pPr><w:spacing w:before="160" w:after="40"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${esc(table.caption)}</w:t></w:r></w:p>
+<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>${border("top")}${border("bottom")}${border("start")}${border("end")}${border("insideH")}${border("insideV")}</w:tblBorders></w:tblPr>${header}${body}</w:tbl>`;
+}
+
+function documentXml(blocks: (DocxBlock | DocxTable)[], meta: CoverMeta): string {
   const body = blocks
-    .map((block) =>
-      block.kind === "heading"
+    .map((block) => {
+      if (block.kind === "table") {
+        return tableXml(block);
+      }
+      return block.kind === "heading"
         ? `<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t xml:space="preserve">${esc(block.text)}</w:t></w:r></w:p>`
-        : `<w:p><w:r><w:t xml:space="preserve">${esc(block.text)}</w:t></w:r></w:p>`,
-    )
+        : `<w:p><w:r><w:t xml:space="preserve">${esc(block.text)}</w:t></w:r></w:p>`;
+    })
     .join("");
   const cover = `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">${esc(meta.firm)}</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">${esc(meta.engineer)} / ${esc(meta.checker)}</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">Révision ${esc(meta.revision)} — ${new Date().toISOString().slice(0, 10)}</w:t></w:r></w:p>
+<w:p><w:r><w:t xml:space="preserve">${esc(meta.scope ?? "")}</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">${esc(meta.disclaimer)}</w:t></w:r></w:p>${
     // v2.1.1: Édition Découverte evaluation watermark (removed in Pro).
     meta.evaluation === true
@@ -52,6 +85,8 @@ export interface CoverMeta {
   checker: string;
   revision: string;
   disclaimer: string;
+  /** M11.3: normative scope line printed on the cover (EN 1990–1999…). */
+  scope?: string;
   /** v2.1.1: true under the free tier — adds the evaluation watermark. */
   evaluation?: boolean;
 }
@@ -87,20 +122,31 @@ function zipEntry(name: string, data: Uint8Array): Uint8Array {
 }
 
 /** Builds and downloads the `.docx` package. */
-export function downloadDocx(blocks: DocxBlock[], meta: CoverMeta, filename: string): void {
+export function downloadDocx(
+  blocks: (DocxBlock | DocxTable)[],
+  meta: CoverMeta,
+  filename: string,
+): void {
   const docBytes = new TextEncoder().encode(documentXml(blocks, meta));
+  const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  const coreBytes = new TextEncoder().encode(
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>RDM Studio — Rapport de calcul : ${esc(meta.firm)}</dc:title><dc:creator>${esc(meta.engineer)}</dc:creator><cp:lastModifiedBy>${esc(meta.engineer)}</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified><dc:description>${esc(meta.scope ?? "")}</dc:description></cp:coreProperties>`,
+  );
   const contentTypes = new TextEncoder().encode(
     `<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
 </Types>`,
   );
   const rels = new TextEncoder().encode(
     `<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
 </Relationships>`,
   );
   const central: { name: string; data: Uint8Array; offset: number }[] = [];
@@ -109,6 +155,7 @@ export function downloadDocx(blocks: DocxBlock[], meta: CoverMeta, filename: str
   for (const [name, data] of [
     ["[Content_Types].xml", contentTypes],
     ["_rels/.rels", rels],
+    ["docProps/core.xml", coreBytes],
     ["word/document.xml", docBytes],
   ] as const) {
     const entry = zipEntry(name, data);

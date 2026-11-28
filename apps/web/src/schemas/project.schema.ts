@@ -24,10 +24,7 @@ const BeamSchema = v.object({
   k_buckling_y: v.optional(v.number(), 1),
   k_buckling_z: v.optional(v.number(), 1),
   /** v2.1.0 (M10.3): Standard | TensionOnly | CompressionOnly axial behavior. */
-  behavior: v.optional(
-    v.picklist(["Standard", "TensionOnly", "CompressionOnly"]),
-    "Standard",
-  ),
+  behavior: v.optional(v.picklist(["Standard", "TensionOnly", "CompressionOnly"]), "Standard"),
 });
 
 const SupportSchema = v.object({

@@ -277,6 +277,30 @@ interface ProjectState {
   upsertCompositeSection: (def: CompositeSectionDefData, beamIds?: number[]) => Promise<void>;
   /** M11.1: removes one composite section definition from the model. */
   removeCompositeSection: (name: string) => void;
+  /**
+   * M12.3: creates (or renames by id) a named member group over the given
+   * beam ids (`Poteaux`, `Traverses`, `Diagonales`, ...).
+   */
+  upsertMemberGroup: (name: string, beamIds: number[], groupId?: number) => void;
+  /** M12.3: removes one member group by id. */
+  removeMemberGroup: (groupId: number) => void;
+  /** M12.3: replaces the storey level table (elevations Z in m). */
+  setLevels: (levels: { id: number; elevation: number; name?: string }[]) => void;
+  /**
+   * M12.4: persists a user-defined material into `structure.materials`
+   * (strict SI: E/G in Pa, rho kg/m³, fy/fu Pa) and optionally assigns it
+   * to the given beams.
+   */
+  upsertCustomMaterial: (
+    name: string,
+    properties: { e: number; g: number; nu: number; rho: number; fy: number; fu: number },
+    beamIds?: number[],
+  ) => void;
+  /**
+   * M12.4: sets the inclined-roller direction of one support from the
+   * deck angle α (deg) — unit normal `(sin α, 0, cos α)`.
+   */
+  setSupportIncline: (nodeId: number, angleDeg: number) => void;
   /** v1.6.0: removes the support on one node (Step 2 `×` button). */
   removeSupport: (nodeId: number) => void;
   /** Removes every support (v1.3.0 "Tout supprimer", undoable upstream). */
@@ -1052,6 +1076,84 @@ export const useProjectStore = create<ProjectState>()(
             },
           },
         })),
+      // M12.3: named member groups over the batch selection.
+      upsertMemberGroup: (name, beamIds, groupId) =>
+        set((st) => {
+          const groups = st.project.structure.groups ?? [];
+          const id = groupId ?? groups.reduce((m, g) => Math.max(m, g.id), 0) + 1;
+          const others = groups.filter((g) => g.id !== id);
+          return {
+            project: {
+              ...st.project,
+              structure: {
+                ...st.project.structure,
+                groups: [...others, { id, name, beam_ids: beamIds }],
+              },
+            },
+          };
+        }),
+      removeMemberGroup: (groupId) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            structure: {
+              ...st.project.structure,
+              groups: (st.project.structure.groups ?? []).filter((g) => g.id !== groupId),
+            },
+          },
+        })),
+      // M12.3: storey level table (elevations Z in m).
+      setLevels: (levels) =>
+        set((st) => ({
+          project: {
+            ...st.project,
+            structure: { ...st.project.structure, levels },
+          },
+        })),
+      // M12.4: user-defined material persisted in `structure.materials`.
+      upsertCustomMaterial: (name, properties, beamIds) =>
+        set((st) => {
+          const selected = new Set(beamIds ?? []);
+          return {
+            project: {
+              ...st.project,
+              structure: {
+                ...st.project.structure,
+                materials: {
+                  ...st.project.structure.materials,
+                  [name]: properties,
+                },
+                beams: st.project.structure.beams.map((b) =>
+                  selected.has(b.id) ? { ...b, material_id: name } : b,
+                ),
+              },
+            },
+          };
+        }),
+      // M12.4: inclined roller direction from the deck angle α (deg) —
+      // the unit normal (sin α, 0, cos α) consumed by `Support.incline`.
+      setSupportIncline: (nodeId, angleDeg) =>
+        set((st) => {
+          const alpha = (angleDeg * Math.PI) / 180;
+          const incline = { x: Math.sin(alpha), y: 0, z: Math.cos(alpha) };
+          const exists = st.project.structure.supports.some((s) => s.node_id === nodeId);
+          const supports = exists
+            ? st.project.structure.supports.map((s) =>
+                s.node_id === nodeId ? { ...s, incline } : s,
+              )
+            : [
+                ...st.project.structure.supports,
+                {
+                  node_id: nodeId,
+                  locked_dofs: [false, false, true, false, false, false],
+                  spring_stiffness: [0, 0, 0, 0, 0, 0],
+                  incline,
+                },
+              ];
+          return {
+            project: { ...st.project, structure: { ...st.project.structure, supports } },
+          };
+        }),
       replaceLoads: (loads) =>
         set((st) => ({
           project: {

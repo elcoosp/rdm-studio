@@ -41,8 +41,8 @@ export function LayerToolbar({ lastSelectionMs }: { lastSelectionMs?: number }) 
   const btnClass = (active: boolean) =>
     `flex h-6 w-6 items-center justify-center rounded-[4px] transition-colors ${
       active
-        ? "bg-accent-tint text-accent ring-1 ring-accent-ring"
-        : "text-ink-secondary hover:bg-panel-subtle hover:text-ink-primary"
+        ? "bg-accent/14 text-accent font-medium"
+        : "text-ink-muted hover:bg-panel-subtle hover:text-ink-primary"
     }`;
 
   return (

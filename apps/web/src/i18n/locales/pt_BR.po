@@ -83,7 +83,19 @@ msgid "< 20 ms"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
-msgid "<0><1/>Appuis élastiques (kx..krz)</0>"
+msgid "<0><1/>Appui élastique (k)</0>"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+#~ msgid "<0><1/>Appuis élastiques (kx..krz)</0>"
+#~ msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "<0><1/>Cas de charges & combinaisons EN 1990</0>"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "<0><1/>Déplacement imposé (Δ)</0>"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -113,6 +125,10 @@ msgstr ""
 #: src/components/LicenseModal.tsx
 #~ msgid "19 € HT · 48 h de plein droit"
 #~ msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "2×UPN dos-à-dos"
+msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "41 / 41"
@@ -146,6 +162,7 @@ msgstr ""
 msgid "Accueil"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
 #: src/routes/_studio/report.tsx
 msgid "Acier"
 msgstr ""
@@ -196,6 +213,10 @@ msgstr ""
 
 #: src/routes/_studio/loads.tsx
 msgid "Ajouter la charge"
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "Ajouter le cas"
 msgstr ""
 
 #: src/components/OptimizerModal.tsx
@@ -260,6 +281,15 @@ msgstr ""
 msgid "Appliquer « {0} » au nœud sélectionné"
 msgstr ""
 
+#. placeholder {0}: activeBeamIds.length
+#: src/components/CompositeSectionStudio.tsx
+msgid "Appliquer à la barre sélectionnée ({0})"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Appliquer le déplacement imposé à N{nodeId}"
+msgstr ""
+
 #: src/routes/_studio/supports.tsx
 msgid "Appliquer les ressorts à N{nodeId}"
 msgstr ""
@@ -271,6 +301,10 @@ msgstr ""
 
 #: src/routes/_studio/report.tsx
 msgid "Appui"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Appui élastique (k)"
 msgstr ""
 
 #: src/routes/_studio/supports.tsx
@@ -325,6 +359,10 @@ msgstr ""
 msgid "Aucune donnée envoyée sur un serveur. Vos modèles, sections, charges, résultats et notes de calcul sont traités et stockés exclusivement dans votre navigateur (IndexedDB, localStorage). RDM Studio ne comporte aucun outil de mesure télémétrique, aucun traceur tiers et aucun transfert vers un pays tiers : le responsable de traitement de vos données d'ingénierie, c'est vous."
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Auteur"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Auto-découpe"
 msgstr ""
@@ -347,6 +385,10 @@ msgstr ""
 
 #: src/components/ValidationModal.tsx
 msgid "benchmarks passent"
+msgstr ""
+
+#: src/components/SettingsPopover.tsx
+msgid "Bernoulli"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -377,6 +419,10 @@ msgstr ""
 msgid "BIM IFC4 / SAF + support prioritaire"
 msgstr ""
 
+#: src/routes/_studio/supports.tsx
+msgid "Bloquez d'abord un DDL : le déplacement imposé s'applique aux DDL verrouillés."
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Bois GL24h"
 msgstr ""
@@ -391,6 +437,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Bureau d'Études Pro"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Buton"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -409,10 +459,15 @@ msgstr ""
 msgid "Cadrer la structure"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Caisson soudé"
+msgstr ""
+
 #: src/components/OnboardingTour.tsx
 msgid "Calcul 3D & Vérification Eurocode 3"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
 #: src/routes/_studio/results.tsx
 msgid "Calcul en cours…"
 msgstr ""
@@ -454,6 +509,10 @@ msgstr ""
 #~ msgid "Cas de charge"
 #~ msgstr "Load case"
 
+#: src/routes/_studio/loads.tsx
+msgid "Cas élémentaires et facteurs ψ (Annexe A1). Un cas ajouté ici alimente les combinaisons 6.10 / 6.10a+6.10b et les enveloppes Min/Max."
+msgstr ""
+
 #: src/components/OnboardingTour.tsx
 msgid "Cas G / Q / W / S / Acc, générateurs EN 1991 (imposée, neige, vent, ΔT) et résultante globale en direct."
 msgstr ""
@@ -461,6 +520,14 @@ msgstr ""
 #: src/routes/geometry.tsx
 #~ msgid "Catalogue"
 #~ msgstr "Catalog"
+
+#: src/routes/_studio/loads.tsx
+msgid "Catégorie"
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "Catégorie du nouveau cas"
+msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Ce site et le logiciel RDM Studio sont édités dans le cadre d'un projet open source. Les coordonnées complètes de l'éditeur — raison sociale, siège, numéro d'immatriculation et adresse de courrier électronique — sont publiées sur la présente page à l'ouverture de la boutique commerciale, conformément à l'article 6 III 1° de la LCEN."
@@ -526,6 +593,10 @@ msgstr ""
 msgid "Charte graphique sur mesure"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Chemin de roulement HEA+UPN"
+msgstr ""
+
 #: src/components/OptimizerModal.tsx
 msgid "Choisi"
 msgstr ""
@@ -539,7 +610,17 @@ msgid "Cible"
 msgstr ""
 
 #: src/components/SettingsPopover.tsx
-msgid "Cisaillement Timoshenko"
+#~ msgid "Cisaillement Timoshenko"
+#~ msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+#: src/routes/_studio/report.tsx
+msgid "Classe compression"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+#: src/routes/_studio/report.tsx
+msgid "Classe flexion"
 msgstr ""
 
 #: src/routes/_marketing/legal.tsx
@@ -576,6 +657,10 @@ msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "Cochez les DDL bloqués par appui. Les rotations libres laissent la flexion passer (rotule)."
+msgstr ""
+
+#: src/routes/_studio/loads.tsx
+msgid "Code"
 msgstr ""
 
 #: src/components/ModelDataTable.tsx
@@ -627,6 +712,10 @@ msgstr ""
 
 #: src/routes/_studio/results.tsx
 msgid "Comparer des scénarios de calcul côte à côte"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Comportement axial"
 msgstr ""
 
 #: src/viewport3d/ForceDiagrams3D.tsx
@@ -682,6 +771,10 @@ msgstr ""
 #~ msgid "Coupe 2D σvM"
 #~ msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Coupe composée — grille millimétrique"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Coupe EN — dimensions en mm"
 msgstr ""
@@ -701,6 +794,10 @@ msgstr ""
 #: src/routes/_studio/report.tsx
 #~ msgid "CSV Excel"
 #~ msgstr ""
+
+#: src/components/AdvancedPanels.tsx
+msgid "Cumul"
+msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Dans IndexedDB, sur votre poste uniquement. Aucune base de données distante, aucun compte obligatoire. Le partage se fait par une URL contenant le modèle compressé (lz-string) revalidé par Valibot à la relecture, ou par fichier .rdm."
@@ -744,6 +841,10 @@ msgstr ""
 
 #: src/routes/_studio/report.tsx
 msgid "Déplacements extrêmes ELS"
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Déplacements imposés sur les DDL bloqués (Δu en mm, Δθ en degrés). Le tassement d'appui mobilise les liaisons hyperstatiques (RDM 7)."
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -790,6 +891,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Diagonales alternées sans montants : certains barreaux sont sans effort selon le chargement — articulez et comparez."
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Diagramme de contrainte My"
 msgstr ""
 
 #: src/viewport3d/ForceDiagrams3D.tsx
@@ -902,6 +1007,10 @@ msgstr ""
 #~ msgid "Édition Pro"
 #~ msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Effort normal N (kN)"
+msgstr ""
+
 #: src/routes/_studio/results.tsx
 #~ msgid "Efforts internes (5 courbes)"
 #~ msgstr ""
@@ -912,6 +1021,10 @@ msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "élastique"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Éléments constitutifs"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -944,6 +1057,14 @@ msgstr ""
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Enregistrer le projet courant"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Enveloppe ELS (Min/Max)"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Enveloppe ELU (Min/Max)"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -989,6 +1110,10 @@ msgstr ""
 #~ msgid "Exécution en cours…"
 #~ msgstr ""
 
+#: src/components/ValidationModal.tsx
+msgid "exemples RDM – Flexion §6"
+msgstr ""
+
 #: src/routes/results.tsx
 #~ msgid "Exploitation EC3"
 #~ msgstr "EC3 utilization"
@@ -1033,6 +1158,7 @@ msgstr ""
 msgid "Extruder"
 msgstr ""
 
+#: src/components/AdvancedPanels.tsx
 #: src/routes/_studio/report.tsx
 msgid "f (Hz)"
 msgstr ""
@@ -1133,6 +1259,10 @@ msgstr ""
 msgid "Gabarit"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Gabarits (1 clic)"
+msgstr ""
+
 #: src/components/CommandPalette.tsx
 #~ msgid "Galerie — 12 modèles"
 #~ msgstr ""
@@ -1168,6 +1298,10 @@ msgstr ""
 msgid "Génération…"
 msgstr ""
 
+#: src/routes/_studio/loads.tsx
+msgid "Générer combinaisons ELU/ELS"
+msgstr ""
+
 #: src/components/ProjectGalleryModal.tsx
 msgid "Générer la structure"
 msgstr ""
@@ -1198,6 +1332,10 @@ msgstr ""
 
 #: src/viewport3d/LayerToolbar.tsx
 msgid "Grille d'accrochage magnétique"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "grille en mm"
 msgstr ""
 
 #: src/routes/_marketing.tsx
@@ -1232,6 +1370,10 @@ msgstr ""
 msgid "Imprimer"
 msgstr ""
 
+#: src/routes/_studio/results.tsx
+msgid "Inactif (comprimé)"
+msgstr ""
+
 #: src/routes/_marketing/legal.tsx
 msgid "Informations légales & confidentialité"
 msgstr ""
@@ -1258,6 +1400,10 @@ msgstr ""
 
 #: src/components/CommandPalette.tsx
 msgid "Inverser la sélection"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "IPE + platine semelle"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -1314,6 +1460,10 @@ msgstr ""
 
 #: src/routes/_studio/results.tsx
 msgid "Le solveur a détecté un mécanisme"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Le solveur WASM recalcule avec les propriétés exactes de la section composée."
 msgstr ""
 
 #: src/routes/_marketing.tsx
@@ -1384,6 +1534,10 @@ msgstr ""
 msgid "Masse {0} kg · Carbone {1} kg CO₂e · Coût {2} € ({COST_EUR_PER_KG} €/kg)"
 msgstr ""
 
+#: src/components/AdvancedPanels.tsx
+msgid "Masses modales effectives (EN 1998-1 §4.3.3.3)"
+msgstr ""
+
 #: src/routes/_studio/geometry.tsx
 msgid "Matériau"
 msgstr ""
@@ -1398,6 +1552,10 @@ msgstr ""
 
 #: src/components/OptimizerModal.tsx
 msgid "Membre"
+msgstr ""
+
+#: src/routes/_studio/results.tsx
+msgid "Membres inactifs (flambage / décompression) :"
 msgstr ""
 
 #: src/components/CommandPalette.tsx
@@ -1418,10 +1576,19 @@ msgstr ""
 msgid "Miroir"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Miroir y"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Miroir z"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Modal f₁..f₆"
 msgstr ""
 
+#: src/components/AdvancedPanels.tsx
 #: src/routes/_studio/report.tsx
 msgid "Mode"
 msgstr ""
@@ -1480,6 +1647,10 @@ msgstr ""
 msgid "Modèles types"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Moment My (kN·m)"
+msgstr ""
+
 #: src/routes/_studio/loads.tsx
 msgid "Moments concentrés (Mx, My, Mz en kN·m)"
 msgstr ""
@@ -1525,6 +1696,10 @@ msgstr ""
 msgid "Nœuds / Poutres / Appuis / Charges"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Nom de la section"
+msgstr ""
+
 #: src/routes/_studio/report.tsx
 msgid "Nom du projet"
 msgstr ""
@@ -1553,6 +1728,10 @@ msgstr ""
 msgid "Normes"
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Note de calcul"
+msgstr ""
+
 #: src/components/CommandPalette.tsx
 #~ msgid "Note de calcul A4 / PDF"
 #~ msgstr ""
@@ -1576,6 +1755,10 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/components/FeedbackModal.tsx
 msgid "feedback.ratingLabel"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Nuance d'acier"
 msgstr ""
 
 #: src/components/CalcTraceTree.tsx
@@ -1766,6 +1949,10 @@ msgstr ""
 #~ msgid "PDF vectoriel, .docx & BIM"
 #~ msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Périmètre normatif"
+msgstr ""
+
 #: src/components/FamilyPills.tsx
 msgid "Perso"
 msgstr ""
@@ -1792,6 +1979,10 @@ msgstr ""
 
 #: src/routes/_studio/results.tsx
 msgid "Plan 2D activé — recalcul en cours"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Platine"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
@@ -1924,6 +2115,7 @@ msgstr "Profile"
 #~ msgid "Profil (EN 10365)"
 #~ msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
 #: src/routes/_studio/geometry.tsx
 msgid "Profilé"
 msgstr ""
@@ -1966,6 +2158,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "PRS / RHS / CHS"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "PRS symétrique"
 msgstr ""
 
 #: src/routes/_marketing/index.tsx
@@ -2025,8 +2221,8 @@ msgid "RDM & Stabilité"
 msgstr ""
 
 #: src/routes/_studio/report.tsx
-msgid "RDM Studio — Rapport de calcul"
-msgstr ""
+#~ msgid "RDM Studio — Rapport de calcul"
+#~ msgstr ""
 
 #: src/components/LicenseModal.tsx
 msgid "RDM Studio est édité en open source : l’édition est 100 % gratuite, illimitée, sans compte et sans cloud. Les métadonnées ci-dessous pré-remplissent la couverture de la note de calcul (étape 5)."
@@ -2050,6 +2246,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "RDM Studio réunit le solveur poutres 3D Timoshenko, la CAO interactive et les vérifications EN 1990 → 1999 dans un atelier local-first : vos projets restent dans votre navigateur, le solveur Rust tourne en WASM, aucun serveur ne voit vos données."
+msgstr ""
+
+#: src/components/ValidationModal.tsx
+msgid "RDM6 / RDM7 (Debard)"
 msgstr ""
 
 #: src/viewport3d/LayerToolbar.tsx
@@ -2235,6 +2435,12 @@ msgstr ""
 #~ msgid "Schéma structurel d'un portique chargé"
 #~ msgstr ""
 
+#. placeholder {0}: def.name
+#. placeholder {1}: activeBeamIds.length
+#: src/components/CompositeSectionStudio.tsx
+msgid "Section « {0} » appliquée à {1} barre(s)"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "Sections classes 1–4, χy / χz / χLT, Nb,Rd, Mc,Rd : chaque clause s'ouvre en formule KaTeX pas-à-pas, vérifiable par le contresignateur, avec empreinte SHA-256 du modèle."
 msgstr ""
@@ -2242,6 +2448,18 @@ msgstr ""
 #: src/routes/_marketing/index.tsx
 #~ msgid "Sections classes 1–4, χy/χz/χLT, Nb,Rd, Mc,Rd et formules KaTeX traçables : chaque étape de calcul est documentée pour le vérificateur."
 #~ msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Sections construites résolues nativement par le solveur WASM — mécanique exacte, classification EN 1993-1-1 Table 5.2."
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Sections droites — mécanique exacte EN 1993-1-1"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Sections Droites Composées"
+msgstr ""
 
 #: src/routes/_marketing/legal.tsx
 msgid "Sections légales"
@@ -2261,6 +2479,14 @@ msgstr ""
 
 #: src/routes/_studio/supports.tsx
 msgid "Sélectionnez un nœud dans la vue 3D pour éditer ses ressorts."
+msgstr ""
+
+#: src/routes/_studio/supports.tsx
+msgid "Sélectionnez un nœud pour prescrire son déplacement."
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Sélectionnez une barre pour appliquer"
 msgstr ""
 
 #: src/routes/_studio/results.tsx
@@ -2295,6 +2521,10 @@ msgstr ""
 msgid "Solveur + EC3 + note A4"
 msgstr ""
 
+#: src/routes/_studio/report.tsx
+msgid "Solveur 3D Timoshenko — WASM"
+msgstr ""
+
 #: src/routes/_marketing/index.tsx
 msgid "solveur Cholesky WASM"
 msgstr ""
@@ -2319,6 +2549,10 @@ msgstr ""
 msgid "Spectre élastique"
 msgstr ""
 
+#: src/routes/_studio/geometry.tsx
+msgid "Standard"
+msgstr ""
+
 #: src/components/SettingsPopover.tsx
 msgid "Statistiques d'usage anonymes (sans cookie)"
 msgstr ""
@@ -2330,6 +2564,15 @@ msgstr ""
 
 #: src/components/ProjectGalleryModal.tsx
 msgid "Structure paramétrique générée"
+msgstr ""
+
+#: src/components/CommandPalette.tsx
+#: src/components/CompositeSectionStudio.tsx
+msgid "Studio Sections Composées"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Studio Sections Composées…"
 msgstr ""
 
 #: src/routes/_studio/geometry.tsx
@@ -2345,7 +2588,15 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/ValidationModal.tsx
-msgid "Suite de 41 benchmarks analytiques — RDM & Eurocode 3"
+#~ msgid "Suite de 41 benchmarks analytiques — RDM & Eurocode 3"
+#~ msgstr ""
+
+#: src/components/ValidationModal.tsx
+msgid "Suite de 49 benchmarks analytiques — RDM, Eurocode 3 & RDM6/RDM7"
+msgstr ""
+
+#: src/routes/_studio/report.tsx
+msgid "Suite de validation certifiée — 49 / 49 benchmarks analytiques RDM6/RDM7 · 0 octet cloud"
 msgstr ""
 
 #: src/components/OnboardingTour.tsx
@@ -2380,6 +2631,10 @@ msgstr ""
 
 #: src/components/CadToolbar.tsx
 msgid "Supprimer des poutres (cliquer ensuite une poutre)"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Supprimer l'élément"
 msgstr ""
 
 #: src/routes/_studio/loads.tsx
@@ -2418,12 +2673,32 @@ msgstr ""
 msgid "Taux max"
 msgstr ""
 
+#: src/components/CompositeSectionStudio.tsx
+msgid "Télémétrie en attente du calcul…"
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "Télémétrie exacte"
+msgstr ""
+
 #: src/components/ValidationModal.tsx
 msgid "Temps WASM"
 msgstr ""
 
 #: src/components/OnboardingTour.tsx
 msgid "Terminer"
+msgstr ""
+
+#: src/components/SettingsPopover.tsx
+msgid "Théorie de poutre"
+msgstr ""
+
+#: src/components/SettingsPopover.tsx
+msgid "Timoshenko"
+msgstr ""
+
+#: src/routes/_studio/geometry.tsx
+msgid "Tirant"
 msgstr ""
 
 #: src/components/ValidationModal.tsx
@@ -2480,6 +2755,10 @@ msgstr ""
 
 #: src/routes/_marketing/index.tsx
 msgid "Trois modèles, un atelier — lancez-les en un clic."
+msgstr ""
+
+#: src/components/CompositeSectionStudio.tsx
+msgid "TSV"
 msgstr ""
 
 #: src/routes/_studio/loads.tsx
@@ -2547,6 +2826,7 @@ msgid "Vente. Les commandes d'abonnements ou de licences perpétuelles sont conc
 msgstr ""
 
 #: src/components/LicenseModal.tsx
+#: src/routes/_studio/report.tsx
 msgid "Vérificateur"
 msgstr ""
 

@@ -183,7 +183,10 @@ export function AdvancedPanels(): ReactElement {
           {/* M10.1: modal participation — effective modal mass ratios per
               direction and their cumulative sum (EN 1998-1 §4.3.3.3). */}
           {modal !== null && (modal.modes ?? []).length > 0 ? (
-            <div className="mb-3 rounded-lg border border-hairline p-2" data-testid="modal-effective-masses">
+            <div
+              className="mb-3 rounded-[8px] border border-hairline p-2"
+              data-testid="modal-effective-masses"
+            >
               <p className="mb-1.5 text-xs font-semibold">
                 <Trans>Masses modales effectives (EN 1998-1 §4.3.3.3)</Trans>
               </p>

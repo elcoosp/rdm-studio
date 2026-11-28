@@ -118,9 +118,7 @@ export function SettingsPopover(): React.ReactElement {
             <SegmentedControl
               size="sm"
               value={shearDeformation ? "Timoshenko" : "Bernoulli"}
-              onValueChange={(next) =>
-                updateSettings({ shear_deformation: next === "Timoshenko" })
-              }
+              onValueChange={(next) => updateSettings({ shear_deformation: next === "Timoshenko" })}
               options={[
                 { value: "Timoshenko", label: <Trans>Timoshenko</Trans> },
                 { value: "Bernoulli", label: <Trans>Bernoulli</Trans> },

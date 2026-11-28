@@ -55,6 +55,11 @@ import { CompositeSectionStudio } from "@/components/CompositeSectionStudio";
 import { CadImportDialog } from "@/components/CadImportDialog";
 import { ModelDataTable } from "@/components/ModelDataTable";
 import { ParametricFrameModal } from "@/components/ParametricFrameModal";
+import {
+  CustomMaterialButton,
+  MemberGroupsPanel,
+  StoreyLevelsPanel,
+} from "@/components/StudioM12Panels";
 import { compactModel } from "@/modeling/modelCleanup";
 import { trackProductEvent } from "@/lib/productTelemetry";
 
@@ -247,9 +252,20 @@ function GeometryPage() {
     setCadBusy(true);
     const before = structuredClone(useProjectStore.getState().project);
     try {
-      const bytes = await file.arrayBuffer();
-      const name = file.name.replace(/\.(dxf|step|stp|igs|iges)$/i, "");
-      const json = await feaClient.importCad(bytes, file.name, name);
+      // M12.5: bidirectional BIM round-trip — `.ifc` (IFC4 structural) and
+      // `.saf.json` (SAF) come back through `import_bim` as fresh projects.
+      const isIfc = /\.ifc$/i.test(file.name);
+      const isSaf = /\.saf\.json$|\.json$/i.test(file.name);
+      let json: string;
+      let name = file.name.replace(/\.(dxf|step|stp|igs|iges|ifc|json)$/i, "");
+      if (isIfc || isSaf) {
+        const text = await file.text();
+        json = await feaClient.importBim(text, isIfc ? "ifc" : "saf", name);
+      } else {
+        const bytes = await file.arrayBuffer();
+        json = await feaClient.importCad(bytes, file.name, name);
+      }
+      name = name === "" ? "Import" : name;
       const imported = JSON.parse(json) as Parameters<typeof loadProject>[0];
       loadProject(imported);
       // Optional convenience restraint: fix the leftmost node.
@@ -577,6 +593,15 @@ function GeometryPage() {
           </p>
         )}
       </div>
+
+      {/* M12.4 — user-defined material dialog (persisted in materials). */}
+      <CustomMaterialButton beamIds={selectedBeam !== null ? [selectedBeam.id] : undefined} />
+
+      {/* M12.3 — named member groups over the batch selection. */}
+      <MemberGroupsPanel />
+
+      {/* M12.3 — storey levels (Z elevations) + 1-click auto-detection. */}
+      <StoreyLevelsPanel />
 
       <p className="mt-2 font-data border-t border-hairline pt-3 text-[12px] text-ink-secondary">
         {sections.length} profils — EN 10365 / 10210 / 10056

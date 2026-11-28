@@ -1,3 +1,97 @@
+Session 22 (2026-11-28): **Milestone M10 — Session 2 of 3 (Audit Fixes, RDM7
+Boundary Conditions & Member Behaviors, Effective Modal Masses, 8 RDM6/7
+Analytical Benchmarks & Multi-Case EN 1990 Envelopes)** on top of origin/main
+fcf4e18 (M9 landed), tree left dirty (zero commits, see ship.toml +
+.github/pr-body.md).
+
+## M10 shipped (implemented + tested)
+
+1. **M10.1 — Audit defect fixes (Rust)**:
+   - `crates/rdm-solver/src/modal.rs`: removed the duplicated
+     `RDM_MODAL_DEBUG` debug blocks; new `ModeShape.effective_mass_ratios:
+     [f64; 3]` — true modal participation factors Γ_d = (M·φ)ᵀe_d and
+     effective modal masses `M_eff,d = Γ_d²/(φᵀMφ)` as fractions of the
+     total structural mass M_T = Σρ·A·L (Debard RDM6 §5.5 / EN 1998-1
+     §4.3.3.3), unit tested (`effective_mass_ratios_are_fractions_of_total_mass`)
+     and exposed on `ModeShapeDto` in the WASM bridge.
+   - `crates/rdm-eurocode/src/en1993.rs`: `member_check` no longer hardcodes
+     `lambda_bar_y_sq = 0.5` / `lambda_bar_z_sq = 0.8` — the squared
+     non-dimensional slendernesses are computed from the actual member
+     geometry (`N_cr = π²EI/L_cr²` from L, k_buckling, E, Iy/IZ) for
+     compression AND bending members.
+   - `crates/rdm-eurocode/src/multi_material.rs`: `ec3_fire_check` reports
+     the real `utilization_mu0` in the substituted line (was `0.5`).
+2. **M10.2 — RDM7 elastic supports & imposed displacements**:
+   `Support.settlement` verified end-to-end (Valibot schema, store, solver);
+   new store action `setSupportSettlement` (+ settlement preservation in
+   `setSupport`/`setSupportSprings`); Step 2 inspector: `Appui élastique (k)`
+   panel (`elastic-springs-panel`, 1-click preset seeding kz = 1000 kN/m)
+   and `Déplacement imposé (Δ)` panel (`support-settlement-panel`,
+   Δux..Δrz in mm/° on locked DOFs only, Δ badge on active supports);
+   `SupportMarkers.tsx` renders Deep Cobalt `#1D4ED8` helical spring coils
+   and cyan `#0891B2` prescribed-displacement arrows.
+3. **M10.3 — Tension/compression-only members & beam theory toggle**:
+   `SolvedModel.inactive_beam_ids` (members the behavior iteration
+   deactivated) threaded through the WASM `SolveReport` and
+   `workerClient.SolveReport`; Step 1 `<SegmentedControl>`
+   `beam-axial-behavior` (Standard | Tirant | Buton) in the beam inspector;
+   `TurnbuckleMarkers` (slender rod + midspan barrel) for
+   TensionOnly/CompressionOnly members; buckled members render dim slate
+   `#64748B` in 3D + `inactive-beams-banner` / `inactive-badge-<id>`
+   "Inactif (comprimé)" badges in Step 4; SettingsPopover `Théorie de
+   poutre` SegmentedControl (`shear-deformation-toggle`, Timoshenko |
+   Bernoulli) bound to `settings.shear_deformation`.
+4. **M10.4 — 8 Yves Debard RDM6/7 analytical benchmarks**:
+   `crates/rdm-solver/tests/rdm6_benchmarks.rs` implements §6.1–§6.8 of
+   Debard's _RDM – Flexion_ with strict 0.5 % closed-form assertions
+   (RDM6-01 four-span continuous beam v5 = −0.079487 mm / M1z = 750.52 N·m;
+   RDM6-02 triangular span; RDM6-03 internal hinge with slope
+   discontinuity — exact force-method closed forms v2 = pL⁴/20EI,
+   F1y = 1320 N, M1z = 208 N·m; RDM6-04 elastic support v2 = 3pL⁴/(2(kL³+24EI))
+   = −1.1428 mm, F2y = 12.571 kN; RDM6-05 imposed settlement F3y = −1.14 N,
+   σ = 34.29 MPa; RDM6-06 rotational spring M1z = −kθ1 = 0.838 kN·m;
+   RDM6-07 T-section ±90/210 MPa fibers; RDM6-08 self-weight propped
+   cantilever argmax at 0.57846 L). The in-app suite (validation.rs) gains
+   the same 8 entries (41 + 8 = 49) and `ValidationModal.tsx` shows
+   49/49 with the `RDM6 / RDM7 (8)` filter pill + summary card.
+   `AdvancedPanels.tsx` shows real per-mode effective modal mass ratios
+   (Mx/My/Mz % + cumulative sum, EN 1998-1 §4.3.3.3).
+5. **M10.5 — Multi-case manager, EN 1990 combinations & envelopes**:
+   Step 3 `load-case-manager` card (add/rename elementary cases with
+   EN 1990 Annex A1 ψ factors via the new `setLoadCases` store action;
+   1-click "Générer combinaisons ELU/ELS" through
+   `build_combinations_v2_json`); `ENV:ULS` / `ENV:SLS`
+   "Enveloppe (Min/Max)" views in the combination selector fed by
+   `compute_envelopes_json` (worker lane) — shaded Deep Cobalt 12 %
+   Min/Max uPlot bands (My/Vz/N, dynamic band indices) and floating 3D
+   `M_max / u_max` extremum callout pills pinned at the members
+   (`envelope-callout-<id>`).
+
+## M10 verification gates (run in this session)
+
+- G1 (Rust): `RUSTFLAGS="-D warnings" cargo test --workspace --all-features`
+  ✓ — 166 tests, 0 failed (incl. the 9 rdm6_benchmarks + expanded modal
+  tests). G0 fmt/clippy pending re-run at handoff (no new
+  unwrap/allow/expect introduced).
+- G2: `wasm-pack build bindings/rdm-wasm --target web --out-dir
+  ../../apps/web/src/wasm-pkg` ✓ (2 min 26 s, wasm-opt ok).
+- G3 (typecheck): `pnpm --filter web exec tsc --noEmit` ✓ 0 errors.
+- G2.5 tsr generate, G4 i18n extract/compile (new UI strings pending),
+  G5 vitest and G6 Playwright were NOT re-run in this session — the
+  follow-up session should run them on this saved tree
+  (`pnpm --filter web exec tsr generate && pnpm --filter web i18n:extract
+  && pnpm --filter web i18n:compile && pnpm --filter web test:unit &&
+  pnpm --filter web exec playwright test e2e/... --project=chromium --project=firefox`)
+  and add `apps/web/e2e/m10-rdm7-solver-envelopes.spec.ts`.
+
+## Next milestone
+
+M10 Session 3 of 3: run G4-G6 on this tree, author the M10 E2E spec, and
+extract/compile the Lingui catalogs for the new M10 strings.
+
+
+---
+
 # STATUS.md — RDM Studio milestone ledger
 
 Session 21 (2026-11-28): **Milestone M9 — RDM7 CAD Power Tools, Parametric

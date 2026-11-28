@@ -51,6 +51,7 @@ import {
   TorqueMoment,
 } from "@rdm-studio/ui/icons";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
+import { CompositeSectionStudio } from "@/components/CompositeSectionStudio";
 import { CadImportDialog } from "@/components/CadImportDialog";
 import { ModelDataTable } from "@/components/ModelDataTable";
 import { ParametricFrameModal } from "@/components/ParametricFrameModal";
@@ -115,6 +116,8 @@ function GeometryPage() {
   const [hoverNodeId, setHoverNodeId] = useState<number | null>(null);
   // M9.3: the parametric frame library modal.
   const [parametricOpen, setParametricOpen] = useState(false);
+  // M11.2: the composite Sections Droites studio dialog.
+  const [compositeOpen, setCompositeOpen] = useState(false);
   // v1.5.0: the data dock rides inside the drawer on phones.
   const isMobile = useMediaQuery("(max-width: 767px)");
   // v1.6.0: the persistent stage slot pane.
@@ -130,6 +133,13 @@ function GeometryPage() {
       setSections(c.sections);
       setSectionDims(new Map(c.sectionDims.map((d) => [d.designation, d])));
     });
+  }, []);
+
+  // M11.2: the ⌘K palette dispatches `rdm-open-composite-studio`.
+  useEffect(() => {
+    const open = (): void => setCompositeOpen(true);
+    window.addEventListener("rdm-open-composite-studio", open);
+    return () => window.removeEventListener("rdm-open-composite-studio", open);
   }, []);
 
   const ipeSections = sections;
@@ -491,6 +501,15 @@ function GeometryPage() {
           </ComboboxRoot>
         </div>
         <SectionCatalogRow designation={selectedBeam?.section_id ?? newSection} />
+        {/* M11.2: entry trigger of the visual Sections Droites studio. */}
+        <button
+          type="button"
+          className="mt-2 w-full rounded-[4px] border border-accent bg-accent-tint px-2 py-1.5 text-[12px] font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+          data-testid="open-composite-section-studio"
+          onClick={() => setCompositeOpen(true)}
+        >
+          <Trans>Studio Sections Composées…</Trans>
+        </button>
       </div>
 
       {/* Create Beam sub-card */}
@@ -572,6 +591,7 @@ function GeometryPage() {
         error={cadError}
       />
       <ParametricFrameModal open={parametricOpen} onClose={() => setParametricOpen(false)} />
+      <CompositeSectionStudio open={compositeOpen} onOpenChange={setCompositeOpen} />
 
       {isMobile ? (
         <ModelDataTable

@@ -1,18 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
 import { Trans } from "@lingui/react/macro";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { t } from "@lingui/core/macro";
-import { IconFrame, IconPlus, IconTrash, PortalFrameIcon } from "@rdm-studio/ui/icons";
+import { IconFrame, IconPlus, PortalFrameIcon } from "@rdm-studio/ui/icons";
 import { GeometryFullSearchSchema } from "@/schemas/searchParams.schema";
 import { useSelectedIds, useUpdateSearch, useViewportParams } from "@/hooks/useStudioQuery";
 import { useViewportStore } from "@/state/viewportStore";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
 import { Button } from "@rdm-studio/ui/primitives";
-import { DataTable } from "@/components/ui/data-table";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { Input } from "@/components/ui/input";
 import {
@@ -54,6 +51,9 @@ import {
 } from "@rdm-studio/ui/icons";
 import { ProjectGalleryModal } from "@/components/ProjectGalleryModal";
 import { CadImportDialog } from "@/components/CadImportDialog";
+import { ModelDataTable } from "@/components/ModelDataTable";
+import { ParametricFrameModal } from "@/components/ParametricFrameModal";
+import { compactModel } from "@/modeling/modelCleanup";
 import { trackProductEvent } from "@/lib/productTelemetry";
 
 export const Route = createFileRoute("/_studio/geometry")({
@@ -110,12 +110,19 @@ function GeometryPage() {
   const [nodeY, setNodeY] = useState<number | null>(null);
   const [nodeZ, setNodeZ] = useState<number | null>(null);
   const [hoverBeamId, setHoverBeamId] = useState<number | null>(null);
+  // M9.4: the metrology spreadsheet hover highlights nodes in 3D too.
+  const [hoverNodeId, setHoverNodeId] = useState<number | null>(null);
+  // M9.3: the parametric frame library modal.
+  const [parametricOpen, setParametricOpen] = useState(false);
   // v1.5.0: the data dock rides inside the drawer on phones.
   const isMobile = useMediaQuery("(max-width: 767px)");
   // v1.6.0: the persistent stage slot pane.
   const slotRef = useStageSlot("geometry");
   const toolMode = useViewportStore((s) => s.toolMode);
   const setToolMode = useViewportStore((s) => s.setToolMode);
+  // M9.1: Auto-Split on Draw (default ON) — beam tool cuts host beams.
+  const autoSplitOnDraw = useViewportStore((s) => s.autoSplitOnDraw);
+  const setAutoSplitOnDraw = useViewportStore((s) => s.setAutoSplitOnDraw);
 
   useEffect(() => {
     void feaClient.fetchCatalog().then((c) => {
@@ -255,6 +262,28 @@ function GeometryPage() {
     }
   };
 
+  // M9.1: the Step 1 Compacter — same atomic pass as the toolbar button,
+  // with the undoable Sonner summary toast.
+  const runCompact = (): void => {
+    const before = structuredClone(useProjectStore.getState().project);
+    const { project: cleaned, stats } = compactModel(useProjectStore.getState().project);
+    loadProject(cleaned);
+    toast(
+      t`Modèle compacté : ${stats.splitBeams} poutre(s) découpée(s), ${stats.mergedNodes} nœud(s) fusionné(s)`,
+      {
+        description: `${stats.removedDuplicates} doublon(s) supprimé(s), ${stats.removedOrphans} nœud(s) orphelin(s)`,
+        action: {
+          label: t`Annuler`,
+          onClick: () => {
+            useProjectStore.getState().loadProject(before);
+          },
+        },
+        duration: 5_000,
+      },
+    );
+    void trackProductEvent("cad_tool_selected", { tool: "compact_model" });
+  };
+
   const inspector = (
     <BottomSheet testId="inspector-sheet" title={<Trans>Inspecteur de section</Trans>}>
       {/* v2.3.0: Inspector sections grouped into hairline sub-cards with 16px engineering icons. */}
@@ -347,6 +376,24 @@ function GeometryPage() {
             <Trans>Galerie de projets</Trans>
           </button>
         </div>
+        {/* M9.3: Bibliothèque d'ossatures paramétrées (Ossatures §3.10). */}
+        <button
+          type="button"
+          className="mt-1.5 w-full rounded-[4px] border border-accent bg-accent-tint px-2 py-1.5 text-[12px] font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+          data-testid="open-parametric-generator"
+          onClick={() => setParametricOpen(true)}
+        >
+          <Trans>Générer une ossature paramétrée…</Trans>
+        </button>
+        {/* M9.1: 1-click topological cleanup (Compacter / Nettoyer §3.7). */}
+        <button
+          type="button"
+          className="mt-1.5 w-full rounded-[4px] border border-hairline bg-panel px-2 py-1.5 text-[12px] font-medium text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+          data-testid="compact-model-inspector"
+          onClick={runCompact}
+        >
+          <Trans>Compacter / nettoyer le modèle</Trans>
+        </button>
       </div>
 
       {/* Material & Profile Selection sub-card */}
@@ -523,8 +570,15 @@ function GeometryPage() {
         busy={cadBusy}
         error={cadError}
       />
+      <ParametricFrameModal open={parametricOpen} onClose={() => setParametricOpen(false)} />
 
-      {isMobile ? <DataDock onHoverBeam={setHoverBeamId} /> : null}
+      {isMobile ? (
+        <ModelDataTable
+          onHoverNode={setHoverNodeId}
+          onHoverBeam={setHoverBeamId}
+          sections={sections.map((s) => s.designation)}
+        />
+      ) : null}
 
       {/* v1.3.0 Step 2 hand-off. */}
       <button
@@ -647,6 +701,7 @@ function GeometryPage() {
           wireframe: render === "wireframe",
           selectedBeamId: beamId,
           hoveredBeamId: hoverBeamId,
+          hoveredNodeId: hoverNodeId,
         }}
       >
         {null}
@@ -688,8 +743,29 @@ function GeometryPage() {
             <Trans>cliquez deux nœuds pour relier (N départ cyan)</Trans>
           </span>
         ) : null}
+        {/* M9.1: Auto-Split on Draw — a member drawn onto an existing
+            beam's interior cuts the host at the landing point. */}
+        {toolMode === "beam" ? (
+          <label
+            className="ml-auto flex shrink-0 items-center gap-1.5 pr-1 text-[11px] text-ink-secondary"
+            data-testid="auto-split-toggle"
+          >
+            <Checkbox
+              checked={autoSplitOnDraw}
+              onCheckedChange={(checked) => setAutoSplitOnDraw(checked === true)}
+              aria-label="Auto-découpe au dessin"
+            />
+            <Trans>Auto-découpe</Trans>
+          </label>
+        ) : null}
       </div>
-      {!isMobile ? <DataDock onHoverBeam={setHoverBeamId} /> : null}
+      {!isMobile ? (
+        <ModelDataTable
+          onHoverNode={setHoverNodeId}
+          onHoverBeam={setHoverBeamId}
+          sections={sections.map((s) => s.designation)}
+        />
+      ) : null}
     </section>
   );
 
@@ -782,120 +858,6 @@ export function ProfileFamilyIcon({ designation }: { designation: string }) {
 }
 
 /**
- * Collapsible bottom data dock (v1.5.0): Nœuds / Poutres TanStack tables
- * behind a h-9 tab bar with a h-44 scroll pane when expanded — the 3D
- * viewport commands 75%+ of the screen. On phones the dock rides inside
- * the drawer instead of stealing viewport height.
- */
-function DataDock({
-  onHoverNode,
-  onHoverBeam,
-}: {
-  onHoverNode?: (id: number | null) => void;
-  onHoverBeam: (id: number | null) => void;
-}) {
-  // v2.1.0: dock tab (`?tab=`) and visibility (`?dock=`) are URL-backed.
-  const search = Route.useSearch();
-  const updateSearch = useUpdateSearch();
-  const tab = search.tab ?? "nodes";
-  const open = (search.dock ?? 1) === 1;
-  const setTab = (next: "nodes" | "beams") => {
-    updateSearch((prev) => ({ ...prev, tab: next }));
-  };
-  const setOpen = (next: boolean) => {
-    updateSearch((prev) => ({ ...prev, dock: next ? 1 : 0 }));
-  };
-  const nodeCount = useProjectStore((s) => s.project.structure.nodes.length);
-  const beamCount = useProjectStore((s) => s.project.structure.beams.length);
-  return (
-    <section
-      className="shrink-0 overflow-hidden rounded border border-hairline bg-panel"
-      data-testid="data-dock"
-    >
-      <div className="flex h-9 items-center gap-1 px-1.5">
-        <button
-          type="button"
-          data-testid="dock-tab-nodes"
-          className={`flex h-7 items-center rounded px-2 text-[12px] ${
-            tab === "nodes" ? "bg-accent-tint text-accent" : "text-ink-secondary"
-          }`}
-          onClick={() => setTab("nodes")}
-        >
-          Nœuds ({nodeCount})
-        </button>
-        <button
-          type="button"
-          data-testid="dock-tab-beams"
-          className={`flex h-7 items-center rounded px-2 text-[12px] ${
-            tab === "beams" ? "bg-accent-tint text-accent" : "text-ink-secondary"
-          }`}
-          onClick={() => setTab("beams")}
-        >
-          Poutres ({beamCount})
-        </button>
-        <button
-          type="button"
-          aria-label={open ? "Replier le tableau de données" : "Déplier le tableau de données"}
-          className="ml-auto flex h-7 w-7 items-center justify-center rounded text-ink-muted hover:text-ink-primary"
-          data-testid="data-dock-toggle"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? (
-            <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
-          ) : (
-            <ChevronUp size={14} strokeWidth={1.5} aria-hidden />
-          )}
-        </button>
-      </div>
-      {open ? (
-        <div className="h-44 overflow-auto border-t border-hairline px-2 pb-2">
-          {tab === "nodes" ? (
-            <NodeTable onHoverNode={onHoverNode} />
-          ) : (
-            <BeamTable onHoverBeam={onHoverBeam} />
-          )}
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-/** Coordinate cell editor (Base UI NumberField, inline in the data dock).
- *  v2.1.1: `w-16` keeps the Nœuds table free of any horizontal scrollbar. */
-function CoordinateCell({
-  node,
-  axis,
-  onMove,
-}: {
-  node: NodeData;
-  axis: "x" | "y" | "z";
-  onMove: (id: number, x: number, y: number, z: number) => void;
-}) {
-  return (
-    <NumberFieldRoot
-      value={node[axis]}
-      step={0.1}
-      onValueChange={(value) => {
-        if (value === null) {
-          return;
-        }
-        onMove(
-          node.id,
-          axis === "x" ? value : node.x,
-          axis === "y" ? value : node.y,
-          axis === "z" ? value : node.z,
-        );
-      }}
-    >
-      <NumberFieldInput
-        className="h-7 w-16 px-1 py-0 text-[12px]"
-        aria-label={`Nœud ${node.id} · coordonnée ${axis}`}
-      />
-    </NumberFieldRoot>
-  );
-}
-
-/**
  * v2.1.1 unit-aware placement field: an explicit `X (m)` metre label plus
  * unit-suffixed parsing through `parseUnitValue` — `4000mm` and `4m` both
  * land as 4 m, plain numbers stay metres, invalid drafts clear the value.
@@ -927,215 +889,6 @@ function UnitCoordinateField({
         className="font-data h-7 w-full min-w-0 px-2 text-[12px]"
       />
     </label>
-  );
-}
-
-/** Node table on the shared TanStack DataTable (v1.5.0 data dock). */
-function NodeTable({ onHoverNode }: { onHoverNode?: (id: number | null) => void } = {}) {
-  const nodes = useProjectStore((s) => s.project.structure.nodes);
-  // v2.1.0: node selection reads/writes `?node=` (URL single source of truth).
-  const { nodeId, selectNode } = useSelectedIds();
-  const removeNode = useProjectStore((s) => s.removeNode);
-  const moveNode = useProjectStore((s) => s.moveNode);
-  const columns = useMemo<ColumnDef<NodeData, unknown>[]>(
-    () => [
-      {
-        accessorKey: "id",
-        header: "ID",
-        cell: (ctx) => <span className="pr-2">{ctx.row.original.id}</span>,
-      },
-      ...(["x", "y", "z"] as const).map((axis) => ({
-        id: axis,
-        header: `${axis.toUpperCase()} (m)`,
-        meta: { numeric: true },
-        cell: (ctx: { row: { original: NodeData } }) => (
-          <CoordinateCell node={ctx.row.original} axis={axis} onMove={moveNode} />
-        ),
-      })),
-      {
-        id: "remove",
-        header: "",
-        cell: (ctx: { row: { original: NodeData } }) => (
-          <button
-            type="button"
-            aria-label={`Supprimer le nœud ${ctx.row.original.id}`}
-            className="text-ink-muted hover:text-fea-max"
-            onClick={(event) => {
-              event.stopPropagation();
-              removeNode(ctx.row.original.id);
-            }}
-          >
-            <IconTrash size={13} />
-          </button>
-        ),
-      },
-    ],
-    [moveNode, removeNode],
-  );
-  return (
-    <DataTable<NodeData>
-      columns={columns}
-      data={nodes}
-      onRowClick={(n) => selectNode(n.id)}
-      onRowHover={
-        onHoverNode === undefined ? undefined : (n) => onHoverNode(n === null ? null : n.id)
-      }
-      rowClassName={(n) => (nodeId === n.id ? "bg-accent-tint" : undefined)}
-    />
-  );
-}
-
-function BeamTable({ onHoverBeam }: { onHoverBeam?: (id: number | null) => void } = {}) {
-  const beams = useProjectStore((s) => s.project.structure.beams);
-  const storeNodes = useProjectStore((s) => s.project.structure.nodes);
-  // v2.1.0: single pick = `?beam=` in the URL; shift-click keeps the
-  // transient batch selection in the project store (not URL-duplicated).
-  const { beamId, selectBeam } = useSelectedIds();
-  const removeBeam = useProjectStore((s) => s.removeBeam);
-  const selectedBeamIds = useProjectStore((s) => s.batch.selectedBeamIds);
-  const batchUpdateBeams = useProjectStore((s) => s.batchUpdateBeams);
-  const columns = useMemo<ColumnDef<BeamData, unknown>[]>(() => {
-    const lengthOf = (beam: BeamData): number => {
-      const n1 = storeNodes.find((n) => n.id === beam.n1);
-      const n2 = storeNodes.find((n) => n.id === beam.n2);
-      if (n1 === undefined || n2 === undefined) {
-        return 0;
-      }
-      return Math.hypot(n2.x - n1.x, n2.y - n1.y, n2.z - n1.z);
-    };
-    return [
-      {
-        accessorKey: "id",
-        header: "ID",
-        cell: (ctx) => <span className="pr-2">{ctx.row.original.id}</span>,
-      },
-      { accessorKey: "n1", header: "N1" },
-      { accessorKey: "n2", header: "N2" },
-      {
-        accessorKey: "section_id",
-        header: "Profil",
-        cell: (ctx) => <span className="font-data">{ctx.row.original.section_id}</span>,
-      },
-      {
-        // v1.6.0: computed member length column (mono, French comma).
-        id: "length",
-        header: "L (m)",
-        meta: { numeric: true },
-        cell: (ctx: { row: { original: BeamData } }) => (
-          <span className="font-data">
-            {lengthOf(ctx.row.original).toFixed(2).replace(".", ",")}
-          </span>
-        ),
-      },
-      {
-        id: "remove",
-        header: "",
-        cell: (ctx: { row: { original: BeamData } }) => (
-          <button
-            type="button"
-            aria-label={`Supprimer la poutre ${ctx.row.original.id}`}
-            className="text-ink-muted hover:text-fea-max"
-            onClick={(event) => {
-              event.stopPropagation();
-              removeBeam(ctx.row.original.id);
-            }}
-          >
-            <IconTrash size={13} />
-          </button>
-        ),
-      },
-    ];
-  }, [removeBeam, storeNodes]);
-  const batchProfiles = useMemo(() => Array.from(new Set(beams.map((b) => b.section_id))), [beams]);
-  return (
-    <>
-      <DataTable<BeamData>
-        columns={columns}
-        data={beams}
-        onRowClick={(b, event) => {
-          if (event.shiftKey) {
-            // Shift+Click extends the multi-selection (batch inspector).
-            useProjectStore.getState().toggleBeamSelection(b.id);
-            return;
-          }
-          selectBeam(b.id);
-        }}
-        onRowHover={
-          onHoverBeam === undefined ? undefined : (b) => onHoverBeam(b === null ? null : b.id)
-        }
-        rowClassName={(b) =>
-          beamId === b.id || selectedBeamIds.includes(b.id) ? "bg-accent-tint" : undefined
-        }
-      />
-      {selectedBeamIds.length > 0 ? (
-        <div
-          className="mt-2 rounded border border-accent-ring bg-accent-tint p-2"
-          data-testid="batch-editor"
-        >
-          <p className="font-data text-[12px] text-accent">
-            {selectedBeamIds.length} poutre(s) sélectionnée(s)
-          </p>
-          {/* v1.4.0: cumulative ΣL / Σm for the multi-selection. */}
-          {(() => {
-            let totalLength = 0;
-            for (const id of selectedBeamIds) {
-              const beam = beams.find((b) => b.id === id);
-              if (beam === undefined) continue;
-              const n1 = storeNodes.find((n) => n.id === beam.n1);
-              const n2 = storeNodes.find((n) => n.id === beam.n2);
-              if (n1 === undefined || n2 === undefined) continue;
-              totalLength += Math.hypot(n2.x - n1.x, n2.y - n1.y, n2.z - n1.z);
-            }
-            const unitMassKgM: Record<string, number> = {
-              "IPE 140": 16.4,
-              "IPE 200": 22.4,
-              "IPE 240": 30.7,
-              "IPE 300": 42.2,
-              "HEA 200": 42.3,
-              "HEA 180": 35.2,
-            };
-            const designation =
-              beams.find((b) => selectedBeamIds.includes(b.id))?.section_id ?? "IPE 200";
-            const mass = totalLength * (unitMassKgM[designation] ?? 22.4);
-            return (
-              <p className="font-data text-[11px] text-ink-muted">
-                ΣL = {totalLength.toFixed(2).replace(".", ",")} m · Σm ≈{" "}
-                {mass.toFixed(1).replace(".", ",")} kg
-              </p>
-            );
-          })()}
-          <div className="mt-1 flex gap-2">
-            {/* v2.1.2: batch section picker as a Select (zero raw selects). */}
-            <SelectRoot
-              value=""
-              onValueChange={(next) => {
-                if (next === null || next === "") return;
-                batchUpdateBeams(selectedBeamIds, { section_id: next });
-                useProjectStore.getState().clearBeamSelection();
-              }}
-            >
-              <SelectTrigger aria-label="batch section" className="h-8 text-[12px]">
-                <SelectValue placeholder="Profil…" />
-              </SelectTrigger>
-              <SelectContent>
-                {batchProfiles.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </SelectRoot>
-            <button
-              type="button"
-              className="rounded border border-hairline px-2 text-[12px] text-ink-secondary"
-              onClick={() => useProjectStore.getState().clearBeamSelection()}
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </>
   );
 }
 
@@ -1229,24 +982,44 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
         <ReleaseHinge size={16} />
         <Trans>Barre de treillis (articuler N1/N2)</Trans>
       </button>
-      {/* v1.6.0: subdivide the member into N collinear tronçons. */}
+      {/* M9.2: Discrétiser une poutre (Ossatures §3.8.13) — N tronçons
+          (2–50) with 1-click presets; the pure `modelCleanup` transform
+          keeps outer releases, rigid interior junctions and remaps loads. */}
       <div
         className="mt-2 flex items-center justify-between gap-2 border-t border-hairline pt-2"
         data-testid="subdivide-panel"
       >
         <span className="flex items-center gap-1.5 text-[12px] text-ink-secondary">
           <TorqueMoment size={16} />
-          <Trans>Subdiviser en N tronçons</Trans>
+          <Trans>Discrétiser (N tronçons)</Trans>
         </span>
-        <NumberFieldRoot
-          value={segments}
-          step={1}
-          min={2}
-          max={24}
-          onValueChange={(v) => setSegments(v)}
-        >
-          <NumberFieldInput className="font-data h-8 w-14" aria-label="Nombre de tronçons" />
-        </NumberFieldRoot>
+        <div className="flex items-center gap-1">
+          {[2, 4, 8, 10].map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              data-testid={`subdivide-preset-${preset}`}
+              aria-pressed={segments === preset}
+              className={`rounded border px-1.5 py-0.5 font-data text-[11px] ${
+                segments === preset
+                  ? "border-accent bg-accent-tint text-accent"
+                  : "border-hairline text-ink-secondary hover:border-accent hover:text-accent"
+              }`}
+              onClick={() => setSegments(preset)}
+            >
+              {preset}
+            </button>
+          ))}
+          <NumberFieldRoot
+            value={segments}
+            step={1}
+            min={2}
+            max={50}
+            onValueChange={(v) => setSegments(v)}
+          >
+            <NumberFieldInput className="font-data h-8 w-14" aria-label="Nombre de tronçons" />
+          </NumberFieldRoot>
+        </div>
         <button
           type="button"
           data-testid="subdivide-beam"
@@ -1255,10 +1028,10 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
           onClick={() => {
             if (segments === null || segments < 2) return;
             subdivideBeam(beam.id, segments);
-            toast(t`P${beam.id} subdivisée en ${segments} tronçons`, { duration: 3_000 });
+            toast(t`P${beam.id} discrétisée en ${segments} tronçons`, { duration: 3_000 });
           }}
         >
-          <Trans>Subdiviser</Trans>
+          <Trans>Discrétiser</Trans>
         </button>
       </div>
       <p className="mt-2 text-[12px] text-ink-secondary">

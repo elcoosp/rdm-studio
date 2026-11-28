@@ -7,6 +7,7 @@ import init, {
   catalog_section_properties,
   catalog_section_shapes,
   catalog_sections,
+  compute_composite_section,
   compute_envelopes_json,
   custom_section_preview,
   export_bim,
@@ -144,7 +145,8 @@ export interface EngineCallRequest {
     | "export_bim"
     | "multi_material_check_json"
     | "moving_loads_envelope_json"
-    | "migrate_project_json";
+    | "migrate_project_json"
+    | "compute_composite_section";
   args: unknown[];
 }
 
@@ -358,6 +360,9 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
             args[1] as number,
             args[2] as number,
           );
+          break;
+        case "compute_composite_section":
+          result = compute_composite_section(args[0] as string);
           break;
         default:
           result = { kind: "Fault", message: "unrouted engine call" };

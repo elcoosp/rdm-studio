@@ -9,6 +9,7 @@
 pub mod buckling;
 pub mod drift;
 pub mod envelopes;
+pub mod fem2d;
 pub mod internal_forces;
 pub mod loads;
 pub mod modal;
@@ -24,6 +25,10 @@ pub mod validation;
 pub use buckling::{BucklingMode, BucklingReport, buckling_analysis, geometric_stiffness_local};
 pub use drift::{LevelDrift, StoreyDriftReport, interstorey_drift};
 pub use envelopes::{BeamEnvelope, compute_envelopes};
+pub use fem2d::{
+    EdgeRestraint, Fem2dError, Fem2dReport, Fem2dSpec, Fem2dTelemetry, FemMaterial, FemPointLoad,
+    FemTheory, PlaneElement, solve_fem2d,
+};
 pub use internal_forces::{STATIONS, StationForces, station_envelope, station_forces};
 pub use loads::{
     BeamElementData, LoadVectorError, assemble_case_vector, beam_case_load_local,

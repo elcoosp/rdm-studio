@@ -9,6 +9,7 @@ authors.workspace = true
 serde = { workspace = true }
 rdm-model = { path = "../rdm-model" }
 rdm-eurocode = { path = "../rdm-eurocode" }
+rdm-mesh = { path = "../rdm-mesh" }
 faer = { workspace = true }
 nalgebra = { workspace = true }
 glam = { workspace = true }

@@ -1,5 +1,6 @@
 import { Canvas, useThree } from "@react-three/fiber";
-import { CameraControls, GizmoHelper, GizmoViewport, Grid } from "@react-three/drei";
+import { CameraControls, Grid } from "@react-three/drei";
+import { OrientationTriad3D, TriadCameraSync, type TriadDomHandles } from "./OrientationTriad3D";
 import {
   Component,
   useCallback,
@@ -334,6 +335,7 @@ export function ViewportCanvas({
   // restores the exact 3D viewpoint.
   const { view: cameraPreset, setView: setCameraPreset } = useViewportParams();
   const controlsRef = useRef<CameraControlsImpl | null>(null);
+  const triadRef = useRef<TriadDomHandles | null>(null);
   const runtimeRef = useRef<ViewportRuntime | null>(null);
   const [runtimeReady, setRuntimeReady] = useState(0);
   // Stable callback: an inline arrow here re-runs the bridge effect on
@@ -472,14 +474,14 @@ export function ViewportCanvas({
               bar (3D Iso | Dessus XY | Face XZ | Côté YZ) stays clear. */}
           {/* v2.4.0: 72px margins keep the gizmo clear of the bottom-right
               status bar and the left-side legends (fea/profile). */}
-          <GizmoHelper alignment="bottom-right" margin={[72, 72]}>
-            <GizmoViewport
-              scale={0.75}
-              axisColors={["#DC2626", "#10b981", "#1D4ED8"]}
-              labelColor="#0F172A"
-            />
-          </GizmoHelper>
+          <TriadCameraSync triadRef={triadRef} />
         </Canvas>
+        <OrientationTriad3D
+          nodes={modelNodes}
+          controlsRef={controlsRef}
+          runtimeRef={runtimeRef}
+          triadRef={triadRef}
+        />
         {/* Snap reticle + cursor pill (DOM overlay, §8.3/§8.4). */}
         {nodes !== undefined && beams !== undefined ? (
           <SnapOverlay

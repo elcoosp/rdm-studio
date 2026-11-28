@@ -404,7 +404,10 @@ pub fn modal_analysis(structure: &Structure, n_modes: usize) -> Result<ModalRepo
         // `d` is `Γ_d = (M·φ)ᵀ·e_d` — the mass-weighted mode sum over the
         // translational DOFs `[Ux|Uy|Uz]` — and the effective mass is
         // `M_eff,d = Γ_d² / (φᵀMφ)`, reported as a fraction of `M_T`.
-        let modal_mass: f64 = (0..n_free).map(|r| phi[r] * m_phi[r]).sum::<f64>().max(1e-300);
+        let modal_mass: f64 = (0..n_free)
+            .map(|r| phi[r] * m_phi[r])
+            .sum::<f64>()
+            .max(1e-300);
         let mut effective_mass_ratios = [0.0f64; 3];
         for (d, ratio) in effective_mass_ratios.iter_mut().enumerate() {
             let gamma: f64 = free

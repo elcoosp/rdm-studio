@@ -16,7 +16,9 @@ import {
   nodePositions,
   hexToRgb,
   familyColorOf,
+  TurnbuckleMarkers,
 } from "./BeamMeshes";
+import { useLastReport } from "@/wasmBridge/workerClient";
 import { SupportMarkers } from "./SupportMarkers";
 import { NodeMarkers } from "./NodeMarkers";
 import { ForceVectors3D } from "./ForceVectors3D";
@@ -375,6 +377,12 @@ function ModelTools({ nodes }: { nodes: { id: number; x: number; y: number; z: n
 
 export function PersistentStage(): ReactElement {
   const nodes = useProjectStore((s) => s.project.structure.nodes);
+  // M10.3: buckled tension-only / compression-only members (slate dim).
+  const lastReport = useLastReport();
+  const inactiveBeamIds = useMemo(
+    () => new Set(lastReport?.inactive_beam_ids ?? []),
+    [lastReport],
+  );
   const beams = useProjectStore((s) => s.project.structure.beams);
   const supports = useProjectStore((s) => s.project.structure.supports);
   const loads = useProjectStore((s) => s.project.structure.loads);
@@ -602,6 +610,7 @@ export function PersistentStage(): ReactElement {
               nodes={nodes}
               beams={beams}
               geometry={sharedGeometry}
+              inactiveBeamIds={inactiveBeamIds}
               wireframe={options.wireframe === true}
               selectedBeamId={options.selectedBeamId ?? null}
               hoveredBeamId={options.hoveredBeamId ?? null}
@@ -629,6 +638,8 @@ export function PersistentStage(): ReactElement {
               }}
             />
           ) : null}
+          {/* M10.3: turnbuckles on the tension-only / compression-only members. */}
+          {layers.beams ? <TurnbuckleMarkers nodes={nodes} beams={beams} /> : null}
           {layers.supports ? <SupportMarkers nodes={nodes} supports={supports} /> : null}
           {layers.loads ? <ForceVectors3D nodes={nodes} beams={beams} loads={loads} /> : null}
           {/* v2.1.0: true 3D signed force diagrams along the members

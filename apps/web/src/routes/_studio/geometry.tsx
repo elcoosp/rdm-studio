@@ -10,6 +10,7 @@ import { useViewportStore } from "@/state/viewportStore";
 import { BottomSheet } from "@/components/BottomSheet";
 import { DesktopSplit } from "@/components/ui/resizable";
 import { Button } from "@rdm-studio/ui/primitives";
+import { SegmentedControl } from "@rdm-studio/ui/interior";
 import { NumberFieldRoot, NumberFieldInput } from "@/components/ui/number-field";
 import { Input } from "@/components/ui/input";
 import {
@@ -939,6 +940,27 @@ function BeamPatchPanel({ beam }: { beam: BeamData }) {
             ))}
           </div>
         </div>
+        <span className="text-xs font-medium text-ink-secondary">
+          <Trans>Comportement axial</Trans>
+        </span>
+        {/* M10.3 (RDM 7): tension-only / compression-only bracing members. */}
+        <SegmentedControl
+          testId="beam-axial-behavior"
+          label="Comportement axial"
+          size="sm"
+          value={beam.behavior ?? "Standard"}
+          onValueChange={(next) => {
+            updateBeam(beam.id, {
+              behavior: next as BeamData["behavior"],
+            });
+            void trackProductEvent("beam_behavior_set", { behavior: next });
+          }}
+          options={[
+            { value: "Standard", label: <Trans>Standard</Trans> },
+            { value: "TensionOnly", label: <Trans>Tirant</Trans> },
+            { value: "CompressionOnly", label: <Trans>Buton</Trans> },
+          ]}
+        />
         <span className="text-xs font-medium text-ink-secondary">
           <Trans>Longueurs de flambement</Trans>
         </span>

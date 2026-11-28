@@ -110,6 +110,12 @@ export interface BeamGeometryOptions {
    * thermal view. Ignored for any beam that carries a `colorRatios` entry.
    */
   beamColors?: Map<number, [number, number, number]>;
+  /**
+   * M10.3: ids of the TensionOnly / CompressionOnly members the solver
+   * deactivated (buckled cable / strut) — rendered in dim slate instead
+   * of their family colour or thermal tier.
+   */
+  inactiveBeamIds?: Set<number>;
 }
 
 interface UnitBox {
@@ -221,7 +227,6 @@ export function buildBeamGeometry(
     const yx = znY * exz - znZ * exy;
     const yy = znZ * exx - znX * exz;
     const yz = znX * exy - znY * exx;
-    const hw = width / 2;
     // v2.4.0: roll θx (rad) about the member's local longitudinal X axis —
     // rotates the section outline (web/flanges) in the local Y-Z plane.
     const roll = Number.isFinite(beam.roll_angle_rad) ? beam.roll_angle_rad : 0;
@@ -230,10 +235,18 @@ export function buildBeamGeometry(
 
     const ratio = options.colorRatios?.get(beam.id) ?? 0.5;
     const familyRgb = options.beamColors?.get(beam.id);
-    const [r, g, b] =
-      options.colorRatios?.has(beam.id) || familyRgb === undefined
+    const [r, g, b] = options.inactiveBeamIds?.has(beam.id) ?? false
+      ? hexToRgb("#64748B")
+      : options.colorRatios?.has(beam.id) || familyRgb === undefined
         ? spectrumColor(ratio)
         : familyRgb;
+    // M10.3: tension-only members render as slender rods (the RDM 7
+    // tirant is a rod, not a framed profile); the turnbuckle cylinder is
+    // overlaid separately by `TurnbuckleMarkers`.
+    const hw =
+      (beam.behavior === "TensionOnly" || beam.behavior === "CompressionOnly"
+        ? Math.max(width * 0.3, 0.02)
+        : width) / 2;
     const base = positions.length / 3;
 
     const dims = options.profiles?.get(beam.id);
@@ -355,6 +368,8 @@ interface BeamMeshesProps {
   nodes: NodeData[];
   beams: BeamData[];
   colorRatios?: Map<number, number>;
+  /** M10.3: dimmed (buckled) tension-only / compression-only members. */
+  inactiveBeamIds?: Set<number>;
   displacements?: number[] | Float64Array;
   deformScale?: number;
   wireframe: boolean;
@@ -394,6 +409,7 @@ export function BeamMeshes({
   geometry: sharedGeometry,
   deleteMode = false,
   onDelete,
+  inactiveBeamIds,
 }: BeamMeshesProps) {
   // v2.4.0: family colours apply only outside the FEA thermal view (no
   // colorRatios) — the spectrum stays reserved for Step 4 results.
@@ -418,6 +434,7 @@ export function BeamMeshes({
         deformScale,
         profiles: sectionDims === undefined ? undefined : beamProfileLookup(beams, sectionDims),
         beamColors: familyColors,
+        inactiveBeamIds,
       }),
     [
       sharedGeometry,
@@ -428,6 +445,7 @@ export function BeamMeshes({
       deformScale,
       sectionDims,
       familyColors,
+      inactiveBeamIds,
     ],
   );
   // v1.6.0 GPU-hygiene: internally-built geometries are disposed when
@@ -604,6 +622,108 @@ export function BeamMeshes({
           <lineBasicMaterial color="#93C5FD" />
         </lineSegments>
       ) : null}
+    </>
+  );
+}
+
+
+/**
+ * M10.3 (RDM 7 _tirants_): slender tension-rod turnbuckles — one thin
+ * rod along the member axis plus a short wider barrel cylinder at
+ * midspan, slate-graphite. Rendered next to `BeamMeshes` for every
+ * `TensionOnly` / `CompressionOnly` member.
+ */
+const TURNBUCKLE_ROD_GEO = new THREE.CylinderGeometry(0.012, 0.012, 1, 8, 1, true);
+const TURNBUCKLE_BARREL_GEO = new THREE.CylinderGeometry(0.028, 0.028, 0.09, 10);
+const TURNBUCKLE_MATERIAL = new THREE.MeshStandardMaterial({ color: "#334155" });
+
+export function TurnbuckleMarkers({
+  nodes,
+  beams,
+  displacements,
+  deformScale = 1,
+}: {
+  nodes: NodeData[];
+  beams: BeamData[];
+  displacements?: number[] | Float64Array;
+  deformScale?: number;
+}): React.ReactElement {
+  const markers = useMemo(() => {
+    const nodeIndex = new Map(nodes.map((n, i) => [n.id, i]));
+    const displaced = (nodeId: number, axis: 0 | 1 | 2): number => {
+      const index = nodeIndex.get(nodeId);
+      if (index === undefined) {
+        return axis === 0 ? 0 : axis === 1 ? 0 : 0;
+      }
+      const node = nodes[index];
+      if (node === undefined) {
+        return 0;
+      }
+      const base = axis === 0 ? node.x : axis === 1 ? node.y : node.z;
+      if (displacements === undefined) {
+        return base;
+      }
+      const raw = displacements[index * 6 + axis] ?? 0;
+      return base + (Number.isFinite(raw) ? raw * deformScale : 0);
+    };
+    const out: {
+      key: number;
+      position: [number, number, number];
+      length: number;
+      quaternion: [number, number, number, number];
+    }[] = [];
+    for (const beam of beams) {
+      if (beam.behavior !== "TensionOnly" && beam.behavior !== "CompressionOnly") {
+        continue;
+      }
+      const ax = displaced(beam.n1, 0);
+      const ay = displaced(beam.n1, 1);
+      const az = displaced(beam.n1, 2);
+      const bx = displaced(beam.n2, 0);
+      const by = displaced(beam.n2, 1);
+      const bz = displaced(beam.n2, 2);
+      const dx = bx - ax;
+      const dy = by - ay;
+      const dz = bz - az;
+      const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (length < 1e-9) {
+        continue;
+      }
+      const dir = new THREE.Vector3(dx / length, dy / length, dz / length);
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        dir,
+      );
+      out.push({
+        key: beam.id,
+        position: [(ax + bx) / 2, (ay + by) / 2, (az + bz) / 2],
+        length,
+        quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
+      });
+    }
+    return out;
+  }, [nodes, beams, displacements, deformScale]);
+  return (
+    <>
+      {markers.map((marker) => (
+        <group
+          key={marker.key}
+          data-testid={`turnbuckle-${marker.key}`}
+          position={marker.position}
+          quaternion={marker.quaternion}
+        >
+          <mesh
+            geometry={TURNBUCKLE_ROD_GEO}
+            material={TURNBUCKLE_MATERIAL}
+            scale={[1, marker.length, 1]}
+          />
+          <mesh
+            geometry={TURNBUCKLE_BARREL_GEO}
+            material={TURNBUCKLE_MATERIAL}
+            position={[0, marker.length * 0.0, 0]}
+          />
+        </group>
+      ))}
     </>
   );
 }

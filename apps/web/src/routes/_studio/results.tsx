@@ -134,7 +134,15 @@ function SolverFaultCard({ fault, onRerun }: { fault: SolveFault; onRerun: () =>
             >
               <Trans>Activer Plan 2D & recalculer</Trans>
             </button>
-          ) : null}
+          ) : (
+            <a
+              href="/supports"
+              data-testid="fix-go-supports"
+              className="inline-flex items-center gap-1.5 rounded bg-accent px-3 py-1 text-[12px] font-semibold text-white hover:bg-accent-strong"
+            >
+              <Trans>Aller aux Liaisons →</Trans>
+            </a>
+          )}
           <button
             type="button"
             aria-expanded={detailsOpen}
@@ -529,17 +537,12 @@ function ResultsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 p-3">
       {/* Zone 1 — compact solve header + KPI strip. */}
-      <div className="flex shrink-0 items-center justify-between gap-2">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold">
           <Trans>Résultats de calcul</Trans>
         </h2>
-        <div className="flex items-center gap-2">
-          {/* v2.1.2: SLS deflection limit as a SegmentedControl (shared
-              spring pill) — L/200 | L/250 | L/300 with contract test ids. */}
-          <div
-            data-testid="sls-limit-selector"
-            className="flex shrink-0 items-center rounded-[6px] border border-hairline bg-panel p-0.5"
-          >
+        <div className="flex flex-wrap items-center gap-2">
+          <div data-testid="sls-limit-selector" className="shrink-0">
             <SegmentedControl
               size="sm"
               label={t`Limite de flèche ELS`}
@@ -553,8 +556,6 @@ function ResultsPage() {
             />
           </div>
 
-          {/* v2.1.2: combination + eigenmode selector as a Base UI Select
-              (LoadCombination / ModalVibration icons) — zero raw selects. */}
           <SelectRoot
             items={comboItems}
             value={viewKey}
@@ -563,7 +564,7 @@ function ResultsPage() {
             }}
           >
             <SelectTrigger
-              className="h-7 w-56 gap-1 font-data text-[11px]"
+              className="h-7 w-44 gap-1 font-data text-[11px]"
               data-testid="combination-selector"
               aria-label={t`Combinaison affichée`}
             >
@@ -626,10 +627,7 @@ function ResultsPage() {
           ) : null}
           {/* v2.1.2: thermal scale as a SegmentedControl — Taux EC3 |
               σvM / fy | Auto (contract test ids scale-ec3/svm/auto). */}
-          <div
-            data-testid="scale-modes"
-            className="flex shrink-0 items-center rounded-[6px] border border-hairline bg-panel p-0.5"
-          >
+          <div data-testid="scale-modes" className="shrink-0">
             <SegmentedControl
               size="sm"
               label={t`Échelle thermique`}
@@ -818,28 +816,30 @@ function ResultsPage() {
           </StageContent>
           {/* v2.1.1: thermal legend at bottom-LEFT (clear of the XYZ
               gizmo at bottom-right), labels synced to the active scale. */}
-          <div
-            className="absolute bottom-8 left-3 z-30 flex w-56 max-w-[60%] items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
-            data-testid="fea-legend"
-          >
-            <span className="font-data text-[11px] text-ink-muted">
-              {scaleMode === "ec3" ? "η = 0" : scaleMode === "svm" ? "0" : "Min"}
-            </span>
+          {report !== null ? (
             <div
-              className="h-2 flex-1 rounded"
-              style={{
-                background: `linear-gradient(to right, ${[0, 0.25, 0.5, 0.75, 1]
-                  .map((t) => {
-                    const [r, g, b] = spectrumColor(t);
-                    return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)}) ${t * 100}%`;
-                  })
-                  .join(", ")})`,
-              }}
-            />
-            <span className="font-data text-[11px] text-ink-muted">
-              {scaleMode === "ec3" ? "η = 1,25" : scaleMode === "svm" ? "235 MPa (fy)" : "Max"}
-            </span>
-          </div>
+              className="absolute bottom-8 left-3 z-30 flex w-56 max-w-[60%] items-center gap-2 rounded-panel border border-hairline bg-panel/90 p-1.5 backdrop-blur"
+              data-testid="fea-legend"
+            >
+              <span className="font-data text-[11px] text-ink-muted">
+                {scaleMode === "ec3" ? "η = 0" : scaleMode === "svm" ? "0" : "Min"}
+              </span>
+              <div
+                className="h-2 flex-1 rounded"
+                style={{
+                  background: `linear-gradient(to right, ${[0, 0.25, 0.5, 0.75, 1]
+                    .map((t) => {
+                      const [r, g, b] = spectrumColor(t);
+                      return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)}) ${t * 100}%`;
+                    })
+                    .join(", ")})`,
+                }}
+              />
+              <span className="font-data text-[11px] text-ink-muted">
+                {scaleMode === "ec3" ? "η = 1,25" : scaleMode === "svm" ? "235 MPa (fy)" : "Max"}
+              </span>
+            </div>
+          ) : null}
         </section>
         {/* v2.1.1: right 340px diagnostic rail — 2 clean tabs so the EC3
             verification AND the advanced analyses (λcr, sismique,
@@ -1019,7 +1019,34 @@ function ResultsPage() {
               )}
             </div>
           </aside>
-        ) : null}
+        ) : (
+          <aside
+            className="hidden w-[340px] shrink-0 flex-col justify-between overflow-hidden rounded-panel border border-hairline bg-panel p-3.5 md:flex"
+            data-testid="ec3-rail-empty"
+          >
+            <div>
+              <h3 className="text-[13px] font-semibold text-ink-primary">
+                <Trans>Diagnostic Eurocode 3</Trans>
+              </h3>
+              <p className="mt-1.5 text-[12px] leading-5 text-ink-muted">
+                <Trans>
+                  Aucune solution active — vérifiez vos appuis à l'étape Liaisons puis cliquez sur
+                  Calculer pour afficher les taux de travail EN 1993-1-1, le flambement et la trace
+                  KaTeX.
+                </Trans>
+              </p>
+            </div>
+            <div className="border-t border-hairline pt-3">
+              <button
+                type="button"
+                className="w-full rounded-[4px] border border-hairline bg-canvas px-3 py-1.5 text-[12px] font-medium text-ink-secondary hover:border-accent hover:text-accent"
+                onClick={() => void navigate({ to: "/supports" })}
+              >
+                <Trans>← Configurer les liaisons</Trans>
+              </button>
+            </div>
+          </aside>
+        )}
       </div>
       {/* Zone 3 — bottom precision dock (h-[220px]). v2.1.1: the
           "Enveloppes 3D" view renders ForceDiagrams3DPanel INSIDE the
@@ -1538,10 +1565,7 @@ function DockedInspector({
               </span>
             ) : null}
           </div>
-          <div
-            className="flex shrink-0 items-center rounded-[6px] border border-hairline p-0.5"
-            data-testid="forces-view-switcher"
-          >
+          <div className="shrink-0" data-testid="forces-view-switcher">
             {/* v2.1.2: dock view switcher as a SegmentedControl. */}
             <SegmentedControl
               size="sm"
